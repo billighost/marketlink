@@ -25,6 +25,11 @@
   height: var(--space-20);
 }
 
+.xl {
+  width: var(--space-24);
+  height: var(--space-24);
+}
+
 /* Soft Tint Fills */
 .fillCarrot {
   fill: var(--color-carrot-bg);
@@ -43,6 +48,11 @@
 
 .fillCanvas {
   fill: var(--color-canvas-soft);
+  stroke: var(--color-ink-soft);
+}
+
+.fillCanvasMedium {
+  fill: var(--color-canvas);
   stroke: var(--color-ink-soft);
 }
 
@@ -70,8 +80,36 @@
   fill: none;
 }
 
+.woodLine {
+  stroke: var(--color-wood);
+  stroke-width: 1px;
+  fill: none;
+}
+
 .scallopLine {
   stroke: var(--color-wood-line);
   stroke-width: var(--illus-stroke);
   fill: none;
+}
+
+.tagFill {
+  fill: var(--color-white);
+  stroke: var(--color-border);
+  stroke-width: 1px;
+}
+
+.tagTwine {
+  stroke: var(--color-wood);
+  stroke-width: 1px;
+  fill: none;
+}
+
+.tagText {
+  font-family: var(--font-body);
+  font-size: 6px;
+  font-weight: 600;
+  fill: var(--color-ink);
+  stroke: none;
+  text-anchor: middle;
+  dominant-baseline: central;
 }

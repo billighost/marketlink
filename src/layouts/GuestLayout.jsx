@@ -11,7 +11,7 @@ import styles from './GuestLayout.module.css';
 export function GuestLayout() {
   const location = useLocation();
 
-  // Scroll to top on route change for seamless page navigation
+  // Scroll to top on route change for clean page navigation
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);

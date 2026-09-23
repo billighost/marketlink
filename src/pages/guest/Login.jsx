@@ -70,8 +70,6 @@ export function Login() {
       return;
     }
 
-    // Front-end only: log credentials and show demo notice or switch to Customer
-    console.log('Login attempt:', formData);
     // For demonstration, default to buyer role on valid form submission
     login('buyer');
     navigate(PATHS.BUYER);
