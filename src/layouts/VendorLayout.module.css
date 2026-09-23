@@ -3,15 +3,25 @@
 .appContainer {
   display: flex;
   height: 100vh;
-  background-color: #f4f7f6;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-canvas, #F5EFE3);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   color: #333;
+}
+
+/* Headings Typography */
+.pageTitle, 
+.greeting, 
+.cardTitle, 
+.inventoryTitle, 
+.statValue,
+.table th {
+  font-family: 'Idiqlat', serif;
 }
 
 /* Sidebar */
 .sidebar {
   width: 260px;
-  background-color: #2b5d3a;
+  background-color: var(--color-herb, #5C7048);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -29,13 +39,14 @@
   font-size: 1.25rem;
   font-weight: 700;
   gap: 12px;
+  font-family: 'Idiqlat', serif;
 }
 
 .logoIcon {
   width: 32px;
   height: 32px;
   background-color: #fff;
-  color: #2b5d3a;
+  color: var(--color-herb, #5C7048);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -160,7 +171,7 @@
   right: 2px;
   width: 8px;
   height: 8px;
-  background-color: #ef4444;
+  background-color: var(--color-beet, #7A2E3B);
   border-radius: 50%;
   border: 2px solid #fff;
 }
@@ -190,7 +201,7 @@
 .avatar {
   width: 36px;
   height: 36px;
-  background-color: #2b5d3a;
+  background-color: var(--color-herb, #5C7048);
   color: #fff;
   border-radius: 50%;
   display: flex;
@@ -214,7 +225,7 @@
 
 .greeting {
   font-size: 1.75rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #111;
   margin: 0 0 8px 0;
 }
@@ -254,7 +265,7 @@
 
 .statValue {
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #111;
   margin: 0 0 8px 0;
 }
@@ -263,8 +274,8 @@
   font-size: 0.85rem;
 }
 
-.textGreen { color: #10b981; }
-.textOrange { color: #f59e0b; }
+.textGreen { color: var(--color-herb, #5C7048); }
+.textOrange { color: var(--color-carrot, #E07A2C); }
 .textGray { color: #6b7280; }
 
 .dashboardSplit {
@@ -289,8 +300,8 @@
 }
 
 .cardTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 400;
   color: #111;
   margin: 0;
 }
@@ -307,7 +318,7 @@
 }
 
 .btnPrimary {
-  background-color: #2b5d3a;
+  background-color: var(--color-herb, #5C7048);
   color: #fff;
   border: none;
   padding: 8px 16px;
@@ -327,8 +338,8 @@
   padding-bottom: 16px;
   border-bottom: 1px solid #e5e7eb;
   color: #6b7280;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 400;
   text-transform: uppercase;
 }
 
@@ -365,23 +376,23 @@
 }
 
 .badgePending {
-  background-color: #fef3c7;
-  color: #d97706;
+  background-color: rgba(224, 122, 44, 0.15); /* Carrot light */
+  color: var(--color-carrot, #E07A2C);
 }
 
-.badgeAccepted {
-  background-color: #d1fae5;
-  color: #059669;
+.badgeAccepted, .badgeDelivered, .badgeGood {
+  background-color: rgba(92, 112, 72, 0.15); /* Herb light */
+  color: var(--color-herb, #5C7048);
 }
 
-.badgeDelivered {
-  background-color: #d1fae5;
-  color: #059669;
+.badgeCancelled, .badgeCritical {
+  background-color: rgba(122, 46, 59, 0.15); /* Beet light */
+  color: var(--color-beet, #7A2E3B);
 }
 
-.badgeCancelled {
-  background-color: #fee2e2;
-  color: #dc2626;
+.badgeLow {
+  background-color: rgba(224, 122, 44, 0.15); /* Carrot light */
+  color: var(--color-carrot, #E07A2C);
 }
 
 /* Progress Bars */
@@ -418,8 +429,8 @@
   border-radius: 999px;
 }
 
-.fillOrange { background-color: #f97316; }
-.fillGreen { background-color: #2b5d3a; }
+.fillOrange { background-color: var(--color-carrot, #E07A2C); }
+.fillGreen { background-color: var(--color-herb, #5C7048); }
 
 /* Filter and Search Layout */
 .actionHeader {
@@ -457,7 +468,7 @@
 }
 
 .searchInput:focus {
-  border-color: #2b5d3a;
+  border-color: var(--color-herb, #5C7048);
 }
 
 .btnFilter {
@@ -498,8 +509,8 @@
 }
 
 .inventoryTitle {
-  font-weight: 600;
-  font-size: 1.05rem;
+  font-weight: 400;
+  font-size: 1.15rem;
   color: #111;
   margin: 0;
 }
@@ -534,24 +545,6 @@
   font-size: 0.85rem;
   color: #6b7280;
   font-weight: normal;
-}
-
-.badgeGood {
-  background-color: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
-}
-
-.badgeLow {
-  background-color: #fff7ed;
-  color: #ea580c;
-  border: 1px solid #fed7aa;
-}
-
-.badgeCritical {
-  background-color: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
 }
 
 .iconButton {
