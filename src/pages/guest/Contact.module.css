@@ -154,7 +154,7 @@
   font-weight: var(--weight-medium);
   color: var(--color-primary);
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: var(--underline-offset);
   min-height: var(--tap-min);
   display: inline-flex;
   align-items: center;

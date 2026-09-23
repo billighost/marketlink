@@ -151,4 +151,8 @@
   /* ---------- Decoration ---------- */
   --wave-height:   clamp(2rem, 1.4rem + 2.4vw, 4.5rem);  /* height of a wave divider */
   --illus-stroke:  1.5px;                                 /* line weight in illustrations */
+
+  /* ---------- Typography: link decoration (appended for strict token compliance) ---------- */
+  --underline-offset:       3px;
+  --underline-offset-tight: 2px;
 }

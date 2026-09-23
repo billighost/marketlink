@@ -99,7 +99,7 @@
   font-size: var(--text-xs);
   color: var(--color-ink-soft);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: var(--underline-offset-tight);
   min-height: var(--tap-min);
   display: inline-flex;
   align-items: center;
@@ -129,7 +129,7 @@
   color: var(--color-primary);
   font-weight: var(--weight-medium);
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: var(--underline-offset);
 }
 
 .registerLink:hover {

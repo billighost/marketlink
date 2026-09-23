@@ -21,7 +21,19 @@ export function Footer({ withWave = true }) {
               <Illustration name="basket" size="sm" className={styles.brandIcon} />
               <span className={styles.brandName}>MarketLink</span>
             </Link>
-            <p className={styles.tagline}>Farm fresh, just a click away.</p>
+            <p className={styles.tagline}>Made for market days.</p>
+            {/* Scalloped awning hairline touch */}
+            <svg
+              className={styles.awningTouch}
+              viewBox="0 0 120 8"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M0,2 Q10,7 20,2 Q30,7 40,2 Q50,7 60,2 Q70,7 80,2 Q90,7 100,2 Q110,7 120,2"
+                className={styles.awningPath}
+              />
+            </svg>
           </div>
 
           {/* Part 2: Navigation Links */}

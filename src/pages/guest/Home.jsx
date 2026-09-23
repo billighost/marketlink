@@ -1,41 +1,102 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Check } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import StatusDot from '@/components/ui/StatusDot';
 import WaveDivider from '@/components/layout/WaveDivider';
 import Illustration from '@/components/domain/Illustration';
-import FarmerCard from '@/components/domain/FarmerCard';
-import { PRICE_BOARD_ITEMS, FEATURED_FARMERS } from '@/data/placeholders';
 import styles from './Home.module.css';
 
 /**
- * Home landing page for MarketLink.
- * Clean, warm, and inviting farmers market pre-order showcase.
+ * Price board market offerings for Elm Street Saturday market
+ */
+const PRICE_BOARD_ITEMS = [
+  {
+    id: 'item-1',
+    stall: 'Stall 4',
+    name: 'Heirloom tomatoes',
+    farmer: 'Riverbend Farm',
+    price: '$4.50',
+    unit: 'lb',
+    status: 'In stock',
+    statusTone: 'herb',
+  },
+  {
+    id: 'item-2',
+    stall: 'Stall 2',
+    name: 'Sourdough loaf',
+    farmer: 'Oak & Mill Bakery',
+    price: '$7.00',
+    unit: 'loaf',
+    status: 'In stock',
+    statusTone: 'herb',
+  },
+  {
+    id: 'item-3',
+    stall: 'Stall 9',
+    name: 'Wildflower honey',
+    farmer: 'Hollow Creek Apiary',
+    price: '$9.50',
+    unit: 'jar',
+    status: 'Low stock',
+    statusTone: 'carrot',
+  },
+  {
+    id: 'item-4',
+    stall: 'Stall 4',
+    name: 'Rainbow carrots',
+    farmer: 'Riverbend Farm',
+    price: '$4.50',
+    unit: 'bunch',
+    status: 'In stock',
+    statusTone: 'herb',
+  },
+  {
+    id: 'item-5',
+    stall: 'Stall 11',
+    name: 'Farm eggs',
+    farmer: 'Willow Bend Poultry',
+    price: '$6.00',
+    unit: 'dozen',
+    status: 'In stock',
+    statusTone: 'herb',
+  },
+  {
+    id: 'item-6',
+    stall: 'Stall 9',
+    name: 'Rhubarb',
+    farmer: 'Hollow Creek Apiary',
+    price: '$3.50',
+    unit: 'bunch',
+    status: 'Low stock',
+    statusTone: 'carrot',
+  },
+];
+
+/**
+ * Home page: Hand-crafted farmers market pre-order showcase.
  */
 export function Home() {
   useDocumentTitle('Home · MarketLink');
 
   return (
     <div className={styles.page}>
-      {/* ---------------- SECTION 1: HERO ---------------- */}
+      {/* ---------------- SECTION 1: HERO ("The market table, seen from above") ---------------- */}
       <section className={styles.heroSection}>
-        <div className={`container ${styles.heroContainer}`}>
-          {/* Hero Left: Copy & Actions */}
-          <div className={styles.heroCopy}>
-            <p className={styles.overline}>Elm Street Market · Saturdays</p>
+        <div className={styles.heroStage}>
+          {/* Centred protected reading column */}
+          <div className={styles.readingColumn}>
+            <p className={styles.marketOverline}>Elm Street Market · Saturdays, 8am to 1pm</p>
             <h1 className={styles.heroTitle}>
               Fresh from the farm,{' '}
-              <span className={styles.underlinedWord}>
+              <span className={styles.readyUnderlineWrap}>
                 ready
                 <svg
                   className={styles.wavyUnderline}
                   viewBox="0 0 100 12"
                   preserveAspectRatio="none"
                   aria-hidden="true"
+                  focusable="false"
                 >
                   <path d="M0,6 Q25,0 50,6 T100,6" />
                 </svg>
@@ -43,8 +104,7 @@ export function Home() {
               when you arrive.
             </h1>
             <p className={styles.heroLead}>
-              Pre-order from the farmers you know and pick it up at the market.
-              No delivery, no fuss. You pay when you collect.
+              Pre-order from the Farmers you know. Collect at the stall. Pay when you pick up.
             </p>
             <div className={styles.heroActions}>
               <Button
@@ -55,226 +115,342 @@ export function Home() {
               >
                 Create your free account
               </Button>
-              <a href="#how-it-works" className={styles.seeHowLink}>
-                See how it works
-              </a>
+              <Button
+                as="a"
+                href="#price-board"
+                variant="secondary"
+                size="md"
+              >
+                See this Saturday's board
+              </Button>
             </div>
             <p className={styles.heroFootnote}>
-              Free for Customers. Pay in person at pickup.
+              Free for Customers. No delivery. Pay in person.
             </p>
           </div>
 
-          {/* Hero Right: Stall illustration panel */}
-          <div className={styles.heroVisual} aria-hidden="true">
-            <div className={styles.visualPanel}>
-              <Illustration name="stall" size="lg" className={styles.mainStall} />
-              <Illustration name="carrot" size="sm" className={styles.floatCarrot} />
-              <Illustration name="leaves" size="sm" className={styles.floatLeaves} />
+          {/* Decorative flat-lay scattered produce composition */}
+          <div className={styles.produceCluster} aria-hidden="true">
+            {/* 1. Basket of tomatoes (Hero item with tag) */}
+            <div className={`${styles.produceItem} ${styles.itemTomatoes}`}>
+              <Illustration name="basket-tomatoes" size="lg" />
+              <div className={styles.tag}>
+                <span className={styles.tagTwine} />
+                <span className={styles.tagHole} />
+                <span className={styles.tagName}>Heirloom tomatoes</span>
+                <span className={styles.tagPrice}>$4.50 / lb</span>
+              </div>
+            </div>
+
+            {/* 2. Crate of carrots (With tag) */}
+            <div className={`${styles.produceItem} ${styles.itemCarrots}`}>
+              <Illustration name="crate-carrots" size="lg" />
+              <div className={styles.tag} style={{ '--tag-r': '-4deg' }}>
+                <span className={styles.tagTwine} />
+                <span className={styles.tagHole} />
+                <span className={styles.tagName}>Rainbow carrots</span>
+                <span className={styles.tagPrice}>$4.50 / bunch</span>
+              </div>
+            </div>
+
+            {/* 3. Beetroot bunch (With tag) */}
+            <div className={`${styles.produceItem} ${styles.itemBeets}`}>
+              <Illustration name="beet-bunch" size="md" />
+              <div className={styles.tag} style={{ '--tag-r': '4deg' }}>
+                <span className={styles.tagTwine} />
+                <span className={styles.tagHole} />
+                <span className={styles.tagName}>Beets</span>
+                <span className={styles.tagPrice}>$3.50 / bunch</span>
+              </div>
+            </div>
+
+            {/* 4. Leafy greens bunch (Accent without tag) */}
+            <div className={`${styles.produceItem} ${styles.itemGreens}`}>
+              <Illustration name="leafy-greens" size="md" />
+            </div>
+
+            {/* 5. Farm eggs carton (With tag) */}
+            <div className={`${styles.produceItem} ${styles.itemEggs}`}>
+              <Illustration name="egg-carton" size="md" />
+              <div className={styles.tag} style={{ '--tag-r': '-2deg' }}>
+                <span className={styles.tagTwine} />
+                <span className={styles.tagHole} />
+                <span className={styles.tagName}>Farm eggs</span>
+                <span className={styles.tagPrice}>$6.00 / dozen</span>
+              </div>
+            </div>
+
+            {/* 6. Sourdough boule (With tag) */}
+            <div className={`${styles.produceItem} ${styles.itemSourdough}`}>
+              <Illustration name="sourdough-boule" size="lg" />
+              <div className={styles.tag} style={{ '--tag-r': '5deg' }}>
+                <span className={styles.tagTwine} />
+                <span className={styles.tagHole} />
+                <span className={styles.tagName}>Sourdough loaf</span>
+                <span className={styles.tagPrice}>$7.00 / loaf</span>
+              </div>
+            </div>
+
+            {/* 7. Honey jar (With tag, desktop only) */}
+            <div className={`${styles.produceItem} ${styles.itemHoney} ${styles.desktopOnlyItem}`}>
+              <Illustration name="honey-jar" size="md" />
+              <div className={styles.tag} style={{ '--tag-r': '-5deg' }}>
+                <span className={styles.tagTwine} />
+                <span className={styles.tagHole} />
+                <span className={styles.tagName}>Wildflower honey</span>
+                <span className={styles.tagPrice}>$9.50 / jar</span>
+              </div>
+            </div>
+
+            {/* 8. Radish bunch (Accent, desktop only) */}
+            <div className={`${styles.produceItem} ${styles.itemRadishes} ${styles.desktopOnlyItem}`}>
+              <Illustration name="radish-bunch" size="md" />
+            </div>
+
+            {/* 9. Brown paper bag of pears (Accent, desktop only) */}
+            <div className={`${styles.produceItem} ${styles.itemPaperBag} ${styles.desktopOnlyItem}`}>
+              <Illustration name="paper-bag-pears" size="md" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ---------------- SECTION 2: HOW IT WORKS ---------------- */}
-      <section id="how-it-works" className={styles.howItWorksSection}>
+      {/* ---------------- SECTION 2: HOW IT WORKS (Staggered editorial steps) ---------------- */}
+      <section className={styles.howSection}>
         <div className="container">
-          <div className={styles.sectionHeader}>
+          <div className={styles.sectionHeadingGroupCentered}>
             <h2 className={styles.sectionTitle}>How it works</h2>
-            <p className={styles.sectionSubtitle}>Three simple steps, no account juggling.</p>
+            <p className={styles.sectionSubtitle}>Three simple steps from harvest to Saturday market bag.</p>
           </div>
 
-          <div className="grid3">
+          <div className={styles.stepsRow}>
+            {/* Connecting wood dotted path */}
+            <svg
+              className={styles.dottedPathSvg}
+              viewBox="0 0 600 80"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M50,20 C180,60 320,10 550,50" />
+            </svg>
+
             {/* Step 1 */}
-            <Card padding="none" className={styles.stepCard}>
-              <div className={styles.stepCardTop}>
-                <Illustration name="basket" size="md" />
-                <span className={styles.stepNumber}>1</span>
+            <div className={styles.stepBlock}>
+              <div className={styles.stepHeader}>
+                <span className={styles.stepNumeral}>1</span>
+                <Illustration name="basket" size="sm" />
               </div>
-              <div className={styles.stepCardBody}>
-                <h3 className={styles.stepTitle}>Browse the market</h3>
-                <p className={styles.stepText}>
-                  See which Farmers are at your market this week and what they have.
-                </p>
-              </div>
-            </Card>
+              <h3 className={styles.stepTitle}>Look at Saturday's board</h3>
+              <p className={styles.stepCopy}>
+                See which Farmers are coming to Elm Street and what was harvested this week.
+              </p>
+            </div>
 
             {/* Step 2 */}
-            <Card padding="none" className={styles.stepCard}>
-              <div className={styles.stepCardTop}>
-                <Illustration name="tomato" size="md" />
-                <span className={styles.stepNumber}>2</span>
+            <div className={styles.stepBlock}>
+              <div className={styles.stepHeader}>
+                <span className={styles.stepNumeral}>2</span>
+                <Illustration name="paper-bag-pears" size="sm" />
               </div>
-              <div className={styles.stepCardBody}>
-                <h3 className={styles.stepTitle}>Pre-order what you want</h3>
-                <p className={styles.stepText}>
-                  Pick your items and a pickup time. Change your mind before the cut-off.
-                </p>
-              </div>
-            </Card>
+              <h3 className={styles.stepTitle}>Reserve before the cut-off</h3>
+              <p className={styles.stepCopy}>
+                Order your picks before Friday at 6pm. The Farmers harvest to order.
+              </p>
+            </div>
 
             {/* Step 3 */}
-            <Card padding="none" className={styles.stepCard}>
-              <div className={styles.stepCardTop}>
-                <Illustration name="loaf" size="md" />
-                <span className={styles.stepNumber}>3</span>
+            <div className={styles.stepBlock}>
+              <div className={styles.stepHeader}>
+                <span className={styles.stepNumeral}>3</span>
+                <Illustration name="sourdough-boule" size="sm" />
               </div>
-              <div className={styles.stepCardBody}>
-                <h3 className={styles.stepTitle}>Pick up and pay</h3>
-                <p className={styles.stepText}>
-                  Collect your order at the stall and pay the Farmer in person.
-                </p>
-              </div>
-            </Card>
+              <h3 className={styles.stepTitle}>Collect it at the stall</h3>
+              <p className={styles.stepCopy}>
+                Your harvest is boxed and waiting under the awning. Pay in person when you pick up.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ---------------- SECTION 3: THE PRICE BOARD (CANVAS BAND) ---------------- */}
+      {/* ---------------- SECTION 3: PRICE BOARD (Chalkboard style double frame) ---------------- */}
       <WaveDivider shape="soft" />
-      <section className={styles.priceBoardSection}>
+      <section id="price-board" className={styles.boardSection}>
         <div className="containerNarrow">
           <div className={styles.boardHeader}>
             <h2 className={styles.sectionTitle}>This Saturday at Elm Street Market</h2>
-            <div className={styles.marketMeta}>
-              <MapPin size={16} strokeWidth={1.5} aria-hidden="true" />
-              <span>Elm Street · 8am to 1pm · Order by Friday 6pm</span>
-            </div>
+            <p className={styles.boardTagline}>
+              Elm Street Market Square · Saturdays, 8am to 1pm
+            </p>
           </div>
 
-          {/* Chalkboard / Cafe Menu list */}
-          <div className={styles.menuBoard}>
-            <ul className={styles.menuList} role="list">
-              {PRICE_BOARD_ITEMS.map((item) => (
-                <li key={item.id} className={styles.menuItem}>
-                  <div className={styles.itemLeft}>
-                    <span className={styles.itemName}>{item.name}</span>
-                    <span className={styles.itemFarmer}>{item.farmer}</span>
-                  </div>
-                  <span className={styles.dottedLeader} aria-hidden="true" />
-                  <div className={styles.itemRight}>
-                    <span className={styles.itemPrice}>
-                      {item.price} <span className={styles.unit}>/ {item.unit}</span>
-                    </span>
-                    <StatusDot label={item.status} tone={item.statusTone} />
-                  </div>
-                </li>
-              ))}
-            </ul>
+          <div className={styles.chalkboardFrameOuter}>
+            <div className={styles.chalkboardFrameInner}>
+              <div className={styles.boardTopBar}>
+                <span className={styles.boardBadge}>Today's Board</span>
+                <span className={styles.cutoffNotice}>Order by Friday, 6pm</span>
+              </div>
 
-            <div className={styles.boardFooter}>
-              <Link to={PATHS.LOGIN} className={styles.boardSignInLink}>
-                Sign in to pre-order
-              </Link>
+              <ul className={styles.boardList} role="list">
+                {PRICE_BOARD_ITEMS.map((item) => (
+                  <li key={item.id} className={styles.boardItem}>
+                    <div className={styles.itemLeftCol}>
+                      <span className={styles.stallBadge}>{item.stall}</span>
+                      <span className={styles.itemProduceName}>{item.name}</span>
+                      <span className={styles.itemFarmName}>({item.farmer})</span>
+                    </div>
+                    <span className={styles.dottedLeaderLine} aria-hidden="true" />
+                    <div className={styles.itemRightCol}>
+                      <span className={styles.itemPriceText}>
+                        {item.price} <span className={styles.itemUnitText}>/ {item.unit}</span>
+                      </span>
+                      {item.statusTone === 'herb' ? (
+                        <span className={styles.statusHerb}>In stock</span>
+                      ) : (
+                        <span className={styles.statusCarrot}>Low stock</span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <div className={styles.boardFooterRow}>
+                <p className={styles.boardFooterNote}>
+                  Prices set directly by the growers. No platform markups.
+                </p>
+                <Link to={PATHS.LOGIN} className={styles.boardSignInLink}>
+                  Sign in to pre-order
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
       <WaveDivider shape="gentle" flip />
 
-      {/* ---------------- SECTION 4: MEET THE FARMERS ---------------- */}
+      {/* ---------------- SECTION 4: MEET THE FARMERS (Magazine editorial spread) ---------------- */}
       <section className={styles.farmersSection}>
         <div className="container">
-          <div className={styles.sectionHeader}>
+          <div className={styles.sectionHeadingGroup}>
             <h2 className={styles.sectionTitle}>Meet the people behind the food</h2>
             <p className={styles.sectionSubtitle}>
-              Small farms and family bakers from around the market.
+              Small farms and family bakers who set up on Elm Street every weekend.
             </p>
           </div>
 
-          <div className="grid3">
-            {FEATURED_FARMERS.map((farmer) => (
-              <FarmerCard key={farmer.id} farmer={farmer} />
-            ))}
+          <div className={styles.editorialSpread}>
+            {/* Featured Farmer Large Panel */}
+            <div className={styles.featuredFarmerPanel}>
+              <div className={styles.featuredFarmerImageCol}>
+                <img
+                  src="/images/riverbend-farm.jpg"
+                  alt="Riverbend Farm stall at Elm Street Market with wooden crates of fresh vegetables"
+                  className={styles.featuredFarmerImg}
+                  loading="lazy"
+                />
+              </div>
+              <div className={styles.featuredFarmerInfoCol}>
+                <span className={styles.farmerStallBadge}>Selling at Elm Street since 2016</span>
+                <h3 className={styles.farmerNameLarge}>Riverbend Farm</h3>
+                <p className={styles.farmerStory}>
+                  Marta and Tomas tend twelve acres of alluvial soil along the riverbank.
+                  Known for heirloom Brandywines, sweet Nantes carrots, and tender salad greens picked at dawn.
+                </p>
+                <p className={styles.farmerKnownFor}>
+                  Known for: Heirloom tomatoes & baby carrots · Stall 4
+                </p>
+              </div>
+            </div>
+
+            {/* Two compact rows beneath */}
+            <div className={styles.farmerCompactRows}>
+              <div className={styles.compactFarmerRow}>
+                <span className={styles.compactFarmerName}>Oak & Mill Bakery</span>
+                <span className={styles.compactFarmerSpec}>Artisan sourdough & morning pastries</span>
+                <span className={styles.dottedLeaderLine} aria-hidden="true" />
+                <span className={styles.compactFarmerStall}>Saturdays · Stall 2</span>
+              </div>
+
+              <div className={styles.compactFarmerRow}>
+                <span className={styles.compactFarmerName}>Hollow Creek Apiary</span>
+                <span className={styles.compactFarmerSpec}>Raw wildflower honey, honeycomb & preserves</span>
+                <span className={styles.dottedLeaderLine} aria-hidden="true" />
+                <span className={styles.compactFarmerStall}>Saturdays · Stall 9</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ---------------- SECTION 5: FOR CUSTOMERS AND FARMERS ---------------- */}
-      <section className={styles.splitSection}>
+      {/* ---------------- SECTION 5: FOR CUSTOMERS & FOR FARMERS (Asymmetric offset statements) ---------------- */}
+      <section className={styles.audiencesSection}>
         <div className="container">
-          <div className={styles.splitGrid}>
-            {/* Customer column */}
-            <div className={styles.splitCol}>
-              <h2 className={styles.splitTitle}>For Customers</h2>
-              <ul className={styles.checkList} role="list">
-                <li className={styles.checkItem}>
-                  <Check size={18} strokeWidth={1.5} className={styles.checkIcon} aria-hidden="true" />
-                  <span>Know what is in stock before you go</span>
-                </li>
-                <li className={styles.checkItem}>
-                  <Check size={18} strokeWidth={1.5} className={styles.checkIcon} aria-hidden="true" />
-                  <span>Reserve your favourites so they are never sold out</span>
-                </li>
-                <li className={styles.checkItem}>
-                  <Check size={18} strokeWidth={1.5} className={styles.checkIcon} aria-hidden="true" />
-                  <span>Save the farmers you love</span>
-                </li>
-              </ul>
-              <Link to={`${PATHS.REGISTER}?role=customer`} className={styles.splitLink}>
-                Create a Customer account
+          <div className={styles.audienceLayout}>
+            {/* Customer Statement (Left aligned) */}
+            <div className={styles.audienceBlockCustomer}>
+              <p className={styles.audienceStatement}>
+                Shop your market with confidence. You know what's in stock before you walk out the door, and your weekend sourdough is held safely behind the counter.
+              </p>
+              <Link to={`${PATHS.REGISTER}?role=customer`} className={styles.audienceActionLink}>
+                Create a Customer account →
               </Link>
             </div>
 
-            {/* Hairline desktop divider */}
-            <div className={styles.splitDivider} aria-hidden="true" />
-
-            {/* Farmer column */}
-            <div className={styles.splitCol}>
-              <h2 className={styles.splitTitle}>For Farmers</h2>
-              <ul className={styles.checkList} role="list">
-                <li className={styles.checkItem}>
-                  <Check size={18} strokeWidth={1.5} className={styles.checkIcon} aria-hidden="true" />
-                  <span>Publish your weekly stock in minutes</span>
-                </li>
-                <li className={styles.checkItem}>
-                  <Check size={18} strokeWidth={1.5} className={styles.checkIcon} aria-hidden="true" />
-                  <span>See pre-orders before market day</span>
-                </li>
-                <li className={styles.checkItem}>
-                  <Check size={18} strokeWidth={1.5} className={styles.checkIcon} aria-hidden="true" />
-                  <span>Reply to reviews and build regulars</span>
-                </li>
-              </ul>
-              <Link to={`${PATHS.REGISTER}?role=farmer`} className={styles.splitLink}>
-                Create a Farmer account
+            {/* Farmer Statement (Right offset) */}
+            <div className={styles.audienceBlockFarmer}>
+              <p className={styles.audienceStatement}>
+                Harvest with certainty. Know your orders before you hitch the trailer on Saturday morning, and build loyal regulars without paying commission.
+              </p>
+              <Link to={`${PATHS.REGISTER}?role=farmer`} className={styles.audienceActionLink}>
+                Create a Farmer account →
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ---------------- SECTION 6: QUIET QUOTE ---------------- */}
+      {/* ---------------- SECTION 6: QUIET QUOTE (Paper price tag shape) ---------------- */}
       <section className={styles.quoteSection}>
-        <div className="containerNarrow">
-          <figure className={styles.quoteFigure}>
-            <blockquote className={styles.blockquote}>
-              “I used to guess how much to bring. Now I know before I load the truck.”
+        <div className="container">
+          <div className={styles.quoteTagCard}>
+            <span className={styles.quoteTagTwine} aria-hidden="true" />
+            <span className={styles.quoteTagHole} aria-hidden="true" />
+            <blockquote className={styles.quoteQuote}>
+              “I used to guess how much to bring and hope for the best. Now I know before I load the truck at 5am.”
             </blockquote>
-            <figcaption className={styles.quoteAuthor}>
-              Marta, Riverbend Farm
+            <figcaption className={styles.quoteAttribution}>
+              — Marta Davies, Riverbend Farm
             </figcaption>
-          </figure>
+          </div>
         </div>
       </section>
 
-      {/* ---------------- SECTION 7: CLOSING CALL TO ACTION ---------------- */}
-      <section className={styles.ctaSection}>
-        <div className="containerNarrow">
-          <div className={styles.ctaInner}>
-            <h2 className={styles.ctaTitle}>Your market is waiting</h2>
-            <p className={styles.ctaSubtitle}>Join for free and see what is fresh this week.</p>
-            <div className={styles.ctaActions}>
+      {/* ---------------- SECTION 7: CLOSING CALL TO ACTION ("See you Saturday.") ---------------- */}
+      <section className={styles.closingSection}>
+        <div className="container">
+          <div className={styles.closingContent}>
+            <div className={styles.closingTextCol}>
+              <h2 className={styles.closingTitle}>See you Saturday.</h2>
+              <p className={styles.closingSub}>
+                Sign up now and your first pre-order can be ready by the weekend.
+              </p>
+            </div>
+            <div className={styles.closingActionCol}>
               <Button
                 as={Link}
-                to={PATHS.REGISTER}
+                to={`${PATHS.REGISTER}?role=customer`}
                 variant="primary"
                 size="md"
               >
                 Create your free account
               </Button>
-              <Link to={PATHS.LOGIN} className={styles.ctaSignInLink}>
-                Already have an account? Sign in
-              </Link>
+              <span className={styles.closingSignInText}>
+                Already have an account?{' '}
+                <Link to={PATHS.LOGIN} className={styles.closingSignInLink}>
+                  Sign in
+                </Link>
+              </span>
             </div>
           </div>
         </div>
