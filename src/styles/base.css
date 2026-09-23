@@ -1,0 +1,161 @@
+/* ==========================================================================
+   MarketLink base styles & modern reset
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 100%;
+  scroll-padding-top: var(--header-height);
+  -webkit-text-size-adjust: 100%;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+
+/* Headings: Idiqlat serif strictly at weight 400 with no faux bold */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-head);
+  font-weight: var(--weight-head);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: var(--tracking-head);
+  text-wrap: balance;
+  margin: 0;
+  color: var(--color-ink);
+}
+
+h1 {
+  font-size: var(--text-h1);
+  line-height: var(--lh-h1);
+}
+
+h2 {
+  font-size: var(--text-h2);
+  line-height: var(--lh-h2);
+}
+
+h3 {
+  font-size: var(--text-h3);
+  line-height: var(--lh-h3);
+}
+
+h4 {
+  font-size: var(--text-h4);
+  line-height: var(--lh-h4);
+}
+
+p {
+  max-width: var(--measure);
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Form element defaults */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+/* Visible keyboard focus ring */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Placeholder styling */
+::placeholder {
+  color: var(--color-text-disabled);
+  opacity: 1;
+}
+
+/* Text selection */
+::selection {
+  background-color: var(--color-beet-tint);
+  color: var(--color-ink);
+}
+
+/* List resets inside nav and semantic lists */
+nav ul,
+nav ol,
+[role="list"] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Divider default */
+hr {
+  border: none;
+  border-top: var(--border);
+  margin: 0;
+}
+
+/* Table reset */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
