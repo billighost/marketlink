@@ -1,0 +1,571 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-white);
+}
+
+/* ---------------- HERO ---------------- */
+.heroSection {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-12);
+}
+
+@media (min-width: 1024px) {
+  .heroSection {
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-20);
+  }
+}
+
+.heroContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+@media (min-width: 1024px) {
+  .heroContainer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-12);
+  }
+}
+
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.overline {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  margin-bottom: var(--space-2);
+}
+
+.heroTitle {
+  font-family: var(--font-head);
+  font-size: var(--text-display);
+  font-weight: 300;
+  line-height: var(--lh-display);
+  color: var(--color-ink);
+  letter-spacing: var(--tracking-head);
+  margin-bottom: var(--space-4);
+  text-wrap: balance;
+}
+
+.underlinedWord {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.wavyUnderline {
+  position: absolute;
+  left: 0;
+  bottom: -0.15em;
+  width: 100%;
+  height: 0.28em;
+  fill: none;
+  stroke: var(--color-wood);
+  stroke-width: var(--illus-stroke);
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.heroLead {
+  font-family: var(--font-body);
+  font-size: var(--text-lead);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-body);
+  max-width: var(--measure-narrow);
+  margin-bottom: var(--space-6);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.seeHowLink {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.seeHowLink:hover {
+  color: var(--color-ink);
+}
+
+.heroFootnote {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-ui);
+}
+
+.heroVisual {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+}
+
+.visualPanel {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 4 / 3;
+  background-color: var(--color-canvas);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mainStall {
+  width: clamp(7rem, 5rem + 8vw, 11rem);
+  height: clamp(7rem, 5rem + 8vw, 11rem);
+}
+
+.floatCarrot {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-6);
+  opacity: 0.9;
+}
+
+.floatLeaves {
+  position: absolute;
+  bottom: var(--space-4);
+  left: var(--space-6);
+  opacity: 0.9;
+}
+
+/* ---------------- COMMON SECTION STYLES ---------------- */
+.sectionHeader {
+  margin-bottom: var(--space-8);
+}
+
+.sectionTitle {
+  font-family: var(--font-head);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  line-height: var(--lh-h2);
+  margin-bottom: var(--space-2);
+}
+
+.sectionSubtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-lead);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-body);
+  max-width: var(--measure);
+}
+
+/* ---------------- SECTION 2: HOW IT WORKS ---------------- */
+.howItWorksSection {
+  padding-block: var(--space-12);
+}
+
+@media (min-width: 1024px) {
+  .howItWorksSection {
+    padding-block: var(--space-20);
+  }
+}
+
+.stepCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-6);
+  gap: var(--space-4);
+}
+
+.stepCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stepNumber {
+  font-family: var(--font-head);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-head);
+  color: var(--color-wood);
+}
+
+.stepCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.stepTitle {
+  font-family: var(--font-head);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  line-height: var(--lh-h3);
+}
+
+.stepText {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-body);
+}
+
+/* ---------------- SECTION 3: THE PRICE BOARD ---------------- */
+.priceBoardSection {
+  background-color: var(--color-canvas);
+  padding-block: var(--space-12);
+}
+
+@media (min-width: 1024px) {
+  .priceBoardSection {
+    padding-block: var(--space-20);
+  }
+}
+
+.boardHeader {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.boardHeader .sectionTitle {
+  margin-bottom: var(--space-2);
+}
+
+.marketMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.menuBoard {
+  background-color: var(--color-white);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .menuBoard {
+    padding: var(--space-8) var(--space-8);
+  }
+}
+
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.menuItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  min-height: var(--tap-min);
+  padding-block: var(--space-2);
+}
+
+.itemLeft {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+@media (min-width: 480px) {
+  .itemLeft {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+}
+
+.itemName {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.itemFarmer {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.dottedLeader {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .dottedLeader {
+    display: block;
+    flex: 1;
+    border-bottom: 1px dotted var(--color-wood);
+    margin-inline: var(--space-3);
+    margin-bottom: var(--space-1);
+    min-width: var(--space-4);
+  }
+}
+
+.itemRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.itemPrice {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+.unit {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  color: var(--color-ink-soft);
+}
+
+.boardFooter {
+  margin-top: var(--space-8);
+  text-align: center;
+}
+
+.boardSignInLink {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.boardSignInLink:hover {
+  color: var(--color-primary-hover);
+}
+
+/* ---------------- SECTION 4: MEET THE FARMERS ---------------- */
+.farmersSection {
+  padding-block: var(--space-12);
+}
+
+@media (min-width: 1024px) {
+  .farmersSection {
+    padding-block: var(--space-24);
+  }
+}
+
+/* ---------------- SECTION 5: FOR CUSTOMERS & FARMERS ---------------- */
+.splitSection {
+  padding-block: var(--space-12);
+  border-top: var(--border);
+}
+
+@media (min-width: 1024px) {
+  .splitSection {
+    padding-block: var(--space-20);
+  }
+}
+
+.splitGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .splitGrid {
+    flex-direction: row;
+    gap: var(--space-8);
+  }
+}
+
+.splitCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.splitDivider {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .splitDivider {
+    display: block;
+    width: 1px;
+    background-color: var(--color-border);
+  }
+}
+
+.splitTitle {
+  font-family: var(--font-head);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  line-height: var(--lh-h2);
+}
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-body);
+}
+
+.checkIcon {
+  color: var(--color-herb);
+  flex-shrink: 0;
+}
+
+.splitLink {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+.splitLink:hover {
+  color: var(--color-primary-hover);
+}
+
+/* ---------------- SECTION 6: QUIET QUOTE ---------------- */
+.quoteSection {
+  padding-block: var(--space-12);
+}
+
+@media (min-width: 1024px) {
+  .quoteSection {
+    padding-block: var(--space-16);
+  }
+}
+
+.quoteFigure {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: var(--measure-narrow);
+  margin-inline: auto;
+}
+
+.blockquote {
+  font-family: var(--font-head);
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  line-height: var(--lh-h2);
+}
+
+.quoteAuthor {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-ui);
+}
+
+/* ---------------- SECTION 7: CLOSING CALL TO ACTION ---------------- */
+.ctaSection {
+  padding-block: var(--space-12);
+  padding-bottom: var(--space-16);
+}
+
+@media (min-width: 1024px) {
+  .ctaSection {
+    padding-block: var(--space-20);
+    padding-bottom: var(--space-24);
+  }
+}
+
+.ctaInner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ctaTitle {
+  font-family: var(--font-head);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  line-height: var(--lh-h2);
+}
+
+.ctaSubtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-lead);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-body);
+  margin-bottom: var(--space-4);
+}
+
+.ctaActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.ctaSignInLink {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.ctaSignInLink:hover {
+  color: var(--color-primary-hover);
+}

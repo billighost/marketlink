@@ -95,7 +95,9 @@ marketlink-frontend/
 
 ## 4. Role Switching & Previews
 
-The `/login` screen provides convenient quick-switch buttons to test all roles:
+To preview the unauthenticated guest experience, run `npm run dev` and navigate to `http://localhost:3000` to browse all guest pages (`/`, `/about`, `/contact`, `/login`, `/register`, `/forgot-password`, `/unauthorized`).
+
+The `/login` screen also provides convenient quick-switch buttons to test each persona:
 - **Continue as Customer** (navigates to `/buyer`)
 - **Continue as Farmer** (navigates to `/vendor`)
 - **Continue as Admin** (navigates to `/admin`)

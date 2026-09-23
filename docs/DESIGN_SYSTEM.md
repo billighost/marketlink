@@ -489,3 +489,36 @@ marketlink-frontend/
 3. **Include the PageHeader**: Render `<PageHeader title="..." subtitle="..." backTo="..." />` inside a `<div className="container section">`.
 4. **Style with Tokens**: Write styles in `PageName.module.css` using only `var(--token)` custom properties and global utility classes (`stack`, `grid3`, etc.).
 5. **Register Route**: Add the path constant to `src/routes/paths.js` and register the `<Route>` in `src/routes/AppRoutes.jsx`.
+
+---
+
+## 17. Decoration: Waves and Illustrations
+
+### WaveDivider System
+- **Component**: `WaveDivider.jsx` renders static, inline SVG waves between `#FFFFFF` page surfaces and `#F5EFE3` canvas bands.
+- **Tokens**:
+  - `--wave-height: clamp(2rem, 1.4rem + 2.4vw, 4.5rem);` sets fluid wave height.
+  - `--illus-stroke: 1.5px;` defines line weight for illustration outlines.
+- **Rules**:
+  - Waves are strictly static (zero animation, zero scroll trigger).
+  - Path fill is set in CSS (`fill: var(--color-canvas)`), never in JSX.
+  - `shape="soft"` and `shape="gentle"` provide gentle, rolling-hill curvature.
+  - Sits flush against the canvas band with no visible seams (`margin-bottom: -1px` or flipped `margin-top: -1px`).
+  - At most one canvas band per marketing page (Home, About, Contact). Error and auth pages use no bands.
+
+### Line-and-Tint Illustrations
+- **Component**: `Illustration.jsx` provides handcrafted inline SVGs (`stall`, `crate`, `carrot`, `beet`, `leaves`, `loaf`, `honey`, `tomato`, `basket`).
+- **Style**:
+  - Outlines: `stroke: var(--color-ink-soft); stroke-width: var(--illus-stroke); fill: none;`
+  - Fills: Restricted exclusively to soft tints (`--color-carrot-bg`, `--color-herb-bg`, `--color-beet-tint`, `--color-canvas-soft`, `--color-white`).
+  - Zero stock photos, zero remote images, zero emojis, zero hardcoded hex values in JSX.
+
+### Wavy Underline (Once Per Site)
+- Appears strictly once across the entire application: on the hero headline word **"ready"** on the Home page.
+- Drawn with an inline SVG in `--color-wood` (stroke 1.5px, no fill, static).
+
+### Top Bar Guest Actions
+- To preserve the "One primary action per screen" rule:
+  - "Sign in" renders as a text link.
+  - "Get started" renders as a secondary (outlined) button.
+  - The single filled primary beet button remains in the hero or page content.

@@ -1,0 +1,77 @@
+.illustration {
+  display: inline-block;
+  vertical-align: middle;
+  stroke: var(--color-ink-soft);
+  stroke-width: var(--illus-stroke);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  flex-shrink: 0;
+}
+
+/* Sizes */
+.sm {
+  width: var(--space-8);
+  height: var(--space-8);
+}
+
+.md {
+  width: var(--space-12);
+  height: var(--space-12);
+}
+
+.lg {
+  width: var(--space-20);
+  height: var(--space-20);
+}
+
+/* Soft Tint Fills */
+.fillCarrot {
+  fill: var(--color-carrot-bg);
+  stroke: var(--color-ink-soft);
+}
+
+.fillHerb {
+  fill: var(--color-herb-bg);
+  stroke: var(--color-ink-soft);
+}
+
+.fillBeet {
+  fill: var(--color-beet-tint);
+  stroke: var(--color-ink-soft);
+}
+
+.fillCanvas {
+  fill: var(--color-canvas-soft);
+  stroke: var(--color-ink-soft);
+}
+
+.fillWhite {
+  fill: var(--color-white);
+  stroke: var(--color-ink-soft);
+}
+
+/* Lines */
+.line {
+  stroke: var(--color-ink-soft);
+  stroke-width: var(--illus-stroke);
+  fill: none;
+}
+
+.subtleLine {
+  stroke: var(--color-wood-line);
+  stroke-width: 1px;
+  fill: none;
+}
+
+.scoreLine {
+  stroke: var(--color-wood);
+  stroke-width: 1px;
+  fill: none;
+}
+
+.scallopLine {
+  stroke: var(--color-wood-line);
+  stroke-width: var(--illus-stroke);
+  fill: none;
+}

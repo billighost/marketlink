@@ -147,4 +147,8 @@
   --z-overlay: 300;   /* modal backdrop */
   --z-modal:   400;
   --z-toast:   500;
+
+  /* ---------- Decoration ---------- */
+  --wave-height:   clamp(2rem, 1.4rem + 2.4vw, 4.5rem);  /* height of a wave divider */
+  --illus-stroke:  1.5px;                                 /* line weight in illustrations */
 }
