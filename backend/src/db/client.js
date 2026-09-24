@@ -18,6 +18,9 @@ let db = null;
  */
 export async function connectDb(customUri, customDbName) {
   if (db) {
+    if (customDbName && db.databaseName !== customDbName && client) {
+      db = client.db(customDbName);
+    }
     return db;
   }
 

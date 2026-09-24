@@ -20,6 +20,14 @@ import { healthRouter } from './modules/health/health.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { usersRouter } from './modules/users/users.routes.js';
 import { contactRouter } from './modules/contact/contact.routes.js';
+import { categoriesRouter } from './modules/categories/categories.routes.js';
+import { publicRouter } from './modules/public/public.routes.js';
+import { announcementsRouter } from './modules/announcements/announcements.routes.js';
+import { marketsRouter } from './modules/markets/markets.routes.js';
+import { farmersRouter } from './modules/farmers/farmers.routes.js';
+import { productsRouter } from './modules/products/products.routes.js';
+import { searchRouter } from './modules/search/search.routes.js';
+import { feedRouter } from './modules/feed/feed.routes.js';
 
 export function createApp() {
   const app = express();
@@ -77,6 +85,14 @@ export function createApp() {
   app.use('/api/auth', authRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/contact', contactRouter);
+  app.use('/api/categories', categoriesRouter);
+  app.use('/api/public', publicRouter);
+  app.use('/api/announcements', announcementsRouter);
+  app.use('/api/markets', marketsRouter);
+  app.use('/api/farmers', farmersRouter);
+  app.use('/api/products', productsRouter);
+  app.use('/api/search', searchRouter);
+  app.use('/api/feed', feedRouter);
 
   // 404 handler for unmatched routes
   app.use(notFound);

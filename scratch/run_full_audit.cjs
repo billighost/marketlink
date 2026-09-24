@@ -66,7 +66,7 @@ async function runAudit() {
 
       try {
         await page.goto(target.url, { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(500);
 
         const issues = await page.evaluate(() => {
           if (typeof window.layoutCheck === 'function') {

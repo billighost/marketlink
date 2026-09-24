@@ -584,3 +584,91 @@ In the signed-in Customer experience, any detail destination (a product, a farme
 - **Reduced Motion**: When `prefers-reduced-motion: reduce` is active, the flying dot and bumps are immediately skipped.
 - **Stepper Transformation**: Once added, the button seamlessly morphs into an accessible `QuantityStepper`.
 
+---
+
+## 19. Responsive Layout System, Density Budgets & Anti-Patterns
+
+### 1. Responsive Layout System
+- **Viewport Philosophy**: Mobile-first architecture tested continuously across 13 distinct viewport sizes: `320px`, `360px`, `390px`, `430px`, `600px`, `768px`, `820px`, `1024px`, `1180px`, `1280px`, `1440px`, `1920px`, and landscape mobile `844x390px`.
+- **Container Max-Widths**:
+  - Main app content: `--container-max: 1120px`
+  - Reading / Narrow content: `--container-narrow: 720px`
+  - Tablet centered content column: `--container-tablet: 40rem (640px)`
+  - Authentication cards: `--container-form: 440px`
+  - Modal sheets / Drawers: `--drawer-width: 28rem (448px)`
+- **Column Budgets per Breakpoint**:
+  - **Phone (< 768px)**: Strict 1-column layout for forms, feeds, and settings; 2 columns allowed exclusively for compact product grids.
+  - **Tablet (768px – 1023px)**: Exactly 2 columns (or 3 columns for dense product catalogs). Centered 40rem column for forms and editorial feeds.
+  - **Desktop (>= 1024px)**: Strict ceiling of 3 columns (or 4 columns in product catalogs). Never exceed 3 columns in dashboards or editorial content.
+
+### 2. The Breakpoint Model
+MarketLink enforces strictly four standard breakpoints across all media queries:
+1. `@media (max-width: 479px)` / `@media (min-width: 480px)`:
+   - Form inputs with accessory buttons (password toggle, filters) stack vertically on narrow phones (< 480px) and arrange horizontally on wider phones.
+   - Order thumbnails and secondary metadata collapse on narrow mobile.
+2. `@media (min-width: 768px)`:
+   - Bottom sheets transition to right-side drawers (`--drawer-width: 28rem`) or centered modal dialogs.
+   - Centered tablet column (`--container-tablet: 40rem`) prevents excessive line length on reading pages.
+   - Multi-column grids activate (2-column layouts).
+3. `@media (min-width: 1024px)`:
+   - Mobile `BottomNav` completely hides (`display: none`).
+   - Desktop header navigation in `BuyerTopBar` activates with all links guaranteed non-wrapping.
+   - Horizontal scrolling rows display subtle chevron navigation buttons for pointer devices.
+4. `@media (min-width: 1280px)`:
+   - Full desktop canvas with generous outer margins (`--page-pad: var(--space-8)`).
+
+### 3. The Bottom Stack Specification
+When multiple fixed floating elements (bottom navigation, cart bar, and notification toasts) share the screen, they must never physically overlap.
+- **Layering & Geometry**:
+  - `BottomNav`: Fixed at bottom 0, height `--bottom-nav-height: 4rem (64px) + env(safe-area-inset-bottom)`. `z-index: var(--z-sticky)`. Visible below 1024px.
+  - `CartBar`: Fixed floating pill above BottomNav. `bottom: calc(var(--bottom-nav-height) + var(--stack-gap) + env(safe-area-inset-bottom))`. `z-index: calc(var(--z-sticky) + 1)`.
+  - `Toast`: Fixed floating notification bar. Positioned dynamically above the highest active bottom element: `bottom: calc(var(--stack-bottom) + var(--stack-gap))`. `z-index: var(--z-toast)`.
+  - `Main Page Padding`: The page scroll area dynamically computes `padding-bottom: calc(var(--stack-bottom) + var(--space-6))` to ensure that the lowest in-flow item can always be scrolled fully into view above all fixed page chrome.
+  - `Modal Sheet Isolation`: When a modal bottom sheet is open, `isSheetOpen: true` dynamically hides `BottomNav`, `CartBar`, and `BuyerTopBar`, preventing collision between sheet controls and background floating chrome.
+
+### 4. Chip Row Rules
+Filter and category chips provide focused filtering without visual clutter:
+- **Single Row Rule**: There is strictly one chip row per screen. Chips must never wrap into multi-line rows that consume vertical screen space.
+- **Scroll Behavior**: Horizontal bleed-to-edge container with `display: flex; gap: var(--space-2); overflow-x: auto; -webkit-overflow-scrolling: touch;`. Scrollbars are visually hidden.
+- **Maximum Count**: At most 7 chips visible in the row: "All" + 5 top categories + "More" (which opens the comprehensive filter sheet).
+- **Touch Target**: Every chip strictly meets `--tap-min: 44px` height (`min-height: var(--tap-min); display: inline-flex; align-items: center; justify-content: center;`).
+- **Styling**: Inactive chips have a transparent background with hairline border (`1px solid var(--color-border)`). The active chip is filled with primary Beet (`var(--color-beet)`) and white text.
+
+### 5. Density Budget at 390x844 (First Viewport)
+Every primary screen is engineered to present exactly one clear focus with zero congestion in the first 844px viewport:
+1. **Home Feed**:
+   - Header: Brand mark + Market selector dropdown (56px).
+   - Hero greeting: Time-of-day greeting ("Good morning, George") + Saturday market countdown badge.
+   - First content: Exactly 1 featured harvest card and 2 compact items visible.
+2. **Products / Browse**:
+   - Sticky Header: Single search input with integrated "Filters" text button (44px) + 1 category chip row (44px).
+   - Summary line: Total product count (e.g., "9 products").
+   - Results: First 4 product cards in clean 2-column grid.
+3. **Orders**:
+   - Market collection info: Next pickup reminder bar.
+   - Segmented control: Active (count) vs Past orders (44px target).
+   - Order items: First 2 active order cards with clear status badges and collection stall highlights.
+4. **Cart Sheet**:
+   - Header: Grab handle + Close button.
+   - Market notice: Collection location and Saturday pickup window.
+   - Items: 2 to 3 cart items with accessible 44px quantity steppers and delete actions.
+   - Footer: Sticky checkout footer with order total and primary "Place pre-order" button.
+5. **Product Sheet**:
+   - Visual: 4/3 ratio product illustration container.
+   - Information: Product name, price per unit, stock status badge, and farmer stall link.
+   - Footer: Sticky 44px action bar with price and "Add to cart" button.
+6. **Profile / Settings**:
+   - Header: User name, email, and market affiliation.
+   - Toggles: 4 accessible preference rows (Email notifications, SMS updates, Reduced motion, Dark canvas) with 44px touch areas and instant "Saved" indicators.
+
+### 6. Anti-Patterns Catalog (Prohibited Design Patterns)
+The following patterns are strictly forbidden as they directly cause responsiveness breakage, congestion, and element overlap:
+1. **Fixed Page Chrome Without Matching Body Padding**: Never position an element with `position: fixed` or `position: sticky` at the bottom or top of the viewport without adding a matching computed `padding-bottom` or `padding-top` to the main scroll container.
+2. **Stretched Links Covering Secondary Actions**: Never place a `.stretchedLink` (`::after { inset: 0 }`) over a card container that also contains secondary buttons (e.g. `AddToCartButton` or favorite heart buttons). The link must be bounded to the card header/image area or use semantic markup without full-card overlay pseudo-elements.
+3. **Multi-line Filter Chip Wrapping**: Never allow chips to wrap onto 2 or 3 lines. Always use horizontal scrolling or move secondary filters into a dedicated filter sheet.
+4. **Unconstrained Image and Media Dimensions**: Never render `<img>` or `<svg>` without explicit aspect ratios (`data-aspect="4/3"` or CSS `aspect-ratio: 4/3`) and `object-fit: cover`. Never allow flex containers to shrink SVGs non-uniformly.
+5. **Sub-44px Interactive Touch Targets**: Never render an icon button, link, tab, or chip with `height` or `width` less than `44px` (`var(--tap-min)`). For small visual icons (e.g., 20px close cross or heart), pad the outer hit area to at least 44x44px.
+6. **Background Interaction During Modal Sheets**: When a modal sheet or dialog is open, the background app root MUST have `inert` applied, and underlying page chrome (such as top navigation or floating bars) must be occluded or hidden to prevent overlapping click traps.
+7. **Decorative Gradients & Heavy Shadows**: Never use CSS linear gradients, radial gradients, or heavy multi-layer box shadows. Use hairline borders (`1px solid var(--color-border)`) and generous whitespace for calm, elegant visual hierarchy.
+
+

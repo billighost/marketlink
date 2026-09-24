@@ -134,16 +134,22 @@ async function runVerification() {
     console.log('\n--- Testing Journey 3: Products Directory, Suggestions & Hairline ---');
     await page.goto('http://localhost:3000/buyer/products', { waitUntil: 'domcontentloaded' });
 
-    // Verify suggestions row
-    const suggestions = await page.$$('[class*="suggestionChip"]');
-    console.log(`Found ${suggestions.length} suggestion chips on Products page`);
-    if (suggestions.length === 0) throw new Error('Expected suggestion chips');
+    // Verify category chips
+    const chips = await page.$$('[class*="categoriesScroll"] button');
+    console.log(`Found ${chips.length} category chips on Products page`);
+    if (chips.length === 0) throw new Error('Expected category chips');
 
-    // Click on suggestion chip
-    await suggestions[0].click();
+    // Click on first non-all category chip
+    await chips[1].click();
+    await page.waitForTimeout(300);
+    const countText = await page.$eval('[class*="countText"]', el => el.textContent);
+    console.log(`Category filter applied. Results: "${countText}"`);
+
+    // Test Search input
+    await page.fill('input[type="search"]', 'tomato');
     await page.waitForTimeout(300);
     const searchVal = await page.$eval('input[type="search"]', el => el.value);
-    console.log(`Search input filled from chip: "${searchVal}"`);
+    console.log(`Search input filled: "${searchVal}"`);
 
     // Clear search
     const clearBtn = await page.$('[class*="clearSearch"]');

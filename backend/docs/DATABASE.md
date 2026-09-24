@@ -59,7 +59,12 @@ Farmer profile, exactly 1:1 with a `users` document where `role === 'farmer'`.
 - `listingEnabled`: Boolean (denormalized: true only when user's status is `active`)
 - `ratingAvg`: Double (1.0 to 5.0)
 - `ratingCount`: Integer
+- `ratingSum`: Integer (cumulative rating total for atomic avg recalculation)
 - `salesCount`: Integer (total units sold across completed orders)
+- `stallNameLower`: String (lowercase stallName for anchored prefix suggestions)
+- `categorySlugs`: Array<String> (denormalized from active products for farmer browse filtering)
+- `rnd`: Double in `[0,1)` (assigned via Mulberry32 PRNG for deterministic random sampling)
+- `imageUrl`: String | null
 - `isTopSeller`: Boolean
 - `isNew`: Boolean
 - `createdAt`, `updatedAt`: Date
@@ -98,18 +103,24 @@ Goods offered by farmers for pre-order.
 - `categoryId`: ObjectId (references `categories._id`)
 - `categorySlug`: String (denormalized for fast browse queries)
 - `name`: String
+- `nameLower`: String (lowercase name for anchored prefix queries and text search fallback)
 - `description`: String
 - `priceCents`: Integer (cents)
 - `unit`: `'lb' | 'bunch' | 'loaf' | 'jar' | 'dozen' | 'each' | 'pint' | 'bag'`
 - `quantityAvailable`: Integer (active stock for upcoming market day)
 - `lowStockThreshold`: Integer
 - `availability`: `'in' | 'low' | 'out' | 'hidden'`
+- `listed`: Boolean (denormalized: true iff farmer.listingEnabled, !moderation.removed, and availability !== 'hidden')
 - `tags`: Array<String> ('seasonal', 'organic', 'new', 'bestseller')
 - `art`: String
+- `imageUrl`: String | null
 - `weekly`: `{ enabled: bool, defaultQty: int }` (inventory reset template)
 - `ratingAvg`: Double
 - `ratingCount`: Integer
+- `ratingSum`: Integer
 - `salesCount`: Integer
+- `featuredScore`: Integer (recomputed ranking: salesCount*2 + ratingAvg*ratingCount + bonus)
+- `rnd`: Double in `[0,1)` (assigned via Mulberry32 PRNG for deterministic random sampling in feed)
 - `moderation`: `{ removed: bool, reason?: string, at?: Date }`
 - `createdAt`, `updatedAt`: Date
 

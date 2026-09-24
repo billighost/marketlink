@@ -972,8 +972,10 @@ export async function runSeed(force = false) {
     })
   );
 
-  // Add 17 more orders for other customers across various farmers and statuses
-  const otherCustomers = customerUsers.filter((u) => u.email !== 'george@example.com' && u.status === 'active');
+  // Add 17 more orders for other customers across various farmers and statuses (Chloe is brand new with 0 orders)
+  const otherCustomers = customerUsers.filter(
+    (u) => u.email !== 'george@example.com' && u.email !== 'chloe@example.com' && u.status === 'active'
+  );
   const activeFarmers = farmers.filter((f) => f.listingEnabled);
 
   const statusesCycle = ['completed', 'completed', 'ready', 'accepted', 'placed', 'declined', 'completed'];

@@ -161,16 +161,18 @@
     overflow: hidden;
   }
 
-  .desktopOnlyItem,
-  .tabletDesktopItem {
-    display: none;
-  }
-
   .produceItem {
     display: flex;
     flex-direction: column;
     align-items: center;
     flex-shrink: 0;
+  }
+
+  .produceItem.desktopOnlyItem,
+  .produceItem.tabletDesktopItem,
+  .desktopOnlyItem,
+  .tabletDesktopItem {
+    display: none;
   }
 
   .produceItem svg {
