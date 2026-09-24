@@ -28,6 +28,13 @@ export function Profile() {
 
   const [isSignOutOpen, setIsSignOutOpen] = useState(false);
   const [motionReduced, setMotionReduced] = useState(false);
+  const [motionSaved, setMotionSaved] = useState(false);
+
+  const handleMotionToggle = (val) => {
+    setMotionReduced(val);
+    setMotionSaved(true);
+    setTimeout(() => setMotionSaved(false), 1800);
+  };
 
   const getInitials = () => {
     if (user?.name) {
@@ -90,8 +97,9 @@ export function Profile() {
           <ListRow
             icon={Sparkles}
             label="Reduced motion"
+            indicator={motionSaved ? 'Saved' : undefined}
             toggle={motionReduced}
-            onToggle={setMotionReduced}
+            onToggle={handleMotionToggle}
           />
         </div>
       </section>

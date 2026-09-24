@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ShoppingBasket, Heart } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -24,6 +24,18 @@ export function BuyerTopBar() {
   const { count } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 4;
+      setScrolled((prev) => (prev !== isScrolled ? isScrolled : prev));
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const currentMarket = (user?.homeMarketId ? getMarket(user.homeMarketId) : null) || homeMarket;
 
@@ -56,7 +68,7 @@ export function BuyerTopBar() {
   };
 
   return (
-    <header className={styles.header} role="banner">
+    <header className={`${styles.header} ${scrolled ? styles.headerScrolled : ''}`} role="banner">
       <div className={styles.container}>
         {/* Left: Brand logo (desktop only) */}
         <Link to="/buyer" className={styles.brand} aria-label="MarketLink home">
@@ -124,7 +136,7 @@ export function BuyerTopBar() {
             <span className={styles.cartText}>Cart</span>
             {count > 0 && (
               <span className={styles.badge} data-cart-badge aria-hidden="true">
-                {count > 99 ? '99+' : count}
+                {count > 9 ? '9+' : count}
               </span>
             )}
           </button>

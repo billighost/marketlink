@@ -5,7 +5,35 @@
  */
 
 const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Announce messages politely to assistive technology
+ */
+export function announceToScreenReader(message) {
+  if (typeof document === 'undefined') return;
+  let announcer = document.getElementById('a11y-announcer');
+  if (!announcer) {
+    announcer = document.createElement('div');
+    announcer.id = 'a11y-announcer';
+    announcer.setAttribute('role', 'status');
+    announcer.setAttribute('aria-live', 'polite');
+    announcer.setAttribute('aria-atomic', 'true');
+    Object.assign(announcer.style, {
+      position: 'absolute',
+      width: '1px',
+      height: '1px',
+      margin: '-1px',
+      padding: '0',
+      overflow: 'hidden',
+      clip: 'rect(0, 0, 0, 0)',
+      border: '0',
+    });
+    document.body.appendChild(announcer);
+  }
+  announcer.textContent = message;
+}
 
 /**
  * Animate a dot from sourceEl to the cart icon target.
@@ -19,10 +47,11 @@ export function flyToCart(sourceEl, onArrive) {
     return;
   }
 
-  // Find the cart icon target (data-cart-target on the bottom nav or top nav cart)
-  const target =
-    document.querySelector('[data-cart-target]') ||
-    document.querySelector('[data-cart-target-desktop]');
+  // Find correct cart icon target (desktop vs mobile)
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+  const target = isDesktop
+    ? (document.querySelector('[data-cart-target-desktop]') || document.querySelector('[data-cart-target]'))
+    : (document.querySelector('[data-cart-target]') || document.querySelector('[data-cart-target-desktop]'));
 
   if (!sourceEl || !target) {
     onArrive?.();
@@ -31,6 +60,12 @@ export function flyToCart(sourceEl, onArrive) {
 
   const sourceRect = sourceEl.getBoundingClientRect();
   const targetRect = target.getBoundingClientRect();
+
+  // If source or target are hidden or offscreen (0 width/height)
+  if (sourceRect.width === 0 || targetRect.width === 0) {
+    onArrive?.();
+    return;
+  }
 
   // Create the flying dot
   const dot = document.createElement('div');
@@ -66,40 +101,56 @@ export function flyToCart(sourceEl, onArrive) {
     }
   );
 
-  animation.onfinish = () => {
-    dot.remove();
+  const cleanup = () => {
+    if (dot.parentNode) {
+      dot.remove();
+    }
     onArrive?.();
   };
+
+  animation.onfinish = cleanup;
+  animation.oncancel = cleanup;
 }
 
 /**
  * Bump animation on the cart icon when an item arrives.
- * @param {HTMLElement} el - The cart icon element
+ * @param {HTMLElement} [el] - Optional cart icon element
  */
 export function bumpCartIcon(el) {
-  if (!el || prefersReducedMotion()) return;
+  if (prefersReducedMotion()) return;
 
-  el.animate(
+  const targetEl =
+    el ||
+    (typeof window !== 'undefined' && window.innerWidth >= 768
+      ? document.querySelector('[data-cart-target-desktop]')
+      : document.querySelector('[data-cart-target]'));
+
+  if (!targetEl) return;
+
+  targetEl.animate(
     [
       { transform: 'scale(1)' },
-      { transform: 'scale(1.18)' },
+      { transform: 'scale(1.15)' },
       { transform: 'scale(1)' },
     ],
-    { duration: 300, easing: 'cubic-bezier(0.2, 0, 0, 1)' }
+    { duration: 250, easing: 'cubic-bezier(0.2, 0, 0, 1)' }
   );
 }
 
 /**
  * Pop animation on the cart badge when the count changes.
- * @param {HTMLElement} el - The badge element
+ * @param {HTMLElement} [el] - Optional badge element
  */
 export function popBadge(el) {
-  if (!el || prefersReducedMotion()) return;
+  if (prefersReducedMotion()) return;
 
-  el.animate(
+  const targetEl = el || document.querySelector('[data-cart-badge]');
+  if (!targetEl) return;
+
+  targetEl.animate(
     [
       { transform: 'scale(0.8)' },
-      { transform: 'scale(1.1)' },
+      { transform: 'scale(1.15)' },
       { transform: 'scale(1)' },
     ],
     { duration: 200, easing: 'cubic-bezier(0.2, 0, 0, 1)' }

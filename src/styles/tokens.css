@@ -5,6 +5,7 @@
 :root {
   /* ---------- Colour: brand palette (from the style guide) ---------- */
   --color-white:        #FFFFFF;  /* Base surface. Used almost everywhere */
+  --color-white-translucent: rgba(255, 255, 255, 0.90); /* Overlay buttons & floating actions */
   --color-canvas:       #F5EFE3;  /* "Market canvas": footer, image placeholders, empty states */
   --color-canvas-soft:  #FAF7F0;  /* Very light tint: table row hover, selected row */
   --color-ink:          #2E2B26;  /* "Chalkboard ink": all primary text */
@@ -116,9 +117,10 @@
   --border-input: 1px solid var(--color-border-input);
 
   /* ---------- Shadows (floating layers ONLY; cards use borders) ---------- */
-  --shadow-none:  none;
-  --shadow-menu:  0 8px 24px rgba(46, 43, 38, 0.10);
-  --shadow-modal: 0 16px 48px rgba(46, 43, 38, 0.16);
+  --shadow-none:    none;
+  --shadow-control: 0 1px 3px rgba(46, 43, 38, 0.08); /* segmented controls and toggles */
+  --shadow-menu:    0 8px 24px rgba(46, 43, 38, 0.10);
+  --shadow-modal:   0 16px 48px rgba(46, 43, 38, 0.16);
 
   /* ---------- Focus ---------- */
   --focus-ring:   2px solid var(--color-focus);
@@ -157,10 +159,13 @@
   --underline-offset-tight: 2px;
 
   /* ---------- App shell (Customer mobile-first) ---------- */
-  --bottom-nav-height: 4rem;      /* mobile bottom navigation */
-  --sheet-max-height:  85dvh;     /* bottom sheet maximum height */
-  --card-w-product:    9.5rem;    /* horizontal row product card */
-  --card-w-feature:    16rem;     /* featured editorial card */
-  --card-w-farmer:     10.5rem;   /* farmer card in rows */
-  --duration-add:      450ms;     /* add-to-cart fly animation */
+  --bottom-nav-height:  4rem;      /* mobile bottom navigation */
+  --sheet-max-height:   85dvh;     /* bottom sheet maximum height */
+  --sheet-tall-height:  92dvh;     /* tall resting height */
+  --sheet-mid-height:   60dvh;     /* two-stop mid resting height */
+  --sheet-drawer-width: 480px;     /* desktop sheet drawer width */
+  --card-w-product:     9.5rem;    /* horizontal row product card */
+  --card-w-feature:     16rem;     /* featured editorial card */
+  --card-w-farmer:      10.5rem;   /* farmer card in rows */
+  --duration-add:       450ms;     /* add-to-cart fly animation */
 }

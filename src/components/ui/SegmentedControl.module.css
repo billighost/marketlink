@@ -16,8 +16,15 @@
   padding: var(--space-1) var(--space-4);
   border-radius: var(--radius-full);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color var(--duration-fast) var(--ease-standard),
-              color var(--duration-fast) var(--ease-standard);
+              color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+}
+
+.option:active {
+  transform: scale(0.98);
 }
 
 .label {
@@ -27,11 +34,12 @@
   line-height: var(--lh-ui);
   color: var(--color-ink-soft);
   white-space: nowrap;
+  user-select: none;
 }
 
 .active {
   background-color: var(--color-white);
-  box-shadow: 0 1px 3px rgba(46, 43, 38, 0.08);
+  box-shadow: var(--shadow-control);
 }
 
 .active .label {

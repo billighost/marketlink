@@ -41,6 +41,18 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.filter((item) => item.productId !== productId));
   }, []);
 
+  const restoreItem = useCallback((productId, quantity) => {
+    setItems((prev) => {
+      const exists = prev.some((item) => item.productId === productId);
+      if (exists) {
+        return prev.map((item) =>
+          item.productId === productId ? { ...item, quantity } : item
+        );
+      }
+      return [...prev, { productId, quantity }];
+    });
+  }, []);
+
   const clear = useCallback(() => {
     setItems([]);
   }, []);
@@ -64,8 +76,8 @@ export function CartProvider({ children }) {
   );
 
   const value = useMemo(
-    () => ({ items, add, setQuantity, remove, clear, count, subtotal, getQuantity }),
-    [items, add, setQuantity, remove, clear, count, subtotal, getQuantity]
+    () => ({ items, add, setQuantity, remove, restoreItem, clear, count, subtotal, getQuantity }),
+    [items, add, setQuantity, remove, restoreItem, clear, count, subtotal, getQuantity]
   );
 
   return (

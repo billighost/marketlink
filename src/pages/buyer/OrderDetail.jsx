@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, AlertCircle, ArrowLeft, RotateCcw, Star, Check } from 'lucide-react';
+import { Calendar, MapPin, AlertCircle, ArrowLeft, RotateCcw, Star, Check, Clock } from 'lucide-react';
 import { orders, getProduct, getMarket } from '@/data/placeholders';
 import { formatPrice, formatDate, formatTime } from '@/utils/format';
 import { useCart } from '@/context/CartContext';
@@ -147,7 +147,7 @@ export function OrderDetail({ inSheet = true, onClose }) {
         <div className={styles.successCircle}>
           <Check size={32} aria-hidden="true" />
         </div>
-        <h2 className={styles.stepTitle}>Thank you!</h2>
+        <h2 className={styles.stepTitle}>Review submitted.</h2>
         <p className={styles.stepDesc}>
           Your feedback helps local growers and helps neighbours discover great harvests.
         </p>
@@ -195,6 +195,10 @@ export function OrderDetail({ inSheet = true, onClose }) {
           <div className={styles.cardText}>
             <span className={styles.cardLabel}>Pickup window</span>
             <span className={styles.cardValue}>{order.pickupSlot}</span>
+            <div className={styles.pickupCountdown}>
+              <Clock size={12} aria-hidden="true" />
+              <span>Closes at 1:00 pm, 2 hours left</span>
+            </div>
           </div>
         </div>
 
@@ -206,7 +210,7 @@ export function OrderDetail({ inSheet = true, onClose }) {
             <div className={styles.stallsList}>
               {order.farmerGroups?.map((fg) => (
                 <span key={fg.farmerId} className={styles.stallPill}>
-                  {fg.stallName} ({fg.stallNumber})
+                  {fg.stallName} · <strong className={styles.stallNumberHighlight}>{fg.stallNumber}</strong>
                 </span>
               ))}
             </div>
@@ -219,17 +223,26 @@ export function OrderDetail({ inSheet = true, onClose }) {
         <section className={styles.timelineSection} aria-label="Order progress timeline">
           <h3 className={styles.sectionHeading}>Order progress</h3>
           <div className={styles.timeline}>
-            {order.timeline.map((step, idx) => (
-              <div key={idx} className={styles.timelineItem}>
-                <div className={styles.timelinePoint} aria-hidden="true" />
-                <div className={styles.timelineDetails}>
-                  <span className={styles.timelineStatus}>{step.status}</span>
-                  <span className={styles.timelineTime}>
-                    {formatDate(step.at)} · {formatTime(step.at)}
-                  </span>
+            {order.timeline.map((step, idx) => {
+              const isCurrent = idx === order.timeline.length - 1;
+              return (
+                <div key={idx} className={styles.timelineItem}>
+                  <div
+                    className={`${styles.timelinePoint} ${isCurrent ? styles.timelinePointActive : ''}`}
+                    aria-hidden="true"
+                  />
+                  <div className={styles.timelineDetails}>
+                    <div className={styles.statusRow}>
+                      <span className={styles.timelineStatus}>{step.status}</span>
+                      {isCurrent && <span className={styles.nowBadge}>Now</span>}
+                    </div>
+                    <span className={styles.timelineTime}>
+                      {formatDate(step.at)} · {formatTime(step.at)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

@@ -38,7 +38,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 240px;
+  min-height: 15rem;
   padding: var(--space-8) var(--space-4);
 }
 
@@ -56,22 +56,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--tap-min);
+  height: var(--tap-min);
   border-radius: var(--radius-full);
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--color-white-translucent);
   border: 1px solid var(--color-border);
   color: var(--color-ink-soft);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: transform var(--duration-fast) var(--ease-standard),
               background-color var(--duration-fast) var(--ease-standard),
               color var(--duration-fast) var(--ease-standard);
 }
 
+.favoriteButton:active {
+  transform: scale(0.95);
+}
+
 .favoriteButton:hover {
   background-color: var(--color-white);
   color: var(--color-beet);
-  transform: scale(1.08);
 }
 
 .favoriteButton:focus-visible {
@@ -158,8 +163,8 @@
 }
 
 .farmerAvatar {
-  width: 44px;
-  height: 44px;
+  width: var(--tap-min);
+  height: var(--tap-min);
   border-radius: var(--radius-full);
   background-color: var(--color-white);
   border: 1px solid var(--color-border);

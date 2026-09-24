@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import BuyerTopBar from '@/components/layout/BuyerTopBar';
 import BottomNav from '@/components/layout/BottomNav';
@@ -17,17 +17,26 @@ import styles from './BuyerLayout.module.css';
  */
 export function BuyerLayout() {
   const location = useLocation();
-  const navType = useNavigationType();
+  const scrollPositionsRef = useRef({});
+  const prevPathRef = useRef(location.pathname);
 
-  // Scroll to top on navigation, except when popping (back button) or when opening a sheet
+  // Preserve scroll positions per tab across tab switches
   useEffect(() => {
-    // If a background location exists, this is a sheet opening over the page; do not scroll the underlying page
+    // If a background location exists, this is a sheet opening over the page; do not touch underlying page scroll
     if (location.state?.background) return;
 
-    if (navType !== 'POP') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    // Save previous tab scroll position
+    const prevPath = prevPathRef.current;
+    if (prevPath && prevPath !== location.pathname) {
+      scrollPositionsRef.current[prevPath] = window.scrollY;
     }
-  }, [location.pathname, location.state?.background, navType]);
+
+    prevPathRef.current = location.pathname;
+
+    // Restore saved scroll position for current tab (or 0 for fresh navigation)
+    const savedY = scrollPositionsRef.current[location.pathname] || 0;
+    window.scrollTo({ top: savedY, left: 0, behavior: 'instant' });
+  }, [location.pathname, location.state?.background]);
 
   return (
     <div className={styles.appShell}>

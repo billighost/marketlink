@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, ArrowLeft } from 'lucide-react';
-import { assistantReplies } from '@/data/placeholders';
+import { assistantReplies, products } from '@/data/placeholders';
 import { useAuth } from '@/context/AuthContext';
+import ProductCard from '@/components/domain/ProductCard';
 import styles from './Assistant.module.css';
 
 const SUGGESTIONS = [
@@ -21,7 +22,7 @@ export function Assistant({ inSheet = true, onClose }) {
     {
       id: 'msg-welcome',
       sender: 'assistant',
-      text: `Good day, ${displayName}! I'm here to help you shop this Saturday. Ask me what's fresh, where to find specific harvests, or about market hours.`,
+      text: `Good day, ${displayName}. I'm here to help you shop this Saturday. Ask me what's fresh, where to find specific harvests, or about market hours.`,
       time: 'Just now',
     },
   ]);
@@ -52,20 +53,29 @@ export function Assistant({ inSheet = true, onClose }) {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate assistant reply
+    // Simulate assistant reply with recommended product cards
     setTimeout(() => {
       let replyText = assistantReplies[text];
+      const lower = text.toLowerCase();
+      let matchedProducts = [];
+
       if (!replyText) {
-        // Fallback or keyword match
-        const lower = text.toLowerCase();
         if (lower.includes('fresh') || lower.includes('produce') || lower.includes('vegetable')) {
           replyText = assistantReplies["What's fresh on Saturday?"];
+          matchedProducts = [products.find((p) => p.id === 'p-01'), products.find((p) => p.id === 'p-02')].filter(Boolean);
         } else if (lower.includes('egg') || lower.includes('chicken') || lower.includes('poultry')) {
           replyText = assistantReplies["Who sells eggs?"];
+          matchedProducts = [products.find((p) => p.id === 'p-12')].filter(Boolean);
         } else if (lower.includes('hour') || lower.includes('close') || lower.includes('time') || lower.includes('open')) {
           replyText = assistantReplies["When does Elm Street close?"];
         } else {
           replyText = assistantReplies.default;
+        }
+      } else {
+        if (text === "What's fresh on Saturday?") {
+          matchedProducts = [products.find((p) => p.id === 'p-01'), products.find((p) => p.id === 'p-02')].filter(Boolean);
+        } else if (text === "Who sells eggs?") {
+          matchedProducts = [products.find((p) => p.id === 'p-12')].filter(Boolean);
         }
       }
 
@@ -75,6 +85,7 @@ export function Assistant({ inSheet = true, onClose }) {
           id: `assistant-${Date.now()}`,
           sender: 'assistant',
           text: replyText,
+          products: matchedProducts,
           time: 'Just now',
         },
       ]);
@@ -114,6 +125,10 @@ export function Assistant({ inSheet = true, onClose }) {
 
       {/* Messages Scroll Area */}
       <div className={styles.messagesArea} role="log" aria-live="polite">
+        <div className={styles.dateSeparator} aria-hidden="true">
+          <span>Today</span>
+        </div>
+
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -123,6 +138,13 @@ export function Assistant({ inSheet = true, onClose }) {
               className={`${styles.bubble} ${msg.sender === 'user' ? styles.userBubble : styles.assistantBubble}`}
             >
               <p className={styles.messageText}>{msg.text}</p>
+              {msg.products && msg.products.length > 0 && (
+                <div className={styles.productRow}>
+                  {msg.products.map((p) => (
+                    <ProductCard key={p.id} product={p} variant="compact" />
+                  ))}
+                </div>
+              )}
             </div>
             <span className={styles.timestamp}>{msg.time}</span>
           </div>
@@ -141,19 +163,21 @@ export function Assistant({ inSheet = true, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested prompts row */}
-      <div className={styles.suggestionsRow} aria-label="Suggested questions">
-        {SUGGESTIONS.map((suggestion, idx) => (
-          <button
-            key={idx}
-            type="button"
-            className={styles.suggestionChip}
-            onClick={() => handleSendMessage(suggestion)}
-          >
-            {suggestion}
-          </button>
-        ))}
-      </div>
+      {/* Suggested prompts row (shown only on first empty prompt) */}
+      {messages.length <= 1 && (
+        <div className={styles.suggestionsRow} aria-label="Suggested questions">
+          {SUGGESTIONS.map((suggestion, idx) => (
+            <button
+              key={idx}
+              type="button"
+              className={styles.suggestionChip}
+              onClick={() => handleSendMessage(suggestion)}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Bottom Message Input Bar */}
       <form className={styles.inputBar} onSubmit={handleSubmit}>
@@ -163,6 +187,7 @@ export function Assistant({ inSheet = true, onClose }) {
           placeholder="Ask about stalls, items, or pickup..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          enterKeyHint="send"
           aria-label="Type your message"
         />
         <button

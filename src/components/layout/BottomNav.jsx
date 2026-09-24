@@ -33,6 +33,27 @@ export function BottomNav() {
     if (item.id === 'cart') {
       // Open cart as a sheet
       navigate('/buyer/cart', { state: { background: location.state?.background || location } });
+      return;
+    }
+
+    const currentBase = location.state?.background?.pathname || location.pathname;
+    const isCurrentActive = item.id === 'market' ? currentBase === '/buyer' : currentBase.startsWith(item.path);
+
+    if (isCurrentActive) {
+      // If a sheet is currently open over this tab, dismiss it back to the tab
+      if (location.state?.background) {
+        navigate(item.path, { replace: true });
+        return;
+      }
+
+      // If already at top of Market tab, refresh feed
+      const atTop = window.scrollY <= 15;
+      if (atTop && item.id === 'market') {
+        window.dispatchEvent(new CustomEvent('marketlink:refresh-feed'));
+      } else {
+        // Smoothly scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } else {
       navigate(item.path);
     }

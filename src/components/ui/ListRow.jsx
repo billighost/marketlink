@@ -15,6 +15,7 @@ export function ListRow({
   to,
   toggle,
   onToggle,
+  indicator,
   danger = false,
   className = '',
   ...rest
@@ -36,6 +37,7 @@ export function ListRow({
       )}
       <span className={styles.label}>{label}</span>
       {value && <span className={styles.value}>{value}</span>}
+      {indicator && <span className={styles.indicator}>{indicator}</span>}
       {toggle !== undefined && (
         <Toggle
           checked={toggle}

@@ -36,7 +36,7 @@ export function OrderConfirmed({
       </div>
 
       <div className={styles.header}>
-        <h2 className={styles.title}>Pre-order placed!</h2>
+        <h2 className={styles.title}>Pre-order placed.</h2>
         <p className={styles.orderNumber}>Order {orderNumber}</p>
       </div>
 

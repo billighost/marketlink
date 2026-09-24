@@ -1,6 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BottomSheet from '@/components/ui/BottomSheet';
+
+function getSheetTitle(pathname) {
+  if (pathname.includes('/products/')) return 'Product Details';
+  if (pathname.includes('/farmers/')) return 'Farmer Stall';
+  if (pathname.includes('/markets/')) return 'Market Details';
+  if (pathname === '/buyer/cart') return 'Cart';
+  if (pathname === '/buyer/order-confirmed') return 'Order Confirmed';
+  if (pathname.includes('/orders/')) return 'Order Details';
+  if (pathname === '/buyer/assistant') return 'Ask MarketLink';
+  if (pathname.includes('/profile/details')) return 'Personal Details';
+  if (pathname.includes('/profile/markets')) return 'Saved Markets';
+  if (pathname.includes('/profile/notifications')) return 'Notification Preferences';
+  if (pathname.includes('/profile/help')) return 'Help & FAQ';
+  return null;
+}
 
 /**
  * Route wrapper for modal bottom sheets.
@@ -18,6 +33,18 @@ export function SheetRoute({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Dynamic document title while sheet is open, restored on close
+  useEffect(() => {
+    const prevTitle = document.title;
+    const computedTitle = title || getSheetTitle(location.pathname);
+    if (computedTitle) {
+      document.title = `${computedTitle} · MarketLink`;
+    }
+    return () => {
+      document.title = prevTitle;
+    };
+  }, [title, location.pathname]);
 
   const handleClose = () => {
     if (location.state?.background) {

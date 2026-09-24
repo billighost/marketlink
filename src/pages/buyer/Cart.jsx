@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Clock, Info } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 import { getFarmer, getProduct, pickupSlots, homeMarket } from '@/data/placeholders';
 import { formatPrice } from '@/utils/format';
 import QuantityStepper from '@/components/ui/QuantityStepper';
@@ -15,12 +16,48 @@ import styles from './Cart.module.css';
  * Groups items by farmer stall, shows pickup slot options, and submits pre-orders.
  */
 export function Cart({ inSheet = true, onClose }) {
-  const { items, count, subtotal, setQuantity, remove, clear } = useCart();
+  const { items, count, subtotal, setQuantity, remove, restoreItem, clear } = useCart();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [selectedSlot, setSelectedSlot] = useState(pickupSlots[0]?.id || 'slot-1');
   const [orderNote, setOrderNote] = useState('');
   const [placedOrder, setPlacedOrder] = useState(null);
+  const [swipedProductId, setSwipedProductId] = useState(null);
+
+  const touchStartXRef = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e, productId) => {
+    const currentX = e.touches[0].clientX;
+    const diff = touchStartXRef.current - currentX;
+    if (diff > 40) {
+      setSwipedProductId(productId);
+    } else if (diff < -20) {
+      setSwipedProductId(null);
+    }
+  };
+
+  const handleRemove = (productOrId, quantityOrName) => {
+    const product = typeof productOrId === 'object' ? productOrId : getProduct(productOrId);
+    const prodId = product?.id || productOrId;
+    const prodName = product?.name || (typeof quantityOrName === 'string' ? quantityOrName : 'item');
+    const quantity = typeof quantityOrName === 'number' ? quantityOrName : 1;
+
+    remove(prodId);
+    setSwipedProductId(null);
+    showToast({
+      message: `Removed ${prodName}`,
+      action: 'Undo',
+      duration: 4000,
+      onAction: () => {
+        restoreItem(prodId, quantity);
+      },
+    });
+  };
 
   // Group items by farmer stall
   const farmerGroups = useMemo(() => {
@@ -139,39 +176,57 @@ export function Cart({ inSheet = true, onClose }) {
               </div>
 
               <div className={styles.itemsList}>
-                {groupItems.map(({ product, quantity }) => (
-                  <div key={product.id} className={styles.itemRow}>
-                    <div className={styles.itemVisual}>
-                      <Illustration name={product.art || 'basket'} size="sm" />
-                    </div>
-
-                    <div className={styles.itemDetails}>
-                      <span className={styles.itemName}>{product.name}</span>
-                      <span className={styles.itemPrice}>
-                        {formatPrice(product.price)} / {product.unit}
-                      </span>
-                    </div>
-
-                    <div className={styles.itemActions}>
-                      <QuantityStepper
-                        value={quantity}
-                        onChange={(newQty) => setQuantity(product.id, newQty)}
-                        min={0}
-                        max={99}
-                        productName={product.name}
-                        compact
-                      />
+                {groupItems.map(({ product, quantity }) => {
+                  const isSwiped = swipedProductId === product.id;
+                  const maxQty = product.quantityLeft || 99;
+                  return (
+                    <div key={product.id} className={styles.rowContainer}>
                       <button
                         type="button"
-                        className={styles.removeButton}
-                        onClick={() => remove(product.id)}
-                        aria-label={`Remove ${product.name} from basket`}
+                        className={styles.swipeAction}
+                        onClick={() => handleRemove(product, quantity)}
+                        aria-label={`Confirm remove ${product.name}`}
                       >
-                        <Trash2 size={16} aria-hidden="true" />
+                        Remove
                       </button>
+                      <div
+                        className={`${styles.itemRow} ${isSwiped ? styles.swiped : ''}`}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={(e) => handleTouchMove(e, product.id)}
+                      >
+                        <div className={styles.itemVisual}>
+                          <Illustration name={product.art || 'basket'} size="sm" />
+                        </div>
+
+                        <div className={styles.itemDetails}>
+                          <span className={styles.itemName}>{product.name}</span>
+                          <span className={styles.itemPrice}>
+                            {formatPrice(product.price)} / {product.unit}
+                          </span>
+                        </div>
+
+                        <div className={styles.itemActions}>
+                          <QuantityStepper
+                            value={quantity}
+                            onChange={(newQty) => setQuantity(product.id, newQty)}
+                            min={0}
+                            max={maxQty}
+                            productName={product.name}
+                            compact
+                          />
+                          <button
+                            type="button"
+                            className={styles.removeButton}
+                            onClick={() => handleRemove(product, quantity)}
+                            aria-label={`Remove ${product.name} from basket`}
+                          >
+                            <Trash2 size={16} aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           );
@@ -197,7 +252,9 @@ export function Cart({ inSheet = true, onClose }) {
       <section className={styles.summarySection} aria-label="Order summary">
         <div className={styles.summaryRow}>
           <span className={styles.summaryLabel}>Subtotal</span>
-          <span className={styles.summaryValue}>{formatPrice(subtotal)}</span>
+          <span key={`subtotal-${subtotal}`} className={`${styles.summaryValue} ${styles.totalValueCrossfade}`}>
+            {formatPrice(subtotal)}
+          </span>
         </div>
         <div className={styles.summaryRow}>
           <span className={styles.summaryLabel}>Market fee</span>
@@ -205,7 +262,9 @@ export function Cart({ inSheet = true, onClose }) {
         </div>
         <div className={`${styles.summaryRow} ${styles.totalRow}`}>
           <span className={styles.totalLabel}>Total to pay</span>
-          <span className={styles.totalValue}>{formatPrice(subtotal)}</span>
+          <span key={`total-${subtotal}`} className={`${styles.totalValue} ${styles.totalValueCrossfade}`}>
+            {formatPrice(subtotal)}
+          </span>
         </div>
 
         <div className={styles.payNotice}>
@@ -221,7 +280,9 @@ export function Cart({ inSheet = true, onClose }) {
           className={styles.placeOrderButton}
           onClick={handlePlaceOrder}
         >
-          <span>Place pre-order · {formatPrice(subtotal)}</span>
+          <span key={`btn-${subtotal}`} className={styles.totalValueCrossfade}>
+            Place pre-order · {formatPrice(subtotal)}
+          </span>
         </button>
       </footer>
     </div>

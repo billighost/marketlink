@@ -3,10 +3,15 @@
   top: 0;
   z-index: var(--z-sticky);
   background-color: var(--color-white);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid transparent;
   min-height: var(--header-height);
   display: flex;
   align-items: center;
+  transition: border-bottom-color var(--duration-fast) var(--ease-standard);
+}
+
+.headerScrolled {
+  border-bottom-color: var(--color-border);
 }
 
 .container {

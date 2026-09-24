@@ -3,10 +3,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+import { ToastProvider } from '@/context/ToastContext';
 import AppRoutes from '@/routes/AppRoutes';
 
 /**
- * Root App component providing Router, Auth, Cart, and Favorites contexts.
+ * Root App component providing Router, Auth, Cart, Favorites, and Toast contexts.
  */
 export function App() {
   return (
@@ -14,7 +15,9 @@ export function App() {
       <AuthProvider>
         <CartProvider>
           <FavoritesProvider>
-            <AppRoutes />
+            <ToastProvider>
+              <AppRoutes />
+            </ToastProvider>
           </FavoritesProvider>
         </CartProvider>
       </AuthProvider>

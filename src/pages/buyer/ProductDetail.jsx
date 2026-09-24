@@ -175,7 +175,7 @@ export function ProductDetail({ inSheet = false, onClose }) {
             </div>
           ) : (
             <p className={styles.noReviews}>
-              No reviews yet for this harvest. Be the first to try it!
+              No reviews yet for this harvest. Be the first to review this harvest.
             </p>
           )}
         </div>

@@ -133,12 +133,44 @@
   flex-direction: column;
 }
 
+.rowContainer {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-danger-bg);
+}
+
+.swipeAction {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--space-16);
+  background-color: var(--color-danger);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  border: none;
+  touch-action: manipulation;
+}
+
 .itemRow {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
+  background-color: var(--color-white);
   border-bottom: 1px solid var(--color-border);
+  transition: transform 150ms var(--ease-standard);
+}
+
+.swiped {
+  transform: translateX(-4rem);
 }
 
 .itemRow:last-child {
@@ -146,8 +178,8 @@
 }
 
 .itemVisual {
-  width: 44px;
-  height: 44px;
+  width: var(--tap-min);
+  height: var(--tap-min);
   border-radius: var(--radius-md);
   background-color: var(--color-canvas-soft);
   display: flex;
@@ -161,7 +193,7 @@
   flex-direction: column;
   flex-grow: 1;
   min-width: 0;
-  gap: 2px;
+  gap: var(--space-1);
 }
 
 .itemName {
@@ -189,15 +221,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
   border-radius: var(--radius-md);
   border: none;
   background: none;
   color: var(--color-ink-soft);
   cursor: pointer;
   padding: 0;
-  transition: color var(--duration-fast) var(--ease-standard);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+}
+
+.removeButton:active {
+  transform: scale(0.92);
 }
 
 .removeButton:hover {
@@ -207,6 +246,15 @@
 .removeButton:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
+}
+
+.totalValueCrossfade {
+  animation: numberFade 150ms var(--ease-standard);
+}
+
+@keyframes numberFade {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
 }
 
 /* Note Section */

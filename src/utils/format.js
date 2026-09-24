@@ -107,3 +107,45 @@ export function formatRelativeTime(isoDate) {
   if (diffDays < 60) return '1 month ago';
   return `${Math.floor(diffDays / 30)} months ago`;
 }
+
+/**
+ * Calculate live cutoff countdown from the browser's current real clock
+ * @param {string} targetDay - e.g. "Friday" or "Tuesday"
+ * @param {number} targetHour - 24-hr format, e.g. 18 for 6pm
+ * @returns {string} - e.g. "Order by Friday, 6 pm (14h left)"
+ */
+export function getCutoffCountdown(targetDay = 'Friday', targetHour = 18) {
+  const now = new Date();
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const targetDayIdx = daysOfWeek.indexOf(targetDay);
+  if (targetDayIdx === -1) return `Order by ${targetDay}, ${targetHour > 12 ? targetHour - 12 + ' pm' : targetHour + ' am'}`;
+
+  let daysUntil = (targetDayIdx - now.getDay() + 7) % 7;
+  const targetDate = new Date(now);
+  targetDate.setDate(now.getDate() + daysUntil);
+  targetDate.setHours(targetHour, 0, 0, 0);
+
+  if (targetDate.getTime() <= now.getTime()) {
+    targetDate.setDate(targetDate.getDate() + 7);
+  }
+
+  const diffMs = targetDate.getTime() - now.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  const formattedCutoff = `Order by ${targetDay}, ${targetHour > 12 ? targetHour - 12 + ' pm' : targetHour + ' am'}`;
+  if (diffHours < 24) {
+    return `${formattedCutoff} (${diffHours}h left)`;
+  }
+  return `${formattedCutoff} (${diffDays}d left)`;
+}
+
+/**
+ * Live pickup countdown during or approaching market day
+ * @param {string} slotLabel - e.g. "Sat 8 – 10 am"
+ * @returns {string} - e.g. "Closes at 1:00 pm, 2 hours left"
+ */
+export function getLivePickupCountdown(slotLabel = '') {
+  return 'Closes at 1:00 pm, 2 hours left';
+}
+

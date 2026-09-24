@@ -10,6 +10,7 @@
   align-items: flex-end;
   justify-content: center;
   animation: fadeIn var(--duration-base) var(--ease-standard);
+  transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
 @keyframes fadeIn {
@@ -34,8 +35,8 @@
 }
 
 @keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from { transform: translate3d(0, 100%, 0); }
+  to { transform: translate3d(0, 0, 0); }
 }
 
 /* Size variants */
@@ -44,8 +45,13 @@
 }
 
 .tall {
-  height: 92dvh;
-  max-height: 92dvh;
+  height: var(--sheet-tall-height);
+  max-height: var(--sheet-tall-height);
+}
+
+.twoStop {
+  height: var(--sheet-tall-height);
+  max-height: var(--sheet-tall-height);
 }
 
 .full {
@@ -54,14 +60,22 @@
   border-radius: 0;
 }
 
-/* Grabber handle */
+/* Grabber handle (44px tall hit area) */
 .handleArea {
   display: flex;
+  align-items: center;
   justify-content: center;
+  min-height: var(--tap-min);
   padding: var(--space-2) 0;
   cursor: grab;
   flex-shrink: 0;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.handleArea:active {
+  cursor: grabbing;
 }
 
 .handle {
@@ -79,6 +93,13 @@
   padding: 0 var(--space-3);
   flex-shrink: 0;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.header:active {
+  cursor: grabbing;
 }
 
 .backButton {
@@ -91,6 +112,13 @@
   cursor: pointer;
   border-radius: var(--radius-full);
   flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.backButton:active {
+  transform: scale(0.92);
 }
 
 .backButton:focus-visible {
@@ -114,6 +142,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  user-select: none;
 }
 
 .closeButton {
@@ -126,6 +155,14 @@
   cursor: pointer;
   border-radius: var(--radius-full);
   flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+}
+
+.closeButton:active {
+  transform: scale(0.92);
 }
 
 .closeButton:hover {
@@ -141,7 +178,8 @@
 .body {
   flex: 1;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -169,20 +207,25 @@
     animation: fadeScaleIn 240ms var(--ease-standard);
   }
 
-  /* Tall & full → right-side drawer */
+  /* Tall, full & twoStop → right-side drawer */
   .tall,
-  .full {
-    width: 480px;
-    max-width: 480px;
+  .full,
+  .twoStop {
+    width: var(--sheet-drawer-width);
+    max-width: var(--sheet-drawer-width);
     height: 100dvh;
     max-height: 100dvh;
     border-radius: 0;
     animation: slideInRight 240ms var(--ease-standard);
   }
 
+  .header {
+    cursor: default;
+  }
+
   @keyframes slideInRight {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
+    from { transform: translate3d(100%, 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
   }
 
   @keyframes fadeScaleIn {
@@ -208,7 +251,8 @@
 
   .peek,
   .tall,
-  .full {
+  .full,
+  .twoStop {
     animation: none;
   }
 }

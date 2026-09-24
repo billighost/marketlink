@@ -6,18 +6,21 @@ import styles from './Button.module.css';
  * Button component supporting primary, secondary, text, and danger variants.
  * Supports rendering as native button, React Router Link, or custom component.
  */
-export function Button({
-  children,
-  variant = 'primary',
-  size = 'md',
-  as: Component = 'button',
-  to,
-  href,
-  disabled = false,
-  className = '',
-  type = 'button',
-  ...rest
-}) {
+export const Button = React.forwardRef(function Button(
+  {
+    children,
+    variant = 'primary',
+    size = 'md',
+    as: Component = 'button',
+    to,
+    href,
+    disabled = false,
+    className = '',
+    type = 'button',
+    ...rest
+  },
+  ref
+) {
   const classes = [
     styles.button,
     styles[variant],
@@ -27,7 +30,7 @@ export function Button({
 
   if (Component === Link || Component === 'Link' || (to && Component === 'button')) {
     return (
-      <Link to={to} className={classes} aria-disabled={disabled} {...rest}>
+      <Link to={to} ref={ref} className={classes} aria-disabled={disabled} {...rest}>
         {children}
       </Link>
     );
@@ -35,7 +38,7 @@ export function Button({
 
   if (Component === 'a' || href) {
     return (
-      <a href={href} className={classes} aria-disabled={disabled} {...rest}>
+      <a href={href} ref={ref} className={classes} aria-disabled={disabled} {...rest}>
         {children}
       </a>
     );
@@ -43,6 +46,7 @@ export function Button({
 
   return (
     <button
+      ref={ref}
       type={type}
       className={classes}
       disabled={disabled}
@@ -51,6 +55,6 @@ export function Button({
       {children}
     </button>
   );
-}
+});
 
 export default Button;

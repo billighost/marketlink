@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './Toast.module.css';
 
 /**
- * Bottom toast notification, above the nav.
+ * Bottom toast notification, above the nav and sheets.
  * Auto-dismisses after duration (default 2s).
  */
 export function Toast({ message, action, onAction, duration = 2000, onDismiss }) {
@@ -18,7 +19,7 @@ export function Toast({ message, action, onAction, duration = 2000, onDismiss })
 
   if (!visible) return null;
 
-  return (
+  const content = (
     <div className={styles.toast} role="status" aria-live="polite">
       <span className={styles.message}>{message}</span>
       {action && (
@@ -28,6 +29,8 @@ export function Toast({ message, action, onAction, duration = 2000, onDismiss })
       )}
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : null;
 }
 
 export default Toast;
