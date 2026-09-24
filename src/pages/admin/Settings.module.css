@@ -1,0 +1,266 @@
+/* Admin Settings */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 800px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.title {
+  font-family: 'Idiqlat', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #111;
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.settingsLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Card */
+.card {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 28px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.iconBox {
+  background-color: rgba(92, 112, 72, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconGreen {
+  color: var(--color-herb, #5C7048);
+}
+
+.cardTitle {
+  font-family: 'Idiqlat', serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: #111;
+  margin: 0 0 4px 0;
+}
+
+.cardSub {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Form */
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4b5563;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #111;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  background-color: #fff;
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--color-herb, #5C7048);
+}
+
+/* Toggles */
+.toggleList {
+  display: flex;
+  flex-direction: column;
+}
+
+.toggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 18px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.toggleRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.toggleRow:first-child {
+  padding-top: 0;
+}
+
+.toggleLabel {
+  font-weight: 600;
+  color: #111;
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.toggleDesc {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.toggleTrack {
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+  margin-top: 2px;
+}
+
+.toggleOn {
+  background-color: var(--color-herb, #5C7048);
+}
+
+.toggleOff {
+  background-color: #d1d5db;
+}
+
+.toggleThumb {
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: left 0.2s;
+}
+
+.toggleOn .toggleThumb {
+  left: auto;
+  right: 2px;
+}
+
+.toggleOff .toggleThumb {
+  left: 2px;
+  right: auto;
+}
+
+/* Save */
+.saveBar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btnPrimary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-herb, #5C7048);
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btnPrimary:hover {
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+  .row2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    gap: 16px;
+  }
+  .title {
+    font-size: 1.25rem;
+  }
+  .card {
+    padding: 16px;
+  }
+  .cardHeader {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .toggleRow {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .saveBar {
+    justify-content: stretch;
+  }
+  .btnPrimary {
+    width: 100%;
+    justify-content: center;
+  }
+}
