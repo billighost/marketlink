@@ -72,6 +72,7 @@ export function decodeCursor(cursorStr, expectedSort) {
 
   // Verify HMAC signature in constant time
   const expectedHmac = crypto.createHmac('sha256', getCursorKey()).update(jsonStr).digest().subarray(0, 16);
+  const expectedSigB64 = expectedHmac.toString('base64url');
   let actualHmac;
   try {
     actualHmac = Buffer.from(sigB64, 'base64url');
@@ -79,7 +80,7 @@ export function decodeCursor(cursorStr, expectedSort) {
     throw new AppError(400, 'INVALID_CURSOR', 'Invalid cursor signature encoding.');
   }
 
-  if (actualHmac.length !== expectedHmac.length || !crypto.timingSafeEqual(actualHmac, expectedHmac)) {
+  if (sigB64 !== expectedSigB64 || actualHmac.length !== expectedHmac.length || !crypto.timingSafeEqual(actualHmac, expectedHmac)) {
     throw new AppError(400, 'INVALID_CURSOR', 'Cursor signature mismatch (tampered cursor).');
   }
 

@@ -32,7 +32,8 @@ export async function processCheckout({ user, idempotencyKey, groups, now = new 
   const customerId = toObjectId(user.id);
 
   // 1. Validate shape and limits. Load settings maxItemsPerOrder (default 30, cap 30). 422 on failures.
-  const maxItemsPerOrder = 30;
+  const settingDoc = await db.collection(COLLECTIONS.SETTINGS).findOne({ _id: 'maxItemsPerOrder' });
+  const maxItemsPerOrder = Math.min(Math.max(settingDoc?.value || 30, 1), 30);
   for (const group of groups) {
     if (group.items.length > maxItemsPerOrder) {
       throw AppError.unprocessable([
@@ -190,7 +191,7 @@ export async function processCheckout({ user, idempotencyKey, groups, now = new 
       const slotKey = `${group.farmerId.toString()}|${group.slotStart}`;
 
       // Capacity check: count non-terminal orders with same slotKey
-      const maxOrdersPerSlot = 30;
+      const maxOrdersPerSlot = farmer?.maxOrdersPerSlot ?? 30;
       const slotOrderCount = await db.collection(COLLECTIONS.ORDERS).countDocuments({
         slotKey,
         status: { $in: ['placed', 'accepted', 'ready'] },
@@ -259,6 +260,40 @@ export async function processCheckout({ user, idempotencyKey, groups, now = new 
       throw new AppError(409, firstCode, problems[0].message, problems);
     }
 
+    // 3b. Atomically reserve slot capacity tickets under concurrency races
+    const reservedSlots = [];
+    for (const ctx of validatedGroupContexts) {
+      const maxOrders = ctx.farmer?.maxOrdersPerSlot ?? 30;
+      const counterId = `slot:${ctx.slotKey}`;
+      const currentCount = await db.collection(COLLECTIONS.ORDERS).countDocuments({
+        slotKey: ctx.slotKey,
+        status: { $in: ['placed', 'accepted', 'ready'] },
+      });
+      await db.collection(COLLECTIONS.COUNTERS).updateOne(
+        { _id: counterId },
+        { $setOnInsert: { seq: currentCount } },
+        { upsert: true }
+      );
+      const slotRes = await db.collection(COLLECTIONS.COUNTERS).findOneAndUpdate(
+        { _id: counterId, seq: { $lt: maxOrders } },
+        { $inc: { seq: 1 } },
+        { returnDocument: 'after' }
+      );
+      if (!slotRes) {
+        for (const sId of reservedSlots) {
+          await db.collection(COLLECTIONS.COUNTERS).updateOne({ _id: sId }, { $inc: { seq: -1 } });
+        }
+        await db.collection(COLLECTIONS.CHECKOUTS).updateOne(
+          { _id: checkoutId },
+          { $set: { status: 'failed', error: { details: [{ farmerId: ctx.group.farmerId.toString(), code: 'SLOT_FULL', message: 'The selected pickup slot is fully booked.' }] } } }
+        );
+        throw new AppError(409, 'SLOT_FULL', 'The selected pickup slot is fully booked.', [
+          { farmerId: ctx.group.farmerId.toString(), code: 'SLOT_FULL', message: 'The selected pickup slot is fully booked.' },
+        ]);
+      }
+      reservedSlots.push(counterId);
+    }
+
     // 4. Reserve stock line by line in a deterministic order (sorted by productId to avoid lock-order surprises).
     // Keep a reserved[] list. On the first false: run rollback(reserved) (restoreStock for each), mark the checkout failed,
     // return 409 NOT_ENOUGH_STOCK naming the product and current quantityAvailable (re-read it once for the message).
@@ -279,8 +314,11 @@ export async function processCheckout({ user, idempotencyKey, groups, now = new 
     for (const item of flatItemsToReserve) {
       const success = await reserveStock(item.productId, item.quantity, db);
       if (!success) {
-        // Roll back previously reserved lines
+        // Roll back previously reserved lines and slot capacity tickets
         await rollbackReservations(reserved, db);
+        for (const sId of reservedSlots) {
+          await db.collection(COLLECTIONS.COUNTERS).updateOne({ _id: sId }, { $inc: { seq: -1 } });
+        }
         await db.collection(COLLECTIONS.CHECKOUTS).updateOne({ _id: checkoutId }, { $set: { status: 'failed' } });
 
         const fresh = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: toObjectId(item.productId) });

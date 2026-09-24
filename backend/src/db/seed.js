@@ -578,6 +578,8 @@ export async function runSeed(force = false) {
       },
       art: f.art,
       imageUrl: null,
+      slotOverrides: [],
+      maxOrdersPerSlot: 30,
       listingEnabled: f.status === 'active',
       rnd: prng(),
       categorySlugs: [],
@@ -720,6 +722,7 @@ export async function runSeed(force = false) {
       moderation: {
         removed: false,
       },
+      archived: false,
       createdAt: now,
       updatedAt: now,
     };
@@ -1257,6 +1260,79 @@ export async function runSeed(force = false) {
     f.categorySlugs = categorySlugs;
   }
   console.log('✓ Denormalized aggregates synchronized.');
+
+  // ── 16b. Seed Settings, Contact Messages, Audit Log ────────────────────────
+  const settingsDocs = [
+    { _id: 'maxItemsPerOrder', value: 30, updatedAt: now, updatedBy: null },
+    { _id: 'defaultCutoffMinutes', value: 720, updatedAt: now, updatedBy: null },
+    { _id: 'lowStockDefault', value: 5, updatedAt: now, updatedBy: null },
+  ];
+  await db.collection(COLLECTIONS.SETTINGS).insertMany(settingsDocs);
+
+  const contactMessages = [
+    {
+      _id: new ObjectId(),
+      name: 'Alice Johnson',
+      email: 'alice@example.com',
+      topic: 'order',
+      message: 'Need help with my recent order pickup.',
+      status: 'new',
+      handledBy: null,
+      handledAt: null,
+      createdAt: new Date(now.getTime() - 2 * 3600000),
+      ip: '127.0.0.1',
+    },
+    {
+      _id: new ObjectId(),
+      name: 'Bob Smith',
+      email: 'bob@example.com',
+      topic: 'farmer-help',
+      message: 'Interested in becoming a vendor next season.',
+      status: 'new',
+      handledBy: null,
+      handledAt: null,
+      createdAt: new Date(now.getTime() - 4 * 3600000),
+      ip: '127.0.0.1',
+    },
+    {
+      _id: new ObjectId(),
+      name: 'Charlie Brown',
+      email: 'charlie@example.com',
+      topic: 'feedback',
+      message: 'Loving the fresh produce selection so far!',
+      status: 'new',
+      handledBy: null,
+      handledAt: null,
+      createdAt: new Date(now.getTime() - 6 * 3600000),
+      ip: '127.0.0.1',
+    },
+  ];
+  await db.collection(COLLECTIONS.CONTACT_MESSAGES).insertMany(contactMessages);
+
+  const auditDocs = [
+    {
+      _id: new ObjectId(),
+      actorId: adminUser._id,
+      actorRole: 'admin',
+      action: 'market.create',
+      targetType: 'market',
+      targetId: elmMarket._id,
+      meta: { name: 'Elm Street Market' },
+      at: new Date(now.getTime() - 24 * 3600000),
+    },
+    {
+      _id: new ObjectId(),
+      actorId: adminUser._id,
+      actorRole: 'admin',
+      action: 'farmer.approve',
+      targetType: 'farmer',
+      targetId: farmers[0]._id,
+      meta: { stallName: farmers[0].stallName },
+      at: new Date(now.getTime() - 12 * 3600000),
+    },
+  ];
+  await db.collection(COLLECTIONS.AUDIT_LOG).insertMany(auditDocs);
+  console.log('✓ Seeded settings, contact messages, and audit log.');
 
   // ── 17. Write tests/seedFacts.json ──────────────────────────────────────────
   const listedProducts = await db.collection(COLLECTIONS.PRODUCTS).find({ listed: true }).toArray();

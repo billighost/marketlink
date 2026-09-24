@@ -266,6 +266,44 @@ export function validateInteger(val, fieldName, details, { required = true, min,
 }
 
 /**
+ * Validates a number (including float) field.
+ *
+ * @param {unknown} val
+ * @param {string} fieldName
+ * @param {Array<{ field: string, message: string }>} details
+ * @param {object} [opts]
+ * @param {boolean} [opts.required=true]
+ * @param {number} [opts.min]
+ * @param {number} [opts.max]
+ * @returns {number|undefined}
+ */
+export function validateNumber(val, fieldName, details, { required = true, min, max } = {}) {
+  if (val === undefined || val === null || val === '') {
+    if (required) {
+      details.push({ field: fieldName, message: `${fieldName} is required.` });
+    }
+    return undefined;
+  }
+
+  if (typeof val !== 'number' || Number.isNaN(val)) {
+    details.push({ field: fieldName, message: `${fieldName} must be a number.` });
+    return undefined;
+  }
+
+  if (min !== undefined && val < min) {
+    details.push({ field: fieldName, message: `${fieldName} must be at least ${min}.` });
+    return undefined;
+  }
+
+  if (max !== undefined && val > max) {
+    details.push({ field: fieldName, message: `${fieldName} cannot exceed ${max}.` });
+    return undefined;
+  }
+
+  return val;
+}
+
+/**
  * Validates an ISO date string or Date object.
  *
  * @param {unknown} val
