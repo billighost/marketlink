@@ -35,6 +35,23 @@ import { favoritesRouter } from './modules/favorites/favorites.routes.js';
 import { notificationsRouter } from './modules/notifications/notifications.routes.js';
 import { homeRouter } from './modules/home/home.routes.js';
 import { assistantRouter } from './modules/assistant/assistant.routes.js';
+import { farmerProfileRouter } from './modules/farmer/profile/farmerProfile.routes.js';
+import { farmerSlotsRouter } from './modules/farmer/slots/slots.routes.js';
+import { farmerProductsRouter, weeklyTemplateRouter } from './modules/farmer/products/farmerProducts.routes.js';
+import { farmerOrdersRouter } from './modules/farmer/orders/farmerOrders.routes.js';
+import { farmerReviewsRouter } from './modules/farmer/reviews/farmerReviews.routes.js';
+import { farmerInsightsRouter } from './modules/farmer/insights/insights.routes.js';
+import { uploadsRouter } from './modules/uploads/uploads.routes.js';
+
+import { adminOverviewRouter } from './modules/admin/overview/adminOverview.routes.js';
+import { adminPeopleRouter } from './modules/admin/people/people.routes.js';
+import { adminMarketsRouter } from './modules/admin/markets/adminMarkets.routes.js';
+import { adminModerationRouter } from './modules/admin/moderation/moderation.routes.js';
+import { adminReportsRouter } from './modules/admin/reports/reports.routes.js';
+import { categoriesAdminRouter } from './modules/admin/settings/categoriesAdmin.routes.js';
+import { announcementsAdminRouter } from './modules/admin/settings/announcementsAdmin.routes.js';
+import { settingsAdminRouter } from './modules/admin/settings/settings.routes.js';
+import { messagesAdminRouter } from './modules/admin/settings/messagesAdmin.routes.js';
 
 export function createApp() {
   const app = express();
@@ -107,6 +124,40 @@ export function createApp() {
   app.use('/api/notifications', notificationsRouter);
   app.use('/api/home', homeRouter);
   app.use('/api/assistant', assistantRouter);
+
+  // Farmer routes
+  app.use('/api/farmer/profile', farmerProfileRouter);
+  app.use('/api/farmer/slots', farmerSlotsRouter);
+  app.use('/api/farmer/products', farmerProductsRouter);
+  app.use('/api/farmer/weekly-template', weeklyTemplateRouter);
+  app.use('/api/farmer/orders', farmerOrdersRouter);
+  app.use('/api/farmer/reviews', farmerReviewsRouter);
+  app.use('/api/farmer', farmerInsightsRouter);
+  app.use('/api/farmer/uploads', uploadsRouter);
+  app.use('/farmer/uploads', uploadsRouter);
+
+  // Admin routes
+  app.use('/api/admin/overview', adminOverviewRouter);
+  app.use('/api/admin/markets', adminMarketsRouter);
+  app.use('/api/admin/categories', categoriesAdminRouter);
+  app.use('/api/admin/announcements', announcementsAdminRouter);
+  app.use('/api/admin/settings', settingsAdminRouter);
+  app.use('/api/admin/messages', messagesAdminRouter);
+  app.use('/api/admin/reports', adminReportsRouter);
+  app.use('/api/admin', adminPeopleRouter);
+  app.use('/api/admin', adminModerationRouter);
+
+  // Static uploads directory serving
+  app.use(
+    '/uploads',
+    express.static(env.UPLOAD_DIR, {
+      index: false,
+      dotfiles: 'deny',
+      maxAge: '30d',
+      immutable: true,
+      setHeaders: (res) => res.set('X-Content-Type-Options', 'nosniff'),
+    })
+  );
 
   // 404 handler for unmatched routes
   app.use(notFound);

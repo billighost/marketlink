@@ -10,6 +10,7 @@ import { toObjectId } from '../../utils/ids.js';
 import { AppError } from '../../utils/errors.js';
 import { restoreStock } from './stock.js';
 import { createNotifications } from '../notifications/notify.js';
+import { triggerDebouncedRefreshRankings } from '../../jobs/rankings.js';
 
 export const TRANSITIONS = {
   placed: {
@@ -179,6 +180,12 @@ export async function transitionOrder(orderOrId, to, actor, options = {}) {
         }
       }
     }
+    if (order.slotKey) {
+      await db.collection(COLLECTIONS.COUNTERS).updateOne(
+        { _id: `slot:${order.slotKey}`, seq: { $gt: 0 } },
+        { $inc: { seq: -1 } }
+      );
+    }
   }
 
   // 4b. SalesCount update on complete
@@ -201,6 +208,7 @@ export async function transitionOrder(orderOrId, to, actor, options = {}) {
     );
 
     // Stage 4 hook: refreshRankings
+    triggerDebouncedRefreshRankings();
   }
 
   // 4c. Notifications per specification table

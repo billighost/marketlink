@@ -165,6 +165,17 @@ export function getUpcomingSlots(farmer, markets, { days = 14, now = new Date() 
     const day = Number(g('day'));
     const weekdayStr = (g('weekday') || '').toLowerCase().slice(0, 3);
 
+    // Stage 4: Check if farmer has closed this date in slotOverrides
+    const monthPadded = String(month).padStart(2, '0');
+    const dayPadded = String(day).padStart(2, '0');
+    const dateKey = `${year}-${monthPadded}-${dayPadded}`;
+    const isClosedDate = (farmer.slotOverrides || []).some(
+      (ov) => ov && ov.date === dateKey && ov.closed === true
+    );
+    if (isClosedDate) {
+      continue;
+    }
+
     // 2. If farmer operates on this weekday
     if (!farmer.operatingDays.includes(weekdayStr)) {
       continue;
