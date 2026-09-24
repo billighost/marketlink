@@ -1,0 +1,34 @@
+/**
+ * Application route paths constants
+ */
+export const PATHS = {
+  HOME: '/',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  FORGOT_PASSWORD: '/forgot-password',
+  UNAUTHORIZED: '/unauthorized',
+  // Authenticated role roots
+  BUYER: '/buyer',
+  BUYER_PRODUCTS: '/buyer/products',
+  BUYER_PRODUCT_DETAIL: '/buyer/products/:id',
+  BUYER_FARMERS: '/buyer/farmers',
+  BUYER_FARMER_DETAIL: '/buyer/farmers/:id',
+  BUYER_MARKETS: '/buyer/markets',
+  BUYER_MARKET_DETAIL: '/buyer/markets/:id',
+  BUYER_CART: '/buyer/cart',
+  BUYER_ORDER_CONFIRMED: '/buyer/order-confirmed',
+  BUYER_ORDERS: '/buyer/orders',
+  BUYER_ORDER_DETAIL: '/buyer/orders/:id',
+  BUYER_FAVORITES: '/buyer/favorites',
+  BUYER_ASSISTANT: '/buyer/assistant',
+  BUYER_PROFILE: '/buyer/profile',
+  BUYER_PROFILE_DETAILS: '/buyer/profile/details',
+  BUYER_PROFILE_MARKETS: '/buyer/profile/markets',
+  BUYER_PROFILE_NOTIFICATIONS: '/buyer/profile/notifications',
+  BUYER_PROFILE_HELP: '/buyer/profile/help',
+  VENDOR: '/vendor',
+  ADMIN: '/admin',
+};
+

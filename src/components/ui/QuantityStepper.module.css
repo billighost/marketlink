@@ -1,0 +1,73 @@
+/* QuantityStepper — − 2 + controls */
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background-color: var(--color-white);
+  padding: 0 var(--space-1);
+  flex: none;
+  flex-shrink: 0;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  border-radius: var(--radius-full);
+  color: var(--color-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+  flex-shrink: 0;
+}
+
+.button:hover:not(:disabled) {
+  background-color: var(--color-canvas-soft);
+}
+
+.button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.button:disabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.value {
+  min-width: var(--space-6);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+  line-height: var(--lh-ui);
+  user-select: none;
+}
+
+.compact {
+  padding: 0;
+  border: none;
+  gap: 0;
+}
+
+.compact .button {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+}
+
+.compact .value {
+  min-width: var(--space-5);
+  font-size: var(--text-sm);
+}

@@ -1,0 +1,17 @@
+{
+  "name": "MarketLink",
+  "short_name": "MarketLink",
+  "description": "Pre-order fresh produce and goods from local farmers markets for Saturday pickup.",
+  "start_url": "/buyer",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+/* FarmerCard — Farmer stall card */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+  min-width: 0;
+}
+
+.card:hover {
+  border-color: var(--color-ink-soft);
+}
+
+.stretchedLink {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  text-decoration: none;
+  border-radius: var(--radius-lg);
+}
+
+.stretchedLink:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Variants */
+.row {
+  width: var(--card-w-farmer);
+  min-width: var(--card-w-farmer);
+  flex-shrink: 0;
+}
+
+.list {
+  flex-direction: row;
+  width: 100%;
+  align-items: center;
+}
+
+/* Image Tile */
+.imageTile {
+  position: relative;
+  background-color: var(--color-canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.list .imageTile {
+  width: var(--space-16);
+  height: var(--space-16);
+  aspect-ratio: 1 / 1;
+  border-bottom: none;
+  border-right: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.illustrationWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+}
+
+/* Content */
+.content {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.list .content {
+  flex-direction: row;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* Reserved two lines for the name prevents ragged card heights */
+.stallName {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  line-height: 1.3;
+  min-height: calc(2 * 15px * 1.3);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.specialty {
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.stallNumber {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  font-weight: var(--weight-medium);
+}

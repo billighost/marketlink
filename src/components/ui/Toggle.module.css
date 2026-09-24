@@ -1,0 +1,45 @@
+/* Toggle — accessible switch */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: var(--space-2);
+  cursor: pointer;
+}
+
+.toggle:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-full);
+}
+
+.track {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-wood-line);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+  flex-shrink: 0;
+}
+
+.thumb {
+  position: absolute;
+  top: var(--space-1);
+  left: var(--space-1);
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-white);
+  transition: transform var(--duration-fast) var(--ease-standard);
+  box-shadow: var(--shadow-control);
+}
+
+.on .track {
+  background-color: var(--color-beet);
+}
+
+.on .thumb {
+  transform: translateX(1.25rem);
+}

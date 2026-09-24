@@ -489,3 +489,98 @@ marketlink-frontend/
 3. **Include the PageHeader**: Render `<PageHeader title="..." subtitle="..." backTo="..." />` inside a `<div className="container section">`.
 4. **Style with Tokens**: Write styles in `PageName.module.css` using only `var(--token)` custom properties and global utility classes (`stack`, `grid3`, etc.).
 5. **Register Route**: Add the path constant to `src/routes/paths.js` and register the `<Route>` in `src/routes/AppRoutes.jsx`.
+
+---
+
+## 17. Decoration: Waves and Illustrations
+
+### WaveDivider System
+- **Component**: `WaveDivider.jsx` renders static, inline SVG waves between `#FFFFFF` page surfaces and `#F5EFE3` canvas bands.
+- **Tokens**:
+  - `--wave-height: clamp(2rem, 1.4rem + 2.4vw, 4.5rem);` sets fluid wave height.
+  - `--illus-stroke: 1.5px;` defines line weight for illustration outlines.
+- **Rules**:
+  - Waves are strictly static (zero animation, zero scroll trigger).
+  - Path fill is set in CSS (`fill: var(--color-canvas)`), never in JSX.
+  - `shape="soft"` and `shape="gentle"` provide gentle, rolling-hill curvature.
+  - Sits flush against the canvas band with no visible seams (`margin-bottom: -1px` or flipped `margin-top: -1px`).
+  - At most one canvas band per marketing page (Home, About, Contact). Error and auth pages use no bands.
+
+### Line-and-Tint Illustrations
+- **Component**: `Illustration.jsx` provides handcrafted inline SVGs (`stall`, `crate`, `carrot`, `beet`, `leaves`, `loaf`, `honey`, `tomato`, `basket`).
+- **Style**:
+  - Outlines: `stroke: var(--color-ink-soft); stroke-width: var(--illus-stroke); fill: none;`
+  - Fills: Restricted exclusively to soft tints (`--color-carrot-bg`, `--color-herb-bg`, `--color-beet-tint`, `--color-canvas-soft`, `--color-white`).
+  - Zero stock photos, zero remote images, zero emojis, zero hardcoded hex values in JSX.
+
+### Wavy Underline (Once Per Site)
+- Appears strictly once across the entire application: on the hero headline word **"ready"** on the Home page.
+- Drawn with an inline SVG in `--color-wood` (stroke 1.5px, no fill, static).
+
+### Top Bar Guest Actions
+- To preserve the "One primary action per screen" rule:
+  - "Sign in" renders as a text link.
+  - "Get started" renders as a secondary (outlined) button.
+  - The single filled primary beet button remains in the hero or page content.
+
+---
+
+## 18. Customer (Buyer) App Shell & Sheet Architecture
+
+### Sheet-First Navigation (Section 19 Spec)
+In the signed-in Customer experience, any detail destination (a product, a farmer, a market, the cart, an order, settings screens, or the assistant) opens as a **modal bottom sheet over the current page**, keeping the underlying page mounted and preserving its scroll position.
+
+#### Route Architecture: Page vs Sheet
+| Route Path | Type | Mobile Size | Desktop Appearance | Underlying State |
+|---|---|---|---|---|
+| `/buyer` | Page | Full page | Centered feed | Base route |
+| `/buyer/products` | Page | Full page | Responsive grid | Base route |
+| `/buyer/orders` | Page | Full page | Centered narrow | Base route |
+| `/buyer/favorites` | Page | Full page | Responsive grid | Base route |
+| `/buyer/profile` | Page | Full page | Settings list | Base route |
+| `/buyer/markets` | Page | Full page | List / Map view | Base route |
+| `/buyer/farmers` | Page | Full page | List view | Base route |
+| `/buyer/products/:id` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+| `/buyer/farmers/:id` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+| `/buyer/markets/:id` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+| `/buyer/cart` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+| `/buyer/order-confirmed` | Sheet | `peek` (content) | Centered dialog (~440px) | Preserved |
+| `/buyer/orders/:id` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+| `/buyer/assistant` | Sheet | `full` (100dvh) | Right drawer (~480px) | Preserved |
+| `/buyer/profile/details` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+| `/buyer/profile/markets` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+| `/buyer/profile/notifications`| Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+| `/buyer/profile/help` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+
+#### Background-Location Router Implementation
+`AppRoutes.jsx` uses React Router's dual `<Routes>` pattern:
+1. `<Routes location={background || location}>` renders the underlying layout and page.
+2. When `background` exists in `location.state`, a second `<Routes>` block renders `<SheetRoute>` floating over the backdrop.
+3. **Replace-Not-Stack Rule**: When navigating from one sheet to another (e.g., product detail -> farmer detail), `useOpenSheet` passes `replace: true` and preserves `state.background`. Sheets never stack; pressing browser Back or close always returns directly to the underlying page.
+4. **Full-Page Fallback**: When visited directly without a `background` (bookmarks, direct links), each sheet route has a fallback that renders with `inSheet={false}` providing accessible back navigation.
+
+### Mobile Bottom Navigation
+- **Height**: `--bottom-nav-height: 4rem (64px)`.
+- **Items (5)**: Market (`/buyer`), Browse (`/buyer/products`), Cart (`/buyer/cart` sheet), Orders (`/buyer/orders`), You (`/buyer/profile`).
+- **Active State**: Beet icon + text label with a 2px beet indicator bar.
+- **Cart Badge**: Pill badge with count over the basket icon.
+- **Desktop (>= 768px)**: Hidden via CSS; top navigation in `BuyerTopBar` takes over.
+
+### Horizontal Rows
+- **Component**: `HorizontalRow.jsx` with section title, subtitle, and "See all" action.
+- **Mechanics**: Bleed-to-edge scroll container with snap-start alignment, peek effect on trailing card, and hidden scrollbars.
+- **Desktop**: Subtle chevron buttons appear at 1024px+ for mouse scrolling.
+- **Rule**: Horizontal rows never auto-advance under any circumstance.
+
+### Home Feed & Endless Scroll
+- **Curated Sections**: 8 fixed thematic rows (Featured today, Recently bought, Top-selling Farmers, Order soon, New this week, From Riverbend Farm, In season right now, Baked this morning).
+- **Endless Feed**: Dynamically loads 12+ seasonal templates via `IntersectionObserver`.
+- **Punctuation Dividers**: Warm quotes and proverbs from local farmers placed between sections.
+- **Performance**: `content-visibility: auto; contain-intrinsic-size: 320px;` applied to section wrappers.
+- **State Persistence**: Module-level cache in `useFeed.js` preserves loaded sections and scroll position when sheets open and close.
+
+### Add-to-Cart Micro-Interaction
+- **Animation Sequence**: Button press scales to 0.92, transitions to checkmark, flying beet dot arcs to cart icon in top/bottom nav via `element.animate()`, cart icon bounces, badge pops.
+- **Reduced Motion**: When `prefers-reduced-motion: reduce` is active, the flying dot and bumps are immediately skipped.
+- **Stepper Transformation**: Once added, the button seamlessly morphs into an accessible `QuantityStepper`.
+

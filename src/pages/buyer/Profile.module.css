@@ -1,0 +1,122 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--container-narrow);
+  margin: 0 auto;
+  gap: var(--space-6);
+  padding: var(--space-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-canvas);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarText {
+  font-family: var(--font-body);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+  letter-spacing: 0.05em;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.userName {
+  font-family: var(--font-head);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  letter-spacing: var(--tracking-head);
+  margin: 0;
+  line-height: var(--lh-h2);
+}
+
+.userEmail {
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.groupHeading {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-soft);
+  margin: 0;
+  padding: 0 var(--space-2);
+}
+
+.panel {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Sign out modal */
+.signOutModal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-4);
+  gap: var(--space-4);
+}
+
+.signOutText {
+  font-size: var(--text-body);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.signOutActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.cancelButton {
+  background: none;
+  border: none;
+  color: var(--color-ink-soft);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  padding: var(--space-2);
+}
+
+.cancelButton:hover {
+  color: var(--color-ink);
+}

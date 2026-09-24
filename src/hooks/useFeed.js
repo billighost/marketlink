@@ -1,0 +1,280 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  products,
+  farmers,
+  recentlyBoughtProductIds,
+  getProduct,
+  getFarmer,
+} from '@/data/placeholders';
+
+// Module-level cache so navigating into sheets and back does not reload or reset feed
+let cachedSections = null;
+
+// Quotes and proverbs for punctuation dividers
+export const FEED_PUNCTUATIONS = [
+  { text: 'Picked at sunrise, on your table by dinner.', author: 'Riverbend Farm' },
+  { text: 'Good bread takes 36 hours. There are no shortcuts.', author: 'Oak & Mill Bakery' },
+  { text: 'Every jar tells the story of summer wildflowers.', author: 'Hollow Creek Apiary' },
+  { text: 'Happy pasture hens lay the brightest yolks.', author: 'Willow Bend Poultry' },
+  { text: 'Brought to market with love by your local farmers.', author: null },
+];
+
+/**
+ * Seeded pseudo-random shuffle to ensure stable yet non-repeating layouts
+ */
+function seededShuffle(array, seed = 1) {
+  const result = [...array];
+  let s = seed;
+  for (let i = result.length - 1; i > 0; i--) {
+    s = (s * 9301 + 49297) % 233280;
+    const j = Math.floor((s / 233280) * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/**
+ * Build the 5 initial curated sections per minimal UI specification
+ */
+function buildCuratedSections(seed = 42) {
+  const featuredProducts = products.filter((p) => p.tags?.includes('bestseller')).slice(0, 5);
+  const recentlyBought = recentlyBoughtProductIds
+    .map((id) => getProduct(id))
+    .filter(Boolean);
+  const topFarmers = farmers.filter((f) => f.isTopSeller);
+  const orderSoon = products.filter((p) => p.stock === 'low');
+  const newArrivals = products.filter((p) => p.tags?.includes('new'));
+
+  return [
+    {
+      id: 'sec-featured',
+      title: 'Featured today',
+      subtitle: "Hand-picked highlights from this week's market stalls",
+      type: 'products',
+      cardVariant: 'feature',
+      items: featuredProducts,
+      seeAllPath: '/buyer/products?filter=featured',
+    },
+    {
+      id: 'sec-recent',
+      title: 'Recently bought',
+      type: 'products',
+      cardVariant: 'compact',
+      items: recentlyBought,
+      seeAllPath: '/buyer/orders',
+    },
+    {
+      id: 'sec-farmers',
+      title: 'Top-selling Farmers',
+      type: 'farmers',
+      cardVariant: 'row',
+      items: topFarmers,
+      seeAllPath: '/buyer/farmers',
+    },
+    {
+      id: 'sec-lowstock',
+      title: 'Order soon',
+      type: 'products',
+      cardVariant: 'compact',
+      items: orderSoon,
+      seeAllPath: '/buyer/products?stock=low',
+    },
+    {
+      id: 'sec-new',
+      title: 'New this week',
+      type: 'products',
+      cardVariant: 'compact',
+      items: newArrivals,
+      seeAllPath: '/buyer/products?filter=new',
+    },
+  ];
+}
+
+// 12+ Endless feed templates with alternating card styles and exact seeAll paths
+const ENDLESS_TEMPLATES = [
+  {
+    title: 'Pasture-raised dairy & eggs',
+    subtitle: 'Golden butter, whole milk and farm eggs',
+    type: 'products',
+    category: 'Dairy and eggs',
+    cardVariant: 'feature',
+    seeAllPath: '/buyer/products?category=Dairy%20and%20eggs',
+  },
+  {
+    title: 'From Hollow Creek Apiary',
+    subtitle: 'Pure comb, raw honey and infusions',
+    type: 'products',
+    farmerId: 'f-hollowcreek',
+    cardVariant: 'compact',
+    seeAllPath: '/buyer/products?farmer=f-hollowcreek',
+  },
+  {
+    title: 'Fresh catch & cured meats',
+    subtitle: 'Day-boat fish and maple breakfast sausage',
+    type: 'products',
+    category: 'Meat and fish',
+    cardVariant: 'compact',
+    seeAllPath: '/buyer/products?category=Meat%20and%20fish',
+  },
+  {
+    title: 'Meet more local producers',
+    subtitle: 'Passionate family farmers and artisans near you',
+    type: 'farmers',
+    cardVariant: 'row',
+    getFarmers: () => farmers.slice(4, 9),
+    seeAllPath: '/buyer/farmers',
+  },
+  {
+    title: 'Berries & orchard fruit',
+    subtitle: 'Earliglow strawberries and crisp heritage apples',
+    type: 'products',
+    category: 'Fruit',
+    cardVariant: 'feature',
+    seeAllPath: '/buyer/products?category=Fruit',
+  },
+  {
+    title: 'Garden blossoms & living herbs',
+    subtitle: 'Seasonal bouquets and windowsill pots',
+    type: 'products',
+    category: 'Herbs and flowers',
+    cardVariant: 'compact',
+    seeAllPath: '/buyer/products?category=Herbs%20and%20flowers',
+  },
+  {
+    title: 'From Clearwater Orchards',
+    subtitle: 'Honeycrisp apples, Bartlett pears and cider',
+    type: 'products',
+    farmerId: 'f-clearwater',
+    cardVariant: 'compact',
+    seeAllPath: '/buyer/products?farmer=f-clearwater',
+  },
+  {
+    title: 'Sunridge Berry Farm',
+    subtitle: 'Slope-grown strawberries and blueberries',
+    type: 'products',
+    farmerId: 'f-sunridge',
+    cardVariant: 'compact',
+    seeAllPath: '/buyer/products?farmer=f-sunridge',
+  },
+  {
+    title: 'Forest & field mushrooms',
+    subtitle: 'Blue oysters and shaggy lion\'s mane',
+    type: 'products',
+    farmerId: 'f-greenhollow',
+    cardVariant: 'feature',
+    seeAllPath: '/buyer/products?farmer=f-greenhollow',
+  },
+  {
+    title: 'Pantry jams & preserves',
+    subtitle: 'Small-batch strawberry jam and fig butter',
+    type: 'products',
+    farmerId: 'f-thornberry',
+    cardVariant: 'compact',
+    seeAllPath: '/buyer/products?farmer=f-thornberry',
+  },
+  {
+    title: 'Artisan cheeses',
+    subtitle: 'Jersey cow cheddar and morning ricotta',
+    type: 'products',
+    farmerId: 'f-maplecrest',
+    cardVariant: 'compact',
+    seeAllPath: '/buyer/products?farmer=f-maplecrest',
+  },
+  {
+    title: 'Heirloom squash & root vegetables',
+    subtitle: 'Yukon golds, butternut squash and beets',
+    type: 'products',
+    category: 'Vegetables',
+    cardVariant: 'feature',
+    seeAllPath: '/buyer/products?category=Vegetables',
+  },
+  {
+    title: 'Weekend breakfast favourites',
+    subtitle: 'Croissants, farm eggs and maple links',
+    type: 'products',
+    productIds: ['p-08', 'p-12', 'p-31', 'p-10'],
+    cardVariant: 'compact',
+    seeAllPath: '/buyer/products',
+  },
+];
+
+/**
+ * Custom hook to manage the curated and endless Home feed.
+ */
+export function useFeed() {
+  const [sections, setSections] = useState(() => {
+    if (cachedSections) return cachedSections;
+    const initial = buildCuratedSections();
+    cachedSections = initial;
+    return initial;
+  });
+
+  const [loading, setLoading] = useState(false);
+  const templateIndexRef = useRef(0);
+  const hasMore = templateIndexRef.current < ENDLESS_TEMPLATES.length * 3; // allow multiple cycles
+
+  // Re-seed on user pull-to-refresh / tab double tap event
+  useEffect(() => {
+    const handleRefresh = () => {
+      const refreshed = buildCuratedSections(Date.now());
+      cachedSections = refreshed;
+      templateIndexRef.current = 0;
+      setSections(refreshed);
+    };
+    window.addEventListener('marketlink:refresh-feed', handleRefresh);
+    return () => window.removeEventListener('marketlink:refresh-feed', handleRefresh);
+  }, []);
+
+  const loadMore = useCallback(() => {
+    if (loading) return;
+
+    setLoading(true);
+
+    setTimeout(() => {
+      const template = ENDLESS_TEMPLATES[templateIndexRef.current % ENDLESS_TEMPLATES.length];
+      const cycle = Math.floor(templateIndexRef.current / ENDLESS_TEMPLATES.length);
+      templateIndexRef.current += 1;
+
+      let sectionItems = [];
+      if (template.getFarmers) {
+        sectionItems = template.getFarmers();
+      } else if (template.category) {
+        const raw = products.filter((p) => p.category === template.category);
+        sectionItems = seededShuffle(raw, 100 + cycle * 17);
+      } else if (template.farmerId) {
+        sectionItems = products.filter((p) => p.farmerId === template.farmerId);
+      } else if (template.productIds) {
+        sectionItems = template.productIds.map((id) => getProduct(id)).filter(Boolean);
+      } else {
+        sectionItems = products.slice(0, 6);
+      }
+
+      if (sectionItems.length > 0) {
+        const newSection = {
+          id: `endless-${Date.now()}-${templateIndexRef.current}`,
+          title: template.title,
+          subtitle: template.subtitle,
+          type: template.type,
+          cardVariant: template.cardVariant || 'compact',
+          items: sectionItems,
+          seeAllPath: template.seeAllPath || '/buyer/products',
+          punctuation: templateIndexRef.current % 3 === 0
+            ? FEED_PUNCTUATIONS[templateIndexRef.current % FEED_PUNCTUATIONS.length]
+            : null,
+        };
+
+        setSections((prev) => {
+          const updated = [...prev, newSection];
+          cachedSections = updated;
+          return updated;
+        });
+      }
+
+      setLoading(false);
+    }, 350);
+  }, [loading]);
+
+  return { sections, loadMore, loading, hasMore };
+}
+
+export default useFeed;

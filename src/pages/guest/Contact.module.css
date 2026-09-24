@@ -1,0 +1,391 @@
+/* ==========================================================================
+   Contact.module.css
+   Authentic market-crafted styling for Contact page:
+   - Hand-set stall sign contact details block
+   - Validated message form with clean typography
+   - Illustrated Elm Street Market map
+   - Native <details> FAQ accordion band
+   ========================================================================== */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+}
+
+.contactGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+
+@media (min-width: 1024px) {
+  .contactGrid {
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--space-8);
+    margin-bottom: var(--space-16);
+  }
+}
+
+/* ---------------- HAND-SET STALL SIGN DETAILS BLOCK ---------------- */
+.stallSignOuter {
+  flex: 1;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+}
+
+.stallSignInner {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  height: 100%;
+}
+
+.signHeader {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-4);
+}
+
+.signTitle {
+  font-family: var(--font-head);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  line-height: var(--lh-h2);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.signSub {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-body);
+  margin: 0;
+}
+
+.signSchedule {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.signSectionLabel {
+  font-family: var(--font-head);
+  font-size: var(--text-h4);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.scheduleTable {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.scheduleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  border-bottom: 1px dotted var(--color-wood-line);
+  padding-bottom: var(--space-1);
+}
+
+.scheduleDay {
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.scheduleHours {
+  color: var(--color-ink-soft);
+}
+
+.signDetailsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.signDetailItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.signDetailLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-wood);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.signDetailValue {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  line-height: var(--lh-body);
+}
+
+/* ---------------- FORM CARD ---------------- */
+.formCard {
+  flex: 1.2;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .formCard {
+    padding: var(--space-8) var(--space-8);
+  }
+}
+
+.cardHeading {
+  font-family: var(--font-head);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  line-height: var(--lh-h3);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.cardSub {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-body);
+  margin: 0 0 var(--space-5) 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.helperText {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  margin: 0;
+}
+
+.submitRow {
+  margin-top: var(--space-2);
+}
+
+/* Success state */
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  padding-block: var(--space-8);
+}
+
+.successIllustration {
+  margin-bottom: var(--space-2);
+}
+
+.successTitle {
+  font-family: var(--font-head);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.successText {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-body);
+  max-width: var(--measure-narrow);
+  margin: 0;
+}
+
+.sendAnotherButton {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: var(--underline-offset);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* ---------------- MAP SECTION ---------------- */
+.mapSection {
+  margin-bottom: var(--space-16);
+}
+
+.sectionHeading {
+  font-family: var(--font-head);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  line-height: var(--lh-h2);
+  margin: 0 0 var(--space-6) 0;
+}
+
+.mapWrapper {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background-color: var(--color-canvas);
+  position: relative;
+}
+
+.mapImage {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+
+.mapMetaBar {
+  background-color: var(--color-white);
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .mapMetaBar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.mapAddress {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.mapTip {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  margin: 0;
+}
+
+/* ---------------- FAQ ACCORDION IN CANVAS BAND ---------------- */
+.faqSection {
+  background-color: var(--color-canvas);
+  padding-block: var(--space-12);
+}
+
+@media (min-width: 1024px) {
+  .faqSection {
+    padding-block: var(--space-16);
+  }
+}
+
+.faqHeader {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.faqHeader .sectionHeading {
+  margin-bottom: var(--space-2);
+}
+
+.sectionSubtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-lead);
+  color: var(--color-ink-soft);
+  margin: 0;
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.faqDetails {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.faqDetails[open] {
+  border-color: var(--color-wood);
+}
+
+.faqSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.faqSummary::-webkit-details-marker {
+  display: none;
+}
+
+.faqQuestion {
+  font-family: var(--font-head);
+  font-size: var(--text-h4);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+}
+
+.faqChevron {
+  color: var(--color-ink-soft);
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.faqDetails[open] .faqChevron {
+  transform: rotate(180deg);
+}
+
+.faqAnswer {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-body);
+}
+
+.faqAnswer p {
+  margin: 0;
+}

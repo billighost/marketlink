@@ -106,6 +106,28 @@ button {
   cursor: pointer;
   padding: 0;
   text-align: left;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* UI Chrome selection prevention */
+nav,
+[role="tablist"],
+[data-drag-zone] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Scroll lock when modal/sheet is open */
+html.noScroll,
+body.noScroll {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* Visible keyboard focus ring */

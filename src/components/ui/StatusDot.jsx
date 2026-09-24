@@ -1,0 +1,27 @@
+import React from 'react';
+import styles from './StatusDot.module.css';
+
+/**
+ * Visual status dot + text label for order statuses.
+ * Tone is inferred from the label unless overridden.
+ */
+const TONE_MAP = {
+  'Placed': 'neutral',
+  'Accepted': 'neutral',
+  'Ready for pickup': 'success',
+  'Completed': 'success',
+  'Cancelled': 'danger',
+};
+
+export function StatusDot({ label, tone, className = '' }) {
+  const resolvedTone = tone || TONE_MAP[label] || 'neutral';
+
+  return (
+    <span className={`${styles.status} ${className}`}>
+      <span className={`${styles.dot} ${styles[resolvedTone]}`} aria-hidden="true" />
+      <span className={styles.label}>{label}</span>
+    </span>
+  );
+}
+
+export default StatusDot;

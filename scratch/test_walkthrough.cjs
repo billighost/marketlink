@@ -1,0 +1,121 @@
+const { chromium } = require('playwright');
+
+(async () => {
+  const browser = await chromium.launch();
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+
+  const page = await context.newPage();
+  const errors = [];
+  const warnings = [];
+
+  page.on('console', msg => {
+    if (msg.type() === 'error') errors.push(msg.text());
+    if (msg.type() === 'warning') warnings.push(msg.text());
+  });
+  page.on('pageerror', err => errors.push(err.message));
+
+  console.log('Testing Journey 1: Sign in with george@example.com / market123...');
+  await page.goto('http://localhost:3000/login');
+  await page.fill('#login-email', 'george@example.com');
+  await page.fill('#login-password', 'market123');
+  await page.click('button[type="submit"]');
+  await page.waitForTimeout(500);
+
+  console.log('Current URL after login:', page.url());
+
+  console.log('Testing Journey 2: Home feed scrolling...');
+  let sectionsCount = await page.locator('section, article, [class*="sectionWrap"]').count();
+  console.log('Initial sections/items count:', sectionsCount);
+
+  // Scroll down multiple times to trigger feed loading
+  for (let i = 0; i < 10; i++) {
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(400);
+  }
+  sectionsCount = await page.locator('section, article, [class*="sectionWrap"]').count();
+  console.log('Sections/items count after 10 scrolls:', sectionsCount);
+
+  // Check tap on a product card
+  console.log('Testing Product Sheet opening...');
+  const firstProductCard = page.locator('a[class*="stretchedLink"]').first();
+  await firstProductCard.click();
+  await page.waitForTimeout(500);
+  console.log('URL after clicking product:', page.url());
+
+  // Check if sheet is open
+  const sheet = page.locator('[data-sheet-overlay]');
+  console.log('Sheet visible:', await sheet.isVisible());
+
+  // Close sheet
+  const closeBtn = page.locator('button[class*="closeButton"]').first();
+  await closeBtn.click();
+  await page.waitForTimeout(500);
+  console.log('Sheet closed. URL:', page.url());
+
+  // Check cart operations
+  console.log('Testing Add-to-cart...');
+  const addBtn = page.locator('button[class*="iconButton"]').first();
+  await addBtn.click();
+  await page.waitForTimeout(500);
+
+  // Check cart badge
+  const cartBadge = page.locator('[data-cart-badge]').first();
+  if (await cartBadge.isVisible()) {
+    console.log('Cart badge count:', await cartBadge.textContent());
+  } else {
+    console.log('Cart badge not visible!');
+  }
+
+  // Check Cart sheet from bottom nav
+  console.log('Opening Cart sheet...');
+  await page.click('[data-cart-target]');
+  await page.waitForTimeout(500);
+  console.log('Cart sheet URL:', page.url());
+
+  // Check Browse tab
+  console.log('Navigating to Browse tab...');
+  await page.goto('http://localhost:3000/buyer/products');
+  await page.waitForTimeout(500);
+
+  // Check filter sheet
+  console.log('Opening Filter sheet...');
+  await page.click('button[class*="filterButton"]');
+  await page.waitForTimeout(400);
+  console.log('Filter sheet open:', await page.locator('[data-sheet-overlay]').isVisible());
+
+  // Close filter sheet
+  const filterReset = page.locator('button[class*="sheetReset"]');
+  await filterReset.click();
+  const filterApply = page.locator('button[class*="sheetApply"]');
+  await filterApply.click();
+  await page.waitForTimeout(400);
+
+  // Check Orders tab
+  console.log('Testing Orders tab...');
+  await page.goto('http://localhost:3000/buyer/orders');
+  await page.waitForTimeout(500);
+
+  // Check Favorites tab
+  console.log('Testing Favorites tab...');
+  await page.goto('http://localhost:3000/buyer/favorites');
+  await page.waitForTimeout(500);
+
+  // Check Assistant sheet
+  console.log('Testing Assistant...');
+  await page.goto('http://localhost:3000/buyer/assistant');
+  await page.waitForTimeout(500);
+
+  // Check Profile
+  console.log('Testing Profile...');
+  await page.goto('http://localhost:3000/buyer/profile');
+  await page.waitForTimeout(500);
+
+  console.log('Console Errors:', errors);
+  console.log('Console Warnings:', warnings);
+
+  await browser.close();
+})();

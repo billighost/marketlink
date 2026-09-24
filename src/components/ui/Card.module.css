@@ -1,0 +1,14 @@
+.card {
+  background-color: var(--color-white);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.paddingDefault {
+  padding: var(--card-padding);
+}
+
+.paddingNone {
+  padding: 0;
+}

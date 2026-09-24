@@ -5,6 +5,7 @@
 :root {
   /* ---------- Colour: brand palette (from the style guide) ---------- */
   --color-white:        #FFFFFF;  /* Base surface. Used almost everywhere */
+  --color-white-translucent: rgba(255, 255, 255, 0.90); /* Overlay buttons & floating actions */
   --color-canvas:       #F5EFE3;  /* "Market canvas": footer, image placeholders, empty states */
   --color-canvas-soft:  #FAF7F0;  /* Very light tint: table row hover, selected row */
   --color-ink:          #2E2B26;  /* "Chalkboard ink": all primary text */
@@ -116,9 +117,10 @@
   --border-input: 1px solid var(--color-border-input);
 
   /* ---------- Shadows (floating layers ONLY; cards use borders) ---------- */
-  --shadow-none:  none;
-  --shadow-menu:  0 8px 24px rgba(46, 43, 38, 0.10);
-  --shadow-modal: 0 16px 48px rgba(46, 43, 38, 0.16);
+  --shadow-none:    none;
+  --shadow-control: 0 1px 3px rgba(46, 43, 38, 0.08); /* segmented controls and toggles */
+  --shadow-menu:    0 8px 24px rgba(46, 43, 38, 0.10);
+  --shadow-modal:   0 16px 48px rgba(46, 43, 38, 0.16);
 
   /* ---------- Focus ---------- */
   --focus-ring:   2px solid var(--color-focus);
@@ -126,6 +128,7 @@
 
   /* ---------- Layout ---------- */
   --container-max:    1120px;   /* main content width */
+  --container-tablet: 40rem;    /* 640px tablet content column */
   --container-narrow: 720px;    /* forms, reading pages */
   --container-form:   440px;    /* login / register card */
   --page-pad:         var(--space-4);   /* raised at 768px and 1024px in utils.css */
@@ -147,4 +150,27 @@
   --z-overlay: 300;   /* modal backdrop */
   --z-modal:   400;
   --z-toast:   500;
+
+  /* ---------- Decoration ---------- */
+  --wave-height:   clamp(2rem, 1.4rem + 2.4vw, 4.5rem);  /* height of a wave divider */
+  --illus-stroke:  1.5px;                                 /* line weight in illustrations */
+
+  /* ---------- Typography: link decoration (appended for strict token compliance) ---------- */
+  --underline-offset:       3px;
+  --underline-offset-tight: 2px;
+
+  /* ---------- App shell & bottom stack (Customer mobile-first) ---------- */
+  --bottom-nav-height:  4rem;                            /* mobile/tablet bottom navigation */
+  --cart-bar-height:    3.5rem;                          /* floating "View cart" bar */
+  --stack-gap:          var(--space-3);                  /* vertical gap between stacked fixed elements */
+  --sheet-max-height:   85dvh;                           /* bottom sheet maximum height */
+  --sheet-tall-height:  92dvh;                           /* tall resting height */
+  --sheet-mid-height:   60dvh;                           /* two-stop mid resting height */
+  --sheet-drawer-width: 28rem;                           /* desktop sheet drawer width (28rem - 30rem) */
+  --drawer-width:       28rem;                           /* token alias for drawer width */
+  --card-w-product:     clamp(9.5rem, 6rem + 12vw, 13rem); /* responsive horizontal row product card */
+  --card-w-feature:     clamp(14rem, 10rem + 12vw, 18rem); /* featured editorial card */
+  --card-w-farmer:      clamp(10rem, 7rem + 10vw, 13rem);  /* farmer card in rows */
+  --card-min:           10rem;                           /* minimum intrinsic card track */
+  --duration-add:       450ms;                           /* add-to-cart fly animation */
 }

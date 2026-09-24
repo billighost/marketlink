@@ -1,0 +1,26 @@
+import React from 'react';
+import { formatDate } from '@/utils/format';
+import Stars from '@/components/ui/Stars';
+import styles from './ReviewItem.module.css';
+
+/**
+ * Review item showing rating, author, date, and text.
+ */
+export function ReviewItem({ review, className = '' }) {
+  if (!review) return null;
+
+  return (
+    <article className={`${styles.review} ${className}`} aria-label={`Review by ${review.author}`}>
+      <div className={styles.header}>
+        <div className={styles.authorRow}>
+          <span className={styles.author}>{review.author}</span>
+          <span className={styles.date}>{formatDate(review.date)}</span>
+        </div>
+        <Stars rating={review.rating} />
+      </div>
+      <p className={styles.text}>{review.text}</p>
+    </article>
+  );
+}
+
+export default ReviewItem;
