@@ -6,7 +6,7 @@ import styles from './CartBar.module.css';
 
 /**
  * Floating cart pill that appears when the cart has items.
- * Opens the cart sheet on tap. Hidden when any sheet is open.
+ * Hidden on the Cart page, when any sheet is open, and when the cart is empty.
  */
 export function CartBar() {
   const { count, subtotal } = useCart();
@@ -16,8 +16,11 @@ export function CartBar() {
   // Don't show when cart is empty
   if (count === 0) return null;
 
-  // Don't show when a sheet is already open (background location exists)
+  // Don't show when a sheet is already open
   if (location.state?.background) return null;
+
+  // Don't show on the Cart route itself
+  if (location.pathname === '/buyer/cart') return null;
 
   const handleClick = () => {
     navigate('/buyer/cart', { state: { background: location } });
@@ -29,6 +32,7 @@ export function CartBar() {
       className={styles.bar}
       onClick={handleClick}
       aria-label={`View cart, ${count} items, ${formatPrice(subtotal)}`}
+      data-cart-bar
     >
       <span className={styles.text}>
         View cart · {count} {count === 1 ? 'item' : 'items'} · {formatPrice(subtotal)}

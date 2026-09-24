@@ -1,29 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, Sparkles, Clock, ArrowRight, ShoppingBag } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Search, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useOpenSheet } from '@/hooks/useOpenSheet';
 import { useFeed } from '@/hooks/useFeed';
 import { getGreeting } from '@/utils/greeting';
-import { orders, categories, homeMarket, getMarket } from '@/data/placeholders';
+import { orders, homeMarket, getMarket } from '@/data/placeholders';
 import HorizontalRow from '@/components/layout/HorizontalRow';
 import ProductCard from '@/components/domain/ProductCard';
 import FarmerCard from '@/components/domain/FarmerCard';
-import Chip from '@/components/ui/Chip';
-import StatusDot from '@/components/ui/StatusDot';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import styles from './Home.module.css';
 
 /**
  * Customer Home page ("Market" tab).
- * Mobile-first curated and endless shopping experience.
+ * Minimal UI specifications:
+ *  - Density budget: greeting h1, one muted line, one search field, then first row
+ *  - No top category chip row, no top assistant pill
+ *  - Quiet text link after 3rd section to Ask MarketLink
+ *  - Tablet centered column with bleeding rows
  */
 export function Home() {
   const { user } = useAuth();
   const { openSheet } = useOpenSheet();
   const { sections, loadMore, loading, hasMore } = useFeed();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [searchQuery, setSearchQuery] = useState('');
   const sentinelRef = useRef(null);
@@ -62,18 +63,6 @@ export function Home() {
     }
   };
 
-  const handleCategoryClick = (categoryName) => {
-    if (categoryName === 'All') {
-      navigate('/buyer/products');
-    } else {
-      navigate(`/buyer/products?category=${encodeURIComponent(categoryName)}`);
-    }
-  };
-
-  const handleOpenAssistant = () => {
-    openSheet('/buyer/assistant');
-  };
-
   const handleOpenActiveOrder = () => {
     if (activeOrder) {
       openSheet(`/buyer/orders/${activeOrder.id}`);
@@ -86,38 +75,23 @@ export function Home() {
       <header className={styles.header}>
         <div className={styles.greetingGroup}>
           <h1 className={styles.greeting}>{getGreeting(displayName)}</h1>
-          <div className={styles.marketStatus}>
-            <StatusDot label="Open Saturday" tone="success" />
-            <span className={styles.marketSchedule}>
-              {currentMarket.name} · 8 am – 1 pm
-            </span>
-          </div>
+          <p className={styles.marketSchedule}>
+            {currentMarket.name} · Saturday 8 am – 1 pm
+          </p>
         </div>
 
-        {/* Search & Assistant Pill */}
-        <div className={styles.searchRow}>
-          <form className={styles.searchForm} onSubmit={handleSearchSubmit} role="search">
-            <Search size={18} className={styles.searchIcon} aria-hidden="true" />
-            <input
-              type="search"
-              className={styles.searchInput}
-              placeholder="Search farm fresh produce, bakery..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search produce, bakery, and farm goods"
-            />
-          </form>
-
-          <button
-            type="button"
-            className={styles.assistantPill}
-            onClick={handleOpenAssistant}
-            aria-label="Ask MarketLink shopping assistant"
-          >
-            <Sparkles size={16} className={styles.sparkleIcon} aria-hidden="true" />
-            <span>Ask</span>
-          </button>
-        </div>
+        {/* Clean, full-width search field */}
+        <form className={styles.searchForm} onSubmit={handleSearchSubmit} role="search">
+          <Search size={18} className={styles.searchIcon} aria-hidden="true" />
+          <input
+            type="search"
+            className={styles.searchInput}
+            placeholder="Search farm fresh produce, bakery..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search produce, bakery, and farm goods"
+          />
+        </form>
       </header>
 
       {/* ── Active Pickup Banner (if active order exists) ─────────────── */}
@@ -151,68 +125,55 @@ export function Home() {
         </section>
       )}
 
-      {/* ── Category Chips Row ────────────────────────────────────────── */}
-      <nav className={styles.categoryNav} aria-label="Product categories">
-        <div className={styles.categoryScroll}>
-          <Chip onClick={() => handleCategoryClick('All')} selected={false}>
-            All
-          </Chip>
-          {categories.map((cat) => (
-            <Chip
-              key={cat}
-              onClick={() => handleCategoryClick(cat)}
-              selected={false}
-            >
-              {cat}
-            </Chip>
-          ))}
-        </div>
-      </nav>
-
       {/* ── Curated & Endless Feed ────────────────────────────────────── */}
       <div className={styles.feed}>
-        {sections.map((section) => (
-          <div key={section.id} className={styles.sectionWrap}>
-            <HorizontalRow
-              title={section.title}
-              subtitle={section.subtitle}
-              seeAllLabel="See all"
-              onSeeAll={() => navigate(section.seeAllPath)}
-            >
-              {section.items.map((item) => {
-                if (section.type === 'farmers') {
+        {sections.map((section, idx) => (
+          <React.Fragment key={section.id}>
+            <div className={styles.sectionWrap}>
+              <HorizontalRow
+                title={section.title}
+                subtitle={section.subtitle}
+                seeAllLabel="See all"
+                onSeeAll={() => navigate(section.seeAllPath)}
+              >
+                {section.items.map((item) => {
+                  if (section.type === 'farmers') {
+                    return (
+                      <FarmerCard
+                        key={item.id}
+                        farmer={item}
+                        variant={section.cardVariant || 'row'}
+                      />
+                    );
+                  }
                   return (
-                    <FarmerCard
+                    <ProductCard
                       key={item.id}
-                      farmer={item}
-                      variant={section.cardVariant || 'row'}
+                      product={item}
+                      variant={section.cardVariant || 'compact'}
                     />
                   );
-                }
-                return (
-                  <ProductCard
-                    key={item.id}
-                    product={item}
-                    variant={section.cardVariant || 'compact'}
-                  />
-                );
-              })}
-            </HorizontalRow>
+                })}
+              </HorizontalRow>
+            </div>
 
-            {/* Punctuation Divider */}
-            {section.punctuation && (
-              <div className={styles.punctuation} aria-hidden="true">
-                <blockquote className={styles.punctuationQuote}>
-                  “{section.punctuation.text}”
-                </blockquote>
-                {section.punctuation.author && (
-                  <cite className={styles.punctuationAuthor}>
-                    — {section.punctuation.author}
-                  </cite>
-                )}
+            {/* Quiet assistant line after the 3rd section */}
+            {idx === 2 && (
+              <div className={styles.assistantCallout}>
+                <p className={styles.assistantText}>
+                  Not sure what to cook?{' '}
+                  <button
+                    type="button"
+                    onClick={() => openSheet('/buyer/assistant')}
+                    className={styles.assistantLink}
+                  >
+                    Ask MarketLink
+                  </button>
+                  .
+                </p>
               </div>
             )}
-          </div>
+          </React.Fragment>
         ))}
 
         {/* Loading Skeletons */}

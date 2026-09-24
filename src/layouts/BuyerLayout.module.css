@@ -1,4 +1,10 @@
+/* BuyerLayout — Customer application frame */
+
 .appShell {
+  --stack-nav: var(--bottom-nav-height);
+  --stack-cart: 0px;
+  --stack-bottom: calc(var(--stack-nav) + var(--stack-cart) + env(safe-area-inset-bottom, 0px));
+
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -10,6 +16,16 @@
   position: relative;
 }
 
+.appShell[data-cart-visible="true"] {
+  --stack-cart: calc(var(--cart-bar-height) + var(--stack-gap));
+}
+
+@media (min-width: 1024px) {
+  .appShell {
+    --stack-nav: 0px;
+  }
+}
+
 /* Skip link */
 .skipLink {
   position: absolute;
@@ -19,7 +35,7 @@
   color: var(--color-on-primary);
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
-  z-index: 1000;
+  z-index: var(--z-toast);
   font-weight: var(--weight-medium);
   text-decoration: none;
   transition: top var(--duration-fast) var(--ease-standard);
@@ -31,19 +47,11 @@
   outline-offset: var(--focus-offset);
 }
 
-/* Main content wrapper */
+/* Main content wrapper with dynamic bottom stack offset */
 .main {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   width: 100%;
-  /* Leave space for mobile bottom nav + safe area */
-  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-6));
-}
-
-@media (min-width: 768px) {
-  .main {
-    /* No bottom nav on desktop */
-    padding-bottom: var(--space-12);
-  }
+  padding-bottom: calc(var(--stack-bottom) + var(--space-8));
 }

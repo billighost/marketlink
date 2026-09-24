@@ -1,3 +1,5 @@
+/* FarmerCard — Farmer stall card */
+
 .card {
   position: relative;
   display: flex;
@@ -6,8 +8,11 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: border-color var(--duration-fast) var(--ease-standard);
   user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+  min-width: 0;
 }
 
 .card:hover {
@@ -35,14 +40,9 @@
 }
 
 .list {
+  flex-direction: row;
   width: 100%;
-}
-
-@media (min-width: 480px) {
-  .list {
-    flex-direction: row;
-    align-items: center;
-  }
+  align-items: center;
 }
 
 /* Image Tile */
@@ -52,87 +52,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   width: 100%;
   border-bottom: 1px solid var(--color-border);
   overflow: hidden;
 }
 
-@media (min-width: 480px) {
-  .list .imageTile {
-    width: 120px;
-    height: 120px;
-    border-bottom: none;
-    border-right: 1px solid var(--color-border);
-    flex-shrink: 0;
-  }
+.list .imageTile {
+  width: var(--space-16);
+  height: var(--space-16);
+  aspect-ratio: 1 / 1;
+  border-bottom: none;
+  border-right: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
 
 .illustrationWrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--duration-fast) var(--ease-standard);
-}
-
-.card:hover .illustrationWrapper {
-  transform: scale(1.05);
-}
-
-/* Favorite heart button */
-.favoriteButton {
-  position: absolute;
-  top: var(--space-2);
-  right: var(--space-2);
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--tap-min);
-  height: var(--tap-min);
-  border-radius: var(--radius-full);
-  background-color: var(--color-white-translucent);
-  border: 1px solid var(--color-border);
-  color: var(--color-ink-soft);
-  cursor: pointer;
-  padding: 0;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform var(--duration-fast) var(--ease-standard),
-              background-color var(--duration-fast) var(--ease-standard),
-              color var(--duration-fast) var(--ease-standard);
-}
-
-.favoriteButton:active {
-  transform: scale(0.95);
-}
-
-.favoriteButton:hover {
-  background-color: var(--color-white);
-  color: var(--color-beet);
-}
-
-.favoriteButton:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
-
-.favorited {
-  color: var(--color-beet);
-  background-color: var(--color-white);
-}
-
-.heartIcon {
-  transition: stroke var(--duration-fast) var(--ease-standard);
-}
-
-/* Badge */
-.badgeWrapper {
-  position: absolute;
-  bottom: var(--space-2);
-  left: var(--space-2);
-  z-index: 2;
-  pointer-events: none;
+  padding: var(--space-2);
 }
 
 /* Content */
@@ -143,76 +82,59 @@
   flex-grow: 1;
   justify-content: space-between;
   gap: var(--space-2);
-  background-color: var(--color-white);
+  min-width: 0;
 }
 
 .list .content {
-  padding: var(--space-4);
-  gap: var(--space-3);
+  flex-direction: row;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
 }
 
 .header {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  min-width: 0;
 }
 
+/* Reserved two lines for the name prevents ragged card heights */
 .stallName {
   font-family: var(--font-body);
   font-size: var(--text-body);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
   color: var(--color-ink);
-  line-height: 1.25;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.specialty {
-  font-size: var(--text-xs);
-  color: var(--color-ink-soft);
+  line-height: 1.3;
+  min-height: calc(2 * 15px * 1.3);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: var(--lh-ui);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.specialty {
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .meta {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-top: auto;
-}
-
-.ratingRow {
-  display: flex;
   align-items: center;
-  gap: var(--space-1);
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
-.ratingText {
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink);
-}
-
-.reviewCount {
-  font-weight: var(--weight-regular);
-  color: var(--color-ink-soft);
-}
-
-.locationDays {
+.stallNumber {
   font-size: var(--text-xs);
   color: var(--color-ink-soft);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dot {
-  margin: 0 var(--space-1);
+  font-weight: var(--weight-medium);
 }

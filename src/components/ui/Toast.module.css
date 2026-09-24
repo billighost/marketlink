@@ -1,24 +1,23 @@
-/* Toast — bottom notification */
+/* Toast — notification above bottom stack */
+
 .toast {
   position: fixed;
-  bottom: calc(var(--bottom-nav-height) + var(--space-3) + env(safe-area-inset-bottom));
+  bottom: calc(var(--stack-bottom, calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px))) + var(--stack-gap));
   left: var(--page-pad);
   right: var(--page-pad);
+  max-width: var(--container-tablet);
+  margin-inline: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-4);
   background-color: var(--color-ink);
   color: var(--color-white);
   border-radius: var(--radius-lg);
   z-index: var(--z-toast);
-  animation: slideUpToast var(--duration-base) var(--ease-standard);
-}
-
-@keyframes slideUpToast {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  min-height: var(--control-h);
+  box-shadow: none;
 }
 
 .message {
@@ -36,19 +35,22 @@
   text-decoration: underline;
   text-underline-offset: var(--underline-offset-tight);
   white-space: nowrap;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
 }
 
-@media (min-width: 768px) {
+.action:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+@media (min-width: 1024px) {
   .toast {
     left: auto;
-    right: var(--space-6);
-    bottom: var(--space-6);
+    right: var(--page-pad);
     max-width: var(--container-form);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .toast {
-    animation: none;
+    margin-inline: 0;
   }
 }

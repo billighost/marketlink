@@ -2,17 +2,25 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: var(--container-max);
   margin: 0 auto;
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 
 /* Header Area */
 .header {
-  padding: var(--space-4) var(--space-4) var(--space-2);
+  padding: var(--space-4) var(--page-pad) var(--space-2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .header {
+    max-width: var(--container-tablet);
+  }
 }
 
 .greetingGroup {
@@ -31,28 +39,17 @@
   line-height: var(--lh-h2);
 }
 
-.marketStatus {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--color-ink-soft);
-}
-
 .marketSchedule {
-  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  margin: 0;
+  line-height: var(--lh-ui);
 }
 
-/* Search Row */
-.searchRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
+/* Full-width Search Form */
 .searchForm {
   position: relative;
-  flex-grow: 1;
+  width: 100%;
   display: flex;
   align-items: center;
 }
@@ -72,7 +69,7 @@
   border-radius: var(--radius-full);
   padding: 0 var(--space-4) 0 calc(var(--space-3) + 24px);
   font-family: var(--font-body);
-  font-size: var(--text-body);
+  font-size: var(--text-input);
   color: var(--color-ink);
   transition: border-color var(--duration-fast) var(--ease-standard),
               background-color var(--duration-fast) var(--ease-standard);
@@ -89,43 +86,9 @@
   color: var(--color-ink-faint);
 }
 
-.assistantPill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  height: var(--control-h);
-  padding: 0 var(--space-4);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-canvas);
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color var(--duration-fast) var(--ease-standard),
-              border-color var(--duration-fast) var(--ease-standard);
-}
-
-.assistantPill:hover {
-  background-color: var(--color-white);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.assistantPill:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
-
-.sparkleIcon {
-  color: var(--color-primary);
-}
-
 /* Active Pickup Banner */
 .pickupBanner {
-  margin: 0 var(--space-4);
+  margin: var(--space-2) var(--page-pad);
   background-color: var(--color-herb-bg);
   border: 1px solid var(--color-herb);
   border-radius: var(--radius-lg);
@@ -133,6 +96,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  max-width: var(--container-max);
 }
 
 @media (min-width: 600px) {
@@ -143,6 +107,21 @@
   }
 }
 
+@media (min-width: 768px) and (max-width: 1023px) {
+  .pickupBanner {
+    max-width: var(--container-tablet);
+    margin-inline: auto;
+    width: calc(100% - 2 * var(--page-pad));
+  }
+}
+
+@media (min-width: 1024px) {
+  .pickupBanner {
+    margin-inline: auto;
+    width: calc(100% - 2 * var(--page-pad));
+  }
+}
+
 .pickupContent {
   display: flex;
   align-items: center;
@@ -150,8 +129,8 @@
 }
 
 .pickupIconWrap {
-  width: 40px;
-  height: 40px;
+  width: var(--tap-min);
+  height: var(--tap-min);
   border-radius: var(--radius-full);
   background-color: var(--color-white);
   display: flex;
@@ -200,12 +179,13 @@
   gap: var(--space-1);
   background: none;
   border: none;
-  padding: var(--space-1) 0;
+  padding: var(--space-2) 0;
   color: var(--color-herb);
   font-weight: var(--weight-semibold);
   font-size: var(--text-sm);
   cursor: pointer;
   align-self: flex-start;
+  min-height: var(--tap-min);
 }
 
 .pickupAction:hover {
@@ -217,76 +197,57 @@
   outline-offset: var(--focus-offset);
 }
 
-/* Category Chips Navigation */
-.categoryNav {
-  padding: 0 var(--space-4);
-  width: 100%;
-  overflow: hidden;
-}
-
-.categoryScroll {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: var(--space-2);
-}
-
-.categoryScroll::-webkit-scrollbar {
-  display: none;
-}
-
 /* Feed Container */
 .feed {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  width: 100%;
 }
 
 .sectionWrap {
-  content-visibility: auto;
-  contain-intrinsic-size: 320px;
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
 
-/* Punctuation Divider */
-.punctuation {
-  margin: var(--space-6) var(--space-4) var(--space-2);
-  padding: var(--space-4);
-  background-color: var(--color-canvas-soft);
-  border-radius: var(--radius-lg);
-  border-left: 3px solid var(--color-wood);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+/* Quiet Assistant Callout */
+.assistantCallout {
+  padding: var(--space-8) var(--page-pad) var(--space-4);
+  text-align: center;
+  max-width: var(--container-narrow);
+  margin-inline: auto;
 }
 
-.punctuationQuote {
-  font-family: var(--font-head);
-  font-size: var(--text-lead);
-  font-style: italic;
-  color: var(--color-ink);
-  margin: 0;
-  line-height: var(--lh-body);
-}
-
-.punctuationAuthor {
-  font-size: var(--text-xs);
+.assistantText {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   color: var(--color-ink-soft);
-  font-style: normal;
+  margin: 0 auto;
+}
+
+.assistantLink {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
   font-weight: var(--weight-medium);
+  cursor: pointer;
+  display: inline;
+  padding: 0;
+  min-height: auto;
+}
+
+.assistantLink:hover {
+  color: var(--color-primary-hover);
 }
 
 /* Skeletons */
 .skeletonRow {
   display: flex;
   gap: var(--space-3);
-  padding: 0 var(--space-4);
+  padding: var(--space-4);
   overflow: hidden;
+  max-width: var(--container-max);
+  margin-inline: auto;
 }
 
 .sentinel {

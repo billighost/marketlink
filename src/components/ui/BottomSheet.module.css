@@ -27,11 +27,11 @@
   background-color: var(--color-white);
   border-top-left-radius: var(--radius-xl);
   border-top-right-radius: var(--radius-xl);
-  box-shadow: var(--shadow-modal);
   z-index: var(--z-modal);
   animation: slideUp 240ms var(--ease-standard);
   max-height: var(--sheet-max-height);
   overflow: hidden;
+  box-shadow: none;
 }
 
 @keyframes slideUp {
@@ -60,36 +60,14 @@
   border-radius: 0;
 }
 
-/* Grabber handle (44px tall hit area) */
-.handleArea {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--tap-min);
-  padding: var(--space-2) 0;
-  cursor: grab;
-  flex-shrink: 0;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.handleArea:active {
-  cursor: grabbing;
-}
-
-.handle {
-  width: var(--space-10);
-  height: var(--space-1);
-  border-radius: var(--radius-full);
-  background-color: var(--color-wood-line);
-}
-
-/* Header */
+/* Header bar: handle + close button (and optional back button) */
 .header {
+  position: relative;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   min-height: var(--tap-min);
+  height: var(--tap-min);
   padding: 0 var(--space-3);
   flex-shrink: 0;
   touch-action: none;
@@ -100,6 +78,17 @@
 
 .header:active {
   cursor: grabbing;
+}
+
+.handle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--space-10);
+  height: var(--space-1);
+  border-radius: var(--radius-full);
+  background-color: var(--color-wood-line);
+  pointer-events: none;
 }
 
 .backButton {
@@ -129,20 +118,6 @@
 .headerSpacer {
   width: var(--tap-min);
   flex-shrink: 0;
-}
-
-.title {
-  flex: 1;
-  text-align: center;
-  font-family: var(--font-head);
-  font-size: var(--text-h4);
-  font-weight: var(--weight-head);
-  color: var(--color-ink);
-  line-height: var(--lh-h4);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  user-select: none;
 }
 
 .closeButton {
@@ -187,40 +162,46 @@
 .footer {
   flex-shrink: 0;
   padding: var(--space-3) var(--space-4);
-  border-top: var(--border);
+  border-top: 1px solid var(--color-border);
   background-color: var(--color-white);
-  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
 }
 
-/* ─── Desktop: 768px+ ─── */
+/* ─── Desktop & Tablet: 768px+ ─── */
 @media (min-width: 768px) {
   .overlay {
     align-items: center;
     justify-content: flex-end;
   }
 
-  /* Peek → centred dialog */
+  /* Peek -> centred dialog */
   .peek {
     max-width: var(--container-form);
     margin: auto;
     border-radius: var(--radius-xl);
     animation: fadeScaleIn 240ms var(--ease-standard);
+    border: 1px solid var(--color-border);
   }
 
-  /* Tall, full & twoStop → right-side drawer */
+  /* Tall, full & twoStop -> right-side drawer */
   .tall,
   .full,
   .twoStop {
-    width: var(--sheet-drawer-width);
-    max-width: var(--sheet-drawer-width);
+    width: var(--drawer-width);
+    max-width: var(--drawer-width);
     height: 100dvh;
     max-height: 100dvh;
     border-radius: 0;
+    border-left: 1px solid var(--color-border);
     animation: slideInRight 240ms var(--ease-standard);
   }
 
   .header {
     cursor: default;
+  }
+
+  .handle {
+    display: none;
   }
 
   @keyframes slideInRight {
@@ -231,11 +212,6 @@
   @keyframes fadeScaleIn {
     from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
-  }
-
-  /* Hide mobile grabber on desktop */
-  .handleArea {
-    display: none;
   }
 }
 

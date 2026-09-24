@@ -1,28 +1,26 @@
-/* CartBar — floating cart pill */
+/* CartBar — floating cart bar */
+
 .bar {
   position: fixed;
-  bottom: calc(var(--bottom-nav-height) + var(--space-3) + env(safe-area-inset-bottom));
+  bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + var(--stack-gap));
   left: var(--page-pad);
   right: var(--page-pad);
+  max-width: var(--container-tablet);
+  margin-inline: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: var(--tap-min);
+  min-height: var(--control-h);
   padding: var(--space-3) var(--space-5);
   background-color: var(--color-beet);
   color: var(--color-on-primary);
   border-radius: var(--radius-full);
-  box-shadow: var(--shadow-menu);
+  border: 1px solid var(--color-beet-dark);
   z-index: var(--z-sticky);
   cursor: pointer;
-  animation: slideUpBar var(--duration-base) var(--ease-standard);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-}
-
-@keyframes slideUpBar {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
 .bar:hover {
@@ -42,17 +40,12 @@
   white-space: nowrap;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .bar {
-    left: auto;
-    right: auto;
-    bottom: var(--space-6);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--stack-gap));
     max-width: 320px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bar {
-    animation: none;
+    left: auto;
+    right: var(--page-pad);
+    margin-inline: 0;
   }
 }

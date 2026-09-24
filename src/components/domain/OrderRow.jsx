@@ -10,6 +10,10 @@ import styles from './OrderRow.module.css';
 
 /**
  * Order row card for the Orders list (Active / Past).
+ * Minimal design system specifications:
+ *  - Order number, Farmer name, pickup time, status dot, total
+ *  - Product thumbnails hidden below 480px
+ *  - 44px touch targets with no overlapping interactive elements
  */
 export function OrderRow({
   order,
@@ -32,7 +36,6 @@ export function OrderRow({
     e.preventDefault();
     e.stopPropagation();
 
-    // Re-add items to cart
     if (order.items) {
       order.items.forEach((item) => {
         for (let i = 0; i < (item.quantity || 1); i++) {
@@ -75,7 +78,7 @@ export function OrderRow({
         <span className={styles.count}>{totalItemCount} {totalItemCount === 1 ? 'item' : 'items'}</span>
       </div>
 
-      {/* Product Mini Tiles Stack */}
+      {/* Bottom row: product thumbnails (>=480px) and Buy again button */}
       <div className={styles.bottomRow}>
         <div className={styles.productTiles} aria-hidden="true">
           {order.items?.slice(0, 4).map((item, idx) => {
@@ -100,7 +103,7 @@ export function OrderRow({
             onClick={handleBuyAgain}
             aria-label={`Buy items from order ${order.number} again`}
           >
-            <RotateCcw size={14} aria-hidden="true" />
+            <RotateCcw size={16} aria-hidden="true" />
             <span>Buy again</span>
           </button>
         )}

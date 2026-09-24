@@ -70,7 +70,7 @@ export function HorizontalRow({
         aria-label={title}
         tabIndex={0}
       >
-        <div className={styles.track}>
+        <div className={styles.track} data-check-even>
           {children}
         </div>
       </div>

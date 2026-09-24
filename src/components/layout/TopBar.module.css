@@ -107,7 +107,7 @@
 }
 
 .getStartedButton {
-  min-height: var(--control-h-sm);
+  min-height: var(--tap-min);
 }
 
 /* Mobile Menu Button */

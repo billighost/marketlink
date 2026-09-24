@@ -9,6 +9,7 @@
   gap: var(--space-2);
   transition: border-color var(--duration-fast) var(--ease-standard);
   user-select: none;
+  min-width: 0;
 }
 
 .card:hover {
@@ -17,10 +18,14 @@
 
 .stretchedLink {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tap-min) + var(--space-4));
   z-index: 1;
   text-decoration: none;
-  border-radius: var(--radius-lg);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
 }
 
 .stretchedLink:focus-visible {
@@ -33,12 +38,14 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .numberStatus {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .orderNumber {
@@ -46,23 +53,30 @@
   font-size: var(--text-body);
   font-weight: var(--weight-semibold);
   color: var(--color-ink);
+  white-space: nowrap;
 }
 
 .total {
   font-size: var(--text-body);
   font-weight: var(--weight-semibold);
   color: var(--color-ink);
+  white-space: nowrap;
 }
 
 .farmers {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .farmerNames {
   font-size: var(--text-sm);
   color: var(--color-ink);
   font-weight: var(--weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .slotRow {
@@ -71,6 +85,7 @@
   gap: var(--space-1);
   font-size: var(--text-xs);
   color: var(--color-ink-soft);
+  min-width: 0;
 }
 
 .dot {
@@ -84,14 +99,23 @@
   justify-content: space-between;
   gap: var(--space-2);
   margin-top: var(--space-2);
-  padding-top: var(--space-3);
+  padding-top: var(--space-2);
   border-top: 1px solid var(--color-border);
+  min-height: var(--tap-min);
+  min-width: 0;
 }
 
+/* Hide thumbnails below 480px to avoid crowding */
 .productTiles {
-  display: flex;
+  display: none;
   align-items: center;
   gap: var(--space-1);
+}
+
+@media (min-width: 480px) {
+  .productTiles {
+    display: flex;
+  }
 }
 
 .tile {
@@ -104,6 +128,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .moreTile {
@@ -118,25 +143,31 @@
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
   color: var(--color-ink-soft);
+  flex-shrink: 0;
 }
 
 .buyAgainButton {
   position: relative;
-  z-index: 2; /* above stretched link */
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  padding: var(--space-1) var(--space-3);
+  padding: 0 var(--space-3);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
   color: var(--color-ink);
   cursor: pointer;
-  min-height: 32px;
+  min-height: var(--tap-min);
+  height: var(--tap-min);
+  white-space: nowrap;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color var(--duration-fast) var(--ease-standard),
               border-color var(--duration-fast) var(--ease-standard);
+  margin-left: auto;
 }
 
 .buyAgainButton:hover {

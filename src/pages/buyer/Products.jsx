@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { products, categories, farmers } from '@/data/placeholders';
@@ -7,19 +7,16 @@ import Chip from '@/components/ui/Chip';
 import EmptyState from '@/components/ui/EmptyState';
 import BottomSheet from '@/components/ui/BottomSheet';
 import Toggle from '@/components/ui/Toggle';
+import Button from '@/components/ui/Button';
 import styles from './Products.module.css';
-
-const DEFAULT_SUGGESTIONS = [
-  'Heirloom tomatoes',
-  'Sourdough',
-  'Raw honey',
-  'Fresh eggs',
-  'Shiitake',
-];
 
 /**
  * Customer Browse / Products directory page.
- * Responsive 2-column product grid with search, category chips, and filter modal.
+ * Minimal UI specifications:
+ *  - Sticky search field with "Filters" text button (stacked on <480px, inline on >=480px)
+ *  - Exactly one category chip row (max 7 chips, trailing "More" chip)
+ *  - Results grid: 2 columns on phones, 3 on tablets and desktop
+ *  - Filter sheet with wrapping chips and single primary action
  */
 export function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -37,26 +34,15 @@ export function Products() {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Recent searches persisted in sessionStorage
-  const [recentSearches, setRecentSearches] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem('marketlink_recent_searches');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Keep state synced with URL search params if navigated externally
-  React.useEffect(() => {
+  // Sync state with URL search params
+  useEffect(() => {
     if (querySearch !== search) setSearch(querySearch);
     if (queryCategory !== selectedCategory) setSelectedCategory(queryCategory);
     if (queryFarmer !== selectedFarmerId) setSelectedFarmerId(queryFarmer);
     if (queryStock === 'in' && !inStockOnly) setInStockOnly(true);
   }, [querySearch, queryCategory, queryFarmer, queryStock]);
 
-  // Hairline bottom border fades in on scroll
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 4);
     };
@@ -65,70 +51,33 @@ export function Products() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const saveRecentSearch = (term) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-    setRecentSearches((prev) => {
-      const updated = [trimmed, ...prev.filter((item) => item.toLowerCase() !== trimmed.toLowerCase())].slice(0, 5);
-      try {
-        sessionStorage.setItem('marketlink_recent_searches', JSON.stringify(updated));
-      } catch {
-        // ignore storage errors
-      }
-      return updated;
-    });
-  };
-
-  const handleApplySearch = (term) => {
-    setSearch(term);
-    saveRecentSearch(term);
-  };
-
-  const handleClearRecent = () => {
-    setRecentSearches([]);
-    try {
-      sessionStorage.removeItem('marketlink_recent_searches');
-    } catch {
-      // ignore
-    }
-  };
-
   // Filter products
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      // Search term
       if (search.trim()) {
-        const q = search.toLowerCase();
+        const q = search.toLowerCase().trim();
         const matchesName = product.name.toLowerCase().includes(q);
-        const matchesDesc = product.description.toLowerCase().includes(q);
         const matchesCategory = product.category.toLowerCase().includes(q);
-        if (!matchesName && !matchesDesc && !matchesCategory) return false;
+        if (!matchesName && !matchesCategory) return false;
       }
 
-      // Category
       if (selectedCategory !== 'All' && product.category !== selectedCategory) {
         return false;
       }
 
-      // Stock
       if (inStockOnly && product.stock === 'out') {
         return false;
       }
+
+      if (selectedFarmerId && product.farmerId !== selectedFarmerId) {
+        return false;
+      }
+
       if (queryStock === 'low' && product.stock !== 'low') {
         return false;
       }
 
-      // Farmer
-      const targetFarmer = selectedFarmerId || queryFarmer;
-      if (targetFarmer && product.farmerId !== targetFarmer) {
-        return false;
-      }
-
-      // Special tags
-      if (queryFilter === 'bestseller' && !product.tags?.includes('bestseller')) {
-        return false;
-      }
-      if (queryFilter === 'featured' && !product.tags?.includes('bestseller') && !product.tags?.includes('featured')) {
+      if (queryFilter === 'featured' && !product.tags?.includes('bestseller')) {
         return false;
       }
       if (queryFilter === 'seasonal' && !product.tags?.includes('seasonal')) {
@@ -140,7 +89,7 @@ export function Products() {
 
       return true;
     });
-  }, [search, selectedCategory, inStockOnly, selectedFarmerId, queryFarmer, queryFilter, queryStock]);
+  }, [search, selectedCategory, inStockOnly, selectedFarmerId, queryFilter, queryStock]);
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
@@ -169,9 +118,12 @@ export function Products() {
     (queryStock ? 1 : 0) +
     (queryFilter ? 1 : 0);
 
+  // Maximum 7 chips visible in row: 'All' + first 5 categories + 'More'
+  const visibleCategories = categories.slice(0, 5);
+
   return (
     <div className={styles.page}>
-      {/* ── Page Header ─────────────────────────────────────────────── */}
+      {/* ── Sticky Search & Filter Header ───────────────────────────── */}
       <div className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''}`}>
         <div className={styles.searchRow}>
           <div className={styles.searchWrapper}>
@@ -179,15 +131,9 @@ export function Products() {
             <input
               type="search"
               className={styles.searchInput}
-              placeholder="Search all market stalls..."
+              placeholder="Search all market products..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  saveRecentSearch(search);
-                }
-              }}
-              enterKeyHint="search"
               aria-label="Search all market products"
             />
             {search && (
@@ -216,47 +162,7 @@ export function Products() {
           </button>
         </div>
 
-        {/* Suggestion Chips and Recent Searches when search is empty */}
-        {!search && (
-          <div className={styles.suggestionsRow} aria-label="Search suggestions">
-            <span className={styles.suggestionsLabel}>Try:</span>
-            {DEFAULT_SUGGESTIONS.map((sug) => (
-              <button
-                key={sug}
-                type="button"
-                className={styles.suggestionChip}
-                onClick={() => handleApplySearch(sug)}
-              >
-                {sug}
-              </button>
-            ))}
-            {recentSearches.length > 0 && (
-              <>
-                <span className={styles.suggestionsLabel} style={{ marginLeft: 'var(--space-2)' }}>Recent:</span>
-                {recentSearches.map((rec) => (
-                  <button
-                    key={rec}
-                    type="button"
-                    className={styles.suggestionChip}
-                    onClick={() => handleApplySearch(rec)}
-                  >
-                    {rec}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  className={styles.clearRecentBtn}
-                  onClick={handleClearRecent}
-                  aria-label="Clear recent searches"
-                >
-                  Clear
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Category Horizontal Chips */}
+        {/* Exactly one Category Chip Row (max 7 chips) */}
         <div className={styles.categoriesScroll} role="tablist" aria-label="Product categories">
           <Chip
             selected={selectedCategory === 'All'}
@@ -264,7 +170,7 @@ export function Products() {
           >
             All
           </Chip>
-          {categories.map((cat) => (
+          {visibleCategories.map((cat) => (
             <Chip
               key={cat}
               selected={selectedCategory === cat}
@@ -273,12 +179,18 @@ export function Products() {
               {cat}
             </Chip>
           ))}
+          <Chip
+            selected={categories.slice(5).includes(selectedCategory)}
+            onClick={() => setIsFilterSheetOpen(true)}
+          >
+            More
+          </Chip>
         </div>
 
         {/* Results summary line */}
         <div className={styles.resultsSummary}>
           <span className={styles.countText}>
-            Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
+            {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
           </span>
           {activeFilterCount > 0 && (
             <button
@@ -286,38 +198,39 @@ export function Products() {
               className={styles.clearAllLink}
               onClick={handleClearFilters}
             >
-              Reset filters
+              Reset
             </button>
           )}
         </div>
       </div>
 
       {/* ── Products Grid ─────────────────────────────────────────────── */}
-      {filteredProducts.length > 0 ? (
-        <div className={styles.grid}>
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              variant="grid"
-            />
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          illustration="empty-crate-soldout"
-          title="No products found"
-          text="Try adjusting your search terms or clearing your selected filters."
-          actionLabel="Clear all filters"
-          onAction={handleClearFilters}
-        />
-      )}
+      <div className={styles.contentWrap}>
+        {filteredProducts.length > 0 ? (
+          <div className={styles.grid}>
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                variant="grid"
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            illustration="empty-crate-soldout"
+            title="No products found"
+            text="Try adjusting your search terms or clearing your selected filters."
+            actionLabel="Clear all filters"
+            onAction={handleClearFilters}
+          />
+        )}
+      </div>
 
       {/* ── Filter Sheet Overlay ──────────────────────────────────────── */}
       <BottomSheet
         open={isFilterSheetOpen}
         onClose={() => setIsFilterSheetOpen(false)}
-        title="Filter products"
         size="tall"
         footer={
           <div className={styles.sheetFooter}>
@@ -328,20 +241,45 @@ export function Products() {
             >
               Reset all
             </button>
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              size="md"
               className={styles.sheetApply}
               onClick={() => setIsFilterSheetOpen(false)}
             >
-              Show {filteredProducts.length} items
-            </button>
+              Show {filteredProducts.length} {filteredProducts.length === 1 ? 'result' : 'results'}
+            </Button>
           </div>
         }
       >
         <div className={styles.filterSheetContent}>
+          <h1 className={styles.sheetTitle}>Filters</h1>
+
+          {/* All Categories wrapping */}
+          <div className={styles.filterSection}>
+            <h2 className={styles.filterSectionTitle}>Category</h2>
+            <div className={styles.chipWrapGroup}>
+              <Chip
+                selected={selectedCategory === 'All'}
+                onClick={() => handleCategoryChange('All')}
+              >
+                All categories
+              </Chip>
+              {categories.map((cat) => (
+                <Chip
+                  key={cat}
+                  selected={selectedCategory === cat}
+                  onClick={() => handleCategoryChange(cat)}
+                >
+                  {cat}
+                </Chip>
+              ))}
+            </div>
+          </div>
+
           {/* Availability Toggle */}
           <div className={styles.filterSection}>
-            <h4 className={styles.filterTitle}>Availability</h4>
+            <h2 className={styles.filterSectionTitle}>Availability</h2>
             <div className={styles.toggleRow}>
               <span>In stock items only</span>
               <Toggle
@@ -352,10 +290,10 @@ export function Products() {
             </div>
           </div>
 
-          {/* Farmer Stall Filter */}
+          {/* Farmer Stall Filter wrapping */}
           <div className={styles.filterSection}>
-            <h4 className={styles.filterTitle}>Farmer Stall</h4>
-            <div className={styles.farmerPills}>
+            <h2 className={styles.filterSectionTitle}>Farmer Stall</h2>
+            <div className={styles.chipWrapGroup}>
               <Chip
                 selected={!selectedFarmerId}
                 onClick={() => setSelectedFarmerId('')}

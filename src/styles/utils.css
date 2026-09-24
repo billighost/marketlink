@@ -31,6 +31,13 @@
   width: 100%;
 }
 
+.containerTablet {
+  max-width: var(--container-tablet);
+  margin-inline: auto;
+  padding-inline: var(--page-pad);
+  width: 100%;
+}
+
 /* Sections */
 .section {
   padding-block: var(--section-gap);

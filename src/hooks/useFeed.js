@@ -34,7 +34,7 @@ function seededShuffle(array, seed = 1) {
 }
 
 /**
- * Build the 8 initial curated sections
+ * Build the 5 initial curated sections per minimal UI specification
  */
 function buildCuratedSections(seed = 42) {
   const featuredProducts = products.filter((p) => p.tags?.includes('bestseller')).slice(0, 5);
@@ -44,9 +44,6 @@ function buildCuratedSections(seed = 42) {
   const topFarmers = farmers.filter((f) => f.isTopSeller);
   const orderSoon = products.filter((p) => p.stock === 'low');
   const newArrivals = products.filter((p) => p.tags?.includes('new'));
-  const riverbendProducts = products.filter((p) => p.farmerId === 'f-riverbend');
-  const seasonalProducts = seededShuffle(products.filter((p) => p.tags?.includes('seasonal')), seed);
-  const bakeryProducts = products.filter((p) => p.category === 'Bakery');
 
   return [
     {
@@ -57,12 +54,10 @@ function buildCuratedSections(seed = 42) {
       cardVariant: 'feature',
       items: featuredProducts,
       seeAllPath: '/buyer/products?filter=featured',
-      punctuation: FEED_PUNCTUATIONS[0],
     },
     {
       id: 'sec-recent',
       title: 'Recently bought',
-      subtitle: 'Quick re-orders from your previous market visits',
       type: 'products',
       cardVariant: 'compact',
       items: recentlyBought,
@@ -71,17 +66,14 @@ function buildCuratedSections(seed = 42) {
     {
       id: 'sec-farmers',
       title: 'Top-selling Farmers',
-      subtitle: 'Beloved producers with queues before 8 am',
       type: 'farmers',
       cardVariant: 'row',
       items: topFarmers,
       seeAllPath: '/buyer/farmers',
-      punctuation: FEED_PUNCTUATIONS[1],
     },
     {
       id: 'sec-lowstock',
       title: 'Order soon',
-      subtitle: 'Only a few left before Saturday pre-orders close',
       type: 'products',
       cardVariant: 'compact',
       items: orderSoon,
@@ -90,41 +82,10 @@ function buildCuratedSections(seed = 42) {
     {
       id: 'sec-new',
       title: 'New this week',
-      subtitle: 'Fresh arrivals and first-time harvests',
       type: 'products',
       cardVariant: 'compact',
       items: newArrivals,
       seeAllPath: '/buyer/products?filter=new',
-      punctuation: FEED_PUNCTUATIONS[2],
-    },
-    {
-      id: 'sec-riverbend',
-      title: 'From Riverbend Farm',
-      subtitle: 'Heirloom tomatoes, rainbow carrots & tender greens',
-      type: 'products',
-      cardVariant: 'feature',
-      items: riverbendProducts,
-      seeAllPath: '/buyer/products?farmer=f-riverbend',
-    },
-    {
-      id: 'sec-seasonal',
-      title: 'In season right now',
-      subtitle: 'Peak harvest flavour, picked at full ripeness',
-      type: 'products',
-      cardVariant: 'compact',
-      items: seasonalProducts,
-      seeAllPath: '/buyer/products?filter=seasonal',
-      punctuation: FEED_PUNCTUATIONS[3],
-    },
-    {
-      id: 'sec-bakery',
-      title: 'Baked this morning',
-      subtitle: 'Crusty sourdoughs, flaky croissants & rye loaves',
-      type: 'products',
-      cardVariant: 'compact',
-      items: bakeryProducts,
-      seeAllPath: '/buyer/products?category=Bakery',
-      punctuation: FEED_PUNCTUATIONS[4],
     },
   ];
 }

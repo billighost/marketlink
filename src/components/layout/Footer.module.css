@@ -67,19 +67,6 @@
   line-height: var(--lh-body);
 }
 
-.awningTouch {
-  width: var(--space-20);
-  height: var(--space-2);
-  display: block;
-  margin-top: var(--space-1);
-}
-
-.awningPath {
-  stroke: var(--color-wood-line);
-  stroke-width: 1px;
-  fill: none;
-}
-
 .navCol {
   display: flex;
 }

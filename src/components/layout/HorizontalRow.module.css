@@ -1,6 +1,19 @@
 /* HorizontalRow — section with horizontal scroll */
 .section {
-  padding-top: var(--space-8);
+  padding-top: var(--space-10);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: var(--space-12);
+  }
+}
+
+@media (min-width: 1024px) {
+  .section {
+    padding-top: var(--space-16);
+  }
 }
 
 /* Header row */
@@ -9,8 +22,16 @@
   align-items: flex-start;
   justify-content: space-between;
   padding-inline: var(--page-pad);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
   gap: var(--space-3);
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .header {
+    max-width: var(--container-tablet);
+  }
 }
 
 .headerText {
@@ -39,7 +60,6 @@
   align-items: center;
   gap: var(--space-3);
   flex-shrink: 0;
-  padding-top: var(--space-1);
 }
 
 .seeAll {
@@ -50,8 +70,9 @@
   text-decoration: none;
   cursor: pointer;
   min-height: var(--tap-min);
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  white-space: nowrap;
 }
 
 .seeAll:hover {
@@ -82,11 +103,12 @@
   width: var(--tap-min);
   height: var(--tap-min);
   border-radius: var(--radius-full);
-  border: var(--border);
+  border: 1px solid var(--color-border);
   background-color: var(--color-white);
   color: var(--color-ink);
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-standard);
+  flex-shrink: 0;
 }
 
 .arrow:hover {
@@ -105,9 +127,8 @@
   scroll-padding-inline-start: var(--page-pad);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-
-  /* Hide scrollbar */
   scrollbar-width: none;
+  width: 100%;
 }
 
 .scroll::-webkit-scrollbar {
@@ -122,9 +143,16 @@
 /* Track: bleed with padding */
 .track {
   display: flex;
-  gap: var(--gap-default);
+  gap: var(--space-3);
   padding-inline-start: var(--page-pad);
   padding-inline-end: var(--page-pad);
+  width: max-content;
+}
+
+@media (min-width: 768px) {
+  .track {
+    gap: var(--space-4);
+  }
 }
 
 .track > * {

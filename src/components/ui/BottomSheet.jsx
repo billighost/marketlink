@@ -455,19 +455,7 @@ export function BottomSheet({
         aria-modal="true"
         aria-labelledby={title ? 'sheet-title' : undefined}
       >
-        {/* Grabber handle (mobile only, 44px invisible hit area) */}
-        <div
-          className={styles.handleArea}
-          data-drag-zone
-          onPointerDown={onPointerDownHandle}
-          onPointerMove={onPointerMoveHandle}
-          onPointerUp={onPointerUpHandle}
-          onPointerCancel={onPointerCancelHandle}
-        >
-          <div className={styles.handle} aria-hidden="true" />
-        </div>
-
-        {/* Header row */}
+        {/* Unified header bar: handle + close button (and optional back button) */}
         <div
           className={styles.header}
           data-drag-zone
@@ -489,11 +477,8 @@ export function BottomSheet({
             <div className={styles.headerSpacer} aria-hidden="true" />
           )}
 
-          {title ? (
-            <h2 id="sheet-title" className={styles.title}>{title}</h2>
-          ) : (
-            <div className={styles.headerSpacer} aria-hidden="true" />
-          )}
+          {/* Grabber handle in center */}
+          <div className={styles.handle} aria-hidden="true" />
 
           <button
             type="button"

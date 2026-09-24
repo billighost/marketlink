@@ -1,12 +1,15 @@
 /* QuantityStepper — − 2 + controls */
+
 .stepper {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  border: var(--border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   background-color: var(--color-white);
-  padding: var(--space-1);
+  padding: 0 var(--space-1);
+  flex: none;
+  flex-shrink: 0;
 }
 
 .button {
@@ -14,11 +17,16 @@
   align-items: center;
   justify-content: center;
   width: var(--tap-min);
-  height: var(--control-h-sm);
+  height: var(--tap-min);
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
   border-radius: var(--radius-full);
   color: var(--color-ink);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color var(--duration-fast) var(--ease-standard);
+  flex-shrink: 0;
 }
 
 .button:hover:not(:disabled) {
@@ -43,6 +51,7 @@
   font-weight: var(--weight-semibold);
   color: var(--color-ink);
   line-height: var(--lh-ui);
+  user-select: none;
 }
 
 .compact {
@@ -52,8 +61,10 @@
 }
 
 .compact .button {
-  width: var(--control-h-sm);
-  height: var(--control-h-sm);
+  width: var(--tap-min);
+  height: var(--tap-min);
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
 }
 
 .compact .value {

@@ -181,14 +181,16 @@ export function Cart({ inSheet = true, onClose }) {
                   const maxQty = product.quantityLeft || 99;
                   return (
                     <div key={product.id} className={styles.rowContainer}>
-                      <button
-                        type="button"
-                        className={styles.swipeAction}
-                        onClick={() => handleRemove(product, quantity)}
-                        aria-label={`Confirm remove ${product.name}`}
-                      >
-                        Remove
-                      </button>
+                      {isSwiped && (
+                        <button
+                          type="button"
+                          className={styles.swipeAction}
+                          onClick={() => handleRemove(product, quantity)}
+                          aria-label={`Confirm remove ${product.name}`}
+                        >
+                          Remove
+                        </button>
+                      )}
                       <div
                         className={`${styles.itemRow} ${isSwiped ? styles.swiped : ''}`}
                         onTouchStart={handleTouchStart}

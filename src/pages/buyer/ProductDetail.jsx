@@ -66,7 +66,7 @@ export function ProductDetail({ inSheet = false, onClose }) {
       )}
 
       {/* Main product illustration visual */}
-      <div className={styles.visualContainer}>
+      <div className={styles.visualContainer} data-aspect="4/3">
         <div className={styles.illustrationWrapper}>
           <Illustration name={product.art || 'basket'} size="xl" />
         </div>

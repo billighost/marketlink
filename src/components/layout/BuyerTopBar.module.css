@@ -1,3 +1,5 @@
+/* BuyerTopBar — Customer top bar */
+
 .header {
   position: sticky;
   top: 0;
@@ -8,6 +10,7 @@
   display: flex;
   align-items: center;
   transition: border-bottom-color var(--duration-fast) var(--ease-standard);
+  width: 100%;
 }
 
 .headerScrolled {
@@ -20,13 +23,14 @@
   justify-content: space-between;
   width: 100%;
   max-width: var(--container-max);
-  margin: 0 auto;
-  padding: 0 var(--space-4);
+  margin-inline: auto;
+  padding-inline: var(--page-pad);
   gap: var(--space-3);
   height: var(--header-height);
+  min-width: 0;
 }
 
-/* Brand logo - hidden on mobile, visible on desktop */
+/* Brand logo — hidden on phone and tablet, visible on desktop >= 1024px */
 .brand {
   display: none;
   align-items: center;
@@ -48,6 +52,7 @@
   font-weight: var(--weight-head);
   color: var(--color-ink);
   letter-spacing: var(--tracking-head);
+  white-space: nowrap;
 }
 
 /* Market selector button */
@@ -63,7 +68,8 @@
   min-height: var(--tap-min);
   color: var(--color-ink);
   transition: background-color var(--duration-fast) var(--ease-standard);
-  max-width: calc(100% - 60px);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .marketSelector:hover {
@@ -86,6 +92,7 @@
   color: var(--color-ink-soft);
   font-weight: var(--weight-medium);
   line-height: var(--lh-ui);
+  white-space: nowrap;
 }
 
 .marketName {
@@ -99,6 +106,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: var(--lh-ui);
+  min-width: 0;
 }
 
 .chevron {
@@ -106,13 +114,15 @@
   flex-shrink: 0;
 }
 
-/* Desktop nav links - hidden on mobile */
+/* Desktop nav links — hidden below 1024px */
 .desktopNav {
   display: none;
   align-items: center;
-  gap: var(--space-6);
-  margin-left: var(--space-4);
-  margin-right: auto;
+  gap: var(--space-4);
+  margin-inline-start: var(--space-2);
+  margin-inline-end: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .navLink {
@@ -126,6 +136,7 @@
   display: inline-flex;
   align-items: center;
   min-height: var(--tap-min);
+  white-space: nowrap;
 }
 
 .navLink:hover {
@@ -148,17 +159,17 @@
   border-radius: var(--radius-full);
 }
 
-/* Right action group */
+/* Right action group — hidden on mobile and tablet below 1024px */
 .actions {
-  display: flex;
+  display: none;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   flex-shrink: 0;
 }
 
-/* Desktop cart button - hidden on mobile */
+/* Desktop cart button */
 .cartButton {
-  display: none;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   background: none;
@@ -171,6 +182,7 @@
   cursor: pointer;
   position: relative;
   min-height: var(--tap-min);
+  white-space: nowrap;
   transition: background-color var(--duration-fast) var(--ease-standard),
               border-color var(--duration-fast) var(--ease-standard);
 }
@@ -203,13 +215,13 @@
   line-height: 1;
 }
 
-/* Avatar button */
+/* Avatar button (44x44px touch target) */
 .avatarButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: var(--tap-min);
+  height: var(--tap-min);
   border-radius: var(--radius-full);
   background-color: var(--color-canvas);
   color: var(--color-ink);
@@ -235,8 +247,8 @@
   user-select: none;
 }
 
-/* Responsive adjustments */
-@media (min-width: 768px) {
+/* ─── Desktop: 1024px to 1279px ─── */
+@media (min-width: 1024px) {
   .brand {
     display: flex;
   }
@@ -245,11 +257,35 @@
     display: flex;
   }
 
-  .cartButton {
+  .actions {
     display: flex;
   }
 
   .marketSelector {
-    max-width: 320px;
+    max-width: 180px;
+  }
+
+  .marketLabel {
+    display: none; /* Hide small label on 1024-1279px to guarantee zero wrapping */
+  }
+}
+
+/* ─── Large Desktop: 1280px and up ─── */
+@media (min-width: 1280px) {
+  .container {
+    gap: var(--space-6);
+  }
+
+  .desktopNav {
+    gap: var(--space-6);
+    margin-inline-start: var(--space-4);
+  }
+
+  .marketSelector {
+    max-width: 280px;
+  }
+
+  .marketLabel {
+    display: block;
   }
 }

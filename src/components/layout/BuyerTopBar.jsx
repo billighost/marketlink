@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, ShoppingBasket, Heart } from 'lucide-react';
+import { ChevronDown, ShoppingBasket } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { homeMarket, getMarket } from '@/data/placeholders';
@@ -8,16 +8,16 @@ import Illustration from '@/components/domain/Illustration';
 import styles from './BuyerTopBar.module.css';
 
 /**
- * Top bar for the signed-in Customer (Buyer) interface.
- * Mobile (<768px):
- *   - Market selector button ("Picking up from" + market name + chevron)
- *   - Avatar button with initials linking to profile
- * Desktop (>=768px):
- *   - Brand logo linking to /buyer
- *   - Market selector button
- *   - Nav links: Market, Browse, Orders, Favorites
- *   - Cart button with item count badge (opens cart sheet)
- *   - Avatar button
+ * Top bar for the signed-in Customer interface.
+ * Responsive specifications:
+ *  - Below 1024px (phone & tablet):
+ *      Slim bar with market selector only (label above name, min-width 0, truncating).
+ *      No avatar (profile lives in bottom nav), no extra buttons.
+ *  - 1024px to 1279px (desktop/tablet landscape):
+ *      Brand logo, compact market selector (name only, max-width),
+ *      4 nav links (Market, Browse, Orders, Favorites), Cart button, and Avatar.
+ *  - 1280px and up:
+ *      Same structure with generous whitespace.
  */
 export function BuyerTopBar() {
   const { user } = useAuth();
@@ -38,10 +38,8 @@ export function BuyerTopBar() {
   }, []);
 
   const currentMarket = (user?.homeMarketId ? getMarket(user.homeMarketId) : null) || homeMarket;
-
   const currentPath = location.state?.background?.pathname || location.pathname;
 
-  // Compute user initials (fallback 'C' for Customer)
   const getInitials = () => {
     if (user?.firstName && user?.name) {
       const parts = user.name.trim().split(/\s+/);
@@ -52,7 +50,7 @@ export function BuyerTopBar() {
     }
     if (user?.name) {
       const parts = user.name.trim().split(/\s+/);
-      return parts.map(p => p[0]).slice(0, 2).join('').toUpperCase();
+      return parts.map((p) => p[0]).slice(0, 2).join('').toUpperCase();
     }
     return 'C';
   };
@@ -70,10 +68,10 @@ export function BuyerTopBar() {
   return (
     <header className={`${styles.header} ${scrolled ? styles.headerScrolled : ''}`} role="banner">
       <div className={styles.container}>
-        {/* Left: Brand logo (desktop only) */}
+        {/* Left: Brand logo (desktop only >=1024px) */}
         <Link to="/buyer" className={styles.brand} aria-label="MarketLink home">
           <span className={styles.logoIcon}>
-            <Illustration name="beet" width={24} height={24} />
+            <Illustration name="beet" size="sm" />
           </span>
           <span className={styles.brandText}>MarketLink</span>
         </Link>
@@ -94,7 +92,7 @@ export function BuyerTopBar() {
           </div>
         </button>
 
-        {/* Desktop Nav Links */}
+        {/* Desktop Nav Links (>=1024px only) */}
         <nav className={styles.desktopNav} aria-label="Customer navigation">
           <Link
             to="/buyer"
@@ -122,7 +120,7 @@ export function BuyerTopBar() {
           </Link>
         </nav>
 
-        {/* Right action group */}
+        {/* Desktop Action Group (>=1024px only) */}
         <div className={styles.actions}>
           {/* Desktop Cart Button */}
           <button
@@ -141,7 +139,7 @@ export function BuyerTopBar() {
             )}
           </button>
 
-          {/* Avatar button linking to Profile */}
+          {/* Desktop Avatar button linking to Profile */}
           <Link
             to="/buyer/profile"
             className={styles.avatarButton}
