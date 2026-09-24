@@ -46,6 +46,39 @@ export async function ensureIndexes(db) {
       name: 'idx_farmers_text_search',
     }
   );
+  // Stage 2 additions: prefix search, random walker, category slugs, and sort indexes
+  await db.collection(COLLECTIONS.FARMERS).createIndex(
+    { listingEnabled: 1, stallNameLower: 1 },
+    { name: 'idx_farmers_listing_stallNameLower' }
+  );
+  await db.collection(COLLECTIONS.FARMERS).createIndex(
+    { listingEnabled: 1, rnd: 1 },
+    { name: 'idx_farmers_listing_rnd' }
+  );
+  await db.collection(COLLECTIONS.FARMERS).createIndex(
+    { listingEnabled: 1, categorySlugs: 1, ratingAvg: -1 },
+    { name: 'idx_farmers_listing_categorySlugs_rating' }
+  );
+  await db.collection(COLLECTIONS.FARMERS).createIndex(
+    { listingEnabled: 1, ratingAvg: -1, _id: -1 },
+    { name: 'idx_farmers_sort_rating' }
+  );
+  await db.collection(COLLECTIONS.FARMERS).createIndex(
+    { listingEnabled: 1, salesCount: -1, _id: -1 },
+    { name: 'idx_farmers_sort_top' }
+  );
+  await db.collection(COLLECTIONS.FARMERS).createIndex(
+    { listingEnabled: 1, createdAt: -1, _id: -1 },
+    { name: 'idx_farmers_sort_new' }
+  );
+  await db.collection(COLLECTIONS.FARMERS).createIndex(
+    { listingEnabled: 1, stallName: 1, _id: 1 },
+    { name: 'idx_farmers_sort_name' }
+  );
+  await db.collection(COLLECTIONS.FARMERS).createIndex(
+    { listingEnabled: 1, operatingDays: 1 },
+    { name: 'idx_farmers_listing_operatingDays' }
+  );
 
   // ── 3. Markets ──
   await db.collection(COLLECTIONS.MARKETS).createIndex(
@@ -99,6 +132,55 @@ export async function ensureIndexes(db) {
       weights: { name: 10, tags: 5, description: 1 },
       name: 'idx_products_text_search',
     }
+  );
+  // Stage 2 additions: prefix search, random walker, keyset sort indexes
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, nameLower: 1 },
+    { name: 'idx_products_listed_nameLower' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, rnd: 1 },
+    { name: 'idx_products_listed_rnd' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, categorySlug: 1, rnd: 1 },
+    { name: 'idx_products_listed_categorySlug_rnd' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, priceCents: 1, rnd: 1 },
+    { name: 'idx_products_listed_priceCents_rnd' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, tags: 1, rnd: 1 },
+    { name: 'idx_products_listed_tags_rnd' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, marketIds: 1, salesCount: -1 },
+    { name: 'idx_products_listed_marketIds_sales' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, farmerId: 1, availability: 1 },
+    { name: 'idx_products_listed_farmer_availability' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, availability: 1, createdAt: -1, _id: -1 },
+    { name: 'idx_products_sort_newest' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, availability: 1, categorySlug: 1, priceCents: 1, _id: 1 },
+    { name: 'idx_products_sort_price_asc_cat' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, availability: 1, priceCents: 1, _id: 1 },
+    { name: 'idx_products_sort_price_asc' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, availability: 1, salesCount: -1, _id: -1 },
+    { name: 'idx_products_sort_popular' }
+  );
+  await db.collection(COLLECTIONS.PRODUCTS).createIndex(
+    { listed: 1, featuredScore: -1, _id: -1 },
+    { name: 'idx_products_sort_featured' }
   );
 
   // ── 6. Orders ──

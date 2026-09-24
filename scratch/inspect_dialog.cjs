@@ -1,0 +1,36 @@
+const { chromium } = require('playwright');
+
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await page.addInitScript(() => {
+    localStorage.setItem('marketlink_role', 'buyer');
+    localStorage.setItem('marketlink_user', JSON.stringify({ id: 'user-george', firstName: 'George', role: 'buyer' }));
+  });
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await page.goto('http://localhost:3000/buyer/products/p-01');
+  await page.waitForTimeout(600);
+
+  const dialog = await page.evaluate(() => {
+    const d = document.querySelector('[role="dialog"]');
+    if (!d) return null;
+    const anims = d.getAnimations().map(a => ({
+      playState: a.playState,
+      currentTime: a.currentTime,
+      animationName: a.animationName
+    }));
+    const rect = d.getBoundingClientRect();
+    const computed = window.getComputedStyle(d);
+    return {
+      rect: { left: rect.left, right: rect.right, width: rect.width },
+      anims,
+      computedWidth: computed.width,
+      right: computed.right,
+      transform: computed.transform,
+      styleAttr: d.getAttribute('style'),
+      className: d.className
+    };
+  });
+  console.log('Dialog at 768px:', dialog);
+  await browser.close();
+})();

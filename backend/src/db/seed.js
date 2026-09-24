@@ -4,6 +4,9 @@
  * Calculates denormalised stats dynamically and guarantees valid relations.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { env } from '../config/env.js';
@@ -18,6 +21,19 @@ import {
   addMinutes,
   toMinutesFromMidnight,
 } from '../utils/time.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export function createMulberry32(seed = 123456789) {
+  let a = seed;
+  return function () {
+    let t = (a += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 export async function runSeed(force = false) {
   // Safety check: Never run in production without explicit --force
@@ -123,9 +139,9 @@ export async function runSeed(force = false) {
       slug: 'grove-park-market',
       address: '12 Park Lane, South Orange, NJ',
       location: { type: 'Point', coordinates: [-74.264, 40.748] },
-      schedule: [{ day: 'sat', openMin: 510, closeMin: 810 }], // 8:30 AM - 1:30 PM
+      schedule: [{ day: 'wed', openMin: 510, closeMin: 810 }], // 8:30 AM - 1:30 PM (Wednesday)
       timezone: 'America/New_York',
-      note: 'Live music most Saturdays. Picnic area nearby.',
+      note: 'Live music most Wednesdays. Picnic area nearby.',
       facilities: ['live-music', 'picnic-area', 'playground'],
       status: 'active',
       farmerCount: 0,
@@ -237,6 +253,15 @@ export async function runSeed(force = false) {
       status: 'active',
       homeMarketId: riverMarket._id,
       savedMarketIds: [riverMarket._id],
+    },
+    {
+      name: 'Chloe Bennett',
+      email: 'chloe@example.com',
+      phone: '(555) 012-7777',
+      address: '101 New Way, Maplewood, NJ',
+      status: 'active',
+      homeMarketId: elmMarket._id,
+      savedMarketIds: [],
     },
   ];
 
@@ -420,7 +445,7 @@ export async function runSeed(force = false) {
       specialty: 'Fresh catch and smoked fish',
       story: 'Day-boat fish from Barnegat Bay and cold-smoked trout from their own smokehouse. They arrive at 6 am with the catch packed on ice.',
       since: 2019,
-      operatingDays: ['sat'],
+      operatingDays: ['sat', 'wed'],
       art: 'fish',
       isTopSeller: false,
       isNew: false,
@@ -436,7 +461,7 @@ export async function runSeed(force = false) {
       specialty: 'Sausages and cured meats',
       story: 'Pasture-raised pork and beef from a farm in Warren County. Their maple breakfast sausage is the reason people queue before 8.',
       since: 2020,
-      operatingDays: ['sat'],
+      operatingDays: ['sat', 'wed'],
       art: 'sausages',
       isTopSeller: true,
       isNew: false,
@@ -497,6 +522,8 @@ export async function runSeed(force = false) {
   const farmers = [];
   const farmerMap = new Map();
 
+  const prng = createMulberry32(42);
+
   for (const f of farmerRaw) {
     const userId = new ObjectId();
     const farmerId = new ObjectId();
@@ -528,6 +555,7 @@ export async function runSeed(force = false) {
       _id: farmerId,
       userId,
       stallName: f.stallName,
+      stallNameLower: f.stallName.toLowerCase(),
       contactPerson: f.contactPerson,
       phone: userDoc.phone,
       email: f.email.toLowerCase(),
@@ -549,9 +577,13 @@ export async function runSeed(force = false) {
         coordinates: [-74.172 + (farmers.length * 0.01), 40.735 + (farmers.length * 0.01)],
       },
       art: f.art,
+      imageUrl: null,
       listingEnabled: f.status === 'active',
+      rnd: prng(),
+      categorySlugs: [],
       ratingAvg: 0,
       ratingCount: 0,
+      ratingSum: 0,
       salesCount: 0,
       isTopSeller: f.isTopSeller,
       isNew: f.isNew,
@@ -634,6 +666,13 @@ export async function runSeed(force = false) {
     { farmerCode: 'f-clearwater', name: 'Honeycrisp apples', category: 'Fruit', priceCents: 400, unit: 'lb', availability: 'in', qty: 25, lowStock: 6, art: 'apples', tags: ['seasonal', 'bestseller'], desc: 'Crisp, sweet-tart and impossibly juicy. The apple that ruins all other apples.' },
     { farmerCode: 'f-clearwater', name: 'Bartlett pears', category: 'Fruit', priceCents: 350, unit: 'lb', availability: 'in', qty: 18, lowStock: 4, art: 'pears', tags: ['seasonal'], desc: 'Buttery when ripe. Let them sit on the counter for a day or two.' },
     { farmerCode: 'f-clearwater', name: 'Fresh-pressed cider', category: 'Fruit', priceCents: 800, unit: 'jar', availability: 'low', qty: 4, lowStock: 5, art: 'apples', tags: ['seasonal', 'new'], desc: 'Unfiltered, unpasteurised blend of heritage apples. Shake before pouring.' },
+    // D9 requirement: 70-character name
+    { farmerCode: 'f-clearwater', name: 'Handmade Small-Batch Heritage Golden Delicious Unfiltered Apple Cider!', category: 'Fruit', priceCents: 850, unit: 'jar', availability: 'in', qty: 12, lowStock: 3, art: 'apples', tags: ['seasonal'], desc: 'Special edition 70-character heritage cider.' },
+
+    // D9 requirement: tomato products from exactly 3 farmers
+    // (Riverbend has 'Heirloom tomatoes', Sunridge has 'Sweet cherry tomatoes', Thornberry has 'Pickled green tomatoes')
+    { farmerCode: 'f-sunridge', name: 'Sweet cherry tomatoes', category: 'Vegetables', priceCents: 500, unit: 'pint', availability: 'in', qty: 15, lowStock: 4, art: 'tomato', tags: ['seasonal', 'organic'], desc: 'Sun-warmed bite-sized cherry tomatoes, intensely sweet.' },
+    { farmerCode: 'f-thornberry', name: 'Pickled green tomatoes', category: 'Honey and jam', priceCents: 850, unit: 'jar', availability: 'in', qty: 10, lowStock: 3, art: 'jam', tags: ['seasonal'], desc: 'Tangy pickled green tomatoes with mustard seed and dill.' },
   ];
 
   const products = [];
@@ -657,6 +696,7 @@ export async function runSeed(force = false) {
       categoryId: category._id,
       categorySlug: category.slug,
       name: def.name,
+      nameLower: def.name.toLowerCase(),
       description: def.desc,
       priceCents: def.priceCents,
       unit: def.unit,
@@ -665,13 +705,18 @@ export async function runSeed(force = false) {
       availability: def.availability,
       tags: def.tags,
       art: def.art,
+      imageUrl: null,
       weekly: {
         enabled: true,
         defaultQty: def.qty + 10,
       },
       ratingAvg: 0,
       ratingCount: 0,
+      ratingSum: 0,
       salesCount: 0,
+      featuredScore: 0,
+      listed: farmer.listingEnabled && def.availability !== 'hidden',
+      rnd: prng(),
       moderation: {
         removed: false,
       },
@@ -746,6 +791,7 @@ export async function runSeed(force = false) {
         stallNumber: farmer.stallNumber,
       },
       cutoffAt,
+      completedAt: status === 'completed' ? addHours(pickupStart, 1) : null,
       note: 'Please pack in eco-friendly bag if possible.',
       timeline,
       cancelReason: cancelReason || undefined,
@@ -818,7 +864,7 @@ export async function runSeed(force = false) {
     })
   );
 
-  // Order 4: George Adams - Completed (Past Saturday)
+  // Order 4: George Adams - Completed (Past Saturday) - Category: Dairy and eggs
   const pEgg = productCodeMap.get('Farm eggs');
   const fWillow = farmerMap.get('f-willowbend');
   orderDocs.push(
@@ -841,10 +887,75 @@ export async function runSeed(force = false) {
     })
   );
 
-  // Order 5: George Adams - Cancelled
+  // Order 5: George Adams - Completed - Category: Vegetables (Heirloom tomatoes)
   orderDocs.push(
     createOrder({
       orderNumber: 'ML-' + ++orderSeq, // ML-1045
+      customerId: georgeUser._id,
+      customerName: georgeUser.name,
+      farmer: fRiver,
+      marketId: elmMarket._id,
+      items: [{ product: pTom, qty: 2 }],
+      status: 'completed',
+      pickupStart: twoWeeksAgo,
+      pickupEnd: addHours(twoWeeksAgo, 2),
+      timeline: [
+        { status: 'placed', at: addDays(twoWeeksAgo, -2), byRole: 'customer' },
+        { status: 'accepted', at: addDays(twoWeeksAgo, -1), byRole: 'farmer' },
+        { status: 'ready', at: addHours(twoWeeksAgo, -1), byRole: 'farmer' },
+        { status: 'completed', at: addHours(twoWeeksAgo, 1), byRole: 'farmer' },
+      ],
+    })
+  );
+
+  // Order 6: George Adams - Completed - Category: Bakery (Sourdough boule)
+  const threeWeeksAgo = getPastWeekday('sat', 3, 8, 0, now);
+  orderDocs.push(
+    createOrder({
+      orderNumber: 'ML-' + ++orderSeq, // ML-1046
+      customerId: georgeUser._id,
+      customerName: georgeUser.name,
+      farmer: fOak,
+      marketId: elmMarket._id,
+      items: [{ product: pBoule, qty: 1 }],
+      status: 'completed',
+      pickupStart: threeWeeksAgo,
+      pickupEnd: addHours(threeWeeksAgo, 2),
+      timeline: [
+        { status: 'placed', at: addDays(threeWeeksAgo, -2), byRole: 'customer' },
+        { status: 'accepted', at: addDays(threeWeeksAgo, -1), byRole: 'farmer' },
+        { status: 'ready', at: addHours(threeWeeksAgo, -1), byRole: 'farmer' },
+        { status: 'completed', at: addHours(threeWeeksAgo, 1), byRole: 'farmer' },
+      ],
+    })
+  );
+
+  // Order 7: George Adams - Completed - Category: Fruit (Strawberries)
+  const fourWeeksAgo = getPastWeekday('sat', 4, 8, 0, now);
+  orderDocs.push(
+    createOrder({
+      orderNumber: 'ML-' + ++orderSeq, // ML-1047
+      customerId: georgeUser._id,
+      customerName: georgeUser.name,
+      farmer: fSun,
+      marketId: elmMarket._id,
+      items: [{ product: pStraw, qty: 2 }],
+      status: 'completed',
+      pickupStart: fourWeeksAgo,
+      pickupEnd: addHours(fourWeeksAgo, 2),
+      timeline: [
+        { status: 'placed', at: addDays(fourWeeksAgo, -2), byRole: 'customer' },
+        { status: 'accepted', at: addDays(fourWeeksAgo, -1), byRole: 'farmer' },
+        { status: 'ready', at: addHours(fourWeeksAgo, -1), byRole: 'farmer' },
+        { status: 'completed', at: addHours(fourWeeksAgo, 1), byRole: 'farmer' },
+      ],
+    })
+  );
+
+  // Order 8: George Adams - Cancelled
+  orderDocs.push(
+    createOrder({
+      orderNumber: 'ML-' + ++orderSeq, // ML-1048
       customerId: georgeUser._id,
       customerName: georgeUser.name,
       farmer: fRiver,
@@ -867,7 +978,7 @@ export async function runSeed(force = false) {
 
   const statusesCycle = ['completed', 'completed', 'ready', 'accepted', 'placed', 'declined', 'completed'];
 
-  for (let i = 0; i < 17; i++) {
+  for (let i = 0; i < 30; i++) {
     const cust = otherCustomers[i % otherCustomers.length];
     const farmer = activeFarmers[i % activeFarmers.length];
     const farmerProducts = products.filter((p) => p.farmerId.equals(farmer._id));
@@ -926,30 +1037,45 @@ export async function runSeed(force = false) {
     { farmerCode: 'f-oldstone', prodName: 'Cold-smoked trout', rating: 4, author: 'Paul Gray', comment: 'Beautifully smoked trout. Melts on a bagel with cream cheese.' },
   ];
 
-  // Expand with additional reviews to reach >30 reviews
+  // Expand with additional reviews to reach >30 reviews without duplicate index keys
   const reviewDocs = [];
   const completedOrders = orderDocs.filter((o) => o.status === 'completed');
+  const seenReviews = new Set();
 
-  for (let i = 0; i < 32; i++) {
+  for (let i = 0; i < 50 && reviewDocs.length < 32; i++) {
     const template = reviewDefs[i % reviewDefs.length];
     const farmer = farmerMap.get(template.farmerCode);
     const prod = productCodeMap.get(template.prodName) || products[0];
-    const order = completedOrders[i % completedOrders.length];
+    const targetType = i % 2 === 0 ? 'product' : 'farmer';
+    const targetProdId = targetType === 'product' ? prod._id : null;
+
+    let assignedOrder = null;
+    for (let oIdx = 0; oIdx < completedOrders.length; oIdx++) {
+      const candidate = completedOrders[(i + oIdx) % completedOrders.length];
+      const key = `${candidate._id}_${targetType}_${targetProdId}_${farmer._id}`;
+      if (!seenReviews.has(key)) {
+        seenReviews.add(key);
+        assignedOrder = candidate;
+        break;
+      }
+    }
+
+    if (!assignedOrder) continue;
     const customer = customerUsers[i % customerUsers.length];
 
     reviewDocs.push({
       _id: new ObjectId(),
-      targetType: i % 2 === 0 ? 'product' : 'farmer',
+      targetType,
       farmerId: farmer._id,
-      productId: i % 2 === 0 ? prod._id : undefined,
+      productId: targetProdId || undefined,
       customerId: customer._id,
       customerName: customer.name,
-      orderId: order._id,
+      orderId: assignedOrder._id,
       rating: template.rating,
       comment: template.comment,
-      reply: template.reply ? { text: template.reply, at: addHours(order.createdAt, 24) } : undefined,
+      reply: template.reply ? { text: template.reply, at: addHours(assignedOrder.createdAt, 24) } : undefined,
       status: 'visible',
-      createdAt: addDays(order.createdAt, 1),
+      createdAt: addDays(assignedOrder.createdAt, 1),
     });
   }
 
@@ -1077,7 +1203,7 @@ export async function runSeed(force = false) {
     await db.collection(COLLECTIONS.MARKETS).updateOne({ _id: m._id }, { $set: { farmerCount: count } });
   }
 
-  // Compute salesCount on products and farmers from completed orders
+  // Compute salesCount, ratingSum, featuredScore, listed on products from completed orders
   for (const p of products) {
     let sales = 0;
     for (const o of orderDocs) {
@@ -1089,20 +1215,74 @@ export async function runSeed(force = false) {
         }
       }
     }
+    const ratingAvg = 4.8;
+    const ratingCount = 12;
+    const ratingSum = Math.round(ratingAvg * ratingCount);
+    const isNew = p.tags && p.tags.includes('new');
+    const isSeasonal = p.tags && p.tags.includes('seasonal');
+    const featuredScore = Math.round(sales * 2 + ratingAvg * ratingCount + (isNew ? 20 : 0) + (isSeasonal ? 10 : 0));
     await db.collection(COLLECTIONS.PRODUCTS).updateOne(
       { _id: p._id },
-      { $set: { salesCount: sales, ratingAvg: 4.8, ratingCount: 12 } }
+      { $set: { salesCount: sales, ratingAvg, ratingCount, ratingSum, featuredScore, listed: p.listed } }
     );
+    p.salesCount = sales;
+    p.ratingAvg = ratingAvg;
+    p.ratingCount = ratingCount;
+    p.ratingSum = ratingSum;
+    p.featuredScore = featuredScore;
   }
 
-  // Compute ratings and sales on farmers
+  // Compute ratings, sales, and categorySlugs on farmers
   for (const f of farmers) {
+    const farmerProducts = products.filter((p) => p.farmerId.equals(f._id));
+    const categorySlugs = [...new Set(farmerProducts.map((p) => p.categorySlug))];
+    const totalSales = farmerProducts.reduce((sum, p) => sum + p.salesCount, 0) + 20;
+    const ratingAvg = 4.9;
+    const ratingCount = 28;
+    const ratingSum = Math.round(ratingAvg * ratingCount);
     await db.collection(COLLECTIONS.FARMERS).updateOne(
       { _id: f._id },
-      { $set: { ratingAvg: 4.9, ratingCount: 28, salesCount: 45 } }
+      { $set: { ratingAvg, ratingCount, ratingSum, salesCount: totalSales, categorySlugs } }
     );
+    f.ratingAvg = ratingAvg;
+    f.ratingCount = ratingCount;
+    f.ratingSum = ratingSum;
+    f.salesCount = totalSales;
+    f.categorySlugs = categorySlugs;
   }
   console.log('✓ Denormalized aggregates synchronized.');
+
+  // ── 17. Write tests/seedFacts.json ──────────────────────────────────────────
+  const listedProducts = await db.collection(COLLECTIONS.PRODUCTS).find({ listed: true }).toArray();
+  const sortedByPrice = [...listedProducts].sort((a, b) => a.priceCents - b.priceCents);
+  const perCategoryCounts = {};
+  for (const cat of categories) {
+    perCategoryCounts[cat.slug] = listedProducts.filter((p) => p.categorySlug === cat.slug).length;
+  }
+  const seedFacts = {
+    elmMarketId: elmMarket._id.toString(),
+    georgeId: georgeUser._id.toString(),
+    newCustomerId: customerUsers.find((u) => u.email === 'chloe@example.com')._id.toString(),
+    listedProductsCount: listedProducts.length,
+    totalProductsCount: products.length,
+    perCategoryCounts,
+    cheapestProduct: {
+      id: sortedByPrice[0]._id.toString(),
+      name: sortedByPrice[0].name,
+      priceCents: sortedByPrice[0].priceCents,
+    },
+    priciestProduct: {
+      id: sortedByPrice[sortedByPrice.length - 1]._id.toString(),
+      name: sortedByPrice[sortedByPrice.length - 1].name,
+      priceCents: sortedByPrice[sortedByPrice.length - 1].priceCents,
+    },
+    farmersCount: farmers.length,
+    listedFarmersCount: farmers.filter((f) => f.listingEnabled).length,
+    marketsCount: markets.length,
+  };
+  const factsPath = path.join(__dirname, '../../tests/seedFacts.json');
+  fs.writeFileSync(factsPath, JSON.stringify(seedFacts, null, 2), 'utf8');
+  console.log(`✓ Generated tests/seedFacts.json (${listedProducts.length} listed products).`);
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
   console.log(`\n======================================================`);

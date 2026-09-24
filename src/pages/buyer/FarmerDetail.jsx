@@ -55,7 +55,7 @@ export function FarmerDetail({ inSheet = true, onClose }) {
       {/* Hero Stall Header */}
       <header className={styles.hero}>
         <div className={styles.avatarWrapper}>
-          <Illustration name={farmer.art || 'crate-carrots'} size="lg" />
+          <Illustration name={farmer.art || 'crate-carrots'} size="md" />
         </div>
 
         <div className={styles.heroDetails}>
