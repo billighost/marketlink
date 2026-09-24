@@ -1,0 +1,168 @@
+import React from 'react';
+import { ShoppingCart, BarChart2, Package, Clock } from 'lucide-react';
+import styles from './DashboardTab.module.css';
+
+const DashboardTab = () => (
+  <div className={styles.contentArea}>
+    <div className={styles.dashboardHeader}>
+      <h1 className={styles.greeting}>Good morning, Farmer Ayomide</h1>
+      <p className={styles.subGreeting}>Market Link • Next Fulfillment: Saturday Grandview Market (Cutoff in 14h 22m)</p>
+    </div>
+
+    <div className={styles.statsGrid}>
+      <div className={styles.statCard}>
+        <div className={styles.statHeader}>
+          <span>TOTAL ORDERS</span>
+          <ShoppingCart size={18} />
+        </div>
+        <h2 className={styles.statValue}>42</h2>
+        <div className={`${styles.statSubtext} ${styles.textGreen}`}>↗ +18% vs previous market</div>
+      </div>
+      
+      <div className={styles.statCard}>
+        <div className={styles.statHeader}>
+          <span>PENDING REVIEW</span>
+          <Clock size={18} className={styles.textOrange} />
+        </div>
+        <h2 className={styles.statValue}>8</h2>
+        <div className={`${styles.statSubtext} ${styles.textOrange}`}>Needs action before cutoff</div>
+      </div>
+      
+      <div className={styles.statCard}>
+        <div className={styles.statHeader}>
+          <span>RESERVED VALUE</span>
+          <BarChart2 size={18} />
+        </div>
+        <h2 className={styles.statValue}>₦425,500</h2>
+        <div className={`${styles.statSubtext} ${styles.textGray}`}>Pay-at-pickup on Saturday</div>
+      </div>
+      
+      <div className={styles.statCard}>
+        <div className={styles.statHeader}>
+          <span>ACTIVE INVENTORY</span>
+          <Package size={18} className={styles.textOrange} />
+        </div>
+        <h2 className={styles.statValue}>16</h2>
+        <div className={`${styles.statSubtext} ${styles.textOrange}`}>3 Low Stock warnings</div>
+      </div>
+    </div>
+
+    <div className={styles.dashboardSplit}>
+      <div className={styles.cardPanel}>
+        <div className={styles.cardHeader}>
+          <h3 className={styles.cardTitle}>Incoming Pre-Orders</h3>
+          <button className={styles.btnOutline}>View All</button>
+        </div>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>CUSTOMER & SLOT</th>
+              <th>HARVEST ITEMS</th>
+              <th>TOTAL</th>
+              <th>STATUS</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span className={styles.tdPrimary}>Marta Lin</span>
+                <span className={styles.tdSecondary}>8:30 AM - 9:00 AM</span>
+              </td>
+              <td>
+                <span className={styles.tdPrimary}>Fresh Ugu Leaves (3 Bunches)</span>
+                <span className={styles.tdSecondary}>Order #ML-8821</span>
+              </td>
+              <td><span className={styles.tdPrimary}>₦1,500</span></td>
+              <td><span className={`${styles.badge} ${styles.badgePending}`}>Pending</span></td>
+              <td><button className={styles.btnPrimary}>Accept</button></td>
+            </tr>
+            <tr>
+              <td>
+                <span className={styles.tdPrimary}>David Chen</span>
+                <span className={styles.tdSecondary}>9:00 AM - 9:30 AM</span>
+              </td>
+              <td>
+                <span className={styles.tdPrimary}>Cherokee Purple Tomatoes (2kg)</span>
+                <span className={styles.tdSecondary}>Order #ML-8820</span>
+              </td>
+              <td><span className={styles.tdPrimary}>₦4,200</span></td>
+              <td><span className={`${styles.badge} ${styles.badgeAccepted}`}>Accepted</span></td>
+              <td><button className={styles.btnOutline}>Mark Ready</button></td>
+            </tr>
+            <tr>
+              <td>
+                <span className={styles.tdPrimary}>Sarah Jenkins</span>
+                <span className={styles.tdSecondary}>10:15 AM - 10:45 AM</span>
+              </td>
+              <td>
+                <span className={styles.tdPrimary}>White Yams (5 Tubers)</span>
+                <span className={styles.tdSecondary}>Order #ML-8819</span>
+              </td>
+              <td><span className={styles.tdPrimary}>₦12,500</span></td>
+              <td><span className={`${styles.badge} ${styles.badgePending}`}>Pending</span></td>
+              <td><button className={styles.btnPrimary}>Accept</button></td>
+            </tr>
+            <tr>
+              <td>
+                <span className={styles.tdPrimary}>James Robertson</span>
+                <span className={styles.tdSecondary}>11:30 AM - 12:00 PM</span>
+              </td>
+              <td>
+                <span className={styles.tdPrimary}>Lacinato Kale (4 Bunches)</span>
+                <span className={styles.tdSecondary}>Order #ML-8818</span>
+              </td>
+              <td><span className={styles.tdPrimary}>₦3,000</span></td>
+              <td><span className={`${styles.badge} ${styles.badgePending}`}>Pending</span></td>
+              <td><button className={styles.btnPrimary}>Accept</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className={styles.cardPanel}>
+        <div className={styles.cardHeader}>
+          <h3 className={styles.cardTitle}>Top Selling Harvest</h3>
+        </div>
+        <div className={styles.progressItem}>
+          <div className={styles.progressItemHeader}>
+            <span className={styles.progressLabel}>Cherokee Purple Tomatoes</span>
+            <span className={styles.progressValue}>45 / 50 kg</span>
+          </div>
+          <div className={styles.progressBarTrack}>
+            <div className={`${styles.progressBarFill} ${styles.fillOrange}`} style={{ width: '90%' }}></div>
+          </div>
+        </div>
+        <div className={styles.progressItem}>
+          <div className={styles.progressItemHeader}>
+            <span className={styles.progressLabel}>White Yams</span>
+            <span className={styles.progressValue}>38 / 40 tubers</span>
+          </div>
+          <div className={styles.progressBarTrack}>
+            <div className={`${styles.progressBarFill} ${styles.fillOrange}`} style={{ width: '95%' }}></div>
+          </div>
+        </div>
+        <div className={styles.progressItem}>
+          <div className={styles.progressItemHeader}>
+            <span className={styles.progressLabel}>Fresh Ugu Leaves</span>
+            <span className={styles.progressValue}>60 / 100 bunches</span>
+          </div>
+          <div className={styles.progressBarTrack}>
+            <div className={`${styles.progressBarFill} ${styles.fillGreen}`} style={{ width: '60%' }}></div>
+          </div>
+        </div>
+        <div className={styles.progressItem}>
+          <div className={styles.progressItemHeader}>
+            <span className={styles.progressLabel}>Sweet Bell Peppers</span>
+            <span className={styles.progressValue}>24 / 30 kg</span>
+          </div>
+          <div className={styles.progressBarTrack}>
+            <div className={`${styles.progressBarFill} ${styles.fillGreen}`} style={{ width: '80%' }}></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+export default DashboardTab;
