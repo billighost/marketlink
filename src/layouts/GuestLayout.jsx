@@ -2,11 +2,12 @@ import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import TopBar from '@/components/layout/TopBar';
 import Footer from '@/components/layout/Footer';
+import BackToTop from '@/components/ui/BackToTop';
 import styles from './GuestLayout.module.css';
 
 /**
  * GuestLayout frame wrapping public unauthenticated pages.
- * Provides skip-to-content link, persistent TopBar, unconstrained <main>, and Footer.
+ * Provides skip-to-content link, persistent TopBar, unconstrained <main>, Footer, and BackToTop.
  */
 export function GuestLayout() {
   const location = useLocation();
@@ -31,8 +32,11 @@ export function GuestLayout() {
         <Outlet />
       </main>
 
-      {/* Persistent footer with top wave */}
-      <Footer withWave={true} />
+      {/* Persistent footer */}
+      <Footer withWave={false} />
+
+      {/* Floating Back to Top Button */}
+      <BackToTop showAfter={350} />
     </div>
   );
 }

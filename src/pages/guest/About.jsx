@@ -1,228 +1,450 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import {
+  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
+  Leaf,
+  Store,
+  Clock,
+  Heart,
+  Users,
+  Award,
+  CheckCircle2,
+  Calendar,
+  Sparkles,
+  MapPin,
+  ChevronRight,
+  Quote,
+  ShoppingBag,
+  ExternalLink,
+} from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
-import PageHeader from '@/components/layout/PageHeader';
-import Button from '@/components/ui/Button';
-import WaveDivider from '@/components/layout/WaveDivider';
-import Illustration from '@/components/domain/Illustration';
-import { TEAM_MEMBERS } from '@/data/placeholders';
 import styles from './About.module.css';
 
-/**
- * About page sharing the MarketLink story, values, workflow timeline, and team.
- */
+const STATS = [
+  { value: '40+', label: 'Independent Growers', subtext: 'Within 90 miles of our markets' },
+  { value: '8', label: 'Historic Markets', subtext: 'Across Manhattan & Brooklyn' },
+  { value: '100%', label: 'Direct Producer Takings', subtext: '0% platform take from stall sales' },
+  { value: '14,000+', label: 'Harvest Pre-Orders', subtext: 'Fulfilled without food waste' },
+];
+
+const VALUES = [
+  {
+    numeral: '01',
+    title: '100% Producer-Only Guarantee',
+    highlight: 'No resellers, no wholesale markups.',
+    description:
+      'Every heirloom tomato, sourdough boule, and raw wildflower jar sold through MarketLink is harvested or crafted by the very grower standing behind the stall. We audit every farm to ensure authentic regional provenance.',
+    icon: ShieldCheck,
+  },
+  {
+    numeral: '02',
+    title: 'Calm, Guaranteed Saturday Mornings',
+    highlight: 'Sleep in knowing your favorites are set aside.',
+    description:
+      'No more arriving at 8:30 AM to find wooden crates already picked clean. Reserve your picks during the week; your labeled brown paper tote will be waiting safely under the canopy until you arrive.',
+    icon: ShoppingBag,
+  },
+  {
+    numeral: '03',
+    title: 'Zero Food Waste by Design',
+    highlight: 'Harvested specifically to demand, never in excess.',
+    description:
+      'Conventional farming discards up to 30% of harvested produce that spoils in trucks or unsold crates. MarketLink growers receive pre-order manifests on Friday evening and harvest strictly to order at dawn.',
+    icon: Leaf,
+  },
+  {
+    numeral: '04',
+    title: 'Dignified Economics for Family Farms',
+    highlight: 'Farmers set their prices and keep 100% of proceeds.',
+    description:
+      'Big retail chains pay farmers as little as 14 cents on the retail food dollar. On MarketLink, growers pocket 100% of their listed price, paid directly to them in person at Saturday collection.',
+    icon: Heart,
+  },
+];
+
+const TIMELINE_STEPS = [
+  {
+    step: '1',
+    time: 'Wednesday & Thursday',
+    title: 'Growers Publish Available Harvest',
+    description:
+      'Farmers inspect their fields and orchard rows, listing the exact crops reaching peak flavor for the upcoming weekend.',
+    badge: 'Field Inspection',
+  },
+  {
+    step: '2',
+    time: 'Thursday through Friday 6:00 PM',
+    title: 'Neighbours Reserve Their Weekly Baskets',
+    description:
+      'Customers browse their neighborhood stalls, building a customized pre-order without prepayment or subscription lock-ins.',
+    badge: 'Pre-Order Window',
+  },
+  {
+    step: '3',
+    time: 'Saturday 5:00 AM Dawn',
+    title: 'Harvested, Packed & Labeled to Order',
+    description:
+      'Produce is clipped at dawn while still cool with morning dew, packed into personalized totes, and loaded for the drive into town.',
+    badge: 'Dawn Harvest',
+  },
+  {
+    step: '4',
+    time: 'Saturday 8:00 AM – 2:00 PM',
+    title: 'Pick Up & Pay Directly at the Stall',
+    description:
+      'Walk up to the stall canopy, greet your grower, inspect your fresh harvest, and settle payment directly in person.',
+    badge: 'Market Day',
+  },
+];
+
+const TEAM = [
+  {
+    name: 'Elena Vance',
+    role: 'Co-Founder & Organic Soil Cultivator',
+    farm: 'Riverbend Farm (Hudson Valley, NY)',
+    image: '/images/farmer-elena.jpg',
+    bio: 'Fourth-generation grower managing 45 certified organic acres along the Hudson. Elena co-founded MarketLink to protect family farms from predatory distributor margins.',
+  },
+  {
+    name: 'Marcus Bennett',
+    role: 'Regional Market Operations Director',
+    farm: 'Greenwich Village Farmers Alliance',
+    image: '/images/farmer-marcus.jpg',
+    bio: 'Former agricultural economist and fifteen-year market manager dedicated to revitalizing historic urban square markets across Lower Manhattan.',
+  },
+  {
+    name: 'Priya Patel',
+    role: 'Heritage Grains Specialist & Artisan Baker',
+    farm: 'Oak & Mill Bakery (Kingston, NY)',
+    image: '/images/hero-carrots.jpg',
+    bio: 'Priya champions stone-milled New York wheat varieties, baking naturally fermented sourdough boules in wood-fired stone deck ovens.',
+  },
+  {
+    name: 'David Cho',
+    role: 'Food Access & Community Partnerships',
+    farm: 'Orchard & Grove Collective',
+    image: '/images/farmer-david.jpg',
+    bio: 'David directs our partnerships with SNAP/EBT and FMNP programs, ensuring that fresh farm produce is accessible to every community household.',
+  },
+];
+
+const FEATURED_MARKETS = [
+  { name: 'Greenwich Village Farmers Market', schedule: 'Saturdays · 8AM–2PM', location: 'Abingdon Square Park' },
+  { name: 'Union Square Greenmarket', schedule: 'Wed, Fri, Sat · 8AM–6PM', location: 'Union Square North & West' },
+  { name: 'Brooklyn Grand Army Plaza', schedule: 'Saturdays · 8AM–4PM', location: 'Prospect Park Entrance' },
+  { name: 'Chelsea Farmers Market', schedule: 'Sundays · 9AM–3PM', location: 'W 23rd St & 9th Ave' },
+];
+
 export function About() {
-  useDocumentTitle('About · MarketLink');
+  useDocumentTitle('About MarketLink — Connecting Soil to Table');
 
   return (
     <div className={styles.page}>
-      <div className="container">
-        <PageHeader
-          title="About MarketLink"
-          subtitle="A quiet, sensible way to shop your local Saturday market."
-          backTo={PATHS.HOME}
-          backLabel="Home"
-        />
-
-        {/* ---------------- SECTION 1: OUR STORY ---------------- */}
-        <section className={styles.storySection}>
-          <div className={styles.storyContent}>
-            <div className={styles.storyText}>
-              <h2 className={styles.storyHeading}>Why we started</h2>
-              <p className={styles.paragraph}>
-                You drive twenty minutes on a Saturday morning, search for parking around the square,
-                and walk up to the market stalls hoping for fresh Brandywines or sourdough, only to
-                find the wooden crates already picked clean.
-              </p>
-              <p className={styles.paragraph}>
-                Meanwhile, small growers and independent family bakers load their trucks at 5am
-                in the dark, guessing how much to harvest without knowing what will sell or spoil
-                in the afternoon heat.
-              </p>
-              <p className={styles.paragraph}>
-                MarketLink was built to make Saturday mornings calm and certain. You pre-order
-                during the week from the farmers you know, they harvest specifically for your order,
-                and your brown paper bag is waiting safely under the awning when you arrive.
-                No delivery vans, no markups. You pay the farmer directly in person when you collect.
-              </p>
+      {/* ─── HERO HEADER SECTION ───────────────────────────────── */}
+      <section className={styles.heroSection}>
+        <div className="container">
+          <div className={styles.heroContent}>
+            <div className={styles.badgeRow}>
+              <span className={styles.heroBadge}>
+                <Leaf size={13} className={styles.badgeIcon} />
+                Our Story & Heritage
+              </span>
+              <span className={styles.heroBadgeAlt}>
+                Est. 2018 · Hudson Valley & New York
+              </span>
             </div>
-            <div className={styles.storyVisual}>
-              <div className={styles.storyImageFrame}>
-                <img
-                  src="/images/market-morning.jpg"
-                  alt="Early morning at Elm Street Market Square with wooden crates of produce and fresh sourdough"
-                  className={styles.storyImg}
-                  data-aspect="4/3"
-                  loading="lazy"
-                />
-                <p className={styles.storyImageCaption}>
-                  Early Saturday morning at Elm Street Market Square
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* ---------------- SECTION 2: WHAT WE BELIEVE (NUMBERED LIST) ---------------- */}
-        <section className={styles.beliefsSection}>
-          <h2 className={styles.sectionHeading}>What we believe</h2>
-          <ul className={styles.beliefsList} role="list">
-            <li className={styles.beliefItem}>
-              <span className={styles.beliefNumeral}>01</span>
-              <div className={styles.beliefBody}>
-                <h3 className={styles.beliefTitle}>Local first</h3>
-                <p className={styles.beliefText}>
-                  Food should travel miles, not continents. Every dollar spent on Elm Street
-                  stays directly with the growers, beekeepers, and bakers who live in our community.
-                </p>
-              </div>
-            </li>
+            <h1 className={styles.heroTitle}>
+              Rooted in the Soil. <br />
+              <span className={styles.titleAccent}>Dedicated to the Neighborhood Table.</span>
+            </h1>
 
-            <li className={styles.beliefItem}>
-              <span className={styles.beliefNumeral}>02</span>
-              <div className={styles.beliefBody}>
-                <h3 className={styles.beliefTitle}>Fair for Farmers</h3>
-                <p className={styles.beliefText}>
-                  Zero commission cuts, zero middle-tier warehouses, and zero hidden platform fees.
-                  Farmers set their own prices, pack their own boxes, and keep 100% of their takings.
-                </p>
-              </div>
-            </li>
-
-            <li className={styles.beliefItem}>
-              <span className={styles.beliefNumeral}>03</span>
-              <div className={styles.beliefBody}>
-                <h3 className={styles.beliefTitle}>Honest simplicity</h3>
-                <p className={styles.beliefText}>
-                  Built for real hands and busy market mornings. No apps to install, no algorithmic
-                  feeds, and no complicated screens. Just a quiet weekly notice board.
-                </p>
-              </div>
-            </li>
-          </ul>
-        </section>
-      </div>
-
-      {/* ---------------- SECTION 3: HOW IT WORKS (CANVAS BAND) ---------------- */}
-      <WaveDivider shape="soft" />
-      <section className={styles.timelineSection}>
-        <div className="containerNarrow">
-          <div className={styles.timelineHeader}>
-            <h2 className={styles.sectionHeading}>How MarketLink works</h2>
-            <p className={styles.sectionSubtitle}>
-              Four straightforward steps from Friday harvest to Saturday market bag.
+            <p className={styles.heroLead}>
+              MarketLink was founded with a straightforward conviction: Saturday morning market trips
+              should be calm, food should travel miles rather than continents, and family farmers should
+              always receive fair value for honest labor.
             </p>
-          </div>
 
-          <div className={styles.timeline}>
-            {/* Step 1 */}
-            <div className={styles.timelineItem}>
-              <div className={styles.timelineBadge} aria-hidden="true">
-                1
-              </div>
-              <div className={styles.timelineBody}>
-                <h3 className={styles.timelineStepTitle}>Farmers publish stock</h3>
-                <p className={styles.timelineStepText}>
-                  Growers and bakers list what will be ripe at Saturday’s market before Friday evening.
-                </p>
-              </div>
+            <div className={styles.heroActionRow}>
+              <Link to={PATHS.MARKETS} className={styles.heroPrimaryBtn}>
+                <Store size={17} />
+                <span>Explore Our 8 Markets</span>
+              </Link>
+              <Link to={PATHS.PRODUCTS} className={styles.heroSecondaryBtn}>
+                <span>Browse Seasonal Harvest</span>
+                <ArrowRight size={16} />
+              </Link>
             </div>
-
-            {/* Step 2 */}
-            <div className={styles.timelineItem}>
-              <div className={styles.timelineBadge} aria-hidden="true">
-                2
-              </div>
-              <div className={styles.timelineBody}>
-                <h3 className={styles.timelineStepTitle}>Customers pre-order</h3>
-                <p className={styles.timelineStepText}>
-                  Neighbours browse their favourite stalls and reserve items ahead of time so their picks are held.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className={styles.timelineItem}>
-              <div className={styles.timelineBadge} aria-hidden="true">
-                3
-              </div>
-              <div className={styles.timelineBody}>
-                <h3 className={styles.timelineStepTitle}>Farmers harvest to order</h3>
-                <p className={styles.timelineStepText}>
-                  Stalls pack your harvest early Saturday morning, labeled and waiting safely behind the counter.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 4 */}
-            <div className={styles.timelineItem}>
-              <div className={styles.timelineBadge} aria-hidden="true">
-                4
-              </div>
-              <div className={styles.timelineBody}>
-                <h3 className={styles.timelineStepTitle}>Pick up and pay</h3>
-                <p className={styles.timelineStepText}>
-                  Collect your brown paper bag at the stall and pay the Farmer in person.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.timelineNote}>
-            <p className={styles.timelineNoteText}>
-              Pickup only. No delivery fees. Payment happens directly at the stall.
-            </p>
           </div>
         </div>
       </section>
-      <WaveDivider shape="gentle" flip />
 
-      {/* ---------------- SECTION 4: THE TEAM ---------------- */}
-      <div className="container">
-        <section className={styles.teamSection}>
-          <div className={styles.teamHeader}>
-            <h2 className={styles.sectionHeading}>The team</h2>
-            <p className={styles.sectionSubtitle}>
-              Market organizers, growers, and community volunteers on Elm Street.
+      {/* ─── STATS METRIC STRIP ─────────────────────────────────── */}
+      <section className={styles.statsSection}>
+        <div className="container">
+          <div className={styles.statsGrid}>
+            {STATS.map((stat, idx) => (
+              <div key={idx} className={styles.statCard}>
+                <span className={styles.statValue}>{stat.value}</span>
+                <strong className={styles.statLabel}>{stat.label}</strong>
+                <span className={styles.statSubtext}>{stat.subtext}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CHAPTER 1: THE STORY (WHY WE STARTED) ─────────────── */}
+      <section className={styles.storySection}>
+        <div className="container">
+          <div className={styles.storyLayout}>
+            {/* Story Text */}
+            <div className={styles.storyTextCol}>
+              <span className={styles.sectionKicker}>The Origin</span>
+              <h2 className={styles.sectionHeading}>
+                Why Saturday mornings needed a quieter, better way
+              </h2>
+
+              <p className={styles.storyParagraph}>
+                You set your alarm on Saturday morning, navigate weekend traffic, hunt for parking
+                around Abingdon Square, and walk eagerly toward the green-and-white canopies—only to discover
+                that the heirloom Brandywines and country sourdough loaves were picked clean twenty minutes earlier.
+              </p>
+
+              <p className={styles.storyParagraph}>
+                Meanwhile, eighty miles north in Dutchess and Columbia counties, independent growers and
+                small-batch bakers load their delivery flatbeds at 4:30 AM in the pitch dark. They guess
+                how many crates will sell and how much tender produce will wilt under the hot summer sun.
+              </p>
+
+              <p className={styles.storyParagraph}>
+                <strong>MarketLink was created to solve both sides of that equation.</strong> By enabling
+                thoughtful pre-orders throughout the week, farmers harvest only what neighbours have
+                reserved, and your brown paper tote is safely set aside under the tent canopy waiting for your arrival.
+              </p>
+
+              <div className={styles.storyHighlightBox}>
+                <Quote size={24} className={styles.quoteIcon} />
+                <p className={styles.quoteText}>
+                  “The deepest connection to your food is looking the grower in the eye across a crate
+                  of fresh radishes. We built technology not to replace that handshake, but to make sure
+                  it happens every weekend without stress.”
+                </p>
+                <span className={styles.quoteAuthor}>— Elena Vance, Co-Founder & 4th Generation Grower</span>
+              </div>
+            </div>
+
+            {/* Story Visual Imagery Frame */}
+            <div className={styles.storyVisualCol}>
+              <div className={styles.imageStack}>
+                <div className={styles.mainImageWrap}>
+                  <img
+                    src="/images/market-morning.jpg"
+                    alt="Bustling morning at the farmers market with wooden crates full of fresh produce"
+                    className={styles.storyMainImg}
+                  />
+                  <div className={styles.imageOverlayPill}>
+                    <MapPin size={13} />
+                    <span>Abingdon Square Farmers Market, 8:00 AM</span>
+                  </div>
+                </div>
+
+                <div className={styles.secondaryImageWrap}>
+                  <img
+                    src="/images/riverbend-farm.jpg"
+                    alt="Riverbend Farm fields in Hudson Valley"
+                    className={styles.storySecondaryImg}
+                  />
+                  <div className={styles.secondaryBadge}>
+                    <span>🌱 100% Certified Organic Soil</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CHAPTER 2: OUR 4 PILLARS (VALUES) ──────────────────── */}
+      <section className={styles.valuesSection}>
+        <div className="container">
+          <div className={styles.valuesHeader}>
+            <span className={styles.sectionKickerCenter}>Our Principles</span>
+            <h2 className={styles.sectionHeadingCenter}>What we stand for every Saturday</h2>
+            <p className={styles.sectionLeadCenter}>
+              We are deliberately not a nationwide delivery warehouse or venture-backed grocery app.
+              We are a community-operated utility preserving regional agriculture.
             </p>
           </div>
 
-          {/* TODO: replace with real team details */}
-          <div className={styles.teamGrid}>
-            {TEAM_MEMBERS.map((member, index) => {
-              const iconNames = ['crate', 'loaf', 'honey', 'basket'];
-              const iconName = iconNames[index % iconNames.length];
+          <div className={styles.valuesGrid}>
+            {VALUES.map((val) => {
+              const IconComp = val.icon;
               return (
-                <div key={member.id} className={styles.teamMemberRow}>
-                  <Illustration name={iconName} size="sm" className={styles.teamAccentIcon} />
-                  <div className={styles.teamMemberInfo}>
-                    <h3 className={styles.memberName}>{member.name}</h3>
-                    <span className={styles.memberRole}>{member.role}</span>
-                    <p className={styles.memberBio}>{member.bio}</p>
+                <div key={val.numeral} className={styles.valueCard}>
+                  <div className={styles.valueCardTop}>
+                    <span className={styles.valueNumeral}>{val.numeral}</span>
+                    <div className={styles.valueIconWrap}>
+                      <IconComp size={20} />
+                    </div>
                   </div>
+                  <h3 className={styles.valueTitle}>{val.title}</h3>
+                  <span className={styles.valueHighlight}>{val.highlight}</span>
+                  <p className={styles.valueDesc}>{val.description}</p>
                 </div>
               );
             })}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ---------------- SECTION 5: CLOSING CTA ---------------- */}
-        <section className={styles.aboutCta}>
-          <h2 className={styles.ctaHeading}>Join us this Saturday</h2>
-          <p className={styles.ctaSubtitle}>
-            Sign up in two minutes. Your first pre-order can be ready for collection this weekend.
-          </p>
-          <Button
-            as={Link}
-            to={`${PATHS.REGISTER}?role=customer`}
-            variant="primary"
-            size="md"
-          >
-            Create your free account
-          </Button>
-        </section>
-      </div>
+      {/* ─── CHAPTER 3: HOW IT WORKS (THE SATURDAY CYCLE) ───────── */}
+      <section className={styles.timelineSection}>
+        <div className="container">
+          <div className={styles.timelineHeader}>
+            <span className={styles.sectionKickerCenterLight}>The Weekly Rhythm</span>
+            <h2 className={styles.sectionHeadingCenterLight}>How MarketLink connects soil to table</h2>
+            <p className={styles.sectionLeadCenterLight}>
+              Four straightforward steps from midweek field checks to your Saturday morning paper tote.
+            </p>
+          </div>
+
+          <div className={styles.timelineGrid}>
+            {TIMELINE_STEPS.map((item, idx) => (
+              <div key={idx} className={styles.timelineCard}>
+                <div className={styles.timelineCardHead}>
+                  <div className={styles.stepBadge}>{item.step}</div>
+                  <span className={styles.timelineCategoryPill}>{item.badge}</span>
+                </div>
+                <span className={styles.timelineTime}>{item.time}</span>
+                <h3 className={styles.timelineTitle}>{item.title}</h3>
+                <p className={styles.timelineText}>{item.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.timelineNotice}>
+            <div className={styles.noticeIconWrap}>
+              <CheckCircle2 size={18} />
+            </div>
+            <p className={styles.noticeText}>
+              <strong>Direct in-person pickup only:</strong> No cardboard shipping boxes, no third-party delivery couriers,
+              and no online payment surcharges. You pay the grower directly at collection.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CHAPTER 4: COMMUNITY STEWARDS & TEAM ───────────────── */}
+      <section className={styles.teamSection}>
+        <div className="container">
+          <div className={styles.teamHeader}>
+            <span className={styles.sectionKicker}>Community Stewards</span>
+            <h2 className={styles.sectionHeading}>The people behind the stalls and screens</h2>
+            <p className={styles.teamLead}>
+              Market organizers, multi-generation family growers, and volunteers united around regional food dignity.
+            </p>
+          </div>
+
+          <div className={styles.teamGrid}>
+            {TEAM.map((member, idx) => (
+              <div key={idx} className={styles.teamCard}>
+                <div className={styles.teamImgWrap}>
+                  <img src={member.image} alt={member.name} className={styles.teamImg} />
+                  <span className={styles.teamFarmTag}>{member.farm}</span>
+                </div>
+                <div className={styles.teamCardBody}>
+                  <h3 className={styles.memberName}>{member.name}</h3>
+                  <span className={styles.memberRole}>{member.role}</span>
+                  <p className={styles.memberBio}>{member.bio}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CHAPTER 5: OUR HISTORIC MARKET LOCATIONS ───────────── */}
+      <section className={styles.marketsPreviewSection}>
+        <div className="container">
+          <div className={styles.marketsCard}>
+            <div className={styles.marketsText}>
+              <span className={styles.sectionKicker}>Neighborhood Network</span>
+              <h2 className={styles.marketsHeading}>Operating at 8 historic square markets</h2>
+              <p className={styles.marketsParagraph}>
+                From the cobbled streets of the West Village to the grand tree-lined arc of Prospect Park,
+                our partner markets bring fresh Hudson Valley and regional harvests directly to neighborhood centers.
+              </p>
+              <div className={styles.marketsList}>
+                {FEATURED_MARKETS.map((m, idx) => (
+                  <div key={idx} className={styles.marketPillItem}>
+                    <MapPin size={14} className={styles.marketPillIcon} />
+                    <div>
+                      <strong>{m.name}</strong>
+                      <span>{m.schedule} · {m.location}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link to={PATHS.MARKETS} className={styles.viewMarketsBtn}>
+                <span>View Full Market Directory & Schedule</span>
+                <ChevronRight size={16} />
+              </Link>
+            </div>
+
+            <div className={styles.marketsVisual}>
+              <img
+                src="/images/market-greenwich.jpg"
+                alt="Greenwich Village Farmers Market sunny morning scene"
+                className={styles.marketsImg}
+              />
+              <div className={styles.marketsImgTag}>
+                <span>📍 Greenwich Village · Abingdon Square</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CHAPTER 6: COMMUNITY INVITATION CTA ────────────────── */}
+      <section className={styles.ctaSection}>
+        <div className="container">
+          <div className={styles.ctaCard}>
+            <div className={styles.ctaBadgeRow}>
+              <span className={styles.ctaBadge}>
+                <Sparkles size={13} />
+                Saturday Morning Tradition
+              </span>
+            </div>
+
+            <h2 className={styles.ctaTitle}>
+              Experience your neighborhood market <br />
+              with certainty and ease this weekend.
+            </h2>
+
+            <p className={styles.ctaSubtitle}>
+              Create your free account in under two minutes. No subscription fees, no locked contracts—just
+              fresh harvest held safely for you under the canopy.
+            </p>
+
+            <div className={styles.ctaButtonGroup}>
+              <Link
+                to={`${PATHS.REGISTER}?role=customer`}
+                className={styles.ctaPrimaryBtn}
+              >
+                <span>Create Your Free Account</span>
+                <ArrowRight size={17} />
+              </Link>
+              <Link to={PATHS.CONTACT} className={styles.ctaSecondaryBtn}>
+                <span>Contact Market Coordinators</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

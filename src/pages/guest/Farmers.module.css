@@ -1,0 +1,644 @@
+/* ==========================================================================
+   Farmers Directory — Guest Page Styles
+   ========================================================================== */
+
+.page {
+  width: 100%;
+  background-color: #ffffff;
+}
+
+/* ─── 1. HERO BANNER ─────────────────────────────────────────── */
+.heroSection {
+  background: linear-gradient(180deg, #faf3f1 0%, #ffffff 100%);
+  border-bottom: 1px solid #eee4df;
+  padding-block: clamp(2.5rem, 2rem + 2vw, 4rem);
+}
+
+.heroContent {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #6a1b29;
+  background-color: #fae8eb;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+.eyebrowIcon {
+  color: #27532b;
+}
+
+.heroTitle {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: clamp(2rem, 1.6rem + 1.8vw, 2.75rem);
+  font-weight: 700;
+  color: #4a1521;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 14px 0;
+}
+
+.heroSubtitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #595147;
+  margin: 0 0 28px 0;
+}
+
+/* Search Bar & Organic Filter */
+.searchBarWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .searchBarWrapper {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.searchInputGroup {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #dcd1c8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 8px rgba(46, 43, 38, 0.04);
+}
+
+.searchIcon {
+  color: #7d7266;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  color: #2e2b26;
+}
+
+.searchInput::placeholder {
+  color: #9c9187;
+}
+
+.clearSearchBtn {
+  background: transparent;
+  border: none;
+  color: #9c9187;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.organicFilterBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 18px;
+  background-color: #ffffff;
+  border: 1px solid #dcd1c8;
+  border-radius: 8px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #2e2b26;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(46, 43, 38, 0.04);
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.organicFilterBtn:hover {
+  background-color: #faf5f2;
+  border-color: #27532b;
+  color: #27532b;
+}
+
+.organicFilterActive {
+  background-color: #e5f6e8;
+  border-color: #27532b;
+  color: #175e21;
+}
+
+/* ─── 2. CATEGORY BAR ────────────────────────────────────────── */
+.categoryBar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #eee4df;
+  padding-block: 14px;
+}
+
+.categoryScroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.categoryScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.categoryChip {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background-color: #faf4f1;
+  border: 1px solid #ebdcd6;
+  color: #544d45;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.categoryChip:hover {
+  background-color: #f2e7e2;
+  color: #2e2b26;
+}
+
+.categoryChipActive {
+  background-color: #541722;
+  border-color: #541722;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.categoryChipActive:hover {
+  background-color: #431019;
+  color: #ffffff;
+}
+
+/* ─── 3. FARMERS GRID ────────────────────────────────────────── */
+.farmersGridSection {
+  padding-block: clamp(2rem, 1.5rem + 1.5vw, 3.5rem);
+}
+
+.resultsMetaRow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+  .resultsMetaRow {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.resultsCount {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  color: #6b6259;
+  margin: 0;
+}
+
+.resultsCount strong {
+  color: #2e2b26;
+}
+
+.trustBadges {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.trustBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #27532b;
+}
+
+.farmersGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .farmersGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .farmersGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.farmerCard {
+  background-color: #ffffff;
+  border: 1px solid #ece4de;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(46, 43, 38, 0.04);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.farmerCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(46, 43, 38, 0.09);
+}
+
+.cardHeaderArea {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  background-color: #f1ebe5;
+}
+
+.cardCoverImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cardCoverOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+.avatarWrap {
+  position: absolute;
+  bottom: -22px;
+  left: 20px;
+  width: 66px;
+  height: 66px;
+  border-radius: 999px;
+  border: 3px solid #ffffff;
+  overflow: hidden;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 5;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ratingBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #2e2b26;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.ratingCount {
+  font-size: 0.68rem;
+  color: #7d7266;
+  font-weight: 400;
+}
+
+.cardBody {
+  padding: 30px 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.titleRow {
+  margin-bottom: 6px;
+}
+
+.farmTitle {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #4a1521;
+  margin: 0 0 2px 0;
+  line-height: 1.25;
+}
+
+.farmerName {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.78rem;
+  color: #7d7266;
+  margin: 0;
+}
+
+.locationRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  color: #6b6259;
+  margin-bottom: 12px;
+}
+
+.locIcon {
+  color: #6a1b29;
+  flex-shrink: 0;
+}
+
+.badgesRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.badgePill {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #1b6026;
+  background-color: #e5f6e8;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.storySnippet {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #544d45;
+  margin: 0 0 16px 0;
+}
+
+/* Market Attendance Box */
+.marketAttendanceBox {
+  background-color: #faf5f2;
+  border: 1px solid #ede3dc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.marketBoxHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #541722;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.storeIcon {
+  color: #541722;
+}
+
+.marketDaysList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.marketDayItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+}
+
+.marketDayName {
+  font-weight: 600;
+  color: #2e2b26;
+}
+
+.marketDayTime {
+  color: #7d7266;
+}
+
+/* Crops Preview */
+.cropsPreviewRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.cropsLabel {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.7rem;
+  color: #7d7266;
+  font-weight: 600;
+}
+
+.cropTagsList {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.cropTag {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.65rem;
+  color: #544d45;
+  background-color: #f1ebe5;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.cropMoreTag {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.65rem;
+  color: #6a1b29;
+  font-weight: 600;
+}
+
+/* Card Footer */
+.cardFooter {
+  padding-top: 14px;
+  border-top: 1px solid #f0e8e2;
+  margin-top: auto;
+}
+
+.viewStallBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  background-color: #faede9;
+  border: 1px solid #ebdcd6;
+  border-radius: 7px;
+  color: #541722;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 120ms ease;
+}
+
+.viewStallBtn:hover {
+  background-color: #541722;
+  border-color: #541722;
+  color: #ffffff;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 48px 20px;
+  background-color: #faf5f2;
+  border-radius: 12px;
+  border: 1px dashed #dcd1c8;
+}
+
+.emptyIcon {
+  color: #27532b;
+  margin-bottom: 12px;
+}
+
+.emptyState h3 {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: 1.25rem;
+  color: #4a1521;
+  margin: 0 0 6px 0;
+}
+
+.emptyState p {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  color: #6b6259;
+  margin: 0 0 16px 0;
+}
+
+.resetBtn {
+  background-color: #541722;
+  color: #ffffff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ─── 4. PRODUCER PLEDGE CALLOUT ─────────────────────────────── */
+.pledgeSection {
+  padding-bottom: clamp(3rem, 2.5rem + 2vw, 5rem);
+}
+
+.pledgeCard {
+  background: linear-gradient(135deg, #faede9 0%, #f7f3ee 100%);
+  border: 1px solid #ecdcd5;
+  border-radius: 14px;
+  padding: clamp(24px, 20px + 2vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+@media (min-width: 768px) {
+  .pledgeCard {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.pledgeText {
+  max-width: 680px;
+}
+
+.pledgeTag {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #6a1b29;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.pledgeText h2 {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.85rem);
+  font-weight: 700;
+  color: #4a1521;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.pledgeText p {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: #544d45;
+  margin: 0;
+}
+
+.pledgeCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background-color: #541722;
+  color: #ffffff;
+  border-radius: 8px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(84, 23, 34, 0.25);
+  transition: background-color 120ms ease;
+  flex-shrink: 0;
+}
+
+.pledgeCtaBtn:hover {
+  background-color: #3e0e16;
+}

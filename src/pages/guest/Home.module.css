@@ -1,965 +1,894 @@
 /* ==========================================================================
-   Home.module.css
-   MarketLink landing page styles:
-   - Hand-placed flat-lay hero composition
-   - Editorial staggered How It Works
-   - Chalkboard double-frame Price Board
-   - Magazine editorial Meet the Farmers
-   - Asymmetric offset Customer & Farmer statements
-   - Paper-tag styled farmer quote
-   - Warm "See you Saturday" closing
+   MarketLink Home Page Styles
+   Matches the design: Hero, Markets, Seasonal Harvest, Farmers, Process, CTA
    ========================================================================== */
 
-.page {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-bg);
-  overflow-x: clip;
+.homeContainer {
+  width: 100%;
+  overflow-x: hidden;
 }
 
-/* --------------------------------------------------------------------------
-   SECTION 1: HERO ("The market table, seen from above")
-   -------------------------------------------------------------------------- */
+/* ─── 1. HERO SECTION ────────────────────────────────────────── */
 
 .heroSection {
   position: relative;
-  background-color: var(--color-bg);
-  padding-block: var(--space-12) var(--space-16);
-  overflow-x: clip;
-  border-bottom: 1px solid var(--color-border);
-}
-
-@media (min-width: 768px) {
-  .heroSection {
-    padding-block: var(--space-16) var(--space-20);
-    min-height: clamp(34rem, 28rem + 12vw, 42rem);
-    display: flex;
-    align-items: center;
-  }
-}
-
-@media (min-width: 1024px) {
-  .heroSection {
-    min-height: clamp(38rem, 30rem + 14vw, 46rem);
-  }
-}
-
-.heroStage {
-  position: relative;
   width: 100%;
-  max-width: calc(var(--container-max) + var(--space-16));
-  margin-inline: auto;
-  padding-inline: var(--page-pad);
+  min-height: clamp(620px, 88vh, 920px);
+  background-image: url('/images/hero-market-crates.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(3.5rem, 5vw, 6rem) var(--page-pad, 1.5rem);
+  overflow: hidden;
 }
 
-/* Protected central reading zone */
-.readingColumn {
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  /* Radial center enhancement: softly illuminates the canvas while keeping produce crates vivid */
+  background: radial-gradient(
+    ellipse 62% 64% at 50% 50%,
+    rgba(252, 248, 241, 0.76) 0%,
+    rgba(250, 246, 238, 0.45) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.heroContent {
   position: relative;
   z-index: 2;
-  max-width: var(--measure-narrow);
-  margin-inline: auto;
-  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  text-align: center;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  animation: heroFadeIn 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.marketOverline {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  letter-spacing: var(--tracking-normal);
-  margin: 0;
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.heroBrandMark {
+  margin-bottom: clamp(1rem, 1.6vw, 1.85rem);
+  transform: scale(1.05);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.04));
 }
 
 .heroTitle {
-  font-family: var(--font-head);
-  font-size: var(--text-display);
-  font-weight: 300;
-  line-height: var(--lh-display);
-  color: var(--color-ink);
-  letter-spacing: var(--tracking-head);
-  text-wrap: balance;
-  margin: 0;
-}
-
-.readyUnderlineWrap {
-  position: relative;
-  display: inline-block;
-  white-space: nowrap;
-}
-
-.wavyUnderline {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.15em;
-  width: 100%;
-  height: 0.28em;
-  stroke: var(--color-wood);
-  stroke-width: 1.5px;
-  fill: none;
-  pointer-events: none;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.85rem, 2.2rem + 3.4vw, 4.6rem);
+  font-weight: 700;
+  color: #5C7048;
+  line-height: 1.13;
+  letter-spacing: -0.025em;
+  margin: 0 0 clamp(1.1rem, 1.5vw, 1.6rem) 0;
+  text-shadow: 0 1px 24px rgba(255, 255, 255, 0.7);
 }
 
 .heroLead {
-  font-family: var(--font-body);
-  font-size: var(--text-lead);
-  line-height: var(--lh-body);
-  color: var(--color-ink-soft);
-  margin: 0;
-  max-width: var(--measure-narrow);
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(1.06rem, 0.98rem + 0.35vw, 1.25rem);
+  line-height: 1.6;
+  color: #4c433b;
+  max-width: 590px;
+  margin: 0 auto clamp(1.85rem, 2.4vw, 2.6rem);
+  font-weight: 450;
+  text-shadow: 0 1px 16px rgba(255, 255, 255, 0.6);
 }
 
 .heroActions {
   display: flex;
-  flex-direction: column;
-  gap: var(--gap-default);
-  width: 100%;
-  margin-top: var(--space-2);
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
 }
 
-@media (min-width: 480px) {
-  .heroActions {
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: auto;
-  }
+.browseMarketsBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: #5C1D2E;
+  color: #ffffff !important;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 1.02rem;
+  font-weight: 600;
+  padding: 14px 30px;
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(92, 29, 46, 0.28);
+  transition: all 180ms ease;
 }
 
-.heroFootnote {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-faint);
-  margin: 0;
+.browseMarketsBtn:hover {
+  background-color: #481422;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(92, 29, 46, 0.38);
+  color: #ffffff !important;
 }
 
-/* --------------------------------------------------------------------------
-   Scattered Produce Composition (Flat-lay still life)
-   Composition exception: percentages, small degree rotations, and offsets
-   are allowed here because this is a hand-placed flat-lay arrangement.
-   -------------------------------------------------------------------------- */
-
-.produceCluster {
-  pointer-events: none;
-  user-select: none;
+.exploreProduceBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: rgba(252, 249, 244, 0.92);
+  color: #26211c !important;
+  border: 1.5px solid #26211c;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 1.02rem;
+  font-weight: 600;
+  padding: 13px 28px;
+  border-radius: 999px;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition: all 180ms ease;
 }
 
-/* Mobile arrangement: exactly 3 items, centered, no tags, no overflow */
-@media (max-width: 767px) {
-  .produceCluster {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--space-4);
-    width: 100%;
-    max-width: 100%;
-    margin-top: var(--space-8);
-    overflow: hidden;
-  }
-
-  .desktopOnlyItem,
-  .tabletDesktopItem {
-    display: none;
-  }
-
-  .produceItem {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  .produceItem svg {
-    width: clamp(2.5rem, 8vw, 3.5rem);
-    height: clamp(2.5rem, 8vw, 3.5rem);
-  }
-
-  .tag {
-    display: none;
-  }
+.exploreProduceBtn:hover {
+  background-color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(38, 33, 28, 0.12);
+  color: #26211c !important;
 }
 
-/* Tablet & Desktop: scattered coordinates around edges */
-@media (min-width: 768px) {
-  .produceCluster {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-  }
-
-  .produceItem {
-    position: absolute;
-    left: var(--x);
-    top: var(--y);
-    transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--s, 1));
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-2);
-  }
-
-  /* Specific composition coordinates (hand-arranged still life) */
-  /* Top-left: Wicker basket of tomatoes (hero item) */
-  .itemTomatoes {
-    --x: 12%;
-    --y: 24%;
-    --r: -4deg;
-    --s: 1.1;
-  }
-
-  /* Top-right: Wooden crate of carrots */
-  .itemCarrots {
-    --x: 80%;
-    --y: 22%;
-    --r: 5deg;
-    --s: 1.05;
-  }
-
-  /* Bottom-left: Farm egg carton (Tablet & Desktop) */
-  .itemEggs {
-    --x: 16%;
-    --y: 78%;
-    --r: -3deg;
-    --s: 0.95;
-  }
-
-  /* Bottom-right: Sourdough boule */
-  .itemSourdough {
-    --x: 80%;
-    --y: 78%;
-    --r: 4deg;
-    --s: 1.05;
-  }
-
-  /* Mid-left: Bunch of beetroots (Desktop only) */
-  .itemBeets {
-    --x: 10%;
-    --y: 52%;
-    --r: 6deg;
-    --s: 0.95;
-  }
+.btnArrow {
+  display: inline-block;
+  font-size: 1.15rem;
+  line-height: 1;
+  transition: transform 180ms ease;
 }
 
-@media (max-width: 1023px) {
-  .desktopOnlyItem {
-    display: none;
-  }
+.browseMarketsBtn:hover .btnArrow,
+.exploreProduceBtn:hover .btnArrow {
+  transform: translateX(4px);
 }
 
-/* Paper price tags */
-.tag {
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-2);
+/* ─── SECTION COMMONS ────────────────────────────────────────── */
+.sectionHeader {
   display: flex;
-  flex-direction: column;
-  transform: rotate(var(--tag-r, 3deg));
-  box-shadow: none;
-  pointer-events: none;
-  position: relative;
-  white-space: nowrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: var(--space-6, 1.75rem);
+  flex-wrap: wrap;
+  gap: var(--space-3, 0.75rem);
 }
 
-.tagHole {
-  position: absolute;
-  top: var(--space-1);
-  left: -0.35rem;
-  width: 5px;
-  height: 5px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-wood);
-  background-color: var(--color-white);
+.sectionEyebrow {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #7a2e3b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
 }
-
-.tagTwine {
-  position: absolute;
-  top: var(--space-1);
-  left: -0.85rem;
-  width: 0.5rem;
-  height: 1px;
-  background-color: var(--color-wood);
-}
-
-.tagName {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink);
-  line-height: var(--lh-ui);
-}
-
-.tagPrice {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink);
-  line-height: var(--lh-ui);
-}
-
-/* --------------------------------------------------------------------------
-   SECTION 2: HOW IT WORKS (Staggered editorial steps with dotted path)
-   -------------------------------------------------------------------------- */
-
-.howSection {
-  padding-block: var(--space-16) var(--space-20);
-  background-color: var(--color-bg);
-}
-
-.sectionHeadingGroup {
-  margin-bottom: var(--space-12);
-}
-
-.sectionHeadingGroupCentered {
-  text-align: center;
-  margin-bottom: var(--space-12);
+.from{
+  color: #7a2e3b;
 }
 
 .sectionTitle {
-  font-family: var(--font-head);
-  font-size: var(--text-h2);
-  font-weight: var(--weight-head);
-  line-height: var(--lh-h2);
-  color: var(--color-ink);
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(1.4rem, 1.2rem + 0.8vw, 1.85rem);
+  font-weight: 700;
+  color: #262e2d;
+  letter-spacing: -0.015em;
   margin: 0;
 }
 
-.sectionSubtitle {
-  font-family: var(--font-body);
-  font-size: var(--text-lead);
-  color: var(--color-ink-soft);
-  margin-top: var(--space-2);
+/* ─── 2. WEEKEND GATHERINGS / MARKETS ────────────────────────── */
+.marketsSection {
+  background-color: #faf7f0;
+  padding-block: clamp(3rem, 2.5rem + 2.5vw, 4.5rem);
+  border-bottom: 1px solid rgba(122, 46, 59, 0.07);
 }
 
-.stepsRow {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-}
-
-@media (min-width: 768px) {
-  .stepsRow {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--space-6);
-  }
-}
-
-/* Dotted path SVG between steps on desktop */
-.dottedPathSvg {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .dottedPathSvg {
-    display: block;
-    position: absolute;
-    top: var(--space-6);
-    left: 10%;
-    right: 10%;
-    width: 80%;
-    height: var(--space-12);
-    stroke: var(--color-wood-line);
-    stroke-width: 1.5px;
-    stroke-dasharray: 4 6;
-    fill: none;
-    pointer-events: none;
-  }
-}
-
-.stepBlock {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  position: relative;
-}
-
-/* Desktop vertical staggering */
-@media (min-width: 768px) {
-  .stepBlock:nth-child(2) {
-    margin-top: 0;
-  }
-  .stepBlock:nth-child(3) {
-    margin-top: var(--space-6);
-  }
-  .stepBlock:nth-child(4) {
-    margin-top: var(--space-12);
-  }
-}
-
-.stepHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.stepNumeral {
-  font-family: var(--font-head);
-  font-size: var(--text-h1);
-  font-weight: var(--weight-head);
-  color: var(--color-wood);
-  line-height: 1;
-}
-
-.stepTitle {
-  font-family: var(--font-head);
-  font-size: var(--text-h3);
-  font-weight: var(--weight-head);
-  color: var(--color-ink);
-  margin: 0;
-}
-
-.stepCopy {
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  line-height: var(--lh-body);
-  color: var(--color-ink-soft);
-  margin: 0;
-}
-
-/* --------------------------------------------------------------------------
-   SECTION 3: PRICE BOARD (Chalkboard style double frame with stall numbers)
-   -------------------------------------------------------------------------- */
-
-.boardSection {
-  background-color: var(--color-canvas);
-  padding-block: var(--space-12) var(--space-16);
-}
-
-.boardHeader {
-  text-align: center;
-  margin-bottom: var(--space-8);
-}
-
-.boardTagline {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-  margin-top: var(--space-2);
-}
-
-/* Double hairline frame */
-.chalkboardFrameOuter {
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-}
-
-.chalkboardFrameInner {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-6) var(--space-5);
-}
-
-@media (min-width: 768px) {
-  .chalkboardFrameInner {
-    padding: var(--space-8) var(--space-8);
-  }
-}
-
-.boardTopBar {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--space-3);
-  margin-bottom: var(--space-6);
-}
-
-.boardBadge {
-  font-family: var(--font-head);
-  font-size: var(--text-h3);
-  font-weight: var(--weight-head);
-  color: var(--color-ink);
-}
-
-.cutoffNotice {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-carrot-text);
-}
-
-.boardList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.boardItem {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-}
-
-@media (max-width: 640px) {
-  .boardItem {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-1);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px dashed var(--color-border);
-  }
-
-  .itemLeftCol {
-    flex-wrap: wrap;
-    white-space: normal;
-    gap: var(--space-2);
-  }
-
-  .dottedLeaderLine {
-    display: none;
-  }
-
-  .itemRightCol {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
-
-.itemLeftCol {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  white-space: nowrap;
-}
-
-.stallBadge {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  background-color: var(--color-canvas-soft);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--space-2);
-}
-
-.itemProduceName {
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink);
-}
-
-.itemFarmName {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-}
-
-.dottedLeaderLine {
-  flex: 1;
-  border-bottom: 1px dotted var(--color-wood-line);
-  margin-bottom: 0.3em;
-  min-width: var(--space-4);
-}
-
-.itemRightCol {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  white-space: nowrap;
-}
-
-.itemPriceText {
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink);
-}
-
-.itemUnitText {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-regular);
-  color: var(--color-ink-soft);
-}
-
-.statusHerb {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: var(--color-herb);
-  font-weight: var(--weight-medium);
-}
-
-.statusCarrot {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: var(--color-carrot-text);
-  font-weight: var(--weight-medium);
-}
-
-.boardFooterRow {
-  margin-top: var(--space-6);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--gap-default);
-}
-
-.boardFooterNote {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-  margin: 0;
-}
-
-.boardSignInLink {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: var(--underline-offset);
+.filterBtn {
   display: inline-flex;
   align-items: center;
-  min-height: var(--tap-min);
+  gap: 7px;
+  background-color: #ffffff;
+  border: 1px solid rgba(122, 46, 59, 0.18);
+  color: #2e2b26;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color var(--duration-fast, 120ms) ease,
+              border-color var(--duration-fast, 120ms) ease;
 }
 
-/* --------------------------------------------------------------------------
-   SECTION 4: MEET THE FARMERS (Magazine editorial spread)
-   -------------------------------------------------------------------------- */
-
-.farmersSection {
-  padding-block: var(--space-16) var(--space-20);
-  background-color: var(--color-bg);
+.filterBtn:hover {
+  background-color: #f7edf0;
+  border-color: #7a2e3b;
+  color: #7a2e3b;
 }
 
-.editorialSpread {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
+.marketsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5, 1.25rem);
 }
 
-.featuredFarmerPanel {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background-color: var(--color-white);
-}
-
-@media (min-width: 768px) {
-  .featuredFarmerPanel {
-    flex-direction: row;
-    align-items: stretch;
+@media (min-width: 640px) {
+  .marketsGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-.featuredFarmerImageCol {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-canvas);
+@media (min-width: 1024px) {
+  .marketsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.featuredFarmerImg {
+.marketCard {
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(46, 43, 38, 0.05);
+  border: 1px solid rgba(122, 46, 59, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--duration-fast, 120ms) ease,
+              box-shadow var(--duration-fast, 120ms) ease;
+}
+
+.marketCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(46, 43, 38, 0.09);
+}
+
+.marketImgWrapper {
+  position: relative;
   width: 100%;
-  height: auto;
   aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+.marketImg {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.featuredFarmerInfoCol {
-  flex: 1.2;
-  padding: var(--space-6) var(--space-6);
+.marketStatusBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: #ffffff;
+}
+
+.badgeToday {
+  background-color: #27532b;
+}
+
+.badgeTomorrow {
+  background-color: #c9671e;
+}
+
+.badgeWed {
+  background-color: #4b3e42;
+}
+
+.marketBody {
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: var(--space-3);
+  flex: 1;
 }
 
-@media (min-width: 768px) {
-  .featuredFarmerInfoCol {
-    padding: var(--space-8) var(--space-8);
-  }
+.marketLocation {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  color: #6b6259;
+  margin-bottom: 6px;
 }
 
-.farmerStallBadge {
+.iconInline {
+  color: #7a2e3b;
+  flex-shrink: 0;
+}
+
+.marketName {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2e2b26;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.marketSchedule {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  color: #6b6259;
+  margin-bottom: 14px;
+}
+
+.marketFooter {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(122, 46, 59, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vendorCount {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  color: #6b6259;
+}
+
+.viewMarketLink {
   display: inline-flex;
   align-items: center;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  background-color: var(--color-canvas-soft);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-2);
-  width: fit-content;
+  gap: 4px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #7a2e3b;
+  text-decoration: none;
+  transition: color var(--duration-fast, 120ms) ease;
 }
 
-.farmerNameLarge {
-  font-family: var(--font-head);
-  font-size: var(--text-h2);
-  font-weight: var(--weight-head);
-  color: var(--color-ink);
-  margin: 0;
+.viewMarketLink:hover {
+  color: #5e212b;
 }
 
-.farmerStory {
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  line-height: var(--lh-body);
-  color: var(--color-ink-soft);
-  margin: 0;
+/* ─── 3. SEASONAL HARVEST / PRODUCTS ─────────────────────────── */
+.productsSection {
+  background-color: #fcf7f8;
+  padding-block: clamp(3rem, 2.5rem + 2.5vw, 4.5rem);
+  border-bottom: 1px solid rgba(122, 46, 59, 0.07);
 }
 
-.farmerKnownFor {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-wood);
-  margin: 0;
+.filterPills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-/* Two compact rows underneath */
-.farmerCompactRows {
+.filterPill {
+  background-color: #ffffff;
+  border: 1px solid rgba(122, 46, 59, 0.16);
+  color: #6b6259;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all var(--duration-fast, 120ms) ease;
+}
+
+.filterPill:hover {
+  border-color: #7a2e3b;
+  color: #d0b9bd;
+}
+
+.filterPillActive {
+  background-color: #7a2e3b;
+  border-color: #7a2e3b;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.productsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4, 1rem);
+}
+
+@media (min-width: 540px) {
+  .productsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .productsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.productCard {
+  background-color: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(46, 43, 38, 0.04);
+  border: 1px solid rgba(122, 46, 59, 0.08);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-6);
+  transition: transform var(--duration-fast, 120ms) ease,
+              box-shadow var(--duration-fast, 120ms) ease;
 }
 
-.compactFarmerRow {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
+.productCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(46, 43, 38, 0.08);
 }
 
-@media (max-width: 767px) {
-  .compactFarmerRow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-1);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px dashed var(--color-border);
-  }
-
-  .compactFarmerName,
-  .compactFarmerSpec,
-  .compactFarmerStall {
-    white-space: normal;
-  }
-
-  .compactFarmerRow .dottedLeaderLine {
-    display: none;
-  }
-}
-
-.compactFarmerName {
-  font-family: var(--font-head);
-  font-size: var(--text-h4);
-  font-weight: var(--weight-head);
-  color: var(--color-ink);
-  white-space: nowrap;
-}
-
-.compactFarmerSpec {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-  white-space: nowrap;
-}
-
-.compactFarmerStall {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  background-color: var(--color-canvas-soft);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--space-2);
-  white-space: nowrap;
-}
-
-/* --------------------------------------------------------------------------
-   SECTION 5: FOR CUSTOMERS & FOR FARMERS (Asymmetric offset statements)
-   -------------------------------------------------------------------------- */
-
-.audiencesSection {
-  padding-block: var(--space-16) var(--space-20);
-  background-color: var(--color-bg);
-  border-top: 1px solid var(--color-border);
-}
-
-.audienceLayout {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
-}
-
-.audienceBlockCustomer {
-  max-width: var(--measure-narrow);
-  text-align: left;
-}
-
-.audienceBlockFarmer {
-  max-width: var(--measure-narrow);
-  margin-left: auto;
-  text-align: left;
-}
-
-.audienceStatement {
-  font-family: var(--font-head);
-  font-size: var(--text-h2);
-  font-weight: var(--weight-head);
-  line-height: var(--lh-h2);
-  color: var(--color-ink);
-  margin-bottom: var(--space-3);
-}
-
-.audienceActionLink {
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: var(--weight-medium);
-  color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: var(--underline-offset);
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--tap-min);
-}
-
-.audienceActionLink:hover {
-  color: var(--color-primary-hover);
-}
-
-/* --------------------------------------------------------------------------
-   SECTION 6: QUIET QUOTE (Hand-crafted paper price tag shape)
-   -------------------------------------------------------------------------- */
-
-.quoteSection {
-  padding-block: var(--space-12) var(--space-16);
-  background-color: var(--color-bg);
-}
-
-.quoteTagCard {
+.productImgWrapper {
   position: relative;
-  max-width: var(--measure-narrow);
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-6) var(--space-6) var(--space-5) var(--space-6);
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
 }
 
-/* Tag twine & hole at top */
-.quoteTagHole {
+.productImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.favoriteBtn {
   position: absolute;
-  top: -6px;
-  left: var(--space-6);
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-wood);
-  background-color: var(--color-white);
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform var(--duration-fast, 120ms) ease;
 }
 
-.quoteTagTwine {
+.favoriteBtn:hover {
+  transform: scale(1.1);
+}
+
+.favoriteBtnActive {
+  background-color: #ffffff;
+}
+
+.productStockBadge {
   position: absolute;
-  top: -16px;
-  left: calc(var(--space-6) + 4px);
-  width: 1px;
-  height: 10px;
-  background-color: var(--color-wood);
+  bottom: 8px;
+  left: 8px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #ffffff;
 }
 
-.quoteQuote {
-  font-family: var(--font-head);
-  font-size: var(--text-h3);
-  font-weight: var(--weight-head);
-  font-style: italic;
-  line-height: var(--lh-h3);
-  color: var(--color-ink);
-  margin: 0 0 var(--space-3) 0;
+.stockIn {
+  background-color: #27532b;
 }
 
-.quoteAttribution {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-  margin: 0;
+.stockLow {
+  background-color: #c9671e;
 }
 
-/* --------------------------------------------------------------------------
-   SECTION 7: CLOSING CALL TO ACTION ("See you Saturday.")
-   -------------------------------------------------------------------------- */
-
-.closingSection {
-  padding-block: var(--space-16) var(--space-20);
-  background-color: var(--color-canvas-soft);
-  border-top: 1px solid var(--color-border);
-}
-
-.closingContent {
+.productBody {
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  flex: 1;
 }
 
-@media (min-width: 768px) {
-  .closingContent {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+.productFarmer {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  color: #6b6259;
+  margin-bottom: 3px;
+}
+
+.productTitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #2e2b26;
+  line-height: 1.3;
+  margin-bottom: 12px;
+}
+
+.productPriceRow {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.productPrice {
+  margin: 0;
+  line-height: 1;
+}
+
+.priceNum {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2e2b26;
+}
+
+.priceUnit {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  color: #6b6259;
+}
+
+.reserveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #7a2e3b;
+  color: #ffffff;
+  border: none;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color var(--duration-fast, 120ms) ease;
+}
+
+.reserveBtn:hover {
+  background-color: #5e212b;
+}
+
+.reserveBtnDone {
+  background-color: #27532b;
+}
+
+/* ─── 4. THE GROWERS / FARMERS ───────────────────────────────── */
+.farmersSection {
+  background-color: #ffffff;
+  padding-block: clamp(3rem, 2.5rem + 2.5vw, 4.5rem);
+  border-bottom: 1px solid rgba(122, 46, 59, 0.07);
+}
+
+.viewAllLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #7a2e3b;
+  text-decoration: none;
+  transition: color var(--duration-fast, 120ms) ease;
+}
+
+.viewAllLink:hover {
+  color: #5e212b;
+}
+
+.farmersGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5, 1.25rem);
+}
+
+@media (min-width: 640px) {
+  .farmersGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-.closingTextCol {
-  max-width: var(--measure-narrow);
+@media (min-width: 1024px) {
+  .farmersGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.closingTitle {
-  font-family: var(--font-head);
-  font-size: var(--text-h1);
-  font-weight: var(--weight-head);
-  line-height: var(--lh-h1);
-  color: var(--color-ink);
-  margin: 0 0 var(--space-2) 0;
+.farmerCard {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(46, 43, 38, 0.04);
+  border: 1px solid rgba(122, 46, 59, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
-.closingSub {
-  font-family: var(--font-body);
-  font-size: var(--text-lead);
-  color: var(--color-ink-soft);
+.farmerHeader {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.farmerAvatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.farmerInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.farmerName {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2e2b26;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.farmerFarm {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  color: #6b6259;
+  margin: 2px 0 0 0;
+}
+
+.farmerSpecialty {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  color: #7a2e3b;
+  margin: 2px 0 0 0;
+  font-weight: 500;
+}
+
+.farmerBio {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #6b6259;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.farmerActionBtn {
+  display: block;
+  text-align: center;
+  background-color: #faf2f4;
+  border: 1px solid rgba(122, 46, 59, 0.14);
+  color: #2e2b26;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all var(--duration-fast, 120ms) ease;
+}
+
+.farmerActionBtn:hover {
+  background-color: #7a2e3b;
+  color: #ffffff;
+  border-color: #7a2e3b;
+}
+
+/* ─── 5. SIMPLE PROCESS / HOW IT WORKS ───────────────────────── */
+.processSection {
+  background-color: #faf2f4;
+  padding-block: clamp(3.5rem, 3rem + 3vw, 5rem);
+  border-bottom: 1px solid rgba(122, 46, 59, 0.08);
+}
+
+.processHeader {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto clamp(2rem, 1.5rem + 1.5vw, 3rem) auto;
+}
+
+.processEyebrow {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #7a2e3b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.processTitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(1.6rem, 1.3rem + 1vw, 2.1rem);
+  font-weight: 700;
+  color: #2e2b26;
+  letter-spacing: -0.015em;
+  margin: 0 0 8px 0;
+}
+
+.processSubtitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.9375rem;
+  color: #6b6259;
+  line-height: 1.5;
   margin: 0;
 }
 
-.closingActionCol {
+.processGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4, 1rem);
+}
+
+@media (min-width: 560px) {
+  .processGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .processGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.processCard {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(46, 43, 38, 0.04);
+  border: 1px solid rgba(122, 46, 59, 0.08);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  align-items: flex-start;
+  align-items: center;
 }
 
-.closingSignInText {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+.stepNumBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background-color: #7a2e3b;
+  color: #ffffff;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
 }
 
-.closingSignInLink {
-  color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: var(--underline-offset);
-  font-weight: var(--weight-medium);
+.stepTitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2e2b26;
+  margin: 0 0 8px 0;
+}
+
+.stepDesc {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #6b6259;
+  margin: 0;
+}
+
+/* ─── 6. CALL TO ACTION BANNER ───────────────────────────────── */
+.ctaBannerSection {
+  background-color: #5E212B;
+  padding-block: clamp(3.5rem, 3rem + 3vw, 5.5rem);
+}
+
+.ctaContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.ctaCard {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: clamp(2rem, 1.5rem + 2.5vw, 3.5rem) clamp(1.5rem, 1rem + 2vw, 3rem);
+  text-align: center;
+  max-width: 820px;
+  width: 100%;
+  box-shadow: 0 8px 28px rgba(46, 43, 38, 0.06);
+  border: 1px solid rgba(122, 46, 59, 0.08);
+}
+
+.ctaIconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.ctaIcon {
+  color: #7a2e3b;
+}
+
+.ctaTitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 700;
+  color: #2e2b26;
+  letter-spacing: -0.015em;
+  margin: 8px 0 12px 0;
+}
+
+.ctaSubtitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #6b6259;
+  max-width: 560px;
+  margin: 0 auto 24px auto;
+}
+
+.ctaButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.ctaPrimaryBtn {
+  background-color: #5e212b;
+  color: #ffffff;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color var(--duration-fast, 120ms) ease;
+}
+
+.ctaPrimaryBtn:hover {
+  background-color: #43141d;
+}
+
+.ctaSecondaryBtn {
+  background-color: transparent;
+  color: #2e2b26;
+  border: 1px solid rgba(46, 43, 38, 0.25);
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color var(--duration-fast, 120ms) ease,
+              border-color var(--duration-fast, 120ms) ease;
+}
+
+.ctaSecondaryBtn:hover {
+  background-color: rgba(46, 43, 38, 0.05);
+  border-color: rgba(46, 43, 38, 0.4);
 }

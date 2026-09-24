@@ -1,397 +1,537 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  ArrowRight,
+  SlidersHorizontal,
+  MapPin,
+  Clock,
+  Heart,
+  BookmarkCheck,
+  ShoppingBag,
+  Sparkles,
+  HeartHandshake,
+  Sprout,
+} from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
-import Button from '@/components/ui/Button';
-import WaveDivider from '@/components/layout/WaveDivider';
-import Illustration from '@/components/domain/Illustration';
+import { useCart } from '@/context/CartContext';
+import { useFavorites } from '@/context/FavoritesContext';
+import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './Home.module.css';
 
-/**
- * Price board market offerings for Elm Street Saturday market
- */
-const PRICE_BOARD_ITEMS = [
+const MARKETS = [
   {
-    id: 'item-1',
-    stall: 'Stall 4',
-    name: 'Heirloom tomatoes',
-    farmer: 'Riverbend Farm',
-    price: '$4.50',
-    unit: 'lb',
-    status: 'In stock',
-    statusTone: 'herb',
+    id: 'market-1',
+    name: 'Central Community Farmers Market',
+    badge: 'Open Today',
+    badgeType: 'today',
+    location: 'Downtown Plaza, 4th & Main',
+    schedule: 'Saturdays • 8:00 AM - 1:00 PM',
+    vendors: '42 Active Vendors',
+    image: '/images/market-central.jpg',
+    path: PATHS.BUYER_MARKETS || '/buyer/markets',
   },
   {
-    id: 'item-2',
-    stall: 'Stall 2',
-    name: 'Sourdough loaf',
-    farmer: 'Oak & Mill Bakery',
-    price: '$7.00',
-    unit: 'loaf',
-    status: 'In stock',
-    statusTone: 'herb',
+    id: 'market-2',
+    name: 'Riverside Artisans & Growers',
+    badge: 'Opens Tomorrow',
+    badgeType: 'tomorrow',
+    location: 'Riverside Park North Pavilion',
+    schedule: 'Sundays • 9:00 AM - 2:00 PM',
+    vendors: '35 Active Vendors',
+    image: '/images/market-riverside.jpg',
+    path: PATHS.BUYER_MARKETS || '/buyer/markets',
   },
   {
-    id: 'item-3',
-    stall: 'Stall 9',
-    name: 'Wildflower honey',
-    farmer: 'Hollow Creek Apiary',
-    price: '$9.50',
-    unit: 'jar',
-    status: 'Low stock',
-    statusTone: 'carrot',
-  },
-  {
-    id: 'item-4',
-    stall: 'Stall 4',
-    name: 'Rainbow carrots',
-    farmer: 'Riverbend Farm',
-    price: '$4.50',
-    unit: 'bunch',
-    status: 'In stock',
-    statusTone: 'herb',
-  },
-  {
-    id: 'item-5',
-    stall: 'Stall 11',
-    name: 'Farm eggs',
-    farmer: 'Willow Bend Poultry',
-    price: '$6.00',
-    unit: 'dozen',
-    status: 'In stock',
-    statusTone: 'herb',
-  },
-  {
-    id: 'item-6',
-    stall: 'Stall 9',
-    name: 'Rhubarb',
-    farmer: 'Hollow Creek Apiary',
-    price: '$3.50',
-    unit: 'bunch',
-    status: 'Low stock',
-    statusTone: 'carrot',
+    id: 'market-3',
+    name: 'Mid-Week Harvest Market',
+    badge: 'Opens Wednesday',
+    badgeType: 'wednesday',
+    location: 'Old Town Square',
+    schedule: 'Wednesdays • 3:00 PM - 7:00 PM',
+    vendors: '19 Active Vendors',
+    image: '/images/market-midweek.jpg',
+    path: PATHS.BUYER_MARKETS || '/buyer/markets',
   },
 ];
 
-/**
- * Home page: Hand-crafted farmers market pre-order showcase.
- */
+const PRODUCTS = [
+  {
+    id: 'prod-1',
+    title: 'Heirloom Brandywine Tomatoes',
+    farmer: 'Green Valley Farm',
+    price: '$4.50',
+    unit: '/ lb',
+    stock: 'In Stock (14 lbs)',
+    stockType: 'in-stock',
+    image: '/images/product-tomatoes.jpg',
+    tag: 'Organic Certified',
+  },
+  {
+    id: 'prod-2',
+    title: 'Living Butterhead Lettuce',
+    farmer: 'Sunburst Hydroponics',
+    price: '$3.00',
+    unit: '/ head',
+    stock: 'Low Stock (3 left)',
+    stockType: 'low-stock',
+    image: '/images/product-lettuce.jpg',
+    tag: 'Pesticide Free',
+  },
+  {
+    id: 'prod-3',
+    title: 'Raw Wildflower Honey',
+    farmer: 'Hollow Creek Apiary',
+    price: '$12.00',
+    unit: '/ 16oz',
+    stock: 'In Stock (12 jars)',
+    stockType: 'in-stock',
+    image: '/images/product-honey.jpg',
+    tag: 'Organic Certified',
+  },
+  {
+    id: 'prod-4',
+    title: 'Organic Alpine Strawberries',
+    farmer: 'Berry Patch Farm',
+    price: '$6.50',
+    unit: '/ pint',
+    stock: 'In Stock (8 pints)',
+    stockType: 'in-stock',
+    image: '/images/product-strawberries.jpg',
+    tag: 'Organic Certified',
+  },
+];
+
+const FARMERS = [
+  {
+    id: 'farmer-1',
+    name: 'Elena Vance',
+    farm: 'Green Valley Organic Farm',
+    specialty: 'Specialty: Heirloom Veggies',
+    bio: 'Farming regeneratively in the valley for over 15 years, cultivating heirloom seeds passed down through generations.',
+    image: '/images/farmer-elena.jpg',
+    path: PATHS.BUYER_FARMERS || '/buyer/farmers',
+  },
+  {
+    id: 'farmer-2',
+    name: 'Marcus Chen',
+    farm: 'Sunburst Hydroponics',
+    specialty: 'Specialty: Living Greens',
+    bio: 'Pioneering sustainable urban hydroponics to deliver crisp, pesticide-free salad greens year-round with zero soil runoff.',
+    image: '/images/farmer-marcus.jpg',
+    path: PATHS.BUYER_FARMERS || '/buyer/farmers',
+  },
+  {
+    id: 'farmer-3',
+    name: 'Sarah Jenkins',
+    farm: 'Hollow Creek Apiary',
+    specialty: 'Specialty: Raw Honey & Wax',
+    bio: 'Dedicated caretaker of over 50 thriving beehives across local orchards, producing unheated, unfiltered raw wildflower honey.',
+    image: '/images/farmer-sarah.jpg',
+    path: PATHS.BUYER_FARMERS || '/buyer/farmers',
+  },
+];
+
+const STEPS = [
+  {
+    num: '1',
+    title: 'Discover',
+    desc: 'Browse local markets and find growers operating right in your neighborhood.',
+  },
+  {
+    num: '2',
+    title: 'Choose',
+    desc: 'Explore fresh seasonal produce, artisan baked goods, and farm-raised specialties.',
+  },
+  {
+    num: '3',
+    title: 'Reserve',
+    desc: 'Secure your items online ahead of market day so nothing sells out before you arrive.',
+  },
+  {
+    num: '4',
+    title: 'Pick Up',
+    desc: 'Visit the farm stall to collect your packed order directly from the grower.',
+  },
+];
+
 export function Home() {
-  useDocumentTitle('Home · MarketLink');
+  useDocumentTitle('MarketLink — Fresh from The Farm');
+  const navigate = useNavigate();
+
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [favorites, setFavorites] = useState({});
+  const [reservedItems, setReservedItems] = useState({});
+
+  let cartContext = {};
+  try {
+    cartContext = useCart() || {};
+  } catch {
+    cartContext = {};
+  }
+  const { addItem } = cartContext;
+
+  const toggleFavorite = (id) => {
+    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleReserve = (product) => {
+    setReservedItems((prev) => ({ ...prev, [product.id]: true }));
+    if (addItem) {
+      try {
+        addItem({
+          id: product.id,
+          name: product.title,
+          farmer: product.farmer,
+          price: parseFloat(product.price.replace('$', '')),
+          unit: product.unit.replace('/', '').trim(),
+          image: product.image,
+        });
+      } catch {
+        // Fallback
+      }
+    }
+  };
+
+  const filteredProducts = PRODUCTS.filter((p) => {
+    if (activeFilter === 'All') return true;
+    return p.tag === activeFilter;
+  });
 
   return (
-    <div className={styles.page}>
-      {/* ---------------- SECTION 1: HERO ("The market table, seen from above") ---------------- */}
+    <div className={styles.homeContainer}>
+      {/* ─── 1. HERO SECTION ────────────────────────────────────────── */}
       <section className={styles.heroSection}>
-        <div className={styles.heroStage}>
-          {/* Centred protected reading column */}
-          <div className={styles.readingColumn}>
-            <p className={styles.marketOverline}>Elm Street Market · Saturdays, 8am to 1pm</p>
-            <h1 className={styles.heroTitle}>
-              Fresh from the farm,{' '}
-              <span className={styles.readyUnderlineWrap}>
-                ready
-                <svg
-                  className={styles.wavyUnderline}
-                  viewBox="0 0 100 12"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path d="M0,6 Q25,0 50,6 T100,6" />
-                </svg>
-              </span>{' '}
-              when you arrive.
-            </h1>
-            <p className={styles.heroLead}>
-              Pre-order from the Farmers you know. Collect at the stall. Pay when you pick up.
-            </p>
-            <div className={styles.heroActions}>
-              <Button
-                as={Link}
-                to={`${PATHS.REGISTER}?role=customer`}
-                variant="primary"
-                size="md"
-              >
-                Create your free account
-              </Button>
-              <Button
-                as="a"
-                href="#price-board"
-                variant="secondary"
-                size="md"
-              >
-                See this Saturday's board
-              </Button>
-            </div>
-            <p className={styles.heroFootnote}>
-              Free for Customers. No delivery. Pay in person.
-            </p>
+        <div className={styles.heroOverlay} />
+
+        <div className={styles.heroContent}>
+          {/* Centered Brand Mark matching reference image */}
+          <div className={styles.heroBrandMark}>
+            <MarketLinkLogo variant="stacked" size="hero" />
           </div>
 
-          {/* Decorative flat-lay scattered produce composition */}
-          <div className={styles.produceCluster} aria-hidden="true">
-            {/* 1. Basket of tomatoes (Hero item with tag) */}
-            <div className={`${styles.produceItem} ${styles.itemTomatoes}`}>
-              <Illustration name="basket-tomatoes" size="lg" />
-              <div className={styles.tag}>
-                <span className={styles.tagTwine} />
-                <span className={styles.tagHole} />
-                <span className={styles.tagName}>Heirloom tomatoes</span>
-                <span className={styles.tagPrice}>$4.50 / lb</span>
-              </div>
-            </div>
+          {/* Headline - prominent & bigger on the overlay */}
+          <h1 className={styles.heroTitle}>
+            Fresh From The<span className={styles.from}> Farm  </span>.
+            <br />
+            Ready when you are.
+          </h1>
 
-            {/* 2. Crate of carrots (With tag) */}
-            <div className={`${styles.produceItem} ${styles.itemCarrots}`}>
-              <Illustration name="crate-carrots" size="lg" />
-              <div className={styles.tag} style={{ '--tag-r': '-4deg' }}>
-                <span className={styles.tagTwine} />
-                <span className={styles.tagHole} />
-                <span className={styles.tagName}>Rainbow carrots</span>
-                <span className={styles.tagPrice}>$4.50 / bunch</span>
-              </div>
-            </div>
+          {/* Subheadline */}
+          <p className={styles.heroLead}>
+            Discover what’s available at nearby markets, reserve your favorites and pick them up fresh at the market.
+          </p>
 
-            {/* 3. Sourdough boule (No tag) */}
-            <div className={`${styles.produceItem} ${styles.itemSourdough}`}>
-              <Illustration name="sourdough-boule" size="lg" />
-            </div>
-
-            {/* 4. Farm eggs carton (Tablet & Desktop only, no tag) */}
-            <div className={`${styles.produceItem} ${styles.itemEggs} ${styles.tabletDesktopItem}`}>
-              <Illustration name="egg-carton" size="md" />
-            </div>
-
-            {/* 5. Beetroot bunch (Desktop only, no tag) */}
-            <div className={`${styles.produceItem} ${styles.itemBeets} ${styles.desktopOnlyItem}`}>
-              <Illustration name="beet-bunch" size="md" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------- SECTION 2: HOW IT WORKS (Staggered editorial steps) ---------------- */}
-      <section className={styles.howSection}>
-        <div className="container">
-          <div className={styles.sectionHeadingGroupCentered}>
-            <h2 className={styles.sectionTitle}>How it works</h2>
-            <p className={styles.sectionSubtitle}>Three simple steps from harvest to Saturday market bag.</p>
-          </div>
-
-          <div className={styles.stepsRow}>
-            {/* Connecting wood dotted path */}
-            <svg
-              className={styles.dottedPathSvg}
-              viewBox="0 0 600 80"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-              focusable="false"
+          {/* Call to Action Buttons */}
+          <div className={styles.heroActions}>
+            <Link
+              to={PATHS.MARKETS || '/markets'}
+              className={styles.browseMarketsBtn}
             >
-              <path d="M50,20 C180,60 320,10 550,50" />
-            </svg>
+              <span>Browse Markets</span>
+              {/* <span className={styles.btnArrow}>&rarr;</span> */}
+            </Link>
 
-            {/* Step 1 */}
-            <div className={styles.stepBlock}>
-              <div className={styles.stepHeader}>
-                <span className={styles.stepNumeral}>1</span>
-                <Illustration name="basket" size="sm" />
-              </div>
-              <h3 className={styles.stepTitle}>Look at Saturday's board</h3>
-              <p className={styles.stepCopy}>
-                See which Farmers are coming to Elm Street and what was harvested this week.
-              </p>
-            </div>
+            <Link
+              to={PATHS.PRODUCTS || '/products'}
 
-            {/* Step 2 */}
-            <div className={styles.stepBlock}>
-              <div className={styles.stepHeader}>
-                <span className={styles.stepNumeral}>2</span>
-                <Illustration name="paper-bag-pears" size="sm" />
-              </div>
-              <h3 className={styles.stepTitle}>Reserve before the cut-off</h3>
-              <p className={styles.stepCopy}>
-                Order your picks before Friday at 6pm. The Farmers harvest to order.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className={styles.stepBlock}>
-              <div className={styles.stepHeader}>
-                <span className={styles.stepNumeral}>3</span>
-                <Illustration name="sourdough-boule" size="sm" />
-              </div>
-              <h3 className={styles.stepTitle}>Collect it at the stall</h3>
-              <p className={styles.stepCopy}>
-                Your harvest is boxed and waiting under the awning. Pay in person when you pick up.
-              </p>
-            </div>
+              className={styles.exploreProduceBtn}
+            >
+              <span>Explore Fresh Produce</span>
+              {/* <span className={styles.btnArrow}>&rarr;</span> */}
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ---------------- SECTION 3: PRICE BOARD (Chalkboard style double frame) ---------------- */}
-      <WaveDivider shape="soft" />
-      <section id="price-board" className={styles.boardSection}>
-        <div className="containerNarrow">
-          <div className={styles.boardHeader}>
-            <h2 className={styles.sectionTitle}>This Saturday at Elm Street Market</h2>
-            <p className={styles.boardTagline}>
-              Elm Street Market Square · Saturdays, 8am to 1pm
-            </p>
+
+      {/* ─── 2. WEEKEND GATHERINGS / FIND A MARKET ─────────────────── */}
+      <section className={styles.marketsSection}>
+        <div className="container">
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.sectionEyebrow}>WEEKEND GATHERINGS</p>
+              <h2 className={styles.sectionTitle}>Find a Market Near You</h2>
+            </div>
+            <Link
+              to={PATHS.BUYER_MARKETS || '/buyer/markets'}
+              className={styles.filterBtn}
+            >
+              <SlidersHorizontal size={15} />
+              <span>Filter Locations</span>
+            </Link>
           </div>
 
-          <div className={styles.chalkboardFrameOuter}>
-            <div className={styles.chalkboardFrameInner}>
-              <div className={styles.boardTopBar}>
-                <span className={styles.boardBadge}>Today's Board</span>
-                <span className={styles.cutoffNotice}>Order by Friday, 6pm</span>
-              </div>
+          <div className={styles.marketsGrid}>
+            {MARKETS.map((market) => (
+              <div key={market.id} className={styles.marketCard}>
+                <div className={styles.marketImgWrapper}>
+                  <img
+                    src={market.image}
+                    alt={market.name}
+                    className={styles.marketImg}
+                  />
+                  <span
+                    className={`${styles.marketStatusBadge} ${market.badgeType === 'today'
+                      ? styles.badgeToday
+                      : market.badgeType === 'tomorrow'
+                        ? styles.badgeTomorrow
+                        : styles.badgeWed
+                      }`}
+                  >
+                    {market.badge}
+                  </span>
+                </div>
 
-              <ul className={styles.boardList} role="list">
-                {PRICE_BOARD_ITEMS.map((item) => (
-                  <li key={item.id} className={styles.boardItem}>
-                    <div className={styles.itemLeftCol}>
-                      <span className={styles.stallBadge}>{item.stall}</span>
-                      <span className={styles.itemProduceName}>{item.name}</span>
-                      <span className={styles.itemFarmName}>({item.farmer})</span>
-                    </div>
-                    <span className={styles.dottedLeaderLine} aria-hidden="true" />
-                    <div className={styles.itemRightCol}>
-                      <span className={styles.itemPriceText}>
-                        {item.price} <span className={styles.itemUnitText}>/ {item.unit}</span>
-                      </span>
-                      {item.statusTone === 'herb' ? (
-                        <span className={styles.statusHerb}>In stock</span>
-                      ) : (
-                        <span className={styles.statusCarrot}>Low stock</span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                <div className={styles.marketBody}>
+                  <p className={styles.marketLocation}>
+                    <MapPin size={13} className={styles.iconInline} />
+                    <span>{market.location}</span>
+                  </p>
 
-              <div className={styles.boardFooterRow}>
-                <p className={styles.boardFooterNote}>
-                  Prices set directly by the growers. No platform markups.
-                </p>
-                <Link to={PATHS.LOGIN} className={styles.boardSignInLink}>
-                  Sign in to pre-order
-                </Link>
+                  <h3 className={styles.marketName}>{market.name}</h3>
+
+                  <p className={styles.marketSchedule}>
+                    <Clock size={13} className={styles.iconInline} />
+                    <span>{market.schedule}</span>
+                  </p>
+
+                  <div className={styles.marketFooter}>
+                    <span className={styles.vendorCount}>{market.vendors}</span>
+                    <Link to={market.path} className={styles.viewMarketLink}>
+                      <span>View Market</span>
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
-      <WaveDivider shape="gentle" flip />
 
-      {/* ---------------- SECTION 4: MEET THE FARMERS (Magazine editorial spread) ---------------- */}
+      {/* ─── 3. SEASONAL HARVEST / FRESH the farm ────────── */}
+      <section className={styles.productsSection}>
+        <div className="container">
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.sectionEyebrow}>SEASONAL HARVEST</p>
+              <h2 className={styles.sectionTitle}>Fresh From The Farm</h2>
+            </div>
+            <div className={styles.filterPills}>
+              {['All', 'Organic Certified', 'Pesticide Free'].map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setActiveFilter(filter)}
+                  className={`${styles.filterPill} ${activeFilter === filter ? styles.filterPillActive : ''
+                    }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.productsGrid}>
+            {filteredProducts.map((product) => {
+              const isFav = favorites[product.id];
+              const isReserved = reservedItems[product.id];
+
+              return (
+                <div key={product.id} className={styles.productCard}>
+                  <div className={styles.productImgWrapper}>
+                    <img
+                      src={product.image}
+                      alt={product.title}
+                      className={styles.productImg}
+                    />
+
+                    {/* Favorite Heart Button */}
+                    <button
+                      type="button"
+                      onClick={() => toggleFavorite(product.id)}
+                      className={`${styles.favoriteBtn} ${isFav ? styles.favoriteBtnActive : ''
+                        }`}
+                      aria-label="Save to favorites"
+                    >
+                      <Heart
+                        size={16}
+                        fill={isFav ? '#7A2E3B' : 'none'}
+                        color={isFav ? '#7A2E3B' : '#2E2B26'}
+                        strokeWidth={2}
+                      />
+                    </button>
+
+                    {/* Stock pill overlay */}
+                    <span
+                      className={`${styles.productStockBadge} ${product.stockType === 'low-stock'
+                        ? styles.stockLow
+                        : styles.stockIn
+                        }`}
+                    >
+                      {product.stock}
+                    </span>
+                  </div>
+
+                  <div className={styles.productBody}>
+                    <p className={styles.productFarmer}>{product.farmer}</p>
+                    <h3 className={styles.productTitle}>{product.title}</h3>
+
+                    <div className={styles.productPriceRow}>
+                      <p className={styles.productPrice}>
+                        <span className={styles.priceNum}>{product.price}</span>{' '}
+                        <span className={styles.priceUnit}>{product.unit}</span>
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => handleReserve(product)}
+                        className={`${styles.reserveBtn} ${isReserved ? styles.reserveBtnDone : ''
+                          }`}
+                      >
+                        {isReserved ? (
+                          <>
+                            <BookmarkCheck size={13} />
+                            <span>Reserved</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={12} />
+                            <span>Reserve</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '24px' }}>
+            <Link
+              to={PATHS.PRODUCTS || '/products'}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '11px 22px',
+                backgroundColor: '#faede9',
+                border: '1px solid #ebdcd6',
+                borderRadius: '8px',
+                color: '#541722',
+                fontFamily: "var(--font-body, 'Inter', sans-serif)",
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                textDecoration: 'none',
+              }}
+            >
+              <span>Explore All Seasonal Harvest</span>
+              <ArrowRight size={15} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 4. THE GROWERS / MEET LOCAL FARMERS ────────────────────── */}
       <section className={styles.farmersSection}>
         <div className="container">
-          <div className={styles.sectionHeadingGroup}>
-            <h2 className={styles.sectionTitle}>Meet the people behind the food</h2>
-            <p className={styles.sectionSubtitle}>
-              Small farms and family bakers who set up on Elm Street every weekend.
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.sectionEyebrow}>THE GROWERS</p>
+              <h2 className={styles.sectionTitle}>Meet The Farmers</h2>
+            </div>
+            <Link
+              to={PATHS.FARMERS || '/farmers'}
+              className={styles.viewAllLink}
+            >
+              <span>View All Growers</span>
+              <ArrowRight size={15} />
+            </Link>
+          </div>
+
+          <div className={styles.farmersGrid}>
+            {FARMERS.map((farmer) => (
+              <div key={farmer.id} className={styles.farmerCard}>
+                <div className={styles.farmerHeader}>
+                  <img
+                    src={farmer.image}
+                    alt={farmer.name}
+                    className={styles.farmerAvatar}
+                  />
+                  <div className={styles.farmerInfo}>
+                    <h3 className={styles.farmerName}>{farmer.name}</h3>
+                    <p className={styles.farmerFarm}>{farmer.farm}</p>
+                    <p className={styles.farmerSpecialty}>{farmer.specialty}</p>
+                  </div>
+                </div>
+
+                <p className={styles.farmerBio}>{farmer.bio}</p>
+
+                <Link to={farmer.path} className={styles.farmerActionBtn}>
+                  View Profile & Offerings
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 5. SIMPLE PROCESS / HOW MARKETLINK WORKS ──────────────── */}
+      <section className={styles.processSection}>
+        <div className="container">
+          <div className={styles.processHeader}>
+            <p className={styles.processEyebrow}>SIMPLE PROCESS</p>
+            <h2 className={styles.processTitle}>How MarketLink Works</h2>
+            <p className={styles.processSubtitle}>
+              Connecting your table to local soil in four effortless steps.
             </p>
           </div>
 
-          <div className={styles.editorialSpread}>
-            {/* Featured Farmer Large Panel */}
-            <div className={styles.featuredFarmerPanel}>
-              <div className={styles.featuredFarmerImageCol}>
-                <img
-                  src="/images/riverbend-farm.jpg"
-                  alt="Riverbend Farm stall at Elm Street Market with wooden crates of fresh vegetables"
-                  className={styles.featuredFarmerImg}
-                  data-aspect="16/10"
-                  loading="lazy"
-                />
+          <div className={styles.processGrid}>
+            {STEPS.map((step) => (
+              <div key={step.num} className={styles.processCard}>
+                <div className={styles.stepNumBadge}>{step.num}</div>
+                <h3 className={styles.stepTitle}>{step.title}</h3>
+                <p className={styles.stepDesc}>{step.desc}</p>
               </div>
-              <div className={styles.featuredFarmerInfoCol}>
-                <span className={styles.farmerStallBadge}>Selling at Elm Street since 2016</span>
-                <h3 className={styles.farmerNameLarge}>Riverbend Farm</h3>
-                <p className={styles.farmerStory}>
-                  Marta and Tomas tend twelve acres of alluvial soil along the riverbank.
-                  Known for heirloom Brandywines, sweet Nantes carrots, and tender salad greens picked at dawn.
-                </p>
-                <p className={styles.farmerKnownFor}>
-                  Known for: Heirloom tomatoes & baby carrots · Stall 4
-                </p>
-              </div>
-            </div>
-
-            {/* Two compact rows beneath */}
-            <div className={styles.farmerCompactRows}>
-              <div className={styles.compactFarmerRow}>
-                <span className={styles.compactFarmerName}>Oak & Mill Bakery</span>
-                <span className={styles.compactFarmerSpec}>Artisan sourdough & morning pastries</span>
-                <span className={styles.dottedLeaderLine} aria-hidden="true" />
-                <span className={styles.compactFarmerStall}>Saturdays · Stall 2</span>
-              </div>
-
-              <div className={styles.compactFarmerRow}>
-                <span className={styles.compactFarmerName}>Hollow Creek Apiary</span>
-                <span className={styles.compactFarmerSpec}>Raw wildflower honey, honeycomb & preserves</span>
-                <span className={styles.dottedLeaderLine} aria-hidden="true" />
-                <span className={styles.compactFarmerStall}>Saturdays · Stall 9</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ---------------- SECTION 5: FOR CUSTOMERS & FOR FARMERS (Asymmetric offset statements) ---------------- */}
-      <section className={styles.audiencesSection}>
-        <div className="container">
-          <div className={styles.audienceLayout}>
-            {/* Customer Statement (Left aligned) */}
-            <div className={styles.audienceBlockCustomer}>
-              <p className={styles.audienceStatement}>
-                Shop your market with confidence. You know what's in stock before you walk out the door, and your weekend sourdough is held safely behind the counter.
-              </p>
-              <Link to={`${PATHS.REGISTER}?role=customer`} className={styles.audienceActionLink}>
-                Create a Customer account →
-              </Link>
+      {/* ─── 6. CALL TO ACTION BANNER ───────────────────────────────── */}
+      <section className={styles.ctaBannerSection}>
+        <div className={`container ${styles.ctaContainer}`}>
+          <div className={styles.ctaCard}>
+            <div className={styles.ctaIconWrap}>
+              <HeartHandshake size={36} strokeWidth={1.75} className={styles.ctaIcon} />
             </div>
 
-            {/* Farmer Statement (Right offset) */}
-            <div className={styles.audienceBlockFarmer}>
-              <p className={styles.audienceStatement}>
-                Harvest with certainty. Know your orders before you hitch the trailer on Saturday morning, and build loyal regulars without paying commission.
-              </p>
-              <Link to={`${PATHS.REGISTER}?role=farmer`} className={styles.audienceActionLink}>
-                Create a Farmer account →
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+            <h2 className={styles.ctaTitle}>
+              Join the Local Food Movement Today
+            </h2>
 
-      {/* ---------------- SECTION 6: CLOSING CALL TO ACTION ("See you Saturday.") ---------------- */}
-      <section className={styles.closingSection}>
-        <div className="container">
-          <div className={styles.closingContent}>
-            <div className={styles.closingTextCol}>
-              <h2 className={styles.closingTitle}>See you Saturday.</h2>
-              <p className={styles.closingSub}>
-                Sign up now and your first pre-order can be ready by the weekend.
-              </p>
-            </div>
-            <div className={styles.closingActionCol}>
-              <Button
-                as={Link}
-                to={`${PATHS.REGISTER}?role=customer`}
-                variant="primary"
-                size="md"
+            <p className={styles.ctaSubtitle}>
+              Support independent family farms, reduce food miles, and taste the vibrant
+              difference of truly fresh, seasonal eating.
+            </p>
+
+            <div className={styles.ctaButtons}>
+              <Link
+                to={PATHS.BUYER_MARKETS || '/buyer/markets'}
+                className={styles.ctaPrimaryBtn}
               >
-                Create your free account
-              </Button>
-              <p className={styles.closingSignInText}>
-                Already have an account?{' '}
-                <Link to={PATHS.LOGIN} className={styles.closingSignInLink}>
-                  Sign in
-                </Link>
-              </p>
+                Find Your Nearest Market
+              </Link>
+
+              <Link
+                to={PATHS.BUYER_PRODUCTS || '/buyer/products'}
+                className={styles.ctaSecondaryBtn}
+              >
+                Explore All Products
+              </Link>
             </div>
           </div>
         </div>

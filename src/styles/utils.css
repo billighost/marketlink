@@ -3,16 +3,22 @@
    Strictly capped at ~20 high-value classes.
    ========================================================================== */
 
-/* Responsive page padding */
+/* Responsive page padding - reduced so pages move closer to sides */
 @media (min-width: 768px) {
   :root {
-    --page-pad: var(--space-6);
+    --page-pad: 1.25rem;
   }
 }
 
 @media (min-width: 1024px) {
   :root {
-    --page-pad: var(--space-8);
+    --page-pad: 1.5rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --page-pad: 2rem;
   }
 }
 

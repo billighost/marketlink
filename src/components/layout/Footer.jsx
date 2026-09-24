@@ -1,59 +1,96 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Globe, Share2, Mail } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
-import WaveDivider from '@/components/layout/WaveDivider';
-import Illustration from '@/components/domain/Illustration';
+import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './Footer.module.css';
 
 /**
- * Footer component with canvas background and top wave divider.
- * 3-part calm layout: Brand + tagline, key links, copyright.
+ * Footer component matching the design.
+ * 4 columns: Brand, Navigation, Support, Connect (with social icons).
+ * Bottom bar: Centered copyright notice.
  */
-export function Footer({ withWave = true }) {
+export function Footer({ withWave = false }) {
   return (
     <footer className={styles.footerWrapper}>
-      {withWave && <WaveDivider shape="gentle" className={styles.wave} />}
       <div className={styles.footerBody}>
         <div className={`container ${styles.footerContent}`}>
-          {/* Part 1: Brand & Tagline */}
+          {/* Col 1: Brand & Description */}
           <div className={styles.brandCol}>
             <Link to={PATHS.HOME} className={styles.brandLink}>
-              <Illustration name="basket" size="sm" className={styles.brandIcon} />
-              <span className={styles.brandName}>MarketLink</span>
+              <MarketLinkLogo size="md" />
             </Link>
-            <p className={styles.tagline}>Made for market days.</p>
+            <p className={styles.tagline}>
+              Connecting local growers and conscious consumers for a vibrant community.
+            </p>
           </div>
 
-          {/* Part 2: Navigation Links */}
-          <nav className={styles.navCol} aria-label="Footer Navigation">
+          {/* Col 2: Navigation */}
+          <div className={styles.navCol}>
+            <h4 className={styles.colTitle}>Navigation</h4>
             <ul className={styles.linkList} role="list">
               <li>
-                <Link to={PATHS.ABOUT} className={styles.footerLink}>
-                  About
+                <Link to={PATHS.MARKETS || '/markets'} className={styles.footerLink}>
+                  Markets
                 </Link>
               </li>
               <li>
-                <Link to={PATHS.CONTACT} className={styles.footerLink}>
-                  Contact
+                <Link to={PATHS.FARMERS || '/farmers'} className={styles.footerLink}>
+                  Farmers
                 </Link>
               </li>
               <li>
-                <Link to={PATHS.LOGIN} className={styles.footerLink}>
-                  Sign in
-                </Link>
-              </li>
-              <li>
-                <Link to={PATHS.REGISTER} className={styles.footerLink}>
-                  Create account
+                <Link to={PATHS.PRODUCTS || '/products'} className={styles.footerLink}>
+                  Products
                 </Link>
               </li>
             </ul>
-          </nav>
+          </div>
 
-          {/* Part 3: Copyright */}
-          <div className={styles.legalCol}>
+          {/* Col 3: Support */}
+          <div className={styles.navCol}>
+            <h4 className={styles.colTitle}>Support</h4>
+            <ul className={styles.linkList} role="list">
+              <li>
+                <Link to={PATHS.BUYER_PROFILE_HELP || '/buyer/profile/help'} className={styles.footerLink}>
+                  Help Center
+                </Link>
+              </li>
+              <li>
+                <Link to={PATHS.ABOUT} className={styles.footerLink}>
+                  Safety
+                </Link>
+              </li>
+              <li>
+                <Link to={PATHS.ABOUT} className={styles.footerLink}>
+                  Terms of Service
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 4: Connect */}
+          <div className={styles.connectCol}>
+            <h4 className={styles.colTitle}>Connect</h4>
+            <div className={styles.socialIcons}>
+              <a href="#globe" className={styles.socialLink} aria-label="Website">
+                <Globe size={18} strokeWidth={1.8} />
+              </a>
+              <a href="#share" className={styles.socialLink} aria-label="Share">
+                <Share2 size={18} strokeWidth={1.8} />
+              </a>
+              <a href="mailto:hello@marketlink.local" className={styles.socialLink} aria-label="Email">
+                <Mail size={18} strokeWidth={1.8} />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar: Copyright */}
+        <div className={styles.bottomBar}>
+          <div className="container">
             <p className={styles.copyright}>
-              © {new Date().getFullYear()} MarketLink. Pre-order for pickup at your local market.
+              © 2024 MarketLink. All rights reserved.
             </p>
           </div>
         </div>

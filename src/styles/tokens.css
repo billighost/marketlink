@@ -127,11 +127,11 @@
   --focus-offset: 2px;
 
   /* ---------- Layout ---------- */
-  --container-max:    1120px;   /* main content width */
-  --container-tablet: 40rem;    /* 640px tablet content column */
-  --container-narrow: 720px;    /* forms, reading pages */
+  --container-max:    1400px;   /* main content width expanded so pages move to sides */
+  --container-tablet: 48rem;    /* 768px tablet content column */
+  --container-narrow: 840px;    /* forms, reading pages */
   --container-form:   440px;    /* login / register card */
-  --page-pad:         var(--space-4);   /* raised at 768px and 1024px in utils.css */
+  --page-pad:         1rem;     /* 16px base, raised slightly at 768px and 1024px */
   --header-height:    64px;
   --sidebar-width:    248px;
   --tap-min:          44px;     /* minimum clickable size */

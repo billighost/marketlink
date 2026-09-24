@@ -17,6 +17,12 @@ import Register from '@/pages/guest/Register';
 import ForgotPassword from '@/pages/guest/ForgotPassword';
 import Unauthorized from '@/pages/guest/Unauthorized';
 import NotFound from '@/pages/guest/NotFound';
+import Market from '@/pages/guest/Market';
+import MarketDetail from '@/pages/guest/MarketDetail';
+import Farmers from '@/pages/guest/Farmers';
+import FarmerDetail from '@/pages/guest/FarmerDetail';
+import Products from '@/pages/guest/Products';
+import ProductDetail from '@/pages/guest/ProductDetail';
 
 // Vendor Pages
 import Overview from '@/pages/vendor/Overview';
@@ -126,6 +132,12 @@ export function AppRoutes() {
         {/* ── Guest (Unauthenticated) Routes ─────────────────────── */}
         <Route element={<GuestLayout />}>
           <Route path={PATHS.HOME}            element={<GuestHome />} />
+          <Route path={PATHS.MARKETS}         element={<Market />} />
+          <Route path={PATHS.MARKET_DETAIL}    element={<MarketDetail />} />
+          <Route path={PATHS.FARMERS}          element={<Farmers />} />
+          <Route path={PATHS.FARMER_DETAIL}   element={<FarmerDetail />} />
+          <Route path={PATHS.PRODUCTS}        element={<Products />} />
+          <Route path={PATHS.PRODUCT_DETAIL}   element={<ProductDetail />} />
           <Route path={PATHS.ABOUT}           element={<About />} />
           <Route path={PATHS.CONTACT}         element={<Contact />} />
           <Route path={PATHS.LOGIN}           element={<Login />} />

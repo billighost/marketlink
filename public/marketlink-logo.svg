@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 50" fill="none">
+  <!-- Botanical Leaf Icon -->
+  <g transform="translate(6, 4) scale(0.85)">
+    <path
+      d="M23.2 38.8 C21.5 34.5 13.8 28.2 12.2 21.6 C10.8 15.8 14.5 11.2 20.8 13.4 C25.8 15.2 26.2 24.8 23.2 38.8 Z"
+      fill="#3E5844"
+    />
+    <path
+      d="M24.8 38.8 C26.8 33.2 32.5 22.8 37.6 16.5 C42.2 10.8 47.5 13.2 46.2 20.1 C44.5 28.6 34.5 35.8 24.8 38.8 Z"
+      fill="#3E5844"
+    />
+    <path
+      d="M22.5 37.5 C23.5 41.5 24 43 24 43 C24 43 24.5 41.5 25.5 37.5 Z"
+      fill="#3E5844"
+    />
+  </g>
+
+  <!-- Typography -->
+  <text
+    x="54"
+    y="34"
+    font-family="'Playfair Display', Georgia, 'Times New Roman', serif"
+    font-size="30"
+    font-weight="700"
+    letter-spacing="-0.02em"
+  >
+    <tspan fill="#5C1D2E">Market</tspan><tspan fill="#2E4A3B">Link</tspan>
+  </text>
+</svg>

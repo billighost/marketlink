@@ -1,57 +1,104 @@
 import React, { useState, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { PATHS } from '@/routes/paths';
+import {
+  MapPin,
+  Clock,
+  Phone,
+  Mail,
+  ChevronDown,
+  Check,
+  Copy,
+  Send,
+  Sparkles,
+  ShieldCheck,
+  AlertCircle,
+  ExternalLink,
+  Store,
+  HelpCircle,
+  Calendar,
+  CheckCircle2,
+  ArrowRight,
+  MessageSquare,
+} from 'lucide-react';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
-import PageHeader from '@/components/layout/PageHeader';
-import FormField from '@/components/ui/FormField';
-import Button from '@/components/ui/Button';
-import WaveDivider from '@/components/layout/WaveDivider';
-import Illustration from '@/components/domain/Illustration';
 import styles from './Contact.module.css';
 
-const FAQ_ITEMS = [
+const TOPICS = [
+  { id: 'pickup', label: 'Saturday Pickup Question', icon: '🌾' },
+  { id: 'farmer', label: 'Farmer / Vendor Admission', icon: '🚜' },
+  { id: 'order', label: 'Pre-Order Assistance', icon: '📦' },
+  { id: 'product', label: 'Crop or Item Inquiry', icon: '🍎' },
+  { id: 'feedback', label: 'Market Feedback / Other', icon: '💬' },
+];
+
+const MARKETS_LIST = [
+  'Greenwich Village Farmers Market (Abingdon Square)',
+  'Union Square Greenmarket (Manhattan)',
+  'Brooklyn Grand Army Plaza (Prospect Park)',
+  'Chelsea Farmers Market (W 23rd St)',
+  'Tompkins Square Park Greenmarket',
+  'Riverside Park Market (Upper West Side)',
+  'General / Not Market-Specific',
+];
+
+const FAQ_DATA = [
   {
-    id: 'faq-1',
-    question: 'How do pre-orders work on Saturday morning?',
+    category: 'pickup',
+    question: 'How does Saturday market pickup work?',
     answer:
-      'Browse your favourite Elm Street stalls and reserve your produce before Friday at 6pm. The Farmers harvest specifically for your order at dawn. On Saturday between 8am and 1pm, walk up to the stall, give your name, collect your items, and pay the Farmer directly.',
+      'Browse your local stalls and reserve items during the week before Friday at 6:00 PM. Growers harvest specifically for your order at Saturday dawn. Between 8:00 AM and 2:00 PM, walk up to the stall canopy, provide your name, inspect your paper tote, and pay the grower directly.',
   },
   {
-    id: 'faq-2',
-    question: 'Do I pay online or in person?',
+    category: 'payments',
+    question: 'Do I pay online or in person at the stall?',
     answer:
-      'Always in person. MarketLink never charges your card or handles money. You pay the Farmer directly at their stall via cash, card, or market tokens upon collection.',
+      'Always in person! MarketLink never charges your credit card or deducts middleman fees. You pay the grower directly at their stall via cash, credit card, debit, or SNAP/EBT tokens upon collection.',
   },
   {
-    id: 'faq-3',
-    question: 'Can I change or cancel my order?',
+    category: 'pickup',
+    question: 'What if I am running late on Saturday morning?',
     answer:
-      'Yes, you can edit or cancel any pre-order up until the Friday 6pm cut-off. After 6pm, growers begin harvesting and bakers start their overnight bake, so quantities are finalized.',
+      'Stallholders keep reserved pre-orders set aside until 1:00 PM. If you anticipate being delayed past 1:00 PM, call our Market Day Hotline at (212) 555-0198 or message the grower directly so they continue holding your basket.',
   },
   {
-    id: 'faq-4',
-    question: 'Do you deliver to my home?',
+    category: 'orders',
+    question: 'Can I modify or cancel a pre-order?',
     answer:
-      'No. MarketLink is exclusively for pickup at Elm Street Market Square. There are no delivery vans, courier fees, or central warehouses. Food travels directly from farm to stall.',
+      'Yes, you can edit or cancel any pre-order at zero penalty until the Friday 6:00 PM cutoff. After 6:00 PM, manifests are delivered to farms and dawn harvesting begins, so quantities cannot be adjusted.',
+  },
+  {
+    category: 'farmers',
+    question: 'How do independent growers join MarketLink?',
+    answer:
+      'We welcome certified regional growers, heritage grain bakers, apiaries, and farmstead creameries within 150 miles of our markets. Fill out the contact form below choosing "Farmer / Vendor Admission" and our coordinator will guide you through farm verification and stall allocation.',
+  },
+  {
+    category: 'payments',
+    question: 'Do you accept SNAP / EBT / FMNP nutrition coupons?',
+    answer:
+      'Yes! Stop by the Center Pavilion Information Booth at any of our 8 markets. We process SNAP/EBT and provide $2 bonus Market Match wooden tokens for every $2 spent on fresh regional fruits and vegetables.',
   },
 ];
 
-/**
- * Contact page: Hand-set stall sign, validated message form,
- * illustrated market map, and authentic market FAQ.
- */
 export function Contact() {
-  useDocumentTitle('Contact · MarketLink');
+  useDocumentTitle('Contact MarketLink — Market Office & Support');
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    topic: 'Question about Saturday pickup',
+    phone: '',
+    market: 'Greenwich Village Farmers Market (Abingdon Square)',
+    topic: 'Saturday Pickup Question',
     message: '',
   });
 
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [ticketId, setTicketId] = useState('');
+  const [copiedPhone, setCopiedPhone] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [activeFaqTab, setActiveFaqTab] = useState('all');
+  const [expandedFaq, setExpandedFaq] = useState(null);
 
   const nameRef = useRef(null);
   const emailRef = useRef(null);
@@ -66,19 +113,17 @@ export function Contact() {
   };
 
   const validate = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) {
-      newErrors.name = 'Please enter your name.';
-    }
+    const errs = {};
+    if (!formData.name.trim()) errs.name = 'Please enter your full name.';
     if (!formData.email.trim()) {
-      newErrors.email = 'Please enter your email address.';
+      errs.email = 'Please provide an email address.';
     } else if (!formData.email.includes('@') || !formData.email.includes('.')) {
-      newErrors.email = 'Please enter a valid email address.';
+      errs.email = 'Please enter a valid email address.';
     }
-    if (!formData.message.trim()) {
-      newErrors.message = 'Please enter a message.';
+    if (!formData.message.trim() || formData.message.trim().length < 10) {
+      errs.message = 'Please provide a message with at least 10 characters.';
     }
-    return newErrors;
+    return errs;
   };
 
   const handleSubmit = (e) => {
@@ -86,230 +131,500 @@ export function Contact() {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      if (validationErrors.name) {
-        nameRef.current?.focus();
-      } else if (validationErrors.email) {
-        emailRef.current?.focus();
-      } else if (validationErrors.message) {
-        messageRef.current?.focus();
-      }
+      if (validationErrors.name) nameRef.current?.focus();
+      else if (validationErrors.email) emailRef.current?.focus();
+      else if (validationErrors.message) messageRef.current?.focus();
       return;
     }
-    setSubmitted(true);
+
+    setSubmitting(true);
+    // Simulate gentle dispatch
+    setTimeout(() => {
+      setSubmitting(false);
+      setTicketId(`ML-${Math.floor(100000 + Math.random() * 900000)}`);
+      setSubmitted(true);
+    }, 700);
   };
 
   const handleReset = () => {
     setFormData({
       name: '',
       email: '',
-      topic: 'Question about Saturday pickup',
+      phone: '',
+      market: 'Greenwich Village Farmers Market (Abingdon Square)',
+      topic: 'Saturday Pickup Question',
       message: '',
     });
     setErrors({});
     setSubmitted(false);
   };
 
+  const handleCopyPhone = () => {
+    navigator.clipboard?.writeText('(212) 555-0198');
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2000);
+  };
+
+  const handleCopyEmail = () => {
+    navigator.clipboard?.writeText('hello@marketlink.org');
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2000);
+  };
+
+  const filteredFaqs =
+    activeFaqTab === 'all'
+      ? FAQ_DATA
+      : FAQ_DATA.filter((faq) => faq.category === activeFaqTab);
+
   return (
     <div className={styles.page}>
-      <div className="container">
-        <PageHeader
-          title="Contact the market"
-          subtitle="Questions about an order, a stall, or joining Elm Street Market? We read every note."
-          backTo={PATHS.HOME}
-          backLabel="Home"
-        />
-
-        {/* ---------------- TWO COLUMNS: STALL SIGN DETAILS & MESSAGE FORM ---------------- */}
-        <div className={styles.contactGrid}>
-          {/* Hand-set stall sign */}
-          <div className={styles.stallSignOuter}>
-            <div className={styles.stallSignInner}>
-              <div className={styles.signHeader}>
-                <h2 className={styles.signTitle}>Elm Street Market Stall</h2>
-                <p className={styles.signSub}>
-                  Managed by the Elm Street Farmers Association.
-                </p>
-              </div>
-
-              <div className={styles.signSchedule}>
-                <h3 className={styles.signSectionLabel}>Market Hours</h3>
-                <div className={styles.scheduleTable}>
-                  <div className={styles.scheduleRow}>
-                    <span className={styles.scheduleDay}>Saturdays</span>
-                    <span className={styles.scheduleHours}>8:00 AM – 1:00 PM (Market Day)</span>
-                  </div>
-                  <div className={styles.scheduleRow}>
-                    <span className={styles.scheduleDay}>Friday Pre-Order Cut-Off</span>
-                    <span className={styles.scheduleHours}>6:00 PM Sharp</span>
-                  </div>
-                  <div className={styles.scheduleRow}>
-                    <span className={styles.scheduleDay}>Sunday – Thursday</span>
-                    <span className={styles.scheduleHours}>Growers in the fields</span>
-                  </div>
-                </div>
-              </div>
-
-              <ul className={styles.signDetailsList} role="list">
-                <li className={styles.signDetailItem}>
-                  <span className={styles.signDetailLabel}>Location</span>
-                  <span className={styles.signDetailValue}>
-                    142 Elm Street, Market Square (behind Town Hall)
-                  </span>
-                </li>
-
-                <li className={styles.signDetailItem}>
-                  <span className={styles.signDetailLabel}>Market Phone</span>
-                  <span className={styles.signDetailValue}>(555) 234-5678 (Saturdays 7am–2pm)</span>
-                </li>
-
-                <li className={styles.signDetailItem}>
-                  <span className={styles.signDetailLabel}>Email Enquiries</span>
-                  <span className={styles.signDetailValue}>hello@marketlink.local</span>
-                </li>
-              </ul>
+      {/* ─── HERO HEADER ───────────────────────────────────────── */}
+      <section className={styles.heroSection}>
+        <div className="container">
+          <div className={styles.heroContent}>
+            <div className={styles.badgeRow}>
+              <span className={styles.statusBadgePill}>
+                <span className={styles.liveDot} />
+                Market Office & Help Desk
+              </span>
+              <span className={styles.hoursBadgePill}>
+                <Clock size={12} />
+                Desk Open Saturdays 7:00 AM – 2:30 PM
+              </span>
             </div>
-          </div>
 
-          {/* Form Card or Confirmation State */}
-          <div className={styles.formCard}>
-            {submitted ? (
-              <div className={styles.successState}>
-                <Illustration name="paper-bag-pears" size="lg" className={styles.successIllustration} />
-                <h3 className={styles.successTitle}>Thanks, your note is received.</h3>
-                <p className={styles.successText}>
-                  We read every message before market day. A coordinator will get back to you shortly.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className={styles.sendAnotherButton}
-                >
-                  Send another message
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} noValidate className={styles.form}>
-                <h2 className={styles.cardHeading}>Leave a note for the market</h2>
-                <p className={styles.cardSub}>
-                  Have a question about a stall, want to reserve something special, or need help with a pre-order?
-                </p>
+            <h1 className={styles.heroTitle}>
+              We're Here on Market Morning <br />
+              <span className={styles.titleAccent}>and Every Day in Between.</span>
+            </h1>
 
-                <FormField
-                  ref={nameRef}
-                  label="Your name"
-                  id="contact-name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  error={errors.name}
-                  autoComplete="name"
-                  required
-                />
-
-                <FormField
-                  ref={emailRef}
-                  label="Email address"
-                  id="contact-email"
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={errors.email}
-                  autoComplete="email"
-                  required
-                />
-
-                <FormField
-                  label="Topic"
-                  id="contact-topic"
-                  as="select"
-                  name="topic"
-                  value={formData.topic}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="Question about Saturday pickup">Question about Saturday pickup</option>
-                  <option value="I'm a Farmer and want to join">I'm a Farmer and want to join</option>
-                  <option value="Question about an item or stall">Question about an item or stall</option>
-                  <option value="Feedback for market coordinators">Feedback for market coordinators</option>
-                </FormField>
-
-                <FormField
-                  ref={messageRef}
-                  label="Message"
-                  id="contact-message"
-                  as="textarea"
-                  name="message"
-                  rows={4}
-                  value={formData.message}
-                  onChange={handleChange}
-                  error={errors.message}
-                  required
-                />
-
-                <p className={styles.helperText}>
-                  Market coordinators review incoming messages every Thursday and Friday.
-                </p>
-
-                <div className={styles.submitRow}>
-                  <Button type="submit" variant="primary" size="md">
-                    Send note
-                  </Button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-
-        {/* ---------------- ILLUSTRATED MARKET MAP ---------------- */}
-        <section className={styles.mapSection}>
-          <h2 className={styles.sectionHeading}>Find the stalls on Elm Street</h2>
-          <div className={styles.mapWrapper}>
-            <img
-              src="/images/elm-street-map.jpg"
-              alt="Illustrated architectural map of Elm Street Market Square showing stalls 1 to 12, High Street, Town Hall, and Elm Street"
-              className={styles.mapImage}
-              loading="lazy"
-            />
-            <div className={styles.mapMetaBar}>
-              <p className={styles.mapAddress}>
-                Elm Street Market Square · 142 Elm Street (Behind Town Hall)
-              </p>
-              <p className={styles.mapTip}>
-                Tip: High Street parking is free for two hours on Saturdays.
-              </p>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* ---------------- FAQ ACCORDION IN CANVAS BAND ---------------- */}
-      <WaveDivider shape="soft" />
-      <section className={styles.faqSection}>
-        <div className="containerNarrow">
-          <div className={styles.faqHeader}>
-            <h2 className={styles.sectionHeading}>Frequently asked questions</h2>
-            <p className={styles.sectionSubtitle}>
-              Plain answers about orders, pickups, and market days.
+            <p className={styles.heroSubtitle}>
+              Questions about an upcoming Saturday pickup, stall allocations, or becoming a verified
+              grower? Drop by the Center Pavilion Info Booth or send our coordination team a note.
             </p>
-          </div>
-
-          <div className={styles.faqList}>
-            {FAQ_ITEMS.map((faq) => (
-              <details key={faq.id} className={styles.faqDetails}>
-                <summary className={styles.faqSummary}>
-                  <span className={styles.faqQuestion}>{faq.question}</span>
-                  <ChevronDown size={20} strokeWidth={1.5} className={styles.faqChevron} aria-hidden="true" />
-                </summary>
-                <div className={styles.faqAnswer}>
-                  <p>{faq.answer}</p>
-                </div>
-              </details>
-            ))}
           </div>
         </div>
       </section>
-      <WaveDivider shape="gentle" flip />
+
+      {/* ─── TWO-COLUMN MAIN WORKSPACE ─────────────────────────── */}
+      <section className={styles.workspaceSection}>
+        <div className="container">
+          <div className={styles.workspaceGrid}>
+            {/* ── LEFT COLUMN: DIRECT CONTACTS & DESK INFO ── */}
+            <div className={styles.leftCol}>
+              {/* Primary Info Booth Card */}
+              <div className={styles.infoBoothCard}>
+                <div className={styles.boothHeader}>
+                  <div className={styles.boothIconWrap}>
+                    <Store size={22} />
+                  </div>
+                  <div>
+                    <h2 className={styles.boothTitle}>Center Pavilion Info Booth</h2>
+                    <span className={styles.boothSub}>Abingdon Square Market Headquarters</span>
+                  </div>
+                </div>
+
+                <div className={styles.locationBlock}>
+                  <MapPin size={16} className={styles.locationIcon} />
+                  <div>
+                    <strong>Abingdon Square Park</strong>
+                    <p>8th Avenue & W 12th St, West Village, New York, NY 10014</p>
+                  </div>
+                </div>
+
+                {/* Operating Hours Table */}
+                <div className={styles.scheduleBox}>
+                  <h3 className={styles.scheduleTitle}>Market Schedule & Support Hours</h3>
+                  <div className={styles.scheduleRow}>
+                    <span className={styles.dayLabel}>Saturday Market Day</span>
+                    <span className={styles.timeValue}>8:00 AM – 2:00 PM (Info Booth Live)</span>
+                  </div>
+                  <div className={styles.scheduleRow}>
+                    <span className={styles.dayLabel}>Friday Harvest Cutoff</span>
+                    <span className={styles.timeValue}>6:00 PM Sharp (Manifests Sent)</span>
+                  </div>
+                  <div className={styles.scheduleRow}>
+                    <span className={styles.dayLabel}>Mon – Thu Desk Inquiries</span>
+                    <span className={styles.timeValue}>9:00 AM – 5:00 PM (Online / Phone)</span>
+                  </div>
+                </div>
+
+                {/* Direct Action Buttons */}
+                <div className={styles.contactActions}>
+                  <div className={styles.contactActionItem}>
+                    <div className={styles.actionIconBox}>
+                      <Phone size={15} />
+                    </div>
+                    <div className={styles.actionDetails}>
+                      <span className={styles.actionLabel}>Market Day Line</span>
+                      <a href="tel:2125550198" className={styles.actionLink}>
+                        (212) 555-0198
+                      </a>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopyPhone}
+                      className={styles.copyBtn}
+                      title="Copy phone number"
+                      aria-label="Copy phone number"
+                    >
+                      {copiedPhone ? <Check size={14} color="#175e21" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+
+                  <div className={styles.contactActionItem}>
+                    <div className={styles.actionIconBox}>
+                      <Mail size={15} />
+                    </div>
+                    <div className={styles.actionDetails}>
+                      <span className={styles.actionLabel}>General Inquiries</span>
+                      <a href="mailto:hello@marketlink.org" className={styles.actionLink}>
+                        hello@marketlink.org
+                      </a>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopyEmail}
+                      className={styles.copyBtn}
+                      title="Copy email address"
+                      aria-label="Copy email address"
+                    >
+                      {copiedEmail ? <Check size={14} color="#175e21" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Department Direct Email Directory */}
+              <div className={styles.deptCard}>
+                <h3 className={styles.deptTitle}>Direct Department Inboxes</h3>
+                <div className={styles.deptList}>
+                  <div className={styles.deptItem}>
+                    <strong>Customer Pre-Orders & Pickups:</strong>
+                    <a href="mailto:orders@marketlink.org">orders@marketlink.org</a>
+                  </div>
+                  <div className={styles.deptItem}>
+                    <strong>Grower & Baker Applications:</strong>
+                    <a href="mailto:growers@marketlink.org">growers@marketlink.org</a>
+                  </div>
+                  <div className={styles.deptItem}>
+                    <strong>Food Access & SNAP / EBT Match:</strong>
+                    <a href="mailto:access@marketlink.org">access@marketlink.org</a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual Map Card */}
+              <div className={styles.mapCard}>
+                <div className={styles.mapImgWrap}>
+                  <img
+                    src="/images/greenwich-map.jpg"
+                    alt="Map of Greenwich Village Farmers Market at Abingdon Square"
+                    className={styles.mapImg}
+                  />
+                  <a
+                    href="https://maps.google.com/?q=Abingdon+Square+Park+New+York"
+                    target="_blank"
+                    rel="noreferrer"
+                    className={styles.mapDirectionsLink}
+                  >
+                    <span>Open in Google Maps</span>
+                    <ExternalLink size={13} />
+                  </a>
+                </div>
+                <div className={styles.mapCaption}>
+                  <strong>Subway & Transit:</strong>
+                  <p>A, C, E, L to 14th St / 8th Ave (3 min walk) · Free 2-hr Saturday parking along Hudson St.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ── RIGHT COLUMN: INTERACTIVE MESSAGE FORM ── */}
+            <div className={styles.rightCol}>
+              <div className={styles.formCard}>
+                {submitted ? (
+                  <div className={styles.successState}>
+                    <div className={styles.successIconBubble}>
+                      <CheckCircle2 size={36} />
+                    </div>
+                    <h2 className={styles.successHeading}>Your note has been received!</h2>
+                    <span className={styles.ticketPill}>Reference #{ticketId}</span>
+                    <p className={styles.successText}>
+                      Thank you for contacting MarketLink, <strong>{formData.name}</strong>. A market
+                      coordinator will review your note and respond to <strong>{formData.email}</strong>{' '}
+                      before market morning.
+                    </p>
+                    <div className={styles.successMetaBox}>
+                      <div className={styles.successMetaRow}>
+                        <span>Topic:</span>
+                        <strong>{formData.topic}</strong>
+                      </div>
+                      <div className={styles.successMetaRow}>
+                        <span>Target Market:</span>
+                        <strong>{formData.market}</strong>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className={styles.sendAnotherBtn}
+                    >
+                      Send Another Message
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} noValidate className={styles.contactForm}>
+                    <div className={styles.formHeader}>
+                      <h2 className={styles.formTitle}>Leave a note for the market</h2>
+                      <p className={styles.formSubtitle}>
+                        Fill out the details below and we'll connect you directly with the right coordinator.
+                      </p>
+                    </div>
+
+                    {/* Topic Chips */}
+                    <div className={styles.fieldGroup}>
+                      <label className={styles.fieldLabel}>What is this regarding?</label>
+                      <div className={styles.topicChipsGrid}>
+                        {TOPICS.map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => setFormData((prev) => ({ ...prev, topic: t.label }))}
+                            className={`${styles.topicChip} ${
+                              formData.topic === t.label ? styles.topicChipActive : ''
+                            }`}
+                          >
+                            <span>{t.icon}</span>
+                            <span>{t.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Market Selector */}
+                    <div className={styles.fieldGroup}>
+                      <label htmlFor="contact-market" className={styles.fieldLabel}>
+                        Associated Market Location
+                      </label>
+                      <select
+                        id="contact-market"
+                        name="market"
+                        value={formData.market}
+                        onChange={handleChange}
+                        className={styles.selectInput}
+                      >
+                        {MARKETS_LIST.map((m, idx) => (
+                          <option key={idx} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Name & Email Row */}
+                    <div className={styles.twoFieldsRow}>
+                      <div className={styles.fieldGroup}>
+                        <label htmlFor="contact-name" className={styles.fieldLabel}>
+                          Your Full Name <span className={styles.requiredStar}>*</span>
+                        </label>
+                        <input
+                          ref={nameRef}
+                          type="text"
+                          id="contact-name"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          placeholder="e.g. Claire Adams"
+                          className={`${styles.textInput} ${errors.name ? styles.inputError : ''}`}
+                        />
+                        {errors.name && <span className={styles.errorText}>{errors.name}</span>}
+                      </div>
+
+                      <div className={styles.fieldGroup}>
+                        <label htmlFor="contact-email" className={styles.fieldLabel}>
+                          Email Address <span className={styles.requiredStar}>*</span>
+                        </label>
+                        <input
+                          ref={emailRef}
+                          type="email"
+                          id="contact-email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder="claire@example.com"
+                          className={`${styles.textInput} ${errors.email ? styles.inputError : ''}`}
+                        />
+                        {errors.email && <span className={styles.errorText}>{errors.email}</span>}
+                      </div>
+                    </div>
+
+                    {/* Optional Phone Field */}
+                    <div className={styles.fieldGroup}>
+                      <label htmlFor="contact-phone" className={styles.fieldLabel}>
+                        Phone Number <span className={styles.optionalTag}>(Optional, for Saturday morning SMS)</span>
+                      </label>
+                      <input
+                        type="tel"
+                        id="contact-phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="(212) 555-0123"
+                        className={styles.textInput}
+                      />
+                    </div>
+
+                    {/* Message Area */}
+                    <div className={styles.fieldGroup}>
+                      <div className={styles.labelCountRow}>
+                        <label htmlFor="contact-message" className={styles.fieldLabel}>
+                          Your Message <span className={styles.requiredStar}>*</span>
+                        </label>
+                        <span className={styles.charCount}>
+                          {formData.message.length} characters
+                        </span>
+                      </div>
+                      <textarea
+                        ref={messageRef}
+                        id="contact-message"
+                        name="message"
+                        rows={5}
+                        value={formData.message}
+                        onChange={handleChange}
+                        placeholder="Tell us what you need help with, what stall you're looking for, or details about your farm..."
+                        className={`${styles.textAreaInput} ${errors.message ? styles.inputError : ''}`}
+                      />
+                      {errors.message && <span className={styles.errorText}>{errors.message}</span>}
+                    </div>
+
+                    {/* Trust Note */}
+                    <div className={styles.formPrivacyNote}>
+                      <ShieldCheck size={15} className={styles.privacyIcon} />
+                      <span>
+                        We respect your privacy. Your information is only shared with our market
+                        operations team and participating growers when necessary.
+                      </span>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className={styles.submitBtn}
+                    >
+                      {submitting ? (
+                        <span>Sending your note...</span>
+                      ) : (
+                        <>
+                          <Send size={16} />
+                          <span>Send Note to Market Coordinators</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SATURDAY EMERGENCY CALLOUT BANNER ──────────────────── */}
+      <section className={styles.hotlineSection}>
+        <div className="container">
+          <div className={styles.hotlineCard}>
+            <div className={styles.hotlineIconWrap}>
+              <AlertCircle size={24} />
+            </div>
+            <div className={styles.hotlineText}>
+              <h3 className={styles.hotlineTitle}>Need urgent assistance on market morning?</h3>
+              <p className={styles.hotlineDesc}>
+                If you are running late, can't find a specific stall under the awnings, or need immediate
+                help between 7:30 AM and 2:00 PM on Saturday, call our on-duty Market Day Manager at{' '}
+                <a href="tel:2125550198" className={styles.hotlinePhoneLink}>
+                  (212) 555-0198
+                </a>
+                .
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FREQUENTLY ASKED QUESTIONS SECTION ─────────────────── */}
+      <section className={styles.faqSection}>
+        <div className="container">
+          <div className={styles.faqHeader}>
+            <span className={styles.faqKicker}>Help & Answers</span>
+            <h2 className={styles.faqTitle}>Frequently Asked Questions</h2>
+            <p className={styles.faqSubtitle}>
+              Plain-spoken answers to common questions about Saturday pre-orders, collection, and stall policies.
+            </p>
+
+            {/* Filter Tabs */}
+            <div className={styles.faqTabs}>
+              <button
+                type="button"
+                onClick={() => setActiveFaqTab('all')}
+                className={`${styles.faqTabBtn} ${activeFaqTab === 'all' ? styles.faqTabActive : ''}`}
+              >
+                All Questions
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFaqTab('pickup')}
+                className={`${styles.faqTabBtn} ${activeFaqTab === 'pickup' ? styles.faqTabActive : ''}`}
+              >
+                Pre-Orders & Pickup
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFaqTab('payments')}
+                className={`${styles.faqTabBtn} ${activeFaqTab === 'payments' ? styles.faqTabActive : ''}`}
+              >
+                Payments & Food Access
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFaqTab('farmers')}
+                className={`${styles.faqTabBtn} ${activeFaqTab === 'farmers' ? styles.faqTabActive : ''}`}
+              >
+                For Farmers & Bakers
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.faqList}>
+            {filteredFaqs.map((faq, idx) => {
+              const isOpen = expandedFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className={`${styles.faqItem} ${isOpen ? styles.faqItemOpen : ''}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedFaq(isOpen ? null : idx)}
+                    className={styles.faqQuestionBtn}
+                    aria-expanded={isOpen}
+                  >
+                    <span className={styles.faqQText}>{faq.question}</span>
+                    <ChevronDown
+                      size={18}
+                      className={`${styles.faqChevron} ${isOpen ? styles.faqChevronOpen : ''}`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className={styles.faqAnswerBody}>
+                      <p>{faq.answer}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

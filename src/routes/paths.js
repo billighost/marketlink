@@ -3,6 +3,12 @@
  */
 export const PATHS = {
   HOME: '/',
+  MARKETS: '/markets',
+  MARKET_DETAIL: '/markets/:id',
+  FARMERS: '/farmers',
+  FARMER_DETAIL: '/farmers/:id',
+  PRODUCTS: '/products',
+  PRODUCT_DETAIL: '/products/:id',
   ABOUT: '/about',
   CONTACT: '/contact',
   LOGIN: '/login',

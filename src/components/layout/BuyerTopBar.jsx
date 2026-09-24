@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { homeMarket, getMarket } from '@/data/placeholders';
 import Illustration from '@/components/domain/Illustration';
+import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './BuyerTopBar.module.css';
 
 /**
@@ -70,10 +71,7 @@ export function BuyerTopBar() {
       <div className={styles.container}>
         {/* Left: Brand logo (desktop only >=1024px) */}
         <Link to="/buyer" className={styles.brand} aria-label="MarketLink home">
-          <span className={styles.logoIcon}>
-            <Illustration name="beet" size="sm" />
-          </span>
-          <span className={styles.brandText}>MarketLink</span>
+          <MarketLinkLogo size="sm" />
         </Link>
 
         {/* Center / Mobile Left: Market selector button */}
