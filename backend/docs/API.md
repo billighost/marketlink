@@ -731,3 +731,308 @@ Header status sub-line computed in market timezone.
   }
 }
 ```
+
+---
+
+## 8. Cart Quoting (`/api/cart`)
+
+### `POST /api/cart/quote`
+Recalculates cart truth with live stock, prices, issues, and upcoming slots within strict 3-query database budget.
+- **Auth**: Customer (`requireRole('customer')`)
+- **Request Body**:
+```json
+{
+  "groups": [
+    {
+      "farmerId": "6ab4eb7801b3e33e11bff15d",
+      "items": [
+        { "productId": "6ab4eb7801b3e33e11bff178", "quantity": 2, "expectedPriceCents": 450 }
+      ],
+      "slotStart": "2026-10-01T12:00:00.000Z"
+    }
+  ]
+}
+```
+- **Response**: `200 OK`
+```json
+{
+  "data": {
+    "groups": [
+      {
+        "farmer": { "id": "...", "stallName": "Riverbend Farm", "stallNumber": "Stall 4", "art": "crate-carrots" },
+        "market": { "id": "...", "name": "Elm Street Market" },
+        "slots": [ { "start": "2026-10-01T12:00:00.000Z", "end": "2026-10-01T14:00:00.000Z", "label": "Thursday 8:00 AM - 10:00 AM" } ],
+        "cutoffAt": "2026-10-01T00:00:00.000Z",
+        "selectedSlot": { "start": "2026-10-01T12:00:00.000Z", "end": "2026-10-01T14:00:00.000Z", "label": "Thursday 8:00 AM - 10:00 AM" },
+        "items": [
+          {
+            "productId": "6ab4eb7801b3e33e11bff178",
+            "name": "Heirloom tomatoes",
+            "quantity": 2,
+            "unitPriceCents": 450,
+            "lineTotalCents": 900,
+            "unit": "lb",
+            "availability": "in",
+            "quantityAvailable": 24,
+            "issues": []
+          }
+        ],
+        "groupSubtotalCents": 900,
+        "issues": []
+      }
+    ],
+    "subtotalCents": 900,
+    "totalCents": 900,
+    "canCheckout": true,
+    "blockingIssueCount": 0
+  }
+}
+```
+
+---
+
+## 9. Checkout & Pre-Orders (`/api/orders`)
+
+### `POST /api/orders/checkout`
+Atomically reserves stock, creates one order per farmer with contiguous order numbers, and enforces strict idempotency.
+- **Auth**: Customer (`requireRole('customer')`)
+- **Headers**: `Idempotency-Key: <unique-uuid-or-string>` (Required)
+- **Request Body**:
+```json
+{
+  "groups": [
+    {
+      "farmerId": "6ab4eb7801b3e33e11bff15d",
+      "slotStart": "2026-10-01T12:00:00.000Z",
+      "note": "Please pack firm tomatoes",
+      "items": [
+        { "productId": "6ab4eb7801b3e33e11bff178", "quantity": 2 }
+      ]
+    }
+  ]
+}
+```
+- **Response**: `201 Created`
+```json
+{
+  "data": {
+    "checkoutId": "6ab4fc7a01b3e33e11bff999",
+    "orders": [
+      {
+        "id": "6ab4fc7a01b3e33e11bff888",
+        "orderNumber": "ML-1089",
+        "status": "placed",
+        "farmer": { "id": "...", "stallName": "Riverbend Farm", "stallNumber": "Stall 4", "art": "crate-carrots" },
+        "pickup": { "start": "2026-10-01T12:00:00.000Z", "end": "2026-10-01T14:00:00.000Z", "label": "Thursday 8:00 AM - 10:00 AM" },
+        "cutoffAt": "2026-10-01T00:00:00.000Z",
+        "itemCount": 2,
+        "totalCents": 900,
+        "itemsPreview": [ { "name": "Heirloom tomatoes", "art": "tomato" } ],
+        "canModify": true,
+        "reviewed": false
+      }
+    ]
+  }
+}
+```
+
+### `GET /api/orders`
+Lists customer orders with active/past tab filtering and cursor keyset pagination.
+- **Auth**: Customer
+- **Query Params**: `tab=active|past`, `cursor=...`, `limit=10`
+- **Response**: `200 OK`
+
+### `GET /api/orders/:id`
+Retrieves complete order detail with timeline, pickup directions, and action flags. Strict owner isolation (404 on IDOR).
+- **Auth**: Customer (Owner only)
+- **Response**: `200 OK`
+
+### `PATCH /api/orders/:id`
+Modifies placed pre-order quantities, pickup slot, or note before cut-off with atomic stock delta adjustments.
+- **Auth**: Customer (Owner only)
+- **Request Body**:
+```json
+{
+  "items": [{ "productId": "6ab4eb7801b3e33e11bff178", "quantity": 3 }],
+  "note": "Updated note"
+}
+```
+- **Response**: `200 OK`
+
+### `POST /api/orders/:id/cancel`
+Cancels placed or accepted pre-order before cut-off and restores reserved stock.
+- **Auth**: Customer (Owner only)
+- **Request Body**: `{ "reason": "Cannot attend market this Saturday" }`
+- **Response**: `200 OK`
+
+### `GET /api/orders/:id/reorder-preview`
+Fetches past order line items with current live stock, prices, and availability flags for quick re-order.
+- **Auth**: Customer (Owner only)
+- **Response**: `200 OK`
+
+---
+
+## 10. Reviews (`/api/orders/:id/reviews` & `/api/reviews`)
+
+### `POST /api/orders/:id/reviews`
+Submits verified-purchase reviews for completed orders (one review per target per order). Updates farmer and product rating aggregates atomically.
+- **Auth**: Customer (Owner only)
+- **Request Body**:
+```json
+{
+  "farmer": { "rating": 5, "comment": "Outstanding stall!" },
+  "products": [
+    { "productId": "6ab4eb7801b3e33e11bff178", "rating": 5, "comment": "Super sweet!" }
+  ]
+}
+```
+- **Response**: `201 Created`
+
+### `PATCH /api/reviews/:id`
+Author edits review rating or comment within 14-day window. Recalculates rating aggregates by the delta.
+- **Auth**: Customer (Author only)
+- **Request Body**: `{ "rating": 4, "comment": "Updated comment" }`
+- **Response**: `200 OK`
+
+### `DELETE /api/reviews/:id`
+Author deletes review within 14-day window. Atomically decrements target rating aggregates.
+- **Auth**: Customer (Author only)
+- **Response**: `200 OK`
+
+### `POST /api/reviews/:id/flag`
+Flags a review for moderation review.
+- **Auth**: Any authenticated user
+- **Request Body**: `{ "reason": "Contains promotional spam or abusive language." }`
+- **Response**: `200 OK`
+
+---
+
+## 11. Favorites & Restock Alerts (`/api/favorites`)
+
+### `GET /api/favorites/ids`
+Lightweight ID arrays for UI heart toggles (capped at 500 each).
+- **Auth**: Customer
+- **Response**: `200 OK`
+```json
+{
+  "data": {
+    "productIds": ["6ab4eb7801b3e33e11bff178"],
+    "farmerIds": ["6ab4eb7801b3e33e11bff15d"]
+  }
+}
+```
+
+### `GET /api/favorites`
+Cursor-paginated productCard or farmerCard list, most recent first.
+- **Auth**: Customer
+- **Query Params**: `type=product|farmer`, `cursor=...`, `limit=20`
+- **Response**: `200 OK`
+
+### `PUT /api/favorites/:type/:id`
+Idempotent add to favorites.
+- **Auth**: Customer
+- **Response**: `200 OK`
+
+### `DELETE /api/favorites/:type/:id`
+Idempotent remove from favorites.
+- **Auth**: Customer
+- **Response**: `200 OK`
+
+---
+
+## 12. Notifications (`/api/notifications`)
+
+### `GET /api/notifications`
+Lists customer notifications with indexed unread count and optional unread filter.
+- **Auth**: Any authenticated user
+- **Query Params**: `unread=true`, `cursor=...`, `limit=20`
+- **Response**: `200 OK`
+
+### `POST /api/notifications/:id/read`
+Marks single notification as read (owner isolated, 404 on IDOR).
+- **Auth**: Any authenticated user
+- **Response**: `200 OK`
+
+### `POST /api/notifications/read-all`
+Marks all user notifications as read.
+- **Auth**: Any authenticated user
+- **Response**: `200 OK`
+
+---
+
+## 13. Saved Markets & Home Market (`/api/users/me`)
+
+### `GET /api/users/me/saved-markets`
+Returns marketCards for customer's saved markets with directions and next opening.
+- **Auth**: Any authenticated user
+- **Response**: `200 OK`
+
+### `PUT /api/users/me/saved-markets/:marketId`
+Adds market to saved markets (max 10, idempotent).
+- **Auth**: Any authenticated user
+- **Response**: `200 OK`
+
+### `DELETE /api/users/me/saved-markets/:marketId`
+Removes market from saved markets (idempotent).
+- **Auth**: Any authenticated user
+- **Response**: `200 OK`
+
+### `PUT /api/users/me/home-market/:marketId`
+Updates customer's home market.
+- **Auth**: Any authenticated user
+- **Response**: `200 OK`
+
+---
+
+## 14. Home Summary (`/api/home`)
+
+### `GET /api/home/summary`
+Single-round-trip summary with ready for pickup order, next pickup order, and unread notification count.
+- **Auth**: Customer
+- **Response**: `200 OK`
+```json
+{
+  "data": {
+    "readyForPickup": null,
+    "nextPickup": {
+      "id": "...",
+      "orderNumber": "ML-1043",
+      "status": "placed",
+      "farmer": { "id": "...", "stallName": "Riverbend Farm" },
+      "pickup": { "start": "...", "end": "...", "label": "Saturday 8:00 AM - 10:00 AM" }
+    },
+    "unreadNotifications": 2,
+    "cartHint": null
+  }
+}
+```
+
+---
+
+## 15. Rule-Based Assistant (`/api/assistant`)
+
+### `POST /api/assistant/message`
+Answers queries about market schedules, farmer stall locations, produce availability, item prices, and order tracking in under 60ms.
+- **Auth**: Customer (`assistantRateLimiter`: 30/min/user)
+- **Request Body**:
+```json
+{
+  "text": "When does Elm Street Market open?",
+  "history": []
+}
+```
+- **Response**: `200 OK`
+```json
+{
+  "data": {
+    "reply": "Elm Street Market is open Saturdays from 8:00 AM to 1:00 PM at 200 Elm Street, Maplewood, NJ.",
+    "cards": [ { "type": "market", "id": "6ab4eb7801b3e33e11bff159" } ],
+    "suggestions": [
+      "Who sells at Elm Street Market?",
+      "What's fresh on Saturday?",
+      "Market directions"
+    ]
+  }
+}
+```
+

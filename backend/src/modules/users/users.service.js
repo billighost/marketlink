@@ -51,3 +51,137 @@ export async function updateUserPassword(userId, newPasswordHash) {
     }
   );
 }
+
+/**
+ * Returns marketCards for customer's saved markets with directions and next opening.
+ *
+ * @param {string|ObjectId} userId
+ * @returns {Promise<Array<object>>}
+ */
+export async function getSavedMarkets(userId) {
+  const db = getDb();
+  const uid = toObjectId(userId);
+
+  const user = await db
+    .collection(COLLECTIONS.USERS)
+    .findOne({ _id: uid }, { projection: { savedMarketIds: 1 } });
+
+  if (!user || !Array.isArray(user.savedMarketIds) || user.savedMarketIds.length === 0) {
+    return [];
+  }
+
+  const { toMarketCard } = await import('../../utils/shapes.js');
+  const { getNextMarketOpening } = await import('../markets/markets.service.js');
+
+  const marketIds = user.savedMarketIds.map((id) => toObjectId(id));
+  const markets = await db
+    .collection(COLLECTIONS.MARKETS)
+    .find({ _id: { $in: marketIds }, status: 'active' })
+    .toArray();
+
+  const marketMap = new Map(markets.map((m) => [m._id.toString(), m]));
+  const cards = [];
+
+  for (const mid of user.savedMarketIds) {
+    const market = marketMap.get(mid.toString());
+    if (!market) continue;
+
+    const nextOpening = getNextMarketOpening(market);
+    cards.push(toMarketCard(market, { nextOpening }));
+  }
+
+  return cards;
+}
+
+/**
+ * Adds a market to saved markets (max 10, market must exist and be active).
+ *
+ * @param {string|ObjectId} userId
+ * @param {string|ObjectId} marketId
+ * @returns {Promise<{ message: string }>}
+ */
+export async function saveMarket(userId, marketId) {
+  const db = getDb();
+  const uid = toObjectId(userId);
+  const mid = toObjectId(marketId);
+
+  const market = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: mid, status: 'active' });
+  if (!market) {
+    const { AppError } = await import('../../utils/errors.js');
+    throw AppError.notFound('Market not found or inactive.');
+  }
+
+  const user = await db
+    .collection(COLLECTIONS.USERS)
+    .findOne({ _id: uid }, { projection: { savedMarketIds: 1 } });
+
+  const currentSaved = Array.isArray(user?.savedMarketIds) ? user.savedMarketIds : [];
+  const alreadySaved = currentSaved.some((id) => id.toString() === mid.toString());
+
+  if (!alreadySaved && currentSaved.length >= 10) {
+    const { AppError } = await import('../../utils/errors.js');
+    throw AppError.conflict('Cannot save more than 10 markets.', 'LIMIT_EXCEEDED');
+  }
+
+  await db.collection(COLLECTIONS.USERS).updateOne(
+    { _id: uid },
+    {
+      $addToSet: { savedMarketIds: mid },
+      $set: { updatedAt: new Date() },
+    }
+  );
+
+  return { message: 'Market saved successfully.' };
+}
+
+/**
+ * Removes a market from saved markets (idempotent).
+ *
+ * @param {string|ObjectId} userId
+ * @param {string|ObjectId} marketId
+ * @returns {Promise<{ message: string }>}
+ */
+export async function removeSavedMarket(userId, marketId) {
+  const db = getDb();
+  const uid = toObjectId(userId);
+  const mid = toObjectId(marketId);
+
+  await db.collection(COLLECTIONS.USERS).updateOne(
+    { _id: uid },
+    {
+      $pull: { savedMarketIds: mid },
+      $set: { updatedAt: new Date() },
+    }
+  );
+
+  return { message: 'Market removed from saved markets.' };
+}
+
+/**
+ * Sets user's home market (market must exist and be active).
+ *
+ * @param {string|ObjectId} userId
+ * @param {string|ObjectId} marketId
+ * @returns {Promise<{ message: string }>}
+ */
+export async function setHomeMarket(userId, marketId) {
+  const db = getDb();
+  const uid = toObjectId(userId);
+  const mid = toObjectId(marketId);
+
+  const market = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: mid, status: 'active' });
+  if (!market) {
+    const { AppError } = await import('../../utils/errors.js');
+    throw AppError.notFound('Market not found or inactive.');
+  }
+
+  await db.collection(COLLECTIONS.USERS).updateOne(
+    { _id: uid },
+    {
+      $set: { homeMarketId: mid, updatedAt: new Date() },
+    }
+  );
+
+  return { message: 'Home market updated successfully.' };
+}
+

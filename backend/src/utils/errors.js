@@ -63,6 +63,10 @@ export class AppError extends Error {
     return new AppError(422, 'VALIDATION_FAILED', message, details);
   }
 
+  static validation(details = [], message = 'Please check the highlighted fields.') {
+    return new AppError(422, 'VALIDATION_FAILED', message, details);
+  }
+
   static rateLimited(message = 'Too many requests. Please slow down and try again later.') {
     return new AppError(429, 'RATE_LIMITED', message);
   }

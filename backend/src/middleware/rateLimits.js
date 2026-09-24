@@ -76,3 +76,24 @@ export const contactRateLimiter = createLimiter({
   limit: parseInt(process.env.RATE_LIMIT_CONTACT_MAX || '5', 10),
   message: 'Too many messages sent. Please wait an hour before submitting another message.',
 });
+
+// Checkout: 10 requests per minute per user
+export const checkoutRateLimiter = createLimiter({
+  windowMs: 60 * 1000,
+  limit: parseInt(process.env.RATE_LIMIT_CHECKOUT_MAX || '10', 10),
+  message: 'Too many checkout attempts. Please wait a minute before trying again.',
+});
+
+// Assistant: 30 requests per minute per user
+export const assistantRateLimiter = createLimiter({
+  windowMs: 60 * 1000,
+  limit: parseInt(process.env.RATE_LIMIT_ASSISTANT_MAX || '30', 10),
+  message: 'Too many assistant messages. Please wait a minute before sending another message.',
+});
+
+// Review creation: 20 requests per hour per user
+export const reviewRateLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: parseInt(process.env.RATE_LIMIT_REVIEW_MAX || '20', 10),
+  message: 'Review creation limit reached. Please wait before submitting more reviews.',
+});

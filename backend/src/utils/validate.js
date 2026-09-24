@@ -228,6 +228,76 @@ export function validateBoolean(val, fieldName, details, required = true) {
 }
 
 /**
+ * Validates an integer field.
+ *
+ * @param {unknown} val
+ * @param {string} fieldName
+ * @param {Array<{ field: string, message: string }>} details
+ * @param {object} [opts]
+ * @param {boolean} [opts.required=true]
+ * @param {number} [opts.min]
+ * @param {number} [opts.max]
+ * @returns {number|undefined}
+ */
+export function validateInteger(val, fieldName, details, { required = true, min, max } = {}) {
+  if (val === undefined || val === null || val === '') {
+    if (required) {
+      details.push({ field: fieldName, message: `${fieldName} is required.` });
+    }
+    return undefined;
+  }
+
+  if (typeof val !== 'number' || !Number.isInteger(val)) {
+    details.push({ field: fieldName, message: `${fieldName} must be an integer.` });
+    return undefined;
+  }
+
+  if (min !== undefined && val < min) {
+    details.push({ field: fieldName, message: `${fieldName} must be at least ${min}.` });
+    return undefined;
+  }
+
+  if (max !== undefined && val > max) {
+    details.push({ field: fieldName, message: `${fieldName} cannot exceed ${max}.` });
+    return undefined;
+  }
+
+  return val;
+}
+
+/**
+ * Validates an ISO date string or Date object.
+ *
+ * @param {unknown} val
+ * @param {string} fieldName
+ * @param {Array<{ field: string, message: string }>} details
+ * @param {object} [opts]
+ * @param {boolean} [opts.required=true]
+ * @returns {Date|undefined}
+ */
+export function validateDate(val, fieldName, details, { required = true } = {}) {
+  if (val === undefined || val === null || val === '') {
+    if (required) {
+      details.push({ field: fieldName, message: `${fieldName} is required.` });
+    }
+    return undefined;
+  }
+
+  if (typeof val !== 'string' && !(val instanceof Date)) {
+    details.push({ field: fieldName, message: `${fieldName} must be an ISO date string.` });
+    return undefined;
+  }
+
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) {
+    details.push({ field: fieldName, message: `${fieldName} must be a valid ISO date.` });
+    return undefined;
+  }
+
+  return d;
+}
+
+/**
  * Asserts that the details array is empty. Throws 422 if not.
  *
  * @param {Array<{ field: string, message: string }>} details

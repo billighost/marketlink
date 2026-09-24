@@ -56,3 +56,18 @@ export const REVIEW_TARGET_TYPES = ['farmer', 'product'];
 export const FAVORITE_TARGET_TYPES = ['product', 'farmer'];
 
 export const MARKET_STATUSES = ['active', 'removed'];
+
+export const NOTIFICATION_TYPES = [
+  'order_placed',
+  'order_accepted',
+  'order_ready',
+  'order_completed',
+  'order_declined',
+  'order_cancelled',
+  'restock',
+  'announcement',
+  'review_reply',
+  'account',
+];
+
+export const CHECKOUT_STATUSES = ['pending', 'done', 'failed'];

@@ -1,0 +1,508 @@
+/**
+ * Cart quoting test suite (T3.001 - T3.020).
+ * Validates role guards, live quote arithmetic, blocking vs non-blocking issues,
+ * slot validation, multi-vendor grouping, and strict 3-query database budget.
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { getClient } from '../src/db/client.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+import { getCartQuote } from '../src/modules/cart/cart.service.js';
+
+describe('Cart Quoting Suite (T3.001 - T3.020)', () => {
+  let db;
+  let customerAuth;
+  let farmerAuth;
+  let riverbendFarmer;
+  let oakmillFarmer;
+  let carrotsProduct;
+  let tomatoesProduct;
+  let sourdoughProduct;
+
+  before(async () => {
+    const env = await setupTestEnvironment();
+    db = env.db;
+
+    customerAuth = await loginUser('george@example.com', 'market123');
+    farmerAuth = await loginUser('riverbend@example.com', 'market123');
+
+    riverbendFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Riverbend Farm' });
+    oakmillFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Oak & Mill Bakery' });
+
+    carrotsProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Rainbow carrots' });
+    tomatoesProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Heirloom tomatoes' });
+    sourdoughProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Sourdough boule' });
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
+  });
+
+  it('T3.001: POST /api/cart/quote unauthenticated returns 401 UNAUTHENTICATED', async () => {
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            items: [{ productId: carrotsProduct._id.toString(), quantity: 2 }],
+          },
+        ],
+      },
+    });
+    assert.equal(res.status, 401);
+    const body = await res.json();
+    assert.equal(body.error.code, 'UNAUTHENTICATED');
+  });
+
+  it('T3.002: POST /api/cart/quote with Farmer token returns 403 FORBIDDEN', async () => {
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${farmerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            items: [{ productId: carrotsProduct._id.toString(), quantity: 2 }],
+          },
+        ],
+      },
+    });
+    assert.equal(res.status, 403);
+    const body = await res.json();
+    assert.equal(body.error.code, 'FORBIDDEN');
+  });
+
+  it('T3.003: Single group valid quote returns 200 with accurate line totals and subtotal', async () => {
+    // First, inspect available slots for riverbend to select a valid slot
+    const preRes = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            items: [{ productId: carrotsProduct._id.toString(), quantity: 2 }],
+          },
+        ],
+      },
+    });
+    const preBody = await preRes.json();
+    assert.equal(preRes.status, 200);
+    const openSlot = preBody.data.groups[0].slots.find((s) => s.isOpen);
+    assert.ok(openSlot, 'Should find at least one open pickup slot');
+
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            slotStart: openSlot.start,
+            items: [{ productId: carrotsProduct._id.toString(), quantity: 2, expectedPriceCents: carrotsProduct.priceCents }],
+          },
+        ],
+      },
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.data.canCheckout, true);
+    assert.equal(body.data.groups.length, 1);
+    const g = body.data.groups[0];
+    assert.equal(g.farmerId, riverbendFarmer._id.toString());
+    assert.equal(g.farmer.stallName, 'Riverbend Farm');
+    assert.equal(g.lines.length, 1);
+    assert.equal(g.lines[0].productId, carrotsProduct._id.toString());
+    assert.equal(g.lines[0].quantity, 2);
+    assert.equal(g.lines[0].unitPriceCents, carrotsProduct.priceCents);
+    assert.equal(g.lines[0].lineTotalCents, carrotsProduct.priceCents * 2);
+    assert.equal(g.subtotalCents, carrotsProduct.priceCents * 2);
+    assert.equal(body.data.totalCents, carrotsProduct.priceCents * 2);
+    assert.equal(g.selectedSlot.start, openSlot.start);
+    assert.equal(g.selectedSlot.isOpen, true);
+  });
+
+  it('T3.004: Multi-group quote across two farmers calculates combined totals', async () => {
+    const preRes = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          { farmerId: riverbendFarmer._id.toString(), items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }] },
+          { farmerId: oakmillFarmer._id.toString(), items: [{ productId: sourdoughProduct._id.toString(), quantity: 3 }] },
+        ],
+      },
+    });
+    const preBody = await preRes.json();
+    const riverSlot = preBody.data.groups[0].slots.find((s) => s.isOpen);
+    const oakSlot = preBody.data.groups[1].slots.find((s) => s.isOpen);
+
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            slotStart: riverSlot.start,
+            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
+          },
+          {
+            farmerId: oakmillFarmer._id.toString(),
+            slotStart: oakSlot.start,
+            items: [{ productId: sourdoughProduct._id.toString(), quantity: 3 }],
+          },
+        ],
+      },
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.data.canCheckout, true);
+    assert.equal(body.data.groups.length, 2);
+    const expectedTotal = carrotsProduct.priceCents * 1 + sourdoughProduct.priceCents * 3;
+    assert.equal(body.data.totalCents, expectedTotal);
+  });
+
+  it('T3.005: Price expectation mismatch produces PRICE_CHANGED non-blocking issue', async () => {
+    const preRes = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [{ farmerId: riverbendFarmer._id.toString(), items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }] }],
+      },
+    });
+    const preBody = await preRes.json();
+    const openSlot = preBody.data.groups[0].slots.find((s) => s.isOpen);
+
+    const staleClientPrice = carrotsProduct.priceCents - 100;
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            slotStart: openSlot.start,
+            items: [{ productId: carrotsProduct._id.toString(), quantity: 1, expectedPriceCents: staleClientPrice }],
+          },
+        ],
+      },
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    const line = body.data.groups[0].lines[0];
+    assert.equal(line.issues.length, 1);
+    assert.equal(line.issues[0].code, 'PRICE_CHANGED');
+    assert.ok(line.issues[0].message.includes('The price changed from'));
+    // Non-blocking: canCheckout must remain true!
+    assert.equal(body.data.canCheckout, true);
+  });
+
+  it('T3.006: Product from wrong Farmer returns 422', async () => {
+    // Sourdough belongs to Oak & Mill, not Riverbend
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            items: [{ productId: sourdoughProduct._id.toString(), quantity: 1 }],
+          },
+        ],
+      },
+    });
+
+    assert.equal(res.status, 422);
+    const body = await res.json();
+    assert.equal(body.error.code, 'VALIDATION_FAILED');
+  });
+
+  it('T3.007: Duplicate product in a group returns 422', async () => {
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            items: [
+              { productId: carrotsProduct._id.toString(), quantity: 1 },
+              { productId: carrotsProduct._id.toString(), quantity: 2 },
+            ],
+          },
+        ],
+      },
+    });
+
+    assert.equal(res.status, 422);
+    const body = await res.json();
+    assert.equal(body.error.code, 'VALIDATION_FAILED');
+  });
+
+  it('T3.008: Invalid quantities (0, 21, 1.5, "2") return 422', async () => {
+    for (const badQty of [0, 21, 1.5, '2']) {
+      const res = await request('/api/cart/quote', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+        body: {
+          groups: [
+            {
+              farmerId: riverbendFarmer._id.toString(),
+              items: [{ productId: carrotsProduct._id.toString(), quantity: badQty }],
+            },
+          ],
+        },
+      });
+      assert.equal(res.status, 422, `Expected 422 for quantity ${badQty}`);
+    }
+  });
+
+  it('T3.009: More than 10 groups returns 422', async () => {
+    const groups = Array.from({ length: 11 }, () => ({
+      farmerId: riverbendFarmer._id.toString(),
+      items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
+    }));
+
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: { groups },
+    });
+
+    assert.equal(res.status, 422);
+  });
+
+  it('T3.010: More than 30 items in a group returns 422', async () => {
+    const items = Array.from({ length: 31 }, (_, i) => ({
+      productId: carrotsProduct._id.toString(),
+      quantity: 1,
+    }));
+
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [{ farmerId: riverbendFarmer._id.toString(), items }],
+      },
+    });
+
+    assert.equal(res.status, 422);
+  });
+
+  it('T3.011: Out of stock product returns OUT_OF_STOCK and canCheckout: false', async () => {
+    // Temporarily set quantityAvailable = 0, availability = 'out'
+    await db.collection(COLLECTIONS.PRODUCTS).updateOne(
+      { _id: carrotsProduct._id },
+      { $set: { quantityAvailable: 0, availability: 'out' } }
+    );
+
+    try {
+      const res = await request('/api/cart/quote', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+        body: {
+          groups: [
+            {
+              farmerId: riverbendFarmer._id.toString(),
+              items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
+            },
+          ],
+        },
+      });
+
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      const line = body.data.groups[0].lines[0];
+      assert.equal(line.issues[0].code, 'OUT_OF_STOCK');
+      assert.equal(body.data.canCheckout, false);
+    } finally {
+      // Restore carrots stock
+      await db.collection(COLLECTIONS.PRODUCTS).updateOne(
+        { _id: carrotsProduct._id },
+        { $set: { quantityAvailable: 14, availability: 'in' } }
+      );
+    }
+  });
+
+  it('T3.012: Quantity requested exceeds quantityAvailable returns NOT_ENOUGH_STOCK with maxQuantity', async () => {
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            items: [{ productId: carrotsProduct._id.toString(), quantity: 20 }], // carrots has 14
+          },
+        ],
+      },
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    const line = body.data.groups[0].lines[0];
+    const issue = line.issues.find((i) => i.code === 'NOT_ENOUGH_STOCK');
+    assert.ok(issue);
+    assert.equal(issue.maxQuantity, 14);
+    assert.equal(body.data.canCheckout, false);
+  });
+
+  it('T3.013: Missing slotStart returns NO_SLOT_SELECTED and canCheckout: false', async () => {
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
+          },
+        ],
+      },
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    const group = body.data.groups[0];
+    const slotIssue = group.issues.find((i) => i.code === 'NO_SLOT_SELECTED');
+    assert.ok(slotIssue);
+    assert.equal(body.data.canCheckout, false);
+  });
+
+  it('T3.014: Nonexistent or closed slotStart returns SLOT_CLOSED', async () => {
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [
+          {
+            farmerId: riverbendFarmer._id.toString(),
+            slotStart: '2020-01-01T10:00:00.000Z',
+            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
+          },
+        ],
+      },
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    const group = body.data.groups[0];
+    const slotIssue = group.issues.find((i) => i.code === 'SLOT_CLOSED');
+    assert.ok(slotIssue);
+    assert.equal(body.data.canCheckout, false);
+  });
+
+  it('T3.015: Unlisted Farmer returns FARMER_NOT_LISTED and canCheckout: false', async () => {
+    await db.collection(COLLECTIONS.FARMERS).updateOne(
+      { _id: riverbendFarmer._id },
+      { $set: { listingEnabled: false } }
+    );
+
+    try {
+      const res = await request('/api/cart/quote', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+        body: {
+          groups: [
+            {
+              farmerId: riverbendFarmer._id.toString(),
+              items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
+            },
+          ],
+        },
+      });
+
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      const group = body.data.groups[0];
+      const farmerIssue = group.issues.find((i) => i.code === 'FARMER_NOT_LISTED');
+      assert.ok(farmerIssue, 'Should have FARMER_NOT_LISTED issue');
+      assert.equal(body.data.canCheckout, false);
+    } finally {
+      await db.collection(COLLECTIONS.FARMERS).updateOne(
+        { _id: riverbendFarmer._id },
+        { $set: { listingEnabled: true } }
+      );
+    }
+  });
+
+  it('T3.016: Sold-out toggled between two calls updates quote immediately without cache lag', async () => {
+    // Call 1: in stock
+    const res1 = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [{ farmerId: riverbendFarmer._id.toString(), items: [{ productId: tomatoesProduct._id.toString(), quantity: 1 }] }],
+      },
+    });
+    const body1 = await res1.json();
+    assert.equal(body1.data.groups[0].lines[0].availability, 'in');
+
+    // Toggle to out
+    await db.collection(COLLECTIONS.PRODUCTS).updateOne(
+      { _id: tomatoesProduct._id },
+      { $set: { quantityAvailable: 0, availability: 'out' } }
+    );
+
+    // Call 2: immediately out
+    const res2 = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
+      body: {
+        groups: [{ farmerId: riverbendFarmer._id.toString(), items: [{ productId: tomatoesProduct._id.toString(), quantity: 1 }] }],
+      },
+    });
+    const body2 = await res2.json();
+    assert.equal(body2.data.groups[0].lines[0].availability, 'out');
+    assert.equal(body2.data.groups[0].lines[0].issues[0].code, 'OUT_OF_STOCK');
+
+    // Restore stock
+    await db.collection(COLLECTIONS.PRODUCTS).updateOne(
+      { _id: tomatoesProduct._id },
+      { $set: { quantityAvailable: 20, availability: 'in' } }
+    );
+  });
+
+  it('T3.017: 3-query budget: getCartQuote executes <= 3 database queries total', async () => {
+    const client = getClient();
+    let commandCount = 0;
+    const listener = (event) => {
+      // Count query operations on marketlink_test
+      if (['find', 'aggregate'].includes(event.commandName)) {
+        commandCount++;
+      }
+    };
+
+    client.on('commandStarted', listener);
+
+    try {
+      await getCartQuote([
+        {
+          farmerId: riverbendFarmer._id.toString(),
+          items: [
+            { productId: carrotsProduct._id.toString(), quantity: 1 },
+            { productId: tomatoesProduct._id.toString(), quantity: 1 },
+          ],
+        },
+        {
+          farmerId: oakmillFarmer._id.toString(),
+          items: [{ productId: sourdoughProduct._id.toString(), quantity: 1 }],
+        },
+      ]);
+    } finally {
+      client.removeListener('commandStarted', listener);
+    }
+
+    assert.ok(
+      commandCount <= 3,
+      `getCartQuote must execute at most 3 queries (observed: ${commandCount})`
+    );
+  });
+});

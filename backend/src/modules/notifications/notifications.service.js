@@ -1,0 +1,129 @@
+/**
+ * Notifications module service layer.
+ * Implements cursor-paginated notification listing with unread counts,
+ * and single / batch mark-as-read operations with owner isolation.
+ */
+
+import { ObjectId } from 'mongodb';
+import { getDb } from '../../db/client.js';
+import { COLLECTIONS } from '../../db/collections.js';
+import { toObjectId } from '../../utils/ids.js';
+import { AppError } from '../../utils/errors.js';
+import { encodeCursor, decodeCursor, buildKeysetPredicate } from '../../utils/cursor.js';
+
+/**
+ * Lists notifications for a user with cursor pagination and unread counts.
+ *
+ * @param {string|ObjectId} userId
+ * @param {object} [options]
+ * @param {string} [options.cursor]
+ * @param {number} [options.limit=20]
+ * @param {boolean} [options.unread]
+ * @returns {Promise<{ items: Array<object>, nextCursor: string|null, limit: number, unreadCount: number }>}
+ */
+export async function listNotifications(userId, { cursor, limit = 20, unread } = {}) {
+  const db = getDb();
+  const uid = toObjectId(userId);
+  const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
+
+  const filter = { userId: uid };
+  if (unread === true) {
+    filter.readAt = null;
+  }
+
+  if (cursor) {
+    const decoded = decodeCursor(cursor, 'newest');
+    const { predicate } = buildKeysetPredicate('createdAt', 'desc', decoded.k[0], decoded.id);
+    filter.$and = [predicate];
+  }
+
+  // Parallel fetch: notification items and indexed unread count
+  const [docs, unreadCount] = await Promise.all([
+    db
+      .collection(COLLECTIONS.NOTIFICATIONS)
+      .find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(parsedLimit + 1)
+      .toArray(),
+    db.collection(COLLECTIONS.NOTIFICATIONS).countDocuments({ userId: uid, readAt: null }),
+  ]);
+
+  const hasMore = docs.length > parsedLimit;
+  const pageDocs = hasMore ? docs.slice(0, parsedLimit) : docs;
+
+  let nextCursor = null;
+  if (hasMore && pageDocs.length > 0) {
+    const lastDoc = pageDocs[pageDocs.length - 1];
+    nextCursor = encodeCursor({
+      s: 'newest',
+      k: [lastDoc.createdAt],
+      id: lastDoc._id.toString(),
+    });
+  }
+
+  const items = pageDocs.map((d) => ({
+    id: d._id.toString(),
+    type: d.type,
+    title: d.title,
+    body: d.body,
+    data: d.data || {},
+    readAt: d.readAt instanceof Date ? d.readAt.toISOString() : (d.readAt || null),
+    createdAt: d.createdAt instanceof Date ? d.createdAt.toISOString() : d.createdAt,
+  }));
+
+  return {
+    items,
+    nextCursor,
+    limit: parsedLimit,
+    unreadCount,
+  };
+}
+
+/**
+ * Marks a single notification as read (with strict owner isolation, 404 on IDOR).
+ *
+ * @param {string|ObjectId} notificationId
+ * @param {string|ObjectId} userId
+ * @returns {Promise<{ id: string, readAt: string }>}
+ */
+export async function markNotificationRead(notificationId, userId) {
+  const db = getDb();
+  const nid = toObjectId(notificationId);
+  const uid = toObjectId(userId);
+
+  const now = new Date();
+  const result = await db.collection(COLLECTIONS.NOTIFICATIONS).findOneAndUpdate(
+    { _id: nid, userId: uid },
+    { $set: { readAt: now } },
+    { returnDocument: 'after' }
+  );
+
+  if (!result) {
+    throw AppError.notFound('Notification not found.');
+  }
+
+  return {
+    id: result._id.toString(),
+    readAt: result.readAt.toISOString(),
+  };
+}
+
+/**
+ * Marks all unread notifications for a user as read.
+ *
+ * @param {string|ObjectId} userId
+ * @returns {Promise<{ modifiedCount: number }>}
+ */
+export async function markAllNotificationsRead(userId) {
+  const db = getDb();
+  const uid = toObjectId(userId);
+
+  const result = await db.collection(COLLECTIONS.NOTIFICATIONS).updateMany(
+    { userId: uid, readAt: null },
+    { $set: { readAt: new Date() } }
+  );
+
+  return {
+    modifiedCount: result.modifiedCount,
+  };
+}

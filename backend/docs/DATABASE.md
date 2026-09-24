@@ -124,11 +124,25 @@ Goods offered by farmers for pre-order.
 - `moderation`: `{ removed: bool, reason?: string, at?: Date }`
 - `createdAt`, `updatedAt`: Date
 
+### `checkouts`
+Idempotent checkout sessions tracking atomic multi-vendor pre-orders.
+- `_id`: ObjectId
+- `customerId`: ObjectId
+- `idempotencyKey`: String
+- `status`: `'pending' | 'completed' | 'failed'`
+- `orderIds`: Array<ObjectId>
+- `orders`: Array<Object> (serialized summary snapshots for cached duplicate replay)
+- `error`: Object | null
+- `createdAt`: Date
+- `completedAt`: Date | null
+
 ### `orders`
 One order per farmer. A multi-farmer checkout creates multiple orders sharing a `checkoutId`.
 - `_id`: ObjectId
 - `orderNumber`: String (unique, e.g. "ML-1041")
-- `checkoutId`: String (grouped checkout session)
+- `checkoutId`: String | ObjectId (grouped checkout session)
+- `idempotencyKey`: String (unique per customer partial)
+- `slotKey`: String (`<farmerId>|<start ISO>` for capacity checks)
 - `customerId`: ObjectId
 - `customerName`: String (snapshot at order placement)
 - `farmerId`: ObjectId
@@ -174,7 +188,7 @@ Customer bookmarks for products and farmers.
 Customer and farmer system alerts.
 - `_id`: ObjectId
 - `userId`: ObjectId
-- `type`: String (e.g. 'order_ready', 'order_accepted')
+- `type`: `'order_placed' | 'order_accepted' | 'order_ready' | 'order_completed' | 'order_declined' | 'order_cancelled' | 'restock' | 'announcement' | 'review_reply' | 'account'`
 - `title`: String
 - `body`: String
 - `data`: Object (e.g. `{ orderId, orderNumber }`)
@@ -283,7 +297,11 @@ Atomic sequence counters for generating sequential order numbers.
 | `products` | `{ marketIds: 1, availability: 1, createdAt: -1 }` | Market product view & "New This Week" row |
 | `products` | `{ salesCount: -1 }` partial (`moderation.removed: false`) | Top selling products row |
 | `products` | Text `{ name: 10, tags: 5, description: 1 }` | Full-text catalog search |
+| `checkouts` | `{ customerId: 1, idempotencyKey: 1 }` **unique** | Enforces idempotent checkout requests per customer |
+| `checkouts` | `{ createdAt: 1 }` | Checkout session ordering and lifecycle tracking |
 | `orders` | `{ orderNumber: 1 }` **unique** | Direct lookup by order number |
+| `orders` | `{ customerId: 1, idempotencyKey: 1 }` **unique partial** | Prevents duplicate order placement on network retries |
+| `orders` | `{ slotKey: 1, status: 1 }` | Fast slot capacity calculation and limits |
 | `orders` | `{ customerId: 1, createdAt: -1 }` | Customer order history |
 | `orders` | `{ customerId: 1, status: 1, createdAt: -1 }` | Customer Active vs. Past order tabs |
 | `orders` | `{ farmerId: 1, status: 1, createdAt: -1 }` | Farmer inbox status filtering |
@@ -293,9 +311,13 @@ Atomic sequence counters for generating sequential order numbers.
 | `reviews` | `{ productId: 1, status: 1, createdAt: -1 }` | Product detail review list |
 | `reviews` | `{ orderId: 1, targetType: 1, productId: 1, farmerId: 1 }` **unique** | Prevents duplicate reviews for the same order item |
 | `favorites` | `{ userId: 1, targetType: 1, targetId: 1 }` **unique** | Prevents duplicate bookmarking |
+| `favorites` | `{ targetType: 1, targetId: 1 }` | Restock alert lookup of customers who favorited a product |
+| `favorites` | `{ userId: 1, targetType: 1, createdAt: -1 }` | Keyset pagination of customer favorites |
 | `favorites` | `{ userId: 1, createdAt: -1 }` | User favorites listing |
 | `notifications` | `{ userId: 1, readAt: 1, createdAt: -1 }` | Unread notifications query |
+| `notifications` | `{ userId: 1, type: 1, createdAt: -1 }` | Deduplication and type-filtered notification lookup |
 | `notifications` | `{ createdAt: 1 }` (TTL: 90 days) | Automatic cleanup of stale notifications |
+| `moderationFlags` | `{ targetType: 1, targetId: 1, reporterId: 1, status: 1 }` | Single open flag per reporter per target verification |
 | `sessions` | `{ tokenHash: 1 }` **unique** | Fast refresh token hash lookup |
 | `farmers` | `{ listingEnabled: 1, stallNameLower: 1 }` | Fast anchored prefix match on farmer stall names |
 | `farmers` | `{ listingEnabled: 1, rnd: 1 }` | Fast index-based pseudo-random sampling for feed |
@@ -322,3 +344,5 @@ Atomic sequence counters for generating sequential order numbers.
 | `moderationFlags` | `{ targetType: 1, targetId: 1 }` | Content flag status lookups |
 | `searchHistory` | `{ userId: 1, at: -1 }` | Recent searches by user |
 | `searchHistory` | `{ at: 1 }` (TTL: 60 days) | Automatic cleanup of search history |
+
+

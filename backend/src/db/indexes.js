@@ -208,6 +208,28 @@ export async function ensureIndexes(db) {
     { checkoutId: 1 },
     { name: 'idx_orders_checkoutId' }
   );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { customerId: 1, idempotencyKey: 1 },
+    {
+      unique: true,
+      name: 'idx_orders_customer_idempotency_unique',
+      partialFilterExpression: { idempotencyKey: { $exists: true } },
+    }
+  );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { slotKey: 1, status: 1 },
+    { name: 'idx_orders_slotKey_status' }
+  );
+
+  // ── 6b. Checkouts ──
+  await db.collection(COLLECTIONS.CHECKOUTS).createIndex(
+    { customerId: 1, idempotencyKey: 1 },
+    { unique: true, name: 'idx_checkouts_customer_idempotency_unique' }
+  );
+  await db.collection(COLLECTIONS.CHECKOUTS).createIndex(
+    { createdAt: -1 },
+    { name: 'idx_checkouts_created' }
+  );
 
   // ── 7. Reviews ──
   await db.collection(COLLECTIONS.REVIEWS).createIndex(
@@ -236,11 +258,19 @@ export async function ensureIndexes(db) {
     { userId: 1, createdAt: -1 },
     { name: 'idx_favorites_user_created' }
   );
+  await db.collection(COLLECTIONS.FAVORITES).createIndex(
+    { targetType: 1, targetId: 1 },
+    { name: 'idx_favorites_targetType_targetId' }
+  );
 
   // ── 9. Notifications ──
   await db.collection(COLLECTIONS.NOTIFICATIONS).createIndex(
     { userId: 1, readAt: 1, createdAt: -1 },
     { name: 'idx_notifications_user_inbox' }
+  );
+  await db.collection(COLLECTIONS.NOTIFICATIONS).createIndex(
+    { userId: 1, type: 1, createdAt: -1 },
+    { name: 'idx_notifications_user_type_created' }
   );
   await db.collection(COLLECTIONS.NOTIFICATIONS).createIndex(
     { createdAt: 1 },
@@ -291,6 +321,10 @@ export async function ensureIndexes(db) {
   await db.collection(COLLECTIONS.MODERATION_FLAGS).createIndex(
     { targetType: 1, targetId: 1 },
     { name: 'idx_moderationFlags_target' }
+  );
+  await db.collection(COLLECTIONS.MODERATION_FLAGS).createIndex(
+    { targetType: 1, targetId: 1, reporterId: 1, status: 1 },
+    { name: 'idx_moderationFlags_target_reporter_status' }
   );
 
   // ── 15. Search History ──

@@ -28,6 +28,13 @@ import { farmersRouter } from './modules/farmers/farmers.routes.js';
 import { productsRouter } from './modules/products/products.routes.js';
 import { searchRouter } from './modules/search/search.routes.js';
 import { feedRouter } from './modules/feed/feed.routes.js';
+import { cartRouter } from './modules/cart/cart.routes.js';
+import { ordersRouter } from './modules/orders/orders.routes.js';
+import { reviewsRouter } from './modules/reviews/reviews.routes.js';
+import { favoritesRouter } from './modules/favorites/favorites.routes.js';
+import { notificationsRouter } from './modules/notifications/notifications.routes.js';
+import { homeRouter } from './modules/home/home.routes.js';
+import { assistantRouter } from './modules/assistant/assistant.routes.js';
 
 export function createApp() {
   const app = express();
@@ -93,6 +100,13 @@ export function createApp() {
   app.use('/api/products', productsRouter);
   app.use('/api/search', searchRouter);
   app.use('/api/feed', feedRouter);
+  app.use('/api/cart', cartRouter);
+  app.use('/api/orders', ordersRouter);
+  app.use('/api/reviews', reviewsRouter);
+  app.use('/api/favorites', favoritesRouter);
+  app.use('/api/notifications', notificationsRouter);
+  app.use('/api/home', homeRouter);
+  app.use('/api/assistant', assistantRouter);
 
   // 404 handler for unmatched routes
   app.use(notFound);

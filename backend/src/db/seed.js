@@ -796,6 +796,8 @@ export async function runSeed(force = false) {
       timeline,
       cancelReason: cancelReason || undefined,
       reviewed: false,
+      slotKey: `${farmer._id.toString()}|${pickupStart.toISOString()}`,
+      idempotencyKey: 'idemp-' + orderNumber.toLowerCase(),
       createdAt: timeline[0].at,
       updatedAt: timeline[timeline.length - 1].at,
     };
@@ -1217,9 +1219,10 @@ export async function runSeed(force = false) {
         }
       }
     }
-    const ratingAvg = 4.8;
-    const ratingCount = 12;
-    const ratingSum = Math.round(ratingAvg * ratingCount);
+    const prodReviews = reviewDocs.filter((r) => r.productId && r.productId.equals(p._id) && r.status === 'visible');
+    const ratingCount = prodReviews.length;
+    const ratingSum = prodReviews.reduce((sum, r) => sum + r.rating, 0);
+    const ratingAvg = ratingCount > 0 ? Math.round((ratingSum / ratingCount) * 10) / 10 : 0;
     const isNew = p.tags && p.tags.includes('new');
     const isSeasonal = p.tags && p.tags.includes('seasonal');
     const featuredScore = Math.round(sales * 2 + ratingAvg * ratingCount + (isNew ? 20 : 0) + (isSeasonal ? 10 : 0));
@@ -1239,9 +1242,10 @@ export async function runSeed(force = false) {
     const farmerProducts = products.filter((p) => p.farmerId.equals(f._id));
     const categorySlugs = [...new Set(farmerProducts.map((p) => p.categorySlug))];
     const totalSales = farmerProducts.reduce((sum, p) => sum + p.salesCount, 0) + 20;
-    const ratingAvg = 4.9;
-    const ratingCount = 28;
-    const ratingSum = Math.round(ratingAvg * ratingCount);
+    const farmerReviews = reviewDocs.filter((r) => r.farmerId.equals(f._id) && r.targetType === 'farmer' && r.status === 'visible');
+    const ratingCount = farmerReviews.length;
+    const ratingSum = farmerReviews.reduce((sum, r) => sum + r.rating, 0);
+    const ratingAvg = ratingCount > 0 ? Math.round((ratingSum / ratingCount) * 10) / 10 : 0;
     await db.collection(COLLECTIONS.FARMERS).updateOne(
       { _id: f._id },
       { $set: { ratingAvg, ratingCount, ratingSum, salesCount: totalSales, categorySlugs } }

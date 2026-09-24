@@ -207,6 +207,90 @@ if ($feedMeta.data.greetingName -eq "George") {
     Write-Host "FAILED" -ForegroundColor Red; exit 1
 }
 
+# 19. POST /cart/quote
+Write-Host -NoNewline "19. Testing POST /cart/quote... "
+$productId = $products.data[0].id
+$farmerId = $products.data[0].farmer.id
+$quoteBody = @{
+    groups = @(
+        @{
+            farmerId = $farmerId
+            items = @(
+                @{
+                    productId = $productId
+                    quantity = 1
+                }
+            )
+        }
+    )
+} | ConvertTo-Json -Depth 5
+
+$quote = Invoke-RestMethod -Uri "$BaseUrl/cart/quote" -Method Post -Headers $patchHeaders -Body $quoteBody -ContentType "application/json"
+if ($quote.data.totalCents -ge 0 -and $quote.data.groups) {
+    Write-Host "OK (200 - total: $($quote.data.totalCents)c)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 20. GET /orders
+Write-Host -NoNewline "20. Testing GET /orders?tab=active... "
+$orders = Invoke-RestMethod -Uri "$BaseUrl/orders?tab=active" -Method Get -Headers $patchHeaders
+if ($orders.data) {
+    Write-Host "OK (200 - $(@($orders.data).Count) active orders)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 21. GET /favorites/ids & PUT /favorites/farmer/:id
+Write-Host -NoNewline "21. Testing PUT /favorites/farmer/:id & GET /favorites/ids... "
+$favRes = Invoke-WebRequest -Uri "$BaseUrl/favorites/farmer/$farmerId" -Method Put -Headers $patchHeaders -WebSession $Session
+$favIds = Invoke-RestMethod -Uri "$BaseUrl/favorites/ids" -Method Get -Headers $patchHeaders -WebSession $Session
+if ($favRes.StatusCode -eq 200 -and (@($favIds.data.farmerIds) -contains $farmerId)) {
+    Write-Host "OK (200)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 22. GET /notifications
+Write-Host -NoNewline "22. Testing GET /notifications... "
+$notifs = Invoke-RestMethod -Uri "$BaseUrl/notifications" -Method Get -Headers $patchHeaders
+if ($notifs.data) {
+    Write-Host "OK (200 - unread: $($notifs.meta.unreadCount))" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 23. GET /users/me/saved-markets
+Write-Host -NoNewline "23. Testing GET /users/me/saved-markets... "
+$savedMarkets = Invoke-RestMethod -Uri "$BaseUrl/users/me/saved-markets" -Method Get -Headers $patchHeaders
+if ($savedMarkets.data) {
+    Write-Host "OK (200 - $($savedMarkets.data.Count) saved markets)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 24. GET /home/summary
+Write-Host -NoNewline "24. Testing GET /home/summary... "
+$homeSummary = Invoke-RestMethod -Uri "$BaseUrl/home/summary" -Method Get -Headers $patchHeaders
+if ($homeSummary.data.readyForPickup -or $homeSummary.data.nextPickup) {
+    Write-Host "OK (200 - nextPickup: $($homeSummary.data.nextPickup.status))" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 25. POST /assistant/message
+Write-Host -NoNewline "25. Testing POST /assistant/message... "
+$asstBody = @{
+    text = "What time does Elm Street Market open?"
+} | ConvertTo-Json
+
+$asstRes = Invoke-RestMethod -Uri "$BaseUrl/assistant/message" -Method Post -Headers $patchHeaders -Body $asstBody -ContentType "application/json"
+if ($asstRes.data.reply -and $asstRes.data.suggestions) {
+    Write-Host "OK (200 - cards: $($asstRes.data.cards.Count))" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
 Write-Host ""
 Write-Host "========================================================" -ForegroundColor Cyan
 Write-Host "🎉  All smoke test steps passed successfully!" -ForegroundColor Green

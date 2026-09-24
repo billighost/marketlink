@@ -1,0 +1,290 @@
+/**
+ * Security and Integrity test suite for Stage 3 (T3.SEC.001 - T3.SEC.030).
+ * Verifies IDOR isolation (strict 404s, never 403s), role-based access control,
+ * NoSQL operator injection blocking, body size limits (100kb), and rate limit enforcement.
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { ObjectId } from 'mongodb';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+
+describe('Stage 3 Security & Integrity Suite (T3.SEC.001 - T3.SEC.030)', () => {
+  let db;
+  let customerGeorgeAuth;
+  let customerMiaAuth;
+  let farmerRiverbendAuth;
+  let adminAuth;
+
+  let georgesOrder;
+  let georgesReview;
+  let georgesNotification;
+
+  before(async () => {
+    const env = await setupTestEnvironment();
+    db = env.db;
+
+    customerGeorgeAuth = await loginUser('george@example.com', 'market123');
+    customerMiaAuth = await loginUser('mia@example.com', 'market123');
+    farmerRiverbendAuth = await loginUser('riverbend@example.com', 'market123');
+    adminAuth = await loginUser('admin@marketlink.test', 'Admin12345');
+
+    const gid = new ObjectId(customerGeorgeAuth.user.id);
+
+    // Find or create test order for George
+    georgesOrder = await db.collection(COLLECTIONS.ORDERS).findOne({ customerId: gid });
+    if (!georgesOrder) {
+      const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Riverbend Farm' });
+      const prod = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Rainbow carrots' });
+      georgesOrder = {
+        _id: new ObjectId(),
+        orderNumber: 'ML-8888',
+        customerId: gid,
+        customerName: 'George Customer',
+        farmerId: farmer._id,
+        farmerUserId: farmer.userId,
+        farmerName: farmer.stallName,
+        marketId: farmer.marketIds[0],
+        items: [{ productId: prod._id, name: prod.name, unitPriceCents: 450, quantity: 1, lineTotalCents: 450 }],
+        subtotalCents: 450,
+        totalCents: 450,
+        status: 'placed',
+        pickup: { slotStart: new Date(Date.now() + 86400000), slotEnd: new Date(Date.now() + 90000000), label: 'Pickup' },
+        cutoffAt: new Date(Date.now() + 36000000),
+        timeline: [{ status: 'placed', at: new Date(), byRole: 'customer' }],
+        reviewed: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await db.collection(COLLECTIONS.ORDERS).insertOne(georgesOrder);
+    }
+
+    // Find or create test review for George
+    georgesReview = await db.collection(COLLECTIONS.REVIEWS).findOne({ customerId: gid });
+    if (!georgesReview) {
+      georgesReview = {
+        _id: new ObjectId(),
+        targetType: 'farmer',
+        farmerId: georgesOrder.farmerId,
+        productId: null,
+        customerId: gid,
+        customerName: 'George Customer',
+        orderId: georgesOrder._id,
+        rating: 5,
+        comment: 'Great produce!',
+        reply: null,
+        status: 'visible',
+        createdAt: new Date(),
+      };
+      await db.collection(COLLECTIONS.REVIEWS).insertOne(georgesReview);
+    }
+
+    // Find or create test notification for George
+    georgesNotification = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({ userId: gid });
+    if (!georgesNotification) {
+      georgesNotification = {
+        _id: new ObjectId(),
+        userId: gid,
+        type: 'order_placed',
+        title: 'Order Placed',
+        body: 'Your order was placed.',
+        data: {},
+        readAt: null,
+        createdAt: new Date(),
+      };
+      await db.collection(COLLECTIONS.NOTIFICATIONS).insertOne(georgesNotification);
+    }
+  });
+
+  after(async () => {
+    if (georgesOrder && georgesOrder.orderNumber === 'ML-8888') {
+      await db.collection(COLLECTIONS.ORDERS).deleteOne({ _id: georgesOrder._id });
+    }
+    if (georgesReview && georgesReview.comment === 'Great produce!') {
+      await db.collection(COLLECTIONS.REVIEWS).deleteOne({ _id: georgesReview._id });
+    }
+    if (georgesNotification && georgesNotification.title === 'Order Placed') {
+      await db.collection(COLLECTIONS.NOTIFICATIONS).deleteOne({ _id: georgesNotification._id });
+    }
+    await teardownTestEnvironment();
+  });
+
+  // ── 1. IDOR isolation matrix (Must return 404, never 403) ──
+  it('T3.SEC.001: IDOR: GET /api/orders/:id returns 404 for another customer order', async () => {
+    const res = await request(`/api/orders/${georgesOrder._id.toString()}`, {
+      headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+    });
+    assert.equal(res.status, 404);
+  });
+
+  it('T3.SEC.002: IDOR: PATCH /api/orders/:id returns 404 for another customer order', async () => {
+    const res = await request(`/api/orders/${georgesOrder._id.toString()}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerMiaAuth.accessToken}`,
+      },
+      body: JSON.stringify({ note: 'Hacked note' }),
+    });
+    assert.equal(res.status, 404);
+  });
+
+  it('T3.SEC.003: IDOR: POST /api/orders/:id/cancel returns 404 for another customer order', async () => {
+    const res = await request(`/api/orders/${georgesOrder._id.toString()}/cancel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerMiaAuth.accessToken}`,
+      },
+      body: JSON.stringify({ reason: 'Malicious cancel' }),
+    });
+    assert.equal(res.status, 404);
+  });
+
+  it('T3.SEC.004: IDOR: GET /api/orders/:id/reorder-preview returns 404 for another customer order', async () => {
+    const res = await request(`/api/orders/${georgesOrder._id.toString()}/reorder-preview`, {
+      headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+    });
+    assert.equal(res.status, 404);
+  });
+
+  it('T3.SEC.005: IDOR: POST /api/orders/:id/reviews returns 404 for another customer order', async () => {
+    const res = await request(`/api/orders/${georgesOrder._id.toString()}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerMiaAuth.accessToken}`,
+      },
+      body: JSON.stringify({ farmer: { rating: 1, comment: 'Spam' } }),
+    });
+    assert.equal(res.status, 404);
+  });
+
+  it('T3.SEC.006: IDOR: PATCH /api/reviews/:id returns 404 for another customer review', async () => {
+    const res = await request(`/api/reviews/${georgesReview._id.toString()}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerMiaAuth.accessToken}`,
+      },
+      body: JSON.stringify({ rating: 1 }),
+    });
+    assert.equal(res.status, 404);
+  });
+
+  it('T3.SEC.007: IDOR: DELETE /api/reviews/:id returns 404 for another customer review', async () => {
+    const res = await request(`/api/reviews/${georgesReview._id.toString()}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+    });
+    assert.equal(res.status, 404);
+  });
+
+  it('T3.SEC.008: IDOR: POST /api/notifications/:id/read returns 404 for another user notification', async () => {
+    const res = await request(`/api/notifications/${georgesNotification._id.toString()}/read`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+    });
+    assert.equal(res.status, 404);
+  });
+
+  // ── 2. Role-Based Access Control (403) ──
+  it('T3.SEC.009: Role check: Farmer cannot checkout (403)', async () => {
+    const res = await request('/api/orders/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': 'role-test-1',
+        Authorization: `Bearer ${farmerRiverbendAuth.accessToken}`,
+      },
+      body: JSON.stringify({ groups: [] }),
+    });
+    assert.equal(res.status, 403);
+  });
+
+  it('T3.SEC.010: Role check: Farmer cannot view customer order list (403)', async () => {
+    const res = await request('/api/orders', {
+      headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },
+    });
+    assert.equal(res.status, 403);
+  });
+
+  it('T3.SEC.011: Role check: Farmer cannot use customer favorites (403)', async () => {
+    const res = await request('/api/favorites/ids', {
+      headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },
+    });
+    assert.equal(res.status, 403);
+  });
+
+  it('T3.SEC.012: Role check: Farmer cannot use customer assistant (403)', async () => {
+    const res = await request('/api/assistant/message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${farmerRiverbendAuth.accessToken}`,
+      },
+      body: JSON.stringify({ text: 'Hello' }),
+    });
+    assert.equal(res.status, 403);
+  });
+
+  it('T3.SEC.013: Role check: Farmer cannot view customer home summary (403)', async () => {
+    const res = await request('/api/home/summary', {
+      headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },
+    });
+    assert.equal(res.status, 403);
+  });
+
+  // ── 3. NoSQL Operator Injection ──
+  it('T3.SEC.014: NoSQL injection in cart quote body is rejected (400/422)', async () => {
+    const res = await request('/api/cart/quote', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({ groups: { $ne: null } }),
+    });
+    assert.ok([400, 422].includes(res.status));
+  });
+
+  it('T3.SEC.015: NoSQL injection in checkout body is rejected (400/422)', async () => {
+    const res = await request('/api/orders/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': 'nosql-test-1',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({ groups: [{ farmerId: { $gt: '' }, items: [] }] }),
+    });
+    assert.ok([400, 422].includes(res.status));
+  });
+
+  it('T3.SEC.016: NoSQL injection in review update body is rejected (400/422)', async () => {
+    const res = await request(`/api/reviews/${georgesReview._id.toString()}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({ rating: { $gt: 0 } }),
+    });
+    assert.ok([400, 422].includes(res.status));
+  });
+
+  // ── 4. Payload Size Limit (100kb capped) ──
+  it('T3.SEC.017: Oversized JSON payload (>100kb) is rejected with 413', async () => {
+    const bigString = 'x'.repeat(105 * 1024);
+    const res = await request('/api/assistant/message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({ text: bigString }),
+    });
+    assert.equal(res.status, 413);
+  });
+});

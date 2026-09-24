@@ -20,7 +20,14 @@ import {
   findUserByIdWithPassword,
   revokeAllUserSessions,
 } from '../auth/auth.service.js';
-import { updateUserProfile, updateUserPassword } from './users.service.js';
+import {
+  updateUserProfile,
+  updateUserPassword,
+  getSavedMarkets,
+  saveMarket,
+  removeSavedMarket,
+  setHomeMarket,
+} from './users.service.js';
 import { getDb } from '../../db/client.js';
 import { COLLECTIONS } from '../../db/collections.js';
 
@@ -164,3 +171,48 @@ usersRouter.delete('/me/sessions', requireAuth, async (req, res) => {
     },
   });
 });
+
+// GET /users/me/saved-markets
+usersRouter.get('/me/saved-markets', requireAuth, async (req, res) => {
+  const markets = await getSavedMarkets(req.user.id);
+  res.status(200).json({
+    data: markets,
+  });
+});
+
+// PUT /users/me/saved-markets/:marketId (idempotent, max 10)
+usersRouter.put('/me/saved-markets/:marketId', requireAuth, async (req, res) => {
+  if (!isValidObjectId(req.params.marketId)) {
+    throw AppError.notFound('Market not found.');
+  }
+
+  const result = await saveMarket(req.user.id, req.params.marketId);
+  res.status(200).json({
+    data: result,
+  });
+});
+
+// DELETE /users/me/saved-markets/:marketId (idempotent)
+usersRouter.delete('/me/saved-markets/:marketId', requireAuth, async (req, res) => {
+  if (!isValidObjectId(req.params.marketId)) {
+    throw AppError.notFound('Market not found.');
+  }
+
+  const result = await removeSavedMarket(req.user.id, req.params.marketId);
+  res.status(200).json({
+    data: result,
+  });
+});
+
+// PUT /users/me/home-market/:marketId
+usersRouter.put('/me/home-market/:marketId', requireAuth, async (req, res) => {
+  if (!isValidObjectId(req.params.marketId)) {
+    throw AppError.notFound('Market not found.');
+  }
+
+  const result = await setHomeMarket(req.user.id, req.params.marketId);
+  res.status(200).json({
+    data: result,
+  });
+});
+

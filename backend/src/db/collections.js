@@ -15,6 +15,8 @@ import {
   REVIEW_TARGET_TYPES,
   FAVORITE_TARGET_TYPES,
   MARKET_STATUSES,
+  NOTIFICATION_TYPES,
+  CHECKOUT_STATUSES,
 } from '../constants.js';
 
 export const COLLECTIONS = {
@@ -24,6 +26,7 @@ export const COLLECTIONS = {
   CATEGORIES: 'categories',
   PRODUCTS: 'products',
   ORDERS: 'orders',
+  CHECKOUTS: 'checkouts',
   REVIEWS: 'reviews',
   FAVORITES: 'favorites',
   NOTIFICATIONS: 'notifications',
@@ -175,7 +178,7 @@ export const SCHEMAS = {
       required: ['orderNumber', 'checkoutId', 'customerId', 'farmerId', 'marketId', 'items', 'subtotalCents', 'totalCents', 'status', 'createdAt', 'updatedAt'],
       properties: {
         orderNumber: { bsonType: 'string' },
-        checkoutId: { bsonType: 'string' },
+        checkoutId: { bsonType: ['string', 'objectId'] },
         customerId: { bsonType: 'objectId' },
         customerName: { bsonType: 'string' },
         farmerId: { bsonType: 'objectId' },
@@ -193,8 +196,27 @@ export const SCHEMAS = {
         timeline: { bsonType: 'array' },
         cancelReason: { bsonType: ['string', 'null'] },
         reviewed: { bsonType: 'bool' },
+        idempotencyKey: { bsonType: ['string', 'null'] },
+        slotKey: { bsonType: ['string', 'null'] },
         createdAt: { bsonType: 'date' },
         updatedAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.CHECKOUTS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['customerId', 'idempotencyKey', 'status', 'createdAt'],
+      properties: {
+        customerId: { bsonType: 'objectId' },
+        idempotencyKey: { bsonType: 'string' },
+        status: { enum: CHECKOUT_STATUSES },
+        orderIds: { bsonType: 'array' },
+        orders: { bsonType: 'array' },
+        error: { bsonType: 'object' },
+        createdAt: { bsonType: 'date' },
+        completedAt: { bsonType: ['date', 'null'] },
       },
     },
   },
@@ -238,7 +260,7 @@ export const SCHEMAS = {
       required: ['userId', 'type', 'title', 'body', 'createdAt'],
       properties: {
         userId: { bsonType: 'objectId' },
-        type: { bsonType: 'string' },
+        type: { enum: NOTIFICATION_TYPES },
         title: { bsonType: 'string' },
         body: { bsonType: 'string' },
         data: { bsonType: 'object' },
