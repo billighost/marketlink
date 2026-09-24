@@ -297,6 +297,21 @@ Atomic sequence counters for generating sequential order numbers.
 | `notifications` | `{ userId: 1, readAt: 1, createdAt: -1 }` | Unread notifications query |
 | `notifications` | `{ createdAt: 1 }` (TTL: 90 days) | Automatic cleanup of stale notifications |
 | `sessions` | `{ tokenHash: 1 }` **unique** | Fast refresh token hash lookup |
+| `farmers` | `{ listingEnabled: 1, stallNameLower: 1 }` | Fast anchored prefix match on farmer stall names |
+| `farmers` | `{ listingEnabled: 1, rnd: 1 }` | Fast index-based pseudo-random sampling for feed |
+| `farmers` | `{ listingEnabled: 1, categorySlugs: 1, ratingAvg: -1 }` | Farmer directory filtered by category slug |
+| `farmers` | `{ listingEnabled: 1, ratingAvg: -1, _id: -1 }` | Keyset pagination for rating sort |
+| `farmers` | `{ listingEnabled: 1, salesCount: -1, _id: -1 }` | Keyset pagination for top sellers sort |
+| `farmers` | `{ listingEnabled: 1, createdAt: -1, _id: -1 }` | Keyset pagination for new farmers sort |
+| `farmers` | `{ listingEnabled: 1, stallName: 1, _id: 1 }` | Keyset pagination for alphabetical name sort |
+| `farmers` | `{ listingEnabled: 1, operatingDays: 1 }` | Resolves active farmers by operating day |
+| `products` | `{ listed: 1, nameLower: 1 }` | Fast anchored prefix matching on product names |
+| `products` | `{ listed: 1, rnd: 1 }` | Fast index-based pseudo-random sampling for feed walker |
+| `products` | `{ listed: 1, availability: 1, createdAt: -1, _id: -1 }` | Keyset pagination for newest sort |
+| `products` | `{ listed: 1, availability: 1, categorySlug: 1, priceCents: 1, _id: 1 }` | Keyset pagination for price_asc with category |
+| `products` | `{ listed: 1, availability: 1, priceCents: 1, _id: 1 }` | Keyset pagination for price_asc / price_desc without category |
+| `products` | `{ listed: 1, availability: 1, salesCount: -1, _id: -1 }` | Keyset pagination for popular sort |
+| `products` | `{ listed: 1, featuredScore: -1, _id: -1 }` | Keyset pagination for featured sort |
 | `sessions` | `{ userId: 1 }` | Global session revocation for a user |
 | `sessions` | `{ expiresAt: 1 }` (TTL: 0s) | Automatic expired session cleanup |
 | `passwordResets` | `{ tokenHash: 1 }` **unique** | Fast password reset token lookup |
