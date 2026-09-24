@@ -203,3 +203,27 @@
     overflow-x: auto;
   }
 }
+
+@media (max-width: 480px) {
+  .contentArea {
+    padding: 12px;
+  }
+  .topBar {
+    width: 100%;
+  }
+  .btnPrimary {
+    width: 100%;
+    justify-content: center;
+  }
+  .statCard {
+    padding: 16px;
+  }
+  .cardPanel {
+    padding: 16px;
+  }
+  .harvestItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

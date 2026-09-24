@@ -184,6 +184,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.userProfile:hover {
+  opacity: 0.8;
 }
 
 .userInfo {
@@ -284,5 +290,35 @@
   }
   .contentArea {
     padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand {
+    padding: 4px;
+    gap: 0;
+  }
+  .brand span {
+    display: none;
+  }
+  .logoIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+  }
+  .navButton {
+    padding: 8px;
+  }
+  .topHeader {
+    padding: 0 12px;
+  }
+  .headerRight {
+    gap: 10px;
+  }
+  .contentArea {
+    padding: 12px;
+  }
+  .pageTitle {
+    font-size: 0.85rem;
   }
 }

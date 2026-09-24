@@ -2,7 +2,6 @@
   flex: 1;
   overflow-y: auto;
   padding: 24px;
-  background-color: #F9FAFB;
 }
 
 /* Page Header */
@@ -551,5 +550,57 @@
   }
   .cardPanel {
     padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contentArea {
+    padding: 12px;
+  }
+  .cardPanel {
+    padding: 16px;
+  }
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .badgesWrapper {
+    flex-direction: column;
+    width: 100%;
+  }
+  .badgeBtn {
+    width: 100%;
+    justify-content: center;
+  }
+  .bottomSaveBar {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .bottomSaveBar .btnPrimary {
+    width: 100%;
+    justify-content: center;
+  }
+  .toggleGroup {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .headerActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .headerActions .btnPrimary, 
+  .headerActions .btnOutline {
+    width: 100%;
+    justify-content: center;
+  }
+  .statusIndicator {
+    width: 100%;
+    justify-content: center;
+  }
+  .daysGrid {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

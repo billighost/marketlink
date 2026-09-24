@@ -152,3 +152,25 @@
     overflow-x: auto;
   }
 }
+
+@media (max-width: 480px) {
+  .contentArea {
+    padding: 12px;
+  }
+  .searchLayout {
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+  }
+  .btnFilter {
+    justify-content: center;
+  }
+  .cardPanel {
+    padding: 16px;
+  }
+  .actionHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+}

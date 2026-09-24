@@ -23,6 +23,7 @@ import HistoryTab from '../pages/vendor/HistoryTab';
 import FarmInventoryTab from '../pages/vendor/FarmInventoryTab';
 import SalesTab from '../pages/vendor/SalesTab';
 import StoreSettingsTab from '../pages/vendor/StoreSettingsTab';
+import ProfileTab from '../pages/vendor/ProfileTab';
 
 // --- MAIN APPLICATION SHELL ---
 
@@ -38,6 +39,7 @@ export default function VendorLayout() {
       case 'inventory': return <FarmInventoryTab />;
       case 'sales': return <SalesTab />;
       case 'settings': return <StoreSettingsTab />;
+      case 'profile': return <ProfileTab />;
       default: return <DashboardTab />;
     }
   };
@@ -50,6 +52,7 @@ export default function VendorLayout() {
       case 'inventory': return 'Farm Inventory';
       case 'sales': return 'Sales Insights';
       case 'settings': return 'Stall Settings';
+      case 'profile': return 'My Profile';
       default: return 'Dashboard';
     }
   };
@@ -130,7 +133,12 @@ export default function VendorLayout() {
               <Bell size={20} />
               <div className={styles.notificationDot}></div>
             </div>
-            <div className={styles.userProfile}>
+            <div 
+              className={styles.userProfile} 
+              onClick={() => setActiveTab('profile')}
+              role="button"
+              tabIndex={0}
+            >
               <div className={styles.userInfo}>
                 <div className={styles.userName}>Farmer Ayomide</div>
                 <div className={styles.userRole}>Farm Producer</div>
