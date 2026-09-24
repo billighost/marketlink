@@ -2,10 +2,10 @@
  * Farmer Products Test Suite (T4.031 - T4.085)
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Farmer Products Suite (T4.031 - T4.085)', () => {
@@ -18,6 +18,8 @@ describe('Farmer Products Suite (T4.031 - T4.085)', () => {
   let customerToken = '';
   let customerDoc = null;
   let activeCategory = null;
+  let seededProducts = [];
+  let seededProducts2 = [];
 
   before(async () => {
     const env = await setupTestEnvironment();
@@ -45,6 +47,28 @@ describe('Farmer Products Suite (T4.031 - T4.085)', () => {
     // Active category
     activeCategory = await db.collection(COLLECTIONS.CATEGORIES).findOne({ active: true });
     assert.ok(activeCategory);
+
+    // Snapshot original seeded products so that mutation tests do not pollute downstream suites
+    seededProducts = await db.collection(COLLECTIONS.PRODUCTS).find({ farmerId: farmerDoc._id }).toArray();
+    seededProducts2 = await db.collection(COLLECTIONS.PRODUCTS).find({ farmerId: farmer2Doc._id }).toArray();
+  });
+
+  after(async () => {
+    await db.collection(COLLECTIONS.PRODUCTS).deleteMany({
+      name: { $in: ['Heirloom Purple Carrots', 'Unique Test Spinach', 'Disposable Radishes', 'Archivable Turnips'] },
+    });
+    await db.collection(COLLECTIONS.ORDERS).deleteMany({
+      orderNumber: { $regex: '^TEST-ORD-' },
+    });
+    for (const p of seededProducts) {
+      const { _id, ...rest } = p;
+      await db.collection(COLLECTIONS.PRODUCTS).replaceOne({ _id }, rest, { upsert: true });
+    }
+    for (const p of seededProducts2) {
+      const { _id, ...rest } = p;
+      await db.collection(COLLECTIONS.PRODUCTS).replaceOne({ _id }, rest, { upsert: true });
+    }
+    await teardownTestEnvironment();
   });
 
   it('T4.031: Pending farmer receives 403 FARMER_NOT_APPROVED when attempting to create a product', async () => {
@@ -164,7 +188,7 @@ describe('Farmer Products Suite (T4.031 - T4.085)', () => {
   });
 
   it('T4.035: Updating product fields updates DB and recomputes nameLower and availability', async () => {
-    const prod = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmerDoc._id, archived: { $ne: true } });
+    const prod = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmerDoc._id, archived: { $ne: true }, availability: { $ne: 'hidden' } });
     assert.ok(prod);
 
     const patchRes = await request(`/api/farmer/products/${prod._id.toString()}`, {
@@ -200,6 +224,12 @@ describe('Farmer Products Suite (T4.031 - T4.085)', () => {
       { userId: customerDoc._id, targetType: 'product', targetId: prod._id },
       { $set: { createdAt: new Date() } },
       { upsert: true }
+    );
+
+    // Ensure customer has restock alerts enabled
+    await db.collection(COLLECTIONS.USERS).updateOne(
+      { _id: customerDoc._id },
+      { $set: { 'notificationPrefs.restockAlerts': true } }
     );
 
     // Clear recent notifications for this product
@@ -355,8 +385,20 @@ describe('Farmer Products Suite (T4.031 - T4.085)', () => {
     assert.equal(hardCheck, null);
 
     // 2. Product referenced by an order -> soft delete (archived: true)
-    const orderedProd = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmerDoc._id, archived: { $ne: true } });
-    assert.ok(orderedProd);
+    const createOrderedRes = await request('/api/farmer/products', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${farmerToken}` },
+      body: {
+        name: 'Archivable Turnips',
+        categoryId: activeCategory._id.toString(),
+        priceCents: 250,
+        unit: 'bunch',
+        art: 'radish-bunch',
+      },
+    });
+    assert.equal(createOrderedRes.status, 201);
+    const orderedProd = (await createOrderedRes.json()).data;
+    const orderedProdId = new ObjectId(orderedProd.id);
 
     // Insert dummy order referencing orderedProd
     await db.collection(COLLECTIONS.ORDERS).insertOne({
@@ -365,7 +407,7 @@ describe('Farmer Products Suite (T4.031 - T4.085)', () => {
       customerId: customerDoc._id,
       farmerId: farmerDoc._id,
       marketId: farmerDoc.marketIds[0],
-      items: [{ productId: orderedProd._id, name: orderedProd.name, quantity: 1, unitPriceCents: 100, lineTotalCents: 100 }],
+      items: [{ productId: orderedProdId, name: orderedProd.name, quantity: 1, unitPriceCents: 100, lineTotalCents: 100 }],
       subtotalCents: 100,
       totalCents: 100,
       status: 'completed',
@@ -373,7 +415,7 @@ describe('Farmer Products Suite (T4.031 - T4.085)', () => {
       updatedAt: new Date(),
     });
 
-    const delSoftRes = await request(`/api/farmer/products/${orderedProd._id.toString()}`, {
+    const delSoftRes = await request(`/api/farmer/products/${orderedProd.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${farmerToken}` },
     });
@@ -381,7 +423,7 @@ describe('Farmer Products Suite (T4.031 - T4.085)', () => {
     const delSoftBody = await delSoftRes.json();
     assert.equal(delSoftBody.data.archived, true);
 
-    const softCheck = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: orderedProd._id });
+    const softCheck = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: orderedProdId });
     assert.equal(softCheck.archived, true);
     assert.equal(softCheck.listed, false);
   });

@@ -2,10 +2,10 @@
  * Farmer Orders Test Suite (T4.101 - T4.140)
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Farmer Orders and Pick List Suite (T4.101 - T4.140)', () => {
@@ -35,6 +35,13 @@ describe('Farmer Orders and Pick List Suite (T4.101 - T4.140)', () => {
     const custRes = await loginUser('george@example.com', 'market123');
     customerToken = custRes.accessToken;
     customerDoc = await db.collection(COLLECTIONS.USERS).findOne({ _id: new ObjectId(custRes.user.id) });
+  });
+
+  after(async () => {
+    await db.collection(COLLECTIONS.ORDERS).deleteMany({
+      orderNumber: { $regex: '^(TEST-|PICK-)' },
+    });
+    await teardownTestEnvironment();
   });
 
   it('T4.101: GET /api/farmer/orders lists orders with status filtering and counts meta', async () => {
@@ -259,6 +266,10 @@ describe('Farmer Orders and Pick List Suite (T4.101 - T4.140)', () => {
 
   it('T4.106: GET /api/farmer/orders/pick-list aggregates quantities by product and slot', async () => {
     const targetDate = '2026-11-20';
+    await db.collection(COLLECTIONS.ORDERS).deleteMany({
+      farmerId: farmerDoc._id,
+      'pickup.start': { $regex: `^${targetDate}` },
+    });
 
     // Insert 2 orders for targetDate
     const p1 = new ObjectId();

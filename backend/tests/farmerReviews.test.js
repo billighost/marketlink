@@ -2,10 +2,10 @@
  * Farmer Reviews Test Suite
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Farmer Reviews Suite', () => {
@@ -48,6 +48,10 @@ describe('Farmer Reviews Suite', () => {
       createdAt: new Date(),
     };
     await db.collection(COLLECTIONS.REVIEWS).insertOne(testReview);
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
   });
 
   it('T4.120: GET /api/farmer/reviews returns list and rating breakdown summary', async () => {

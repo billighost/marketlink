@@ -16,12 +16,12 @@ import { toMarketCard } from '../../utils/shapes.js';
  * @returns {object}
  */
 export function toOrderSummary(order, { now = new Date(), tz = 'America/New_York' } = {}) {
-  const pStart = order.pickup?.start instanceof Date ? order.pickup.start : new Date(order.pickup.start);
-  const pEnd = order.pickup?.end instanceof Date ? order.pickup.end : new Date(order.pickup.end);
-  const cutoff = order.cutoffAt instanceof Date ? order.cutoffAt : new Date(order.cutoffAt);
+  const pStart = order.pickup?.start ? (order.pickup.start instanceof Date ? order.pickup.start : new Date(order.pickup.start)) : null;
+  const pEnd = order.pickup?.end ? (order.pickup.end instanceof Date ? order.pickup.end : new Date(order.pickup.end)) : null;
+  const cutoff = order.cutoffAt ? (order.cutoffAt instanceof Date ? order.cutoffAt : new Date(order.cutoffAt)) : null;
   const nowDate = now instanceof Date ? now : new Date(now);
 
-  const label = order.pickup?.label || formatSlotLabel(pStart, pEnd, tz);
+  const label = order.pickup?.label || (pStart && pEnd && !isNaN(pStart.getTime()) && !isNaN(pEnd.getTime()) ? formatSlotLabel(pStart, pEnd, tz) : '');
   const itemCount = Array.isArray(order.items)
     ? order.items.reduce((sum, it) => sum + (it.quantity || 0), 0)
     : 0;
@@ -30,7 +30,7 @@ export function toOrderSummary(order, { now = new Date(), tz = 'America/New_York
     ? order.items.slice(0, 3).map((it) => ({ name: it.name, art: it.art || 'carrot' }))
     : [];
 
-  const canModify = order.status === 'placed' && nowDate < cutoff;
+  const canModify = order.status === 'placed' && cutoff && !isNaN(cutoff.getTime()) && nowDate < cutoff;
 
   return {
     id: order._id ? order._id.toString() : order.id,
@@ -43,15 +43,15 @@ export function toOrderSummary(order, { now = new Date(), tz = 'America/New_York
       art: order.farmerArt || 'stall',
     },
     pickup: {
-      start: pStart.toISOString(),
-      end: pEnd.toISOString(),
+      start: pStart && !isNaN(pStart.getTime()) ? pStart.toISOString() : (order.pickup?.start || ''),
+      end: pEnd && !isNaN(pEnd.getTime()) ? pEnd.toISOString() : (order.pickup?.end || ''),
       label,
     },
-    cutoffAt: cutoff.toISOString(),
+    cutoffAt: cutoff && !isNaN(cutoff.getTime()) ? cutoff.toISOString() : null,
     itemCount,
     totalCents: order.totalCents,
     itemsPreview,
-    canModify,
+    canModify: Boolean(canModify),
     reviewed: Boolean(order.reviewed),
   };
 }

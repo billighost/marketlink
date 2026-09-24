@@ -2,10 +2,10 @@
  * Admin Moderation Test Suite (T4.220 - T4.240)
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Admin Moderation Suite (T4.220 - T4.240)', () => {
@@ -105,6 +105,10 @@ describe('Admin Moderation Suite (T4.220 - T4.240)', () => {
         updatedAt: new Date(),
       },
     ]);
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
   });
 
   it('T4.220: GET /api/admin/moderation lists flags with previews populated in batch without N+1 queries', async () => {

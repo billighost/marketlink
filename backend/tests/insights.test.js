@@ -2,11 +2,11 @@
  * Farmer Insights and Overview Test Suite (T4.141 - T4.160)
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Farmer Insights and Overview Suite (T4.141 - T4.160)', () => {
@@ -51,6 +51,10 @@ describe('Farmer Insights and Overview Suite (T4.141 - T4.160)', () => {
     await db.collection(COLLECTIONS.FARMERS).insertOne(emptyFarmerDoc);
     const emptyLogin = await loginUser(emptyEmail, 'market123');
     emptyFarmerToken = emptyLogin.accessToken;
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
   });
 
   it('T4.141: GET /api/farmer/insights numbers match independent plain JS calculation over orders', async () => {

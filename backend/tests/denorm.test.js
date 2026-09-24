@@ -29,6 +29,21 @@ describe('Denormalisation Sync Matrix Suite (D3)', () => {
   });
 
   after(async () => {
+    await db.collection(COLLECTIONS.PRODUCTS).deleteMany({
+      name: { $in: ['Sync Veg 1', 'Sync Veg 2 (hidden)', 'Product 1', 'Product M', 'Product C', 'Product R'] },
+    });
+    await db.collection(COLLECTIONS.MARKETS).deleteMany({
+      name: { $in: ['Market 1', 'Market 2', 'Market 3', 'To Be Removed Market'] },
+    });
+    await db.collection(COLLECTIONS.FARMERS).deleteMany({
+      $or: [
+        { email: { $regex: '^sync\\.farmer\\.' } },
+        { email: { $in: ['mtest@farmer.com', 'test@stall.com', 'c@farmer.com', 'rem@farmer.com'] } },
+      ],
+    });
+    await db.collection(COLLECTIONS.USERS).deleteMany({
+      email: { $regex: '^sync\\.farmer\\.' },
+    });
     await teardownTestEnvironment();
   });
 
@@ -124,7 +139,7 @@ describe('Denormalisation Sync Matrix Suite (D3)', () => {
     // 3. Suspend farmer: both become unlisted, market count decrements, sessions revoked
     await db.collection(COLLECTIONS.SESSIONS).insertOne({
       userId: testUserId,
-      tokenHash: 'dummy_hash',
+      tokenHash: `dummy_hash_${Date.now()}_${Math.random()}`,
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 3600000),
     });

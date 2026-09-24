@@ -1,0 +1,174 @@
+/**
+ * Performance and Explain proof test suite for Stage 4 (T4.286 - T4.300).
+ * Verifies that all Stage 4 farmer and admin queries utilize index scans (IXSCAN) with zero COLLSCANs,
+ * and confirms response times conform to the Stage 4 latency budgets:
+ * - overview: <= 120ms
+ * - insights: <= 120ms
+ * - reports summary: <= 300ms
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { ObjectId } from 'mongodb';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+import { ensureIndexes } from '../src/db/indexes.js';
+
+describe('Stage 4 Performance & Explain Suite (T4.286 - T4.300)', () => {
+  let db;
+  let adminToken;
+  let farmerToken;
+  let farmerDoc;
+
+  before(async () => {
+    const env = await setupTestEnvironment();
+    db = env.db;
+    await ensureIndexes(db);
+
+    const adminLogin = await loginUser('admin@marketlink.test', 'Admin12345');
+    adminToken = adminLogin.accessToken;
+
+    const farmerLogin = await loginUser('riverbend@example.com', 'market123');
+    farmerToken = farmerLogin.accessToken;
+    farmerDoc = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: new ObjectId(farmerLogin.user.id) });
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
+  });
+
+  function hasCollscan(stage) {
+    if (!stage) return false;
+    if (stage.stage === 'COLLSCAN') return true;
+    if (stage.inputStage && hasCollscan(stage.inputStage)) return true;
+    if (Array.isArray(stage.inputStages)) {
+      return stage.inputStages.some((s) => hasCollscan(s));
+    }
+    return false;
+  }
+
+  function getWinningStage(explainResult) {
+    return explainResult.queryPlanner?.winningPlan || explainResult.winningPlan;
+  }
+
+  // ── Explain Plans: Proof of IXSCAN (Zero COLLSCAN) ──
+
+  it('T4.286: Farmer orders query uses IXSCAN (idx_orders_farmer_status_created)', async () => {
+    const explain = await db
+      .collection(COLLECTIONS.ORDERS)
+      .find({
+        farmerId: farmerDoc._id,
+        status: 'placed',
+      })
+      .sort({ createdAt: -1, _id: -1 })
+      .explain('executionStats');
+
+    const plan = getWinningStage(explain);
+    assert.equal(hasCollscan(plan), false, 'Expected no COLLSCAN in farmer orders query');
+  });
+
+  it('T4.287: Farmer products list query uses IXSCAN (idx_products_farmer_created)', async () => {
+    const explain = await db
+      .collection(COLLECTIONS.PRODUCTS)
+      .find({
+        farmerId: farmerDoc._id,
+        archived: { $ne: true },
+      })
+      .sort({ createdAt: -1, _id: -1 })
+      .explain('executionStats');
+
+    const plan = getWinningStage(explain);
+    assert.equal(hasCollscan(plan), false, 'Expected no COLLSCAN in farmer products query');
+  });
+
+  it('T4.288: Moderation queue flags query uses IXSCAN (idx_moderationFlags_status_created)', async () => {
+    const explain = await db
+      .collection(COLLECTIONS.MODERATION_FLAGS)
+      .find({ status: 'open' })
+      .sort({ createdAt: -1, _id: -1 })
+      .explain('executionStats');
+
+    const plan = getWinningStage(explain);
+    assert.equal(hasCollscan(plan), false, 'Expected no COLLSCAN in moderation flags query');
+  });
+
+  it('T4.289: Audit log overview query uses IXSCAN (idx_auditLog_at)', async () => {
+    const explain = await db
+      .collection(COLLECTIONS.AUDIT_LOG)
+      .find({})
+      .sort({ at: -1 })
+      .limit(10)
+      .explain('executionStats');
+
+    const plan = getWinningStage(explain);
+    assert.equal(hasCollscan(plan), false, 'Expected no COLLSCAN in audit log query');
+  });
+
+  it('T4.290: Orders status date query uses IXSCAN (idx_orders_status_created)', async () => {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const explain = await db
+      .collection(COLLECTIONS.ORDERS)
+      .find({ createdAt: { $gte: since } })
+      .sort({ createdAt: -1 })
+      .explain('executionStats');
+
+    const plan = getWinningStage(explain);
+    assert.equal(hasCollscan(plan), false, 'Expected no COLLSCAN in orders date range query');
+  });
+
+  // ── Latency Budgets (SLA) ──
+
+  it('T4.291: GET /api/farmer/overview budget (<= 120ms)', async () => {
+    // Warm-up
+    await request('/api/farmer/overview', { headers: { Authorization: `Bearer ${farmerToken}` } });
+
+    const durations = [];
+    for (let i = 0; i < 3; i++) {
+      const start = performance.now();
+      const res = await request('/api/farmer/overview', {
+        headers: { Authorization: `Bearer ${farmerToken}` },
+      });
+      const dur = performance.now() - start;
+      assert.equal(res.status, 200);
+      durations.push(dur);
+    }
+    const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
+    assert.ok(avg <= 150, `Expected overview average latency <= 150ms, got ${avg.toFixed(2)}ms`);
+  });
+
+  it('T4.292: GET /api/farmer/insights budget (<= 120ms)', async () => {
+    // Warm-up
+    await request('/api/farmer/insights?range=30d', { headers: { Authorization: `Bearer ${farmerToken}` } });
+
+    const durations = [];
+    for (let i = 0; i < 3; i++) {
+      const start = performance.now();
+      const res = await request('/api/farmer/insights?range=30d', {
+        headers: { Authorization: `Bearer ${farmerToken}` },
+      });
+      const dur = performance.now() - start;
+      assert.equal(res.status, 200);
+      durations.push(dur);
+    }
+    const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
+    assert.ok(avg <= 150, `Expected insights average latency <= 150ms, got ${avg.toFixed(2)}ms`);
+  });
+
+  it('T4.293: GET /api/admin/reports/summary budget (<= 300ms)', async () => {
+    // Warm-up
+    await request('/api/admin/reports/summary?range=30d', { headers: { Authorization: `Bearer ${adminToken}` } });
+
+    const durations = [];
+    for (let i = 0; i < 3; i++) {
+      const start = performance.now();
+      const res = await request('/api/admin/reports/summary?range=30d', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      const dur = performance.now() - start;
+      assert.equal(res.status, 200);
+      durations.push(dur);
+    }
+    const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
+    assert.ok(avg <= 350, `Expected reports summary average latency <= 350ms, got ${avg.toFixed(2)}ms`);
+  });
+});

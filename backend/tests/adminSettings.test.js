@@ -2,10 +2,10 @@
  * Admin Settings, Categories, Announcements, and Messages Test Suite (T4.240 - T4.250)
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Admin Settings Suite (T4.240 - T4.250)', () => {
@@ -23,6 +23,10 @@ describe('Admin Settings Suite (T4.240 - T4.250)', () => {
 
     customerUserDoc = await db.collection(COLLECTIONS.USERS).findOne({ role: 'customer', status: 'active' });
     farmerUserDoc = await db.collection(COLLECTIONS.USERS).findOne({ role: 'farmer', status: 'active' });
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
   });
 
   it('T4.241: Category CRUD, slug propagation on rename, and 409 CATEGORY_IN_USE on delete', async () => {

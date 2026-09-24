@@ -2,10 +2,10 @@
  * Admin Markets Test Suite (T4.201 - T4.215)
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Admin Markets Suite', () => {
@@ -26,6 +26,13 @@ describe('Admin Markets Suite', () => {
     await db.collection(COLLECTIONS.MARKETS).deleteMany({
       name: { $in: ['Meadowlands Green Market', 'Pine Valley Farmers Market', 'Force Removal Market'] },
     });
+  });
+
+  after(async () => {
+    await db.collection(COLLECTIONS.MARKETS).deleteMany({
+      name: { $in: ['Meadowlands Green Market', 'Pine Valley Farmers Market', 'Force Removal Market'] },
+    });
+    await teardownTestEnvironment();
   });
 
   it('T4.201: Admin creates market with coordinates or mapUrl and slugification', async () => {

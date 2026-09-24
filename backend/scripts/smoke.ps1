@@ -291,7 +291,139 @@ if ($asstRes.data.reply -and $asstRes.data.suggestions) {
     Write-Host "FAILED" -ForegroundColor Red; exit 1
 }
 
+# ── Stage 4 Smoke Tests ──────────────────────────────────────────
+
+# 26. Farmer Login (Riverbend Farm)
+Write-Host -NoNewline "26. Logging in as Farmer (riverbend@example.com)... "
+$farmerLoginBody = @{
+    email = "riverbend@example.com"
+    password = "market123"
+} | ConvertTo-Json
+$farmerLoginRes = Invoke-RestMethod -Uri "$BaseUrl/auth/login" -Method Post -Body $farmerLoginBody -ContentType "application/json"
+$farmerToken = $farmerLoginRes.data.accessToken
+$farmerHeaders = @{ Authorization = "Bearer $farmerToken" }
+Write-Host "OK (200)" -ForegroundColor Green
+
+# 27. GET /farmer/profile
+Write-Host -NoNewline "27. Testing GET /farmer/profile... "
+$farmerProfile = Invoke-RestMethod -Uri "$BaseUrl/farmer/profile" -Method Get -Headers $farmerHeaders
+if ($farmerProfile.data.stallName -eq "Riverbend Farm") {
+    Write-Host "OK (200 - $($farmerProfile.data.stallName))" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 28. GET /farmer/products
+Write-Host -NoNewline "28. Testing GET /farmer/products... "
+$farmerProds = Invoke-RestMethod -Uri "$BaseUrl/farmer/products" -Method Get -Headers $farmerHeaders
+if ($farmerProds.data.Count -gt 0) {
+    Write-Host "OK (200 - $($farmerProds.data.Count) products)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 29. GET /farmer/orders
+Write-Host -NoNewline "29. Testing GET /farmer/orders... "
+$farmerOrds = Invoke-RestMethod -Uri "$BaseUrl/farmer/orders" -Method Get -Headers $farmerHeaders
+if ($farmerOrds.data) {
+    Write-Host "OK (200 - $($farmerOrds.data.Count) orders)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 30. GET /farmer/reviews
+Write-Host -NoNewline "30. Testing GET /farmer/reviews... "
+$farmerRevs = Invoke-RestMethod -Uri "$BaseUrl/farmer/reviews" -Method Get -Headers $farmerHeaders
+if ($farmerRevs.data) {
+    Write-Host "OK (200 - $($farmerRevs.data.Count) reviews)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 31. GET /farmer/insights/overview
+Write-Host -NoNewline "31. Testing GET /farmer/insights/overview... "
+$farmerInsights = Invoke-RestMethod -Uri "$BaseUrl/farmer/insights/overview" -Method Get -Headers $farmerHeaders
+if ($farmerInsights.data.kpis) {
+    Write-Host "OK (200 - revenue: `$$([math]::Round($farmerInsights.data.kpis.revenueCents / 100, 2)))" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 32. GET /farmer/slots
+Write-Host -NoNewline "32. Testing GET /farmer/slots... "
+$farmerSlots = Invoke-RestMethod -Uri "$BaseUrl/farmer/slots" -Method Get -Headers $farmerHeaders
+if ($farmerSlots.data) {
+    Write-Host "OK (200 - $($farmerSlots.data.Count) upcoming slots)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 33. Admin Login
+Write-Host -NoNewline "33. Logging in as Admin (admin@marketlink.test)... "
+$adminLoginBody = @{
+    email = "admin@marketlink.test"
+    password = "Admin12345"
+} | ConvertTo-Json
+$adminLoginRes = Invoke-RestMethod -Uri "$BaseUrl/auth/login" -Method Post -Body $adminLoginBody -ContentType "application/json"
+$adminToken = $adminLoginRes.data.accessToken
+$adminHeaders = @{ Authorization = "Bearer $adminToken" }
+Write-Host "OK (200)" -ForegroundColor Green
+
+# 34. GET /admin/overview
+Write-Host -NoNewline "34. Testing GET /admin/overview... "
+$adminOverview = Invoke-RestMethod -Uri "$BaseUrl/admin/overview" -Method Get -Headers $adminHeaders
+if ($adminOverview.data.metrics) {
+    Write-Host "OK (200 - users: $($adminOverview.data.metrics.totalUsers))" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 35. GET /admin/people
+Write-Host -NoNewline "35. Testing GET /admin/people... "
+$adminPeople = Invoke-RestMethod -Uri "$BaseUrl/admin/people" -Method Get -Headers $adminHeaders
+if ($adminPeople.data.Count -gt 0) {
+    Write-Host "OK (200 - $($adminPeople.data.Count) people)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 36. GET /admin/markets
+Write-Host -NoNewline "36. Testing GET /admin/markets... "
+$adminMarkets = Invoke-RestMethod -Uri "$BaseUrl/admin/markets" -Method Get -Headers $adminHeaders
+if ($adminMarkets.data.Count -gt 0) {
+    Write-Host "OK (200 - $($adminMarkets.data.Count) markets)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 37. GET /admin/moderation
+Write-Host -NoNewline "37. Testing GET /admin/moderation... "
+$adminMod = Invoke-RestMethod -Uri "$BaseUrl/admin/moderation" -Method Get -Headers $adminHeaders
+if ($adminMod.data) {
+    Write-Host "OK (200 - $($adminMod.data.Count) flags)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 38. GET /admin/reports/sales.csv
+Write-Host -NoNewline "38. Testing GET /admin/reports/sales.csv... "
+$adminCsv = Invoke-WebRequest -Uri "$BaseUrl/admin/reports/sales.csv" -Method Get -Headers $adminHeaders
+if ($adminCsv.StatusCode -eq 200 -and $adminCsv.Headers['Content-Type'] -match 'text/csv') {
+    Write-Host "OK (200 - Content-Type: text/csv)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 39. GET /admin/settings
+Write-Host -NoNewline "39. Testing GET /admin/settings... "
+$adminSettings = Invoke-RestMethod -Uri "$BaseUrl/admin/settings" -Method Get -Headers $adminHeaders
+if ($adminSettings.data) {
+    Write-Host "OK (200 - flags: $($adminSettings.data.featureFlags.p2pMessaging))" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
 Write-Host ""
 Write-Host "========================================================" -ForegroundColor Cyan
-Write-Host "🎉  All smoke test steps passed successfully!" -ForegroundColor Green
+Write-Host "🎉  All smoke test steps (1-39) passed successfully!" -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Cyan

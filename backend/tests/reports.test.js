@@ -2,9 +2,10 @@
  * Admin Reports and CSV Export Test Suite (T4.251 - T4.275)
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { ObjectId } from 'mongodb';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Admin Reports and CSV Export Suite (T4.251 - T4.275)', () => {
@@ -17,6 +18,10 @@ describe('Admin Reports and CSV Export Suite (T4.251 - T4.275)', () => {
 
     const adminLogin = await loginUser('admin@marketlink.test', 'Admin12345');
     adminToken = adminLogin.accessToken;
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
   });
 
   it('T4.251: GET /api/admin/reports/summary matches independent plain JS calculation over orders', async () => {
@@ -62,30 +67,43 @@ describe('Admin Reports and CSV Export Suite (T4.251 - T4.275)', () => {
   });
 
   it('T4.253: CSV export includes headers, BOM, formula-injection defense, and audit logging', async () => {
-    // Insert order with special characters to test formula injection defense and quoting
-    const injectedOrder = {
-      orderNumber: 'TEST-CSV-FORMULA',
-      customerName: '=cmd|’ /C calc’!A0', // formula injection string
-      farmerName: 'Farm with "Quotes", and commas',
-      status: 'placed',
-      totalCents: 4500,
-      createdAt: new Date(),
-    };
-    await db.collection(COLLECTIONS.ORDERS).insertOne(injectedOrder);
+    await db.collection(COLLECTIONS.ORDERS).deleteMany({ orderNumber: { $regex: '^TEST-CSV-' } });
 
-    const res = await request('/api/admin/reports/export?type=orders&range=30d', {
-      headers: { Authorization: `Bearer ${adminToken}` },
-    });
+      // Insert order with special characters to test formula injection defense and quoting
+      const injectedOrder = {
+        orderNumber: `TEST-CSV-${Date.now()}`,
+        checkoutId: new ObjectId(),
+        customerId: new ObjectId(),
+        farmerId: new ObjectId(),
+        marketId: new ObjectId(),
+        items: [],
+        subtotalCents: 4500,
+        customerName: '=cmd|’ /C calc’!A0', // formula injection string
+        farmerName: 'Farm with "Quotes", and commas',
+        status: 'placed',
+        totalCents: 4500,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await db.collection(COLLECTIONS.ORDERS).insertOne(injectedOrder);
+
+      const res = await request('/api/admin/reports/export?type=orders&range=30d', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
     assert.equal(res.status, 200);
 
     // Verify response headers
     assert.equal(res.headers.get('content-type'), 'text/csv; charset=utf-8');
     assert.ok(res.headers.get('content-disposition')?.includes('attachment; filename='));
 
-    const text = await res.text();
+    const buf = Buffer.from(await res.arrayBuffer());
 
-    // 1. Verify UTF-8 BOM is the very first character
-    assert.equal(text.charCodeAt(0), 0xfeff, 'CSV must start with UTF-8 BOM');
+    // 1. Verify UTF-8 BOM is the very first 3 bytes (0xEF, 0xBB, 0xBF)
+    assert.equal(buf[0], 0xef, 'CSV must start with UTF-8 BOM (0xEF)');
+    assert.equal(buf[1], 0xbb, 'CSV must start with UTF-8 BOM (0xBB)');
+    assert.equal(buf[2], 0xbf, 'CSV must start with UTF-8 BOM (0xBF)');
+
+    const text = buf.toString('utf8');
 
     // 2. Verify header row
     assert.ok(text.includes('orderNumber,createdAt,status,customerName,farmerName,market,pickupStart,itemCount,totalUSD'));

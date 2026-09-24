@@ -2,11 +2,11 @@
  * Image Uploads Test Suite (T4.086 - T4.100)
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { env } from '../src/config/env.js';
 
 describe('Image Uploads Suite (T4.086 - T4.100)', () => {
@@ -53,6 +53,10 @@ describe('Image Uploads Suite (T4.086 - T4.100)', () => {
 
     const custRes = await loginUser('george@example.com', 'market123');
     customerToken = custRes.accessToken;
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
   });
 
   it('T4.086: Accepts valid JPEG, PNG, and WebP, returning 201 with /uploads/<hex> path', async () => {

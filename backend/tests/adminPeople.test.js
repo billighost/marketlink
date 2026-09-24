@@ -2,11 +2,11 @@
  * Admin People and Farmer Lifecycle Test Suite (T4.161 - T4.200)
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Admin People Suite (T4.161 - T4.200)', () => {
@@ -38,6 +38,10 @@ describe('Admin People Suite (T4.161 - T4.200)', () => {
     activeFarmerToken = farmerLogin.accessToken;
     activeFarmerUserDoc = await db.collection(COLLECTIONS.USERS).findOne({ email: 'riverbend@example.com' });
     activeFarmerDoc = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: activeFarmerUserDoc._id });
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
   });
 
   it('T4.161: Admin can list farmers and customers with status filters and search', async () => {
@@ -182,6 +186,12 @@ describe('Admin People Suite (T4.161 - T4.200)', () => {
       headers: { Authorization: `Bearer ${adminToken}` },
     });
     assert.equal(dupApprove.status, 409);
+
+    // Clean up T4.163 created records
+    await db.collection(COLLECTIONS.PRODUCTS).deleteMany({ _id: prodId });
+    await db.collection(COLLECTIONS.FARMERS).deleteMany({ _id: pendingFarmerId });
+    await db.collection(COLLECTIONS.USERS).deleteMany({ _id: pendingUserId });
+    await db.collection(COLLECTIONS.MARKETS).updateOne({ _id: market._id }, { $set: { farmerCount: initialFarmerCount } });
   });
 
   it('T4.164: Suspend active farmer: products delisted, session revoked, and 403 on mutating routes', async () => {
@@ -277,6 +287,12 @@ describe('Admin People Suite (T4.161 - T4.200)', () => {
 
     const pReinstated = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: prodId });
     assert.equal(pReinstated.listed, true, 'Products must be relisted after reinstatement');
+
+    // Clean up T4.164 created records
+    await db.collection(COLLECTIONS.PRODUCTS).deleteMany({ _id: prodId });
+    await db.collection(COLLECTIONS.FARMERS).deleteMany({ _id: activeFid });
+    await db.collection(COLLECTIONS.USERS).deleteMany({ _id: activeUserId });
+    await db.collection(COLLECTIONS.MARKETS).updateOne({ _id: market._id }, { $set: { farmerCount: initialFarmerCount } });
   });
 
   it('T4.165: Customer deactivation and activation toggles status and writes audit log', async () => {

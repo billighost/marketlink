@@ -2,9 +2,9 @@
  * Farmer Weekly Template Test Suite
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { setupTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 import { ObjectId } from 'mongodb';
 
@@ -26,6 +26,10 @@ describe('Weekly Template Suite', () => {
     const custLogin = await loginUser('george@example.com', 'market123');
     customerToken = custLogin.accessToken;
     customerDoc = await db.collection(COLLECTIONS.USERS).findOne({ _id: new ObjectId(custLogin.user.id) });
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
   });
 
   it('T4.080: GET /api/farmer/weekly-template returns template configs for farmer products', async () => {
@@ -77,8 +81,8 @@ describe('Weekly Template Suite', () => {
   });
 
   it('T4.082: POST /api/farmer/weekly-template/apply resets quantities and triggers restock alerts', async () => {
-    // 1. Pick a product, set qty=0 and availability='out', enable weekly with defaultQty=25
-    const prod = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmerDoc._id });
+    // 1. Pick an unarchived product, set qty=0 and availability='out', enable weekly with defaultQty=25
+    const prod = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmerDoc._id, archived: { $ne: true } });
     assert.ok(prod);
 
     await db.collection(COLLECTIONS.PRODUCTS).updateOne(

@@ -182,6 +182,115 @@ async function verifyData() {
       console.log('✓ Invariant 7: Product review rating aggregates match actual review collections.');
     }
 
+    // ── 5. Product listing state consistency with farmer and moderation (D3) ──
+    const farmerMap = new Map(farmers.map((f) => [f._id.toString(), f]));
+    let listingStateMismatches = 0;
+    let snapshotMismatches = 0;
+
+    for (const p of products) {
+      const f = farmerMap.get(p.farmerId?.toString());
+      if (!f) continue;
+
+      const shouldBeListed = Boolean(
+        f.listingEnabled && !p.moderation?.removed && !p.archived && p.availability !== 'hidden'
+      );
+
+      if (Boolean(p.listed) !== shouldBeListed) {
+        listingStateMismatches++;
+        reportViolation(
+          'PRODUCT_LISTED_STATE_MISMATCH',
+          `Product ${p.name} (id: ${p._id}): listed=${p.listed}, expected=${shouldBeListed} (farmer.listingEnabled=${f.listingEnabled}, removed=${p.moderation?.removed}, archived=${p.archived}, availability=${p.availability})`
+        );
+      }
+
+      // Check stall snapshot
+      if (p.farmer?.stallName && f.stallName && p.farmer.stallName !== f.stallName) {
+        snapshotMismatches++;
+        reportViolation(
+          'FARMER_SNAPSHOT_MISMATCH',
+          `Product ${p.name} (id: ${p._id}): snapshot stallName='${p.farmer.stallName}', farmer stallName='${f.stallName}'`
+        );
+      }
+    }
+
+    if (listingStateMismatches === 0) {
+      console.log('✓ Invariant 8: Product listed status is strictly consistent with farmer approval and product state.');
+    }
+    if (snapshotMismatches === 0) {
+      console.log('✓ Invariant 9: Product farmer snapshot stall names match parent farmer documents.');
+    }
+
+    // ── 6. Market farmerCount consistency (D3) ──
+    const activeMarkets = await db.collection(COLLECTIONS.MARKETS).find({ status: 'active' }).toArray();
+    let marketCountMismatches = 0;
+
+    for (const m of activeMarkets) {
+      const attendingListedFarmers = farmers.filter(
+        (f) => f.listingEnabled && Array.isArray(f.marketIds) && f.marketIds.some((id) => id.toString() === m._id.toString())
+      );
+      const expectedCount = attendingListedFarmers.length;
+      const actualCount = m.farmerCount || 0;
+
+      if (actualCount !== expectedCount) {
+        marketCountMismatches++;
+        reportViolation(
+          'MARKET_FARMER_COUNT_MISMATCH',
+          `Market ${m.name} (id: ${m._id}): farmerCount=${actualCount}, expected=${expectedCount} attending listed farmers`
+        );
+      }
+    }
+
+    if (marketCountMismatches === 0) {
+      console.log('✓ Invariant 10: Market farmerCount matches attending listed farmers count.');
+    }
+
+    // ── 7. Farmer categorySlugs consistency (D3) ──
+    let categorySlugMismatches = 0;
+    for (const f of farmers) {
+      const distinctSlugs = await db
+        .collection(COLLECTIONS.PRODUCTS)
+        .distinct('categorySlug', {
+          farmerId: f._id,
+          listed: true,
+          categorySlug: { $exists: true, $ne: '' },
+        });
+      const expectedSlugs = (distinctSlugs || []).sort().join(',');
+      const actualSlugs = (f.categorySlugs || []).slice().sort().join(',');
+
+      if (expectedSlugs !== actualSlugs) {
+        categorySlugMismatches++;
+        reportViolation(
+          'FARMER_CATEGORY_SLUGS_MISMATCH',
+          `Farmer ${f.stallName} (id: ${f._id}): categorySlugs='${actualSlugs}', expected='${expectedSlugs}'`
+        );
+      }
+    }
+
+    if (categorySlugMismatches === 0) {
+      console.log('✓ Invariant 11: Farmer categorySlugs match distinct listed product categories.');
+    }
+
+    // ── 8. Category slug propagation consistency (D3) ──
+    const allCategories = await db.collection(COLLECTIONS.CATEGORIES).find().toArray();
+    const catMap = new Map(allCategories.map((c) => [c._id.toString(), c]));
+    let prodCatSlugMismatches = 0;
+
+    for (const p of products) {
+      if (!p.categoryId) continue;
+      const cat = catMap.get(p.categoryId.toString());
+      if (cat && p.categorySlug && p.categorySlug !== cat.slug) {
+        prodCatSlugMismatches++;
+        reportViolation(
+          'CATEGORY_SLUG_MISMATCH',
+          `Product ${p.name} (id: ${p._id}): categorySlug='${p.categorySlug}', category '${cat.name}' slug='${cat.slug}'`
+        );
+      }
+    }
+
+    if (prodCatSlugMismatches === 0) {
+      console.log('✓ Invariant 12: Product categorySlugs match referenced category slugs.');
+    }
+
     console.log('\n======================================================');
     if (violations === 0) {
       console.log('🎉  ALL DATA INVARIANTS PASSED! Platform is 100% consistent.');

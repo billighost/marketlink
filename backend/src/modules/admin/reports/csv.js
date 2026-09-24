@@ -61,8 +61,8 @@ export async function streamCsv(res, req, filename, headers, cursor, rowFormatte
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.setHeader('Cache-Control', 'no-store');
 
-  // 1. Write UTF-8 BOM for Excel compatibility
-  res.write('\uFEFF');
+  // 1. Write UTF-8 BOM for Excel compatibility (0xEF, 0xBB, 0xBF)
+  res.write(Buffer.from([0xEF, 0xBB, 0xBF]));
 
   // 2. Write CSV header row
   res.write(formatCsvRow(headers));

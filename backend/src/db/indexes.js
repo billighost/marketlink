@@ -233,6 +233,10 @@ export async function ensureIndexes(db) {
     { name: 'idx_orders_status_created' }
   );
   await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { createdAt: -1 },
+    { name: 'idx_orders_created' }
+  );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
     { marketId: 1, status: 1, createdAt: -1 },
     { name: 'idx_orders_market_status_created' }
   );

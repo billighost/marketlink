@@ -68,6 +68,8 @@ describe('Farmer Profile and Slots Suite (T4.001 - T4.030)', () => {
   });
 
   after(async () => {
+    await db.collection(COLLECTIONS.USERS).deleteMany({ email: { $regex: '^temp\\.suspended\\.' } });
+    await db.collection(COLLECTIONS.FARMERS).deleteMany({ email: { $regex: '^temp\\.suspended\\.' } });
     await teardownTestEnvironment();
   });
 
@@ -283,11 +285,11 @@ describe('Farmer Profile and Slots Suite (T4.001 - T4.030)', () => {
       assert.ok(p.marketIds.some((id) => id.toString() === m2._id.toString()));
     }
 
-    // Remove m2
+    // Restore original markets
     await request('/api/farmer/profile', {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${activeFarmerToken}` },
-      body: { marketIds: [m1._id.toString()] },
+      body: { marketIds: currentMarketIds },
     });
     const m2Restored = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: m2._id });
     assert.equal(m2Restored.farmerCount, initialM2Count);
@@ -455,5 +457,11 @@ describe('Farmer Profile and Slots Suite (T4.001 - T4.030)', () => {
       { _id: activeFarmerDoc._id },
       { $set: { maxOrdersPerSlot: 30 } }
     );
+
+    // Clean up race test orders, checkouts, and restore orderNumber sequence
+    await db.collection(COLLECTIONS.ORDERS).deleteMany({ slotKey });
+    await db.collection(COLLECTIONS.COUNTERS).deleteOne({ _id: `slot:${slotKey}` });
+    await db.collection(COLLECTIONS.CHECKOUTS).deleteMany({ idempotencyKey: { $regex: '^race-capacity-' } });
+    await db.collection(COLLECTIONS.COUNTERS).updateOne({ _id: 'orderNumber' }, { $inc: { seq: -3 } });
   });
 });

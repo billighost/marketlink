@@ -1,4 +1,4 @@
-# MarketLink API Documentation (Stage 1)
+# MarketLink API Documentation (Stages 1 - 4)
 
 > Base Path: `/api`  
 > Protocol: HTTP/JSON  
@@ -1035,4 +1035,334 @@ Answers queries about market schedules, farmer stall locations, produce availabi
   }
 }
 ```
+
+---
+
+## 16. Farmer Profile & Slots (`/api/farmer`)
+
+### `GET /api/farmer/profile`
+Retrieves the authenticated farmer's profile, including stall details, attending markets, pickup windows, closures, and approval status.
+- **Auth**: Farmer (`farmer` role)
+- **Response**: `200 OK`
+```json
+{
+  "data": {
+    "id": "6ab4d9e99d438e0bfa7d5910",
+    "stallName": "Riverbend Farm",
+    "contactPerson": "Anna Kowalski",
+    "phone": "(555) 300-1001",
+    "bio": "Family-run organic vegetable farm...",
+    "art": "farm",
+    "status": "active",
+    "listingEnabled": true,
+    "markets": [
+      { "id": "6ab4eb7801b3e33e11bff159", "name": "Elm Street Market" }
+    ],
+    "pickupWindows": [
+      { "dayOfWeek": 6, "startTime": "08:00", "endTime": "13:00", "marketId": "6ab4eb7801b3e33e11bff159" }
+    ],
+    "closures": []
+  }
+}
+```
+
+### `PATCH /api/farmer/profile`
+Updates farmer profile fields (bio, art, stallNumber, pickup windows, etc.).
+- **Auth**: Approved Farmer (`farmer` role)
+- **Response**: `200 OK`
+
+### `POST /api/farmer/profile/markets/:marketId`
+Adds attendance at an existing market.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `DELETE /api/farmer/profile/markets/:marketId`
+Removes attendance at a market (prevented with 409 if pending or active orders exist).
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `POST /api/farmer/profile/closures`
+Schedules a temporary stall closure.
+- **Auth**: Approved Farmer
+- **Response**: `201 Created`
+
+### `DELETE /api/farmer/profile/closures/:closureId`
+Removes a scheduled closure.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `GET /api/farmer/slots`
+Calculates and returns upcoming pickup slots for the next 14 days based on attending markets and pickup windows.
+- **Auth**: Farmer
+- **Response**: `200 OK`
+
+---
+
+## 17. Farmer Products & Templates (`/api/farmer/products`)
+
+### `GET /api/farmer/products`
+Lists the authenticated farmer's products with category, availability, and search filters, plus stock breakdown counts.
+- **Auth**: Farmer
+- **Query Params**: `categoryId`, `availability` (`in|low|out|hidden`), `search`, `sort`, `limit`, `cursor`
+- **Response**: `200 OK`
+```json
+{
+  "data": [...],
+  "meta": { "counts": { "all": 8, "in": 5, "low": 2, "out": 1, "hidden": 0 } }
+}
+```
+
+### `POST /api/farmer/products`
+Creates a new product for the farmer stall. Automatically computes `nameLower`, `rnd`, and initial availability.
+- **Auth**: Approved Farmer
+- **Response**: `201 Created`
+
+### `POST /api/farmer/products/bulk`
+Executes bulk stock actions (`mark_sold_out`, `mark_available`, `hide`, `unhide`) on owned product IDs.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `GET /api/farmer/products/:id`
+Gets full product details for an owned product.
+- **Auth**: Farmer (Enforces tenant isolation: 404 for non-owned)
+- **Response**: `200 OK`
+
+### `PATCH /api/farmer/products/:id`
+Updates product pricing, descriptions, tags, stock thresholds, or quantity.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `DELETE /api/farmer/products/:id`
+Hard-deletes product if no historical orders reference it; soft-deletes (`archived: true`, `listed: false`) otherwise.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `POST /api/farmer/products/:id/sold-out`
+Quick-toggles a product to sold-out (`quantityAvailable: 0`, `availability: "out"`).
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `POST /api/farmer/products/:id/available`
+Restores a product to available with specified quantity or default weekly quantity.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `POST /api/farmer/products/:id/hide` / `POST /api/farmer/products/:id/unhide`
+Toggles product catalog visibility.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `GET /api/farmer/weekly-template`
+Retrieves weekly restock template configuration for farmer products.
+- **Auth**: Farmer
+- **Response**: `200 OK`
+
+### `PUT /api/farmer/weekly-template`
+Updates weekly quantities and enabled status for farmer products.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `POST /api/farmer/weekly-template/apply`
+Applies the weekly restock template: resets quantities to defaults and triggers customer restock alerts.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+---
+
+## 18. Farmer Orders & Pick List (`/api/farmer/orders`)
+
+### `GET /api/farmer/orders`
+Lists farmer orders filtered by tab (`active`, `today`, `all`), market, target date, or search query.
+- **Auth**: Farmer
+- **Response**: `200 OK`
+
+### `GET /api/farmer/orders/:id`
+Fetches full order details for an owned order.
+- **Auth**: Farmer (Enforces tenant isolation: 404 for non-owned)
+- **Response**: `200 OK`
+
+### `POST /api/farmer/orders/:id/accept`
+Transitions order from `placed` to `accepted`.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `POST /api/farmer/orders/:id/ready`
+Transitions order from `accepted` to `ready`. Triggers customer notification and email stub.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `POST /api/farmer/orders/:id/complete`
+Transitions order from `ready` to `completed`. Increments product sales counts.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `POST /api/farmer/orders/:id/decline`
+Declines an incoming order and automatically restores reserved stock.
+- **Auth**: Approved Farmer
+- **Request Body**: `{ "reason": "Out of stock on harvest day" }`
+- **Response**: `200 OK`
+
+### `POST /api/farmer/orders/:id/cancel`
+Farmer cancels an active order before pickup. Requires a valid reason.
+- **Auth**: Approved Farmer
+- **Response**: `200 OK`
+
+### `GET /api/farmer/orders/pick-list`
+Generates aggregated pick-list by produce item and by order for a target market date.
+- **Auth**: Farmer
+- **Query Params**: `targetDate` (YYYY-MM-DD), `marketId`
+- **Response**: `200 OK`
+
+---
+
+## 19. Farmer Reviews & Replies (`/api/farmer/reviews`)
+
+### `GET /api/farmer/reviews`
+Lists all reviews left for the farmer stall or their products, with reply status and rating filters.
+- **Auth**: Farmer
+- **Response**: `200 OK`
+
+### `POST /api/farmer/reviews/:id/reply`
+Adds or updates a farmer's public reply to a customer review.
+- **Auth**: Approved Farmer
+- **Request Body**: `{ "reply": "Thank you for the kind feedback!" }`
+- **Response**: `200 OK`
+
+---
+
+## 20. Farmer Insights & Analytics (`/api/farmer/insights`)
+
+### `GET /api/farmer/insights/overview`
+Returns high-level business intelligence KPIs (total revenue, completed orders, average order value, return customer rate) and weekly trend charts.
+- **Auth**: Farmer
+- **Response**: `200 OK`
+
+### `GET /api/farmer/insights/products`
+Returns product-level performance rankings (top sellers by revenue and volume, repeat purchase items).
+- **Auth**: Farmer
+- **Response**: `200 OK`
+
+---
+
+## 21. Uploads (`/api/farmer/uploads` & `/uploads`)
+
+### `POST /api/farmer/uploads/image`
+Uploads a product or stall image. Validates magic bytes (JPEG, PNG, WebP only) and limits size to 1MB.
+- **Auth**: Approved Farmer
+- **Response**: `201 Created`
+```json
+{
+  "data": {
+    "url": "/uploads/a1b2c3d4e5f6...jpg"
+  }
+}
+```
+
+### `GET /uploads/:filename`
+Serves stored media files with `X-Content-Type-Options: nosniff` and caching headers.
+- **Auth**: Public
+
+---
+
+## 22. Admin Overview & People Management (`/api/admin`)
+
+### `GET /api/admin/overview`
+Platform-wide operational dashboard metrics: user counts, active farmers, total orders, GMV, open moderation flags, and recent audit logs.
+- **Auth**: Admin (`admin` role)
+- **Response**: `200 OK`
+
+### `GET /api/admin/people`
+Lists platform users and farmers with filtering by role (`customer|farmer|admin`), status (`active|pending|suspended`), and text search.
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+### `PATCH /api/admin/people/farmers/:id/status`
+Updates farmer account status (`active|pending|suspended`). Automatically manages `listingEnabled` and syncs market farmer counts.
+- **Auth**: Admin
+- **Request Body**: `{ "status": "active" }`
+- **Response**: `200 OK`
+
+### `PATCH /api/admin/people/customers/:id/status`
+Updates customer account status (`active|suspended`).
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+### `GET /api/admin/people/users/:id`
+Retrieves full user detail, linked farmer profile, and order history.
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+---
+
+## 23. Admin Markets & Moderation (`/api/admin`)
+
+### `GET /api/admin/markets`
+Admin market directory with operational details and attending farmer rosters.
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+### `POST /api/admin/markets`
+Creates a new market venue.
+- **Auth**: Admin
+- **Response**: `201 Created`
+
+### `PATCH /api/admin/markets/:id`
+Updates market details, schedules, or active status.
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+### `DELETE /api/admin/markets/:id`
+Removes market venue (prevented with 409 if active farmers are attending, unless `force=true`).
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+### `GET /api/admin/moderation`
+Lists flagged content (listings, reviews) awaiting administrative moderation.
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+### `POST /api/admin/moderation/:id/resolve`
+Takes moderation action on a flag (e.g. delist product, hide review) and logs to audit trail.
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+### `POST /api/admin/moderation/:id/dismiss`
+Dismisses an open moderation flag without taking destructive action.
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+---
+
+## 24. Admin Reports & System Settings (`/api/admin`)
+
+### `GET /api/admin/reports/:reportType.csv`
+Generates downloadable, compliant CSV reports for administrative export.
+- **Auth**: Admin
+- **Supported Reports**: `sales.csv`, `orders.csv`, `inventory.csv`, `farmers.csv`, `customers.csv`
+- **Response**: `200 OK` (`Content-Type: text/csv; charset=utf-8`)
+
+### `GET /api/admin/settings`
+Retrieves system configuration, feature flags, announcements, categories, and contact messages.
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+### `PATCH /api/admin/settings`
+Updates global settings and feature flags (e.g. toggle P2P messaging, maintenance mode).
+- **Auth**: Admin
+- **Response**: `200 OK`
+
+### `POST /api/admin/settings/announcements`
+Publishes platform-wide or targeted banner announcements.
+- **Auth**: Admin
+- **Response**: `201 Created`
+
+### `POST /api/admin/settings/categories`
+Creates or manages product taxonomy categories.
+- **Auth**: Admin
+- **Response**: `201 Created`
+
+### `PATCH /api/admin/settings/messages/:id`
+Marks contact inquiries as read or archived.
+- **Auth**: Admin
+- **Response**: `200 OK`
 
