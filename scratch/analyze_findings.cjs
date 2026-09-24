@@ -1,0 +1,34 @@
+const fs = require('fs');
+
+const findings = JSON.parse(fs.readFileSync('scratch/audit_results_after_fixes.json', 'utf8'));
+
+console.log('Total findings:', findings.length);
+
+const byType = {};
+findings.forEach(f => {
+  const key = `${f.type} | ${f.page}`;
+  byType[key] = (byType[key] || 0) + 1;
+});
+console.log('\n--- BY TYPE & PAGE ---');
+for (const [k, v] of Object.entries(byType)) {
+  console.log(`${k}: ${v}`);
+}
+
+console.log('\n--- ALL FINDINGS GROUPED BY TYPE ---');
+['OVERFLOW', 'SMALL-TARGET', 'OVERLAP', 'DISTORTED-MEDIA', 'SQUEEZED'].forEach(t => {
+  const items = findings.filter(f => f.type === t);
+  if (items.length === 0) return;
+  console.log(`\n================== ${t} (${items.length}) ==================`);
+  
+  // Group by page and selector
+  const groups = {};
+  items.forEach(i => {
+    const key = `[${i.page}] ${i.selector} -> ${i.message.split(' at ')[0].slice(0, 100)}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(i.viewport);
+  });
+  
+  for (const [desc, viewports] of Object.entries(groups)) {
+    console.log(`${desc} (viewports: ${viewports.join(', ')})`);
+  }
+});
