@@ -46,7 +46,7 @@ export const FormField = forwardRef(function FormField(
         </label>
       )}
 
-      <div className={styles.controlWrapper}>
+      <div className={`${styles.controlWrapper} ${error ? styles.controlWrapperError : ''}`}>
         {as === 'select' ? (
           <select {...controlProps}>
             {children}

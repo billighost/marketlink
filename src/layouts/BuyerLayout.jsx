@@ -21,7 +21,17 @@ export function BuyerLayout() {
   const scrollPositionsRef = useRef({});
   const prevPathRef = useRef(location.pathname);
 
-  const isSheetOpen = Boolean(location.state?.background);
+  const isSheetPath =
+    location.pathname.startsWith('/buyer/products/') ||
+    location.pathname.startsWith('/buyer/farmers/') ||
+    location.pathname.startsWith('/buyer/markets/') ||
+    location.pathname.startsWith('/buyer/orders/') ||
+    location.pathname.startsWith('/buyer/profile/') ||
+    location.pathname === '/buyer/cart' ||
+    location.pathname === '/buyer/order-confirmed' ||
+    location.pathname === '/buyer/assistant';
+
+  const isSheetOpen = Boolean(location.state?.background) || isSheetPath;
   const isCartRoute = location.pathname === '/buyer/cart';
   const isCartVisible = count > 0 && !isSheetOpen && !isCartRoute;
 
@@ -59,10 +69,10 @@ export function BuyerLayout() {
       </main>
 
       {/* Floating Cart Pill */}
-      <CartBar />
+      {!isSheetOpen && <CartBar />}
 
       {/* Mobile Bottom Navigation */}
-      <BottomNav />
+      {!isSheetOpen && <BottomNav />}
     </div>
   );
 }

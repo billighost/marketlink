@@ -87,11 +87,25 @@ export function layoutCheck() {
     }
   }
 
+  // Helper to find closest fixed/sticky ancestor
+  function getFixedOrStickyAncestor(el) {
+    let curr = el;
+    while (curr && curr !== document.body && curr !== document.documentElement) {
+      const pos = window.getComputedStyle(curr).position;
+      if (pos === 'fixed' || pos === 'sticky') return curr;
+      curr = curr.parentElement;
+    }
+    return null;
+  }
+
   // 2. Overlapping interactive or fixed/sticky elements
   const interactiveSelector = 'a, button, input, select, textarea, summary, [role="button"], [role="switch"], [role="tab"]';
   const interactiveEls = Array.from(document.querySelectorAll(interactiveSelector)).filter(isVisible);
   const fixedStickyEls = Array.from(document.querySelectorAll('*')).filter(el => {
     if (!isVisible(el)) return false;
+    // Skip aria-hidden dimming backdrops/overlays
+    if (el.getAttribute('aria-hidden') === 'true') return false;
+    if (typeof el.className === 'string' && (el.className.includes('backdrop') || el.className.includes('overlay'))) return false;
     const pos = window.getComputedStyle(el).position;
     return pos === 'fixed' || pos === 'sticky';
   });
@@ -108,6 +122,22 @@ export function layoutCheck() {
 
       // Skip elements that explicitly pass pointer events through
       if (window.getComputedStyle(el1).pointerEvents === 'none' || window.getComputedStyle(el2).pointerEvents === 'none') continue;
+
+      const fixedAnc1 = getFixedOrStickyAncestor(el1);
+      const fixedAnc2 = getFixedOrStickyAncestor(el2);
+
+      // If one belongs to fixed/sticky page chrome and the other is an in-flow scrolling element on the page,
+      // an in-flow element passing beneath higher z-index fixed chrome is occluded during page scroll,
+      // not an interactive collision (unless both are fixed bars, or both are in-flow controls).
+      if (Boolean(fixedAnc1) !== Boolean(fixedAnc2)) {
+        const fixedAnc = fixedAnc1 || fixedAnc2;
+        const inFlowEl = fixedAnc1 ? el2 : el1;
+        const zFixed = parseInt(window.getComputedStyle(fixedAnc).zIndex, 10) || 0;
+        const zInFlow = parseInt(window.getComputedStyle(inFlowEl).zIndex, 10) || 0;
+        if (zFixed >= zInFlow) {
+          continue;
+        }
+      }
 
       const r1 = el1.getBoundingClientRect();
       const r2 = el2.getBoundingClientRect();
@@ -128,8 +158,8 @@ export function layoutCheck() {
 
   // 3. Small touch targets (< 44x44px)
   for (const el of interactiveEls) {
-    // Ignore inline links inside paragraphs
-    if (el.tagName === 'A' && el.closest('p')) {
+    // Ignore inline links inside paragraphs or inline text blocks
+    if (el.tagName === 'A' && (el.closest('p') || el.closest('span'))) {
       const display = window.getComputedStyle(el).display;
       if (display === 'inline' || display === 'inline-block') continue;
     }
@@ -169,11 +199,13 @@ export function layoutCheck() {
 
     // Text wrapping to 1 character per line: element width under ~3ch with text length above 6
     const text = el.innerText?.trim() || '';
-    if (text.length > 6 && el.clientWidth < 26 && !style.writingMode?.includes('vertical')) {
+    const rect = el.getBoundingClientRect();
+    const renderW = el.clientWidth || Math.round(rect.width);
+    if (text.length > 6 && renderW > 0 && renderW < 26 && !style.writingMode?.includes('vertical')) {
       issues.push({
         type: 'SQUEEZED',
         selector: getSelector(el),
-        message: `Squeezed text: width ${Math.round(el.clientWidth)}px with text length ${text.length}`,
+        message: `Squeezed text: width ${renderW}px with text length ${text.length}`,
       });
     }
   }

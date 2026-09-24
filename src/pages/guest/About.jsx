@@ -53,6 +53,7 @@ export function About() {
                   src="/images/market-morning.jpg"
                   alt="Early morning at Elm Street Market Square with wooden crates of produce and fresh sourdough"
                   className={styles.storyImg}
+                  data-aspect="4/3"
                   loading="lazy"
                 />
                 <p className={styles.storyImageCaption}>

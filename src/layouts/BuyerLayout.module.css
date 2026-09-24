@@ -34,6 +34,10 @@
   background-color: var(--color-primary);
   color: var(--color-on-primary);
   padding: var(--space-2) var(--space-4);
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-md);
   z-index: var(--z-toast);
   font-weight: var(--weight-medium);

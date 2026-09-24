@@ -25,30 +25,43 @@
   display: flex;
   align-items: center;
   width: 100%;
-}
-
-.control {
-  width: 100%;
-  height: var(--control-h);
-  padding-inline: var(--space-3);
-  font-family: var(--font-body);
-  font-size: var(--text-input);
-  line-height: var(--lh-ui);
-  color: var(--color-ink);
+  min-height: calc(var(--tap-min) + 2px);
   background-color: var(--color-white);
   border: var(--border-input);
   border-radius: var(--radius-md);
   transition: border-color var(--duration-fast) var(--ease-standard);
+  padding-inline-start: var(--space-3);
+  padding-inline-end: var(--space-1);
 }
 
-.control:hover:not(:disabled) {
+.controlWrapper:hover:not(:has(:disabled)) {
   border-color: var(--color-border-input-hover);
 }
 
-.control:focus-visible {
+.controlWrapper:focus-within {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
   border-color: var(--color-focus);
+}
+
+.controlWrapperError {
+  border-color: var(--color-danger);
+}
+
+.control {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  min-height: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-input);
+  line-height: var(--lh-ui);
+  color: var(--color-ink);
+  background-color: transparent;
+  border: none;
+  outline: none;
 }
 
 .control:disabled {
@@ -69,10 +82,10 @@
 }
 
 .accessory {
-  position: absolute;
-  right: var(--space-2);
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .hint {

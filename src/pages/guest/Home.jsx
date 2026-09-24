@@ -153,63 +153,19 @@ export function Home() {
               </div>
             </div>
 
-            {/* 3. Beetroot bunch (With tag) */}
-            <div className={`${styles.produceItem} ${styles.itemBeets}`}>
-              <Illustration name="beet-bunch" size="md" />
-              <div className={styles.tag} style={{ '--tag-r': '4deg' }}>
-                <span className={styles.tagTwine} />
-                <span className={styles.tagHole} />
-                <span className={styles.tagName}>Beets</span>
-                <span className={styles.tagPrice}>$3.50 / bunch</span>
-              </div>
-            </div>
-
-            {/* 4. Leafy greens bunch (Accent without tag) */}
-            <div className={`${styles.produceItem} ${styles.itemGreens}`}>
-              <Illustration name="leafy-greens" size="md" />
-            </div>
-
-            {/* 5. Farm eggs carton (With tag) */}
-            <div className={`${styles.produceItem} ${styles.itemEggs}`}>
-              <Illustration name="egg-carton" size="md" />
-              <div className={styles.tag} style={{ '--tag-r': '-2deg' }}>
-                <span className={styles.tagTwine} />
-                <span className={styles.tagHole} />
-                <span className={styles.tagName}>Farm eggs</span>
-                <span className={styles.tagPrice}>$6.00 / dozen</span>
-              </div>
-            </div>
-
-            {/* 6. Sourdough boule (With tag) */}
+            {/* 3. Sourdough boule (No tag) */}
             <div className={`${styles.produceItem} ${styles.itemSourdough}`}>
               <Illustration name="sourdough-boule" size="lg" />
-              <div className={styles.tag} style={{ '--tag-r': '5deg' }}>
-                <span className={styles.tagTwine} />
-                <span className={styles.tagHole} />
-                <span className={styles.tagName}>Sourdough loaf</span>
-                <span className={styles.tagPrice}>$7.00 / loaf</span>
-              </div>
             </div>
 
-            {/* 7. Honey jar (With tag, desktop only) */}
-            <div className={`${styles.produceItem} ${styles.itemHoney} ${styles.desktopOnlyItem}`}>
-              <Illustration name="honey-jar" size="md" />
-              <div className={styles.tag} style={{ '--tag-r': '-5deg' }}>
-                <span className={styles.tagTwine} />
-                <span className={styles.tagHole} />
-                <span className={styles.tagName}>Wildflower honey</span>
-                <span className={styles.tagPrice}>$9.50 / jar</span>
-              </div>
+            {/* 4. Farm eggs carton (Tablet & Desktop only, no tag) */}
+            <div className={`${styles.produceItem} ${styles.itemEggs} ${styles.tabletDesktopItem}`}>
+              <Illustration name="egg-carton" size="md" />
             </div>
 
-            {/* 8. Radish bunch (Accent, desktop only) */}
-            <div className={`${styles.produceItem} ${styles.itemRadishes} ${styles.desktopOnlyItem}`}>
-              <Illustration name="radish-bunch" size="md" />
-            </div>
-
-            {/* 9. Brown paper bag of pears (Accent, desktop only) */}
-            <div className={`${styles.produceItem} ${styles.itemPaperBag} ${styles.desktopOnlyItem}`}>
-              <Illustration name="paper-bag-pears" size="md" />
+            {/* 5. Beetroot bunch (Desktop only, no tag) */}
+            <div className={`${styles.produceItem} ${styles.itemBeets} ${styles.desktopOnlyItem}`}>
+              <Illustration name="beet-bunch" size="md" />
             </div>
           </div>
         </div>
@@ -347,6 +303,7 @@ export function Home() {
                   src="/images/riverbend-farm.jpg"
                   alt="Riverbend Farm stall at Elm Street Market with wooden crates of fresh vegetables"
                   className={styles.featuredFarmerImg}
+                  data-aspect="16/10"
                   loading="lazy"
                 />
               </div>
@@ -410,23 +367,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* ---------------- SECTION 6: QUIET QUOTE (Paper price tag shape) ---------------- */}
-      <section className={styles.quoteSection}>
-        <div className="container">
-          <div className={styles.quoteTagCard}>
-            <span className={styles.quoteTagTwine} aria-hidden="true" />
-            <span className={styles.quoteTagHole} aria-hidden="true" />
-            <blockquote className={styles.quoteQuote}>
-              “I used to guess how much to bring and hope for the best. Now I know before I load the truck at 5am.”
-            </blockquote>
-            <figcaption className={styles.quoteAttribution}>
-              — Marta Davies, Riverbend Farm
-            </figcaption>
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------- SECTION 7: CLOSING CALL TO ACTION ("See you Saturday.") ---------------- */}
+      {/* ---------------- SECTION 6: CLOSING CALL TO ACTION ("See you Saturday.") ---------------- */}
       <section className={styles.closingSection}>
         <div className="container">
           <div className={styles.closingContent}>
@@ -445,12 +386,12 @@ export function Home() {
               >
                 Create your free account
               </Button>
-              <span className={styles.closingSignInText}>
+              <p className={styles.closingSignInText}>
                 Already have an account?{' '}
                 <Link to={PATHS.LOGIN} className={styles.closingSignInLink}>
                   Sign in
                 </Link>
-              </span>
+              </p>
             </div>
           </div>
         </div>

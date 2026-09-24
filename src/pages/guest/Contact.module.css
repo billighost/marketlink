@@ -353,6 +353,7 @@
   cursor: pointer;
   list-style: none;
   user-select: none;
+  min-height: var(--tap-min);
 }
 
 .faqSummary::-webkit-details-marker {

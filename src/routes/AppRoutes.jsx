@@ -109,18 +109,18 @@ export function AppRoutes() {
           <Route path="markets" element={<BuyerMarkets />} />
           <Route path="farmers" element={<BuyerFarmers />} />
 
-          {/* Full-page fallbacks if opened directly without a background location */}
-          <Route path="products/:id" element={<BuyerProductDetail inSheet={false} />} />
-          <Route path="farmers/:id" element={<BuyerFarmerDetail inSheet={false} />} />
-          <Route path="markets/:id" element={<BuyerMarketDetail inSheet={false} />} />
-          <Route path="cart" element={<BuyerCart inSheet={false} />} />
-          <Route path="order-confirmed" element={<BuyerOrderConfirmed inSheet={false} />} />
-          <Route path="orders/:id" element={<BuyerOrderDetail inSheet={false} />} />
-          <Route path="assistant" element={<BuyerAssistant inSheet={false} />} />
-          <Route path="profile/details" element={<BuyerProfileDetails inSheet={false} />} />
-          <Route path="profile/markets" element={<BuyerSavedMarkets inSheet={false} />} />
-          <Route path="profile/notifications" element={<BuyerProfileNotifications inSheet={false} />} />
-          <Route path="profile/help" element={<BuyerHelp inSheet={false} />} />
+          {/* Direct URLs and browser refreshes open in the SheetRoute frame */}
+          <Route path="products/:id" element={<SheetRoute size="tall"><BuyerProductDetail /></SheetRoute>} />
+          <Route path="farmers/:id" element={<SheetRoute size="tall"><BuyerFarmerDetail /></SheetRoute>} />
+          <Route path="markets/:id" element={<SheetRoute size="tall"><BuyerMarketDetail /></SheetRoute>} />
+          <Route path="cart" element={<SheetRoute size="tall"><BuyerCart /></SheetRoute>} />
+          <Route path="order-confirmed" element={<SheetRoute size="peek"><BuyerOrderConfirmed /></SheetRoute>} />
+          <Route path="orders/:id" element={<SheetRoute size="tall"><BuyerOrderDetail /></SheetRoute>} />
+          <Route path="assistant" element={<SheetRoute size="full"><BuyerAssistant /></SheetRoute>} />
+          <Route path="profile/details" element={<SheetRoute size="tall"><BuyerProfileDetails /></SheetRoute>} />
+          <Route path="profile/markets" element={<SheetRoute size="tall"><BuyerSavedMarkets /></SheetRoute>} />
+          <Route path="profile/notifications" element={<SheetRoute size="tall"><BuyerProfileNotifications /></SheetRoute>} />
+          <Route path="profile/help" element={<SheetRoute size="tall"><BuyerHelp /></SheetRoute>} />
         </Route>
 
         {/* ── Guest (Unauthenticated) Routes ─────────────────────── */}
