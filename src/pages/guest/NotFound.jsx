@@ -8,21 +8,21 @@ import Illustration from '@/components/domain/Illustration';
 import styles from './NotFound.module.css';
 
 /**
- * Friendly 404 Not Found page
+ * Friendly market-style 404 page
  */
 export function NotFound() {
-  useDocumentTitle('Page Not Found · MarketLink');
+  useDocumentTitle('Stall Not Found · MarketLink');
 
   return (
     <div className={styles.page}>
       <div className={styles.container}>
         <Card className={styles.card}>
-          <div className={styles.iconCircle} aria-hidden="true">
-            <Illustration name="crate" size="lg" />
+          <div className={styles.illustrationMoment} aria-hidden="true">
+            <Illustration name="empty-crate-soldout" size="xl" />
           </div>
-          <h1 className={styles.title}>We couldn't find that page</h1>
+          <h1 className={styles.title}>This stall isn't here today.</h1>
           <p className={styles.text}>
-            It may have moved, or the link may be wrong.
+            The page you're looking for has moved, packed up early, or never existed on Elm Street.
           </p>
           <div className={styles.action}>
             <Button
@@ -31,7 +31,7 @@ export function NotFound() {
               variant="primary"
               size="md"
             >
-              Go to home
+              Back to Elm Street
             </Button>
           </div>
         </Card>

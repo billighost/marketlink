@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import PageHeader from '@/components/layout/PageHeader';
 import FormField from '@/components/ui/FormField';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import Illustration from '@/components/domain/Illustration';
 import styles from './ForgotPassword.module.css';
 
 /**
@@ -42,7 +42,7 @@ export function ForgotPassword() {
       <div className={styles.container}>
         <PageHeader
           title="Reset your password"
-          subtitle={!sent ? "Enter your email and we'll send you a reset link." : undefined}
+          subtitle={!sent ? "Enter your email address and we'll send a note to restore your account." : undefined}
           backTo={PATHS.LOGIN}
           backLabel="Sign in"
           className={styles.header}
@@ -52,12 +52,12 @@ export function ForgotPassword() {
           {sent ? (
             /* Sent confirmation state */
             <div className={styles.sentState}>
-              <div className={styles.iconCircle} aria-hidden="true">
-                <Mail size={32} strokeWidth={1.5} className={styles.mailIcon} />
+              <div className={styles.illustrationMoment} aria-hidden="true">
+                <Illustration name="paper-bag-pears" size="lg" />
               </div>
               <h2 className={styles.sentTitle}>Check your inbox</h2>
               <p className={styles.sentText}>
-                If that email is registered, a link is on its way.
+                If that email is registered on Elm Street, a note is on its way with instructions to set a new password.
               </p>
               <Link to={PATHS.LOGIN} className={styles.backLink}>
                 Back to sign in

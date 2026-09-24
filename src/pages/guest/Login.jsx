@@ -86,16 +86,16 @@ export function Login() {
       <div className={styles.container}>
         <PageHeader
           title="Welcome back"
-          subtitle="Sign in to see this week's market."
+          subtitle="Sign in to check Saturday pre-orders and stalls."
           backTo={PATHS.HOME}
           backLabel="Home"
           className={styles.header}
         />
 
         <Card className={styles.card}>
-          {/* Header Illustration */}
-          <div className={styles.iconCircle} aria-hidden="true">
-            <Illustration name="leaves" size="md" />
+          {/* Header Illustration: Market basket at stall door */}
+          <div className={styles.illustrationHeader} aria-hidden="true">
+            <Illustration name="basket-door" size="lg" />
           </div>
 
           {/* Error alert banner */}

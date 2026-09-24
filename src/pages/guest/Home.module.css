@@ -704,7 +704,7 @@
 .featuredFarmerImageCol {
   flex: 1;
   position: relative;
-  min-height: 240px;
+  min-height: calc(var(--space-20) * 3);
   background-color: var(--color-canvas);
 }
 

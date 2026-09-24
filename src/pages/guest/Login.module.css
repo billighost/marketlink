@@ -29,16 +29,9 @@
   }
 }
 
-.iconCircle {
-  width: var(--space-16);
-  height: var(--space-16);
-  border-radius: var(--radius-full);
-  background-color: var(--color-canvas);
-  border: var(--border);
+.illustrationHeader {
   display: flex;
-  align-items: center;
   justify-content: center;
-  margin-inline: auto;
   margin-bottom: var(--space-6);
 }
 

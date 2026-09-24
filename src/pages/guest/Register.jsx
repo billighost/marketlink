@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ShoppingBasket, Store } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import PageHeader from '@/components/layout/PageHeader';
 import FormField from '@/components/ui/FormField';
 import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
 import Illustration from '@/components/domain/Illustration';
 import styles from './Register.module.css';
 
@@ -169,13 +167,11 @@ export function Register() {
                     className={styles.roleRadio}
                   />
                   <div className={styles.roleCardContent}>
-                    <div className={styles.roleIconCircle} aria-hidden="true">
-                      <ShoppingBasket size={24} strokeWidth={1.5} />
-                    </div>
+                    <Illustration name="basket" size="md" className={styles.roleIllustration} />
                     <div className={styles.roleText}>
                       <span className={styles.roleTitle}>Customer</span>
                       <span className={styles.roleDesc}>
-                        I want to pre-order fresh goods from local Farmers
+                        I want to browse Elm Street Market stalls, reserve Saturday harvest ahead of time, and pay the farmers directly at pickup.
                       </span>
                     </div>
                   </div>
@@ -193,13 +189,11 @@ export function Register() {
                     className={styles.roleRadio}
                   />
                   <div className={styles.roleCardContent}>
-                    <div className={styles.roleIconCircle} aria-hidden="true">
-                      <Store size={24} strokeWidth={1.5} />
-                    </div>
+                    <Illustration name="stall" size="md" className={styles.roleIllustration} />
                     <div className={styles.roleText}>
                       <span className={styles.roleTitle}>Farmer</span>
                       <span className={styles.roleDesc}>
-                        I sell produce and goods at a farmers market
+                        I sell produce, sourdough, honey, or artisanal goods at Elm Street Market and want to list weekly harvest.
                       </span>
                     </div>
                   </div>
@@ -436,12 +430,12 @@ export function Register() {
           <div className={styles.successState}>
             {role === 'customer' ? (
               <>
-                <div className={styles.successIconCircle} aria-hidden="true">
-                  <Illustration name="basket" size="lg" />
+                <div className={styles.successIllustration} aria-hidden="true">
+                  <Illustration name="basket-tomatoes" size="lg" />
                 </div>
-                <h2 className={styles.successTitle}>Welcome to MarketLink</h2>
+                <h2 className={styles.successTitle}>You're registered for Elm Street Market</h2>
                 <p className={styles.successText}>
-                  Your account is ready. Sign in to start browsing your local market.
+                  Your Customer account is ready. Sign in to browse Saturday's board and pre-order your fresh harvest.
                 </p>
                 <Button
                   as={Link}
@@ -454,15 +448,15 @@ export function Register() {
               </>
             ) : (
               <>
-                <div className={styles.successIconCircle} aria-hidden="true">
+                <div className={styles.successIllustration} aria-hidden="true">
                   <Illustration name="stall" size="lg" />
                 </div>
                 <div className={styles.badgeWrapper}>
-                  <Badge tone="warning">Waiting for approval</Badge>
+                  <span className={styles.approvalBadge}>Waiting for stall approval</span>
                 </div>
-                <h2 className={styles.successTitle}>Thanks for joining</h2>
+                <h2 className={styles.successTitle}>Stall registered for review</h2>
                 <p className={styles.successText}>
-                  Your stall is waiting for approval. We'll email you as soon as your account is ready.
+                  The Elm Street Market coordinators will review your stall profile and confirm your account before Friday's cut-off.
                 </p>
                 <Button
                   as={Link}
@@ -470,7 +464,7 @@ export function Register() {
                   variant="primary"
                   size="md"
                 >
-                  Back to home
+                  Back to Elm Street
                 </Button>
               </>
             )}

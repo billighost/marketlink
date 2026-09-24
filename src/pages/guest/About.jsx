@@ -4,7 +4,6 @@ import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import PageHeader from '@/components/layout/PageHeader';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import WaveDivider from '@/components/layout/WaveDivider';
 import Illustration from '@/components/domain/Illustration';
 import { TEAM_MEMBERS } from '@/data/placeholders';
@@ -21,7 +20,7 @@ export function About() {
       <div className="container">
         <PageHeader
           title="About MarketLink"
-          subtitle="A simple way to shop the farmers market."
+          subtitle="A quiet, sensible way to shop your local Saturday market."
           backTo={PATHS.HOME}
           backLabel="Home"
         />
@@ -32,61 +31,75 @@ export function About() {
             <div className={styles.storyText}>
               <h2 className={styles.storyHeading}>Why we started</h2>
               <p className={styles.paragraph}>
-                Early mornings, muddy boots, and the aroma of fresh sourdough. Farmers
-                markets are the beating heart of local food, but shopping them can sometimes
-                be a guessing game. You arrive at nine in the morning hoping for heirloom
-                tomatoes, only to find the wooden crates already empty.
+                You drive twenty minutes on a Saturday morning, search for parking around the square,
+                and walk up to the market stalls hoping for fresh Brandywines or sourdough, only to
+                find the wooden crates already picked clean.
               </p>
               <p className={styles.paragraph}>
-                Meanwhile, small growers and independent family bakers spend all week
-                tending fields and warming ovens. They load up the truck on Saturday dawn,
-                guessing how much to bring without knowing what will sell or spoil.
+                Meanwhile, small growers and independent family bakers load their trucks at 5am
+                in the dark, guessing how much to harvest without knowing what will sell or spoil
+                in the afternoon heat.
               </p>
               <p className={styles.paragraph}>
-                MarketLink was built to bridge that gap with honesty and calm. A quiet,
-                respectful way to pre-order what you need before market day, so farmers know
-                exactly what to harvest and you never miss your favourite sourdough.
+                MarketLink was built to make Saturday mornings calm and certain. You pre-order
+                during the week from the farmers you know, they harvest specifically for your order,
+                and your brown paper bag is waiting safely under the awning when you arrive.
+                No delivery vans, no markups. You pay the farmer directly in person when you collect.
               </p>
             </div>
-            <div className={styles.storyVisual} aria-hidden="true">
-              <div className={styles.illustrationFrame}>
-                <Illustration name="crate" size="lg" className={styles.storyIllustration} />
+            <div className={styles.storyVisual}>
+              <div className={styles.storyImageFrame}>
+                <img
+                  src="/images/market-morning.jpg"
+                  alt="Early morning at Elm Street Market Square with wooden crates of produce and fresh sourdough"
+                  className={styles.storyImg}
+                  loading="lazy"
+                />
+                <p className={styles.storyImageCaption}>
+                  Early Saturday morning at Elm Street Market Square
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ---------------- SECTION 2: WHAT WE BELIEVE ---------------- */}
-        <section className={styles.valuesSection}>
+        {/* ---------------- SECTION 2: WHAT WE BELIEVE (NUMBERED LIST) ---------------- */}
+        <section className={styles.beliefsSection}>
           <h2 className={styles.sectionHeading}>What we believe</h2>
-          <div className="grid3">
-            <Card className={styles.valueCard}>
-              <Illustration name="leaves" size="md" className={styles.valueIcon} />
-              <h3 className={styles.valueTitle}>Local first</h3>
-              <p className={styles.valueText}>
-                Food should travel miles, not continents, directly sustaining the growers
-                and bakers within our own neighbourhood.
-              </p>
-            </Card>
+          <ul className={styles.beliefsList} role="list">
+            <li className={styles.beliefItem}>
+              <span className={styles.beliefNumeral}>01</span>
+              <div className={styles.beliefBody}>
+                <h3 className={styles.beliefTitle}>Local first</h3>
+                <p className={styles.beliefText}>
+                  Food should travel miles, not continents. Every dollar spent on Elm Street
+                  stays directly with the growers, beekeepers, and bakers who live in our community.
+                </p>
+              </div>
+            </li>
 
-            <Card className={styles.valueCard}>
-              <Illustration name="stall" size="md" className={styles.valueIcon} />
-              <h3 className={styles.valueTitle}>Fair for Farmers</h3>
-              <p className={styles.valueText}>
-                No commission cuts, no corporate middlemen, and no complicated inventory
-                systems that get in the way of honest work.
-              </p>
-            </Card>
+            <li className={styles.beliefItem}>
+              <span className={styles.beliefNumeral}>02</span>
+              <div className={styles.beliefBody}>
+                <h3 className={styles.beliefTitle}>Fair for Farmers</h3>
+                <p className={styles.beliefText}>
+                  Zero commission cuts, zero middle-tier warehouses, and zero hidden platform fees.
+                  Farmers set their own prices, pack their own boxes, and keep 100% of their takings.
+                </p>
+              </div>
+            </li>
 
-            <Card className={styles.valueCard}>
-              <Illustration name="basket" size="md" className={styles.valueIcon} />
-              <h3 className={styles.valueTitle}>Simple for everyone</h3>
-              <p className={styles.valueText}>
-                Built for real hands. Accessible on any screen, straightforward for all
-                ages, with zero tech headaches or confusing jargon.
-              </p>
-            </Card>
-          </div>
+            <li className={styles.beliefItem}>
+              <span className={styles.beliefNumeral}>03</span>
+              <div className={styles.beliefBody}>
+                <h3 className={styles.beliefTitle}>Honest simplicity</h3>
+                <p className={styles.beliefText}>
+                  Built for real hands and busy market mornings. No apps to install, no algorithmic
+                  feeds, and no complicated screens. Just a quiet weekly notice board.
+                </p>
+              </div>
+            </li>
+          </ul>
         </section>
       </div>
 
@@ -97,7 +110,7 @@ export function About() {
           <div className={styles.timelineHeader}>
             <h2 className={styles.sectionHeading}>How MarketLink works</h2>
             <p className={styles.sectionSubtitle}>
-              Four straightforward steps from harvest to market basket.
+              Four straightforward steps from Friday harvest to Saturday market bag.
             </p>
           </div>
 
@@ -110,8 +123,7 @@ export function About() {
               <div className={styles.timelineBody}>
                 <h3 className={styles.timelineStepTitle}>Farmers publish stock</h3>
                 <p className={styles.timelineStepText}>
-                  Growers and bakers list what will be fresh at this week’s Saturday market
-                  before Friday evening.
+                  Growers and bakers list what will be ripe at Saturday’s market before Friday evening.
                 </p>
               </div>
             </div>
@@ -124,8 +136,7 @@ export function About() {
               <div className={styles.timelineBody}>
                 <h3 className={styles.timelineStepTitle}>Customers pre-order</h3>
                 <p className={styles.timelineStepText}>
-                  Neighbours browse their favourite stalls and reserve items ahead of time
-                  so their picks are guaranteed.
+                  Neighbours browse their favourite stalls and reserve items ahead of time so their picks are held.
                 </p>
               </div>
             </div>
@@ -136,10 +147,9 @@ export function About() {
                 3
               </div>
               <div className={styles.timelineBody}>
-                <h3 className={styles.timelineStepTitle}>Farmers get the order ready</h3>
+                <h3 className={styles.timelineStepTitle}>Farmers harvest to order</h3>
                 <p className={styles.timelineStepText}>
-                  Stalls pack your harvest early on market morning, labeled and waiting
-                  safely behind the counter.
+                  Stalls pack your harvest early Saturday morning, labeled and waiting safely behind the counter.
                 </p>
               </div>
             </div>
@@ -152,16 +162,15 @@ export function About() {
               <div className={styles.timelineBody}>
                 <h3 className={styles.timelineStepTitle}>Pick up and pay</h3>
                 <p className={styles.timelineStepText}>
-                  Collect your order at the market stall and pay the Farmer in person.
+                  Collect your brown paper bag at the stall and pay the Farmer in person.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Calming note card */}
           <div className={styles.timelineNote}>
             <p className={styles.timelineNoteText}>
-              Pickup only. No delivery. Payment happens in person.
+              Pickup only. No delivery fees. Payment happens directly at the stall.
             </p>
           </div>
         </div>
@@ -174,34 +183,38 @@ export function About() {
           <div className={styles.teamHeader}>
             <h2 className={styles.sectionHeading}>The team</h2>
             <p className={styles.sectionSubtitle}>
-              Market organizers, designers, and community supporters.
+              Market organizers, growers, and community volunteers on Elm Street.
             </p>
           </div>
 
           {/* TODO: replace with real team details */}
-          <div className="gridAuto">
-            {TEAM_MEMBERS.map((member) => (
-              <Card key={member.id} className={styles.teamCard}>
-                <div className={styles.initialsAvatar} aria-hidden="true">
-                  {member.initials}
+          <div className={styles.teamGrid}>
+            {TEAM_MEMBERS.map((member, index) => {
+              const iconNames = ['crate', 'loaf', 'honey', 'basket'];
+              const iconName = iconNames[index % iconNames.length];
+              return (
+                <div key={member.id} className={styles.teamMemberRow}>
+                  <Illustration name={iconName} size="sm" className={styles.teamAccentIcon} />
+                  <div className={styles.teamMemberInfo}>
+                    <h3 className={styles.memberName}>{member.name}</h3>
+                    <span className={styles.memberRole}>{member.role}</span>
+                    <p className={styles.memberBio}>{member.bio}</p>
+                  </div>
                 </div>
-                <h3 className={styles.memberName}>{member.name}</h3>
-                <p className={styles.memberRole}>{member.role}</p>
-                <p className={styles.memberBio}>{member.bio}</p>
-              </Card>
-            ))}
+              );
+            })}
           </div>
         </section>
 
         {/* ---------------- SECTION 5: CLOSING CTA ---------------- */}
         <section className={styles.aboutCta}>
-          <h2 className={styles.ctaHeading}>Ready to see what is fresh?</h2>
+          <h2 className={styles.ctaHeading}>Join us this Saturday</h2>
           <p className={styles.ctaSubtitle}>
-            Join your neighbours and start supporting local growers this Saturday.
+            Sign up in two minutes. Your first pre-order can be ready for collection this weekend.
           </p>
           <Button
             as={Link}
-            to={PATHS.REGISTER}
+            to={`${PATHS.REGISTER}?role=customer`}
             variant="primary"
             size="md"
           >
