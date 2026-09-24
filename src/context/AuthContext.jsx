@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState } from 'react';
 
 /**
- * Authentication & role context stub
+ * Authentication & role context
  * Roles: 'guest' | 'buyer' | 'vendor' | 'admin'
+ * login() accepts a full user object with name, firstName, email, phone, address, homeMarketId.
+ * TEMP: replace with real auth when backend is ready.
  */
 const AuthContext = createContext(null);
 
@@ -10,13 +12,22 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState('guest');
   const [user, setUser] = useState(null);
 
-  const login = (newRole) => {
-    setRole(newRole);
-    setUser({
-      id: 'demo-user',
-      name: newRole === 'buyer' ? 'Customer Demo' : newRole === 'vendor' ? 'Farmer Demo' : 'Admin Demo',
-      role: newRole,
-    });
+  const login = (userData) => {
+    // Accept a full user object (from demoUsers) or a role string for backward compat
+    if (typeof userData === 'string') {
+      // Legacy: called with just a role string (vendor layout uses this)
+      setRole(userData);
+      setUser({
+        id: 'demo-user',
+        name: userData === 'buyer' ? 'Customer Demo' : userData === 'vendor' ? 'Farmer Demo' : 'Admin Demo',
+        firstName: userData === 'buyer' ? 'Customer' : userData === 'vendor' ? 'Farmer' : 'Admin',
+        role: userData,
+      });
+    } else {
+      // New: called with a user object
+      setRole(userData.role);
+      setUser(userData);
+    }
   };
 
   const logout = () => {

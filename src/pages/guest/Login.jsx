@@ -4,6 +4,7 @@ import { AlertCircle } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import { useAuth } from '@/context/AuthContext';
+import { demoUsers } from '@/data/placeholders';
 import PageHeader from '@/components/layout/PageHeader';
 import FormField from '@/components/ui/FormField';
 import Button from '@/components/ui/Button';
@@ -12,8 +13,8 @@ import Illustration from '@/components/domain/Illustration';
 import styles from './Login.module.css';
 
 /**
- * Login page with real client-side validation, password visibility toggle,
- * and temporary persona switcher for team review.
+ * Login page with real client-side validation against demo users,
+ * password visibility toggle, and temporary persona switcher for team review.
  */
 export function Login() {
   useDocumentTitle('Sign In · MarketLink');
@@ -57,6 +58,14 @@ export function Login() {
     return newErrors;
   };
 
+  /** Redirect to the correct dashboard based on user role */
+  const redirectByRole = (role) => {
+    if (role === 'buyer') navigate(PATHS.BUYER);
+    else if (role === 'vendor') navigate(PATHS.VENDOR);
+    else if (role === 'admin') navigate(PATHS.ADMIN);
+    else navigate(PATHS.BUYER);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const validationErrors = validate();
@@ -70,15 +79,25 @@ export function Login() {
       return;
     }
 
-    // For demonstration, default to buyer role on valid form submission
-    login('buyer');
-    navigate(PATHS.BUYER);
+    // Check against demo users
+    const allUsers = Object.values(demoUsers);
+    const matchedUser = allUsers.find(
+      (u) => u.email === formData.email.trim().toLowerCase() && u.password === formData.password
+    );
+
+    if (matchedUser) {
+      login(matchedUser);
+      redirectByRole(matchedUser.role);
+    } else {
+      setLoginError(true);
+      emailRef.current?.focus();
+    }
   };
 
   // TEMP: replace when backend is ready
-  const handleRolePreview = (role, path) => {
-    login(role);
-    navigate(path);
+  const handleRolePreview = (demoUser) => {
+    login(demoUser);
+    redirectByRole(demoUser.role);
   };
 
   return (
@@ -156,6 +175,11 @@ export function Login() {
               </Button>
             </div>
 
+            {/* TEMP: replace when backend is ready */}
+            <p className={styles.helperText}>
+              Try george@example.com and market123.
+            </p>
+
             <p className={styles.registerPrompt}>
               New to MarketLink?{' '}
               <Link to={PATHS.REGISTER} className={styles.registerLink}>
@@ -178,7 +202,7 @@ export function Login() {
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => handleRolePreview('buyer', PATHS.BUYER)}
+                onClick={() => handleRolePreview(demoUsers.customer)}
                 className={styles.tempBtn}
               >
                 Continue as Customer
@@ -187,7 +211,7 @@ export function Login() {
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => handleRolePreview('vendor', PATHS.VENDOR)}
+                onClick={() => handleRolePreview(demoUsers.farmer)}
                 className={styles.tempBtn}
               >
                 Continue as Farmer
@@ -196,7 +220,7 @@ export function Login() {
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => handleRolePreview('admin', PATHS.ADMIN)}
+                onClick={() => handleRolePreview(demoUsers.admin)}
                 className={styles.tempBtn}
               >
                 Continue as Admin

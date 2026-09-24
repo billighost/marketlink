@@ -1,0 +1,28 @@
+import React from 'react';
+import styles from './Tabs.module.css';
+
+/**
+ * Tab switcher with beet underline indicator.
+ * Uses button semantics with aria-selected.
+ */
+export function Tabs({ tabs, active, onChange, className = '' }) {
+  return (
+    <div className={`${styles.tabs} ${className}`} role="tablist">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          aria-selected={active === tab.id}
+          className={`${styles.tab} ${active === tab.id ? styles.active : ''}`}
+          onClick={() => onChange(tab.id)}
+        >
+          {tab.label}
+          {tab.count !== undefined && <span className={styles.count}>{tab.count}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default Tabs;

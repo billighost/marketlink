@@ -1,0 +1,214 @@
+/* BottomSheet — modal overlay */
+
+/* Backdrop */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-overlay);
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn var(--duration-base) var(--ease-standard);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Sheet panel — mobile: bottom sheet */
+.sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: var(--color-white);
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+  box-shadow: var(--shadow-modal);
+  z-index: var(--z-modal);
+  animation: slideUp 240ms var(--ease-standard);
+  max-height: var(--sheet-max-height);
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Size variants */
+.peek {
+  max-height: var(--sheet-max-height);
+}
+
+.tall {
+  height: 92dvh;
+  max-height: 92dvh;
+}
+
+.full {
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 0;
+}
+
+/* Grabber handle */
+.handleArea {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2) 0;
+  cursor: grab;
+  flex-shrink: 0;
+  touch-action: none;
+}
+
+.handle {
+  width: var(--space-10);
+  height: var(--space-1);
+  border-radius: var(--radius-full);
+  background-color: var(--color-wood-line);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  flex-shrink: 0;
+  touch-action: none;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  color: var(--color-ink);
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.backButton:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.headerSpacer {
+  width: var(--tap-min);
+  flex-shrink: 0;
+}
+
+.title {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-head);
+  font-size: var(--text-h4);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  line-height: var(--lh-h4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  color: var(--color-ink);
+}
+
+.closeButton:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Scrollable body */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sticky footer */
+.footer {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--border);
+  background-color: var(--color-white);
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+}
+
+/* ─── Desktop: 768px+ ─── */
+@media (min-width: 768px) {
+  .overlay {
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  /* Peek → centred dialog */
+  .peek {
+    max-width: var(--container-form);
+    margin: auto;
+    border-radius: var(--radius-xl);
+    animation: fadeScaleIn 240ms var(--ease-standard);
+  }
+
+  /* Tall & full → right-side drawer */
+  .tall,
+  .full {
+    width: 480px;
+    max-width: 480px;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    animation: slideInRight 240ms var(--ease-standard);
+  }
+
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  @keyframes fadeScaleIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Hide mobile grabber on desktop */
+  .handleArea {
+    display: none;
+  }
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    animation: none;
+  }
+
+  .overlay {
+    animation: none;
+  }
+
+  .peek,
+  .tall,
+  .full {
+    animation: none;
+  }
+}

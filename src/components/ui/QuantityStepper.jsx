@@ -1,0 +1,53 @@
+import React from 'react';
+import { Minus, Plus } from 'lucide-react';
+import styles from './QuantityStepper.module.css';
+
+/**
+ * Quantity stepper with − and + buttons.
+ * 44px touch targets, accessible labels.
+ */
+export function QuantityStepper({
+  value,
+  onChange,
+  min = 0,
+  max = 99,
+  productName = 'item',
+  compact = false,
+  className = '',
+}) {
+  const handleDecrement = () => {
+    if (value > min) onChange(value - 1);
+  };
+
+  const handleIncrement = () => {
+    if (value < max) onChange(value + 1);
+  };
+
+  return (
+    <div className={`${styles.stepper} ${compact ? styles.compact : ''} ${className}`} role="group" aria-label={`Quantity for ${productName}`}>
+      <button
+        type="button"
+        className={styles.button}
+        onClick={handleDecrement}
+        disabled={value <= min}
+        aria-label={`Decrease quantity of ${productName}`}
+      >
+        <Minus size={16} strokeWidth={1.5} aria-hidden="true" />
+      </button>
+      <span className={styles.value} aria-live="polite" aria-atomic="true">
+        {value}
+      </span>
+      <button
+        type="button"
+        className={styles.button}
+        onClick={handleIncrement}
+        disabled={value >= max}
+        aria-label={`Increase quantity of ${productName}`}
+      >
+        <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+export default QuantityStepper;

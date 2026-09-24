@@ -110,6 +110,15 @@
   width: 100%;
 }
 
+/* TEMP: replace when backend is ready */
+.helperText {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+  margin-top: var(--space-1);
+}
+
 .registerPrompt {
   text-align: center;
   font-family: var(--font-body);

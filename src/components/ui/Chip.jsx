@@ -1,0 +1,28 @@
+import React from 'react';
+import styles from './Chip.module.css';
+
+/**
+ * Filter pill chip, 44px tall, with selected state.
+ * Used on Home category row, Browse filters, Markets day filter.
+ */
+export function Chip({
+  children,
+  selected = false,
+  onClick,
+  className = '',
+  ...rest
+}) {
+  return (
+    <button
+      type="button"
+      className={`${styles.chip} ${selected ? styles.selected : ''} ${className}`}
+      aria-pressed={selected}
+      onClick={onClick}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+export default Chip;

@@ -155,4 +155,12 @@
   /* ---------- Typography: link decoration (appended for strict token compliance) ---------- */
   --underline-offset:       3px;
   --underline-offset-tight: 2px;
+
+  /* ---------- App shell (Customer mobile-first) ---------- */
+  --bottom-nav-height: 4rem;      /* mobile bottom navigation */
+  --sheet-max-height:  85dvh;     /* bottom sheet maximum height */
+  --card-w-product:    9.5rem;    /* horizontal row product card */
+  --card-w-feature:    16rem;     /* featured editorial card */
+  --card-w-farmer:     10.5rem;   /* farmer card in rows */
+  --duration-add:      450ms;     /* add-to-cart fly animation */
 }
