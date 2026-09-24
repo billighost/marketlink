@@ -1,81 +1,75 @@
 import React from 'react';
-import { Search, Filter, MoreVertical } from 'lucide-react';
 import styles from './IncomingOrdersTab.module.css';
 
 const IncomingOrdersTab = () => {
   return (
     <div className={styles.contentArea}>
       <div className={styles.cardPanel}>
-        <div className={styles.actionHeader}>
-          <h2 className={styles.cardTitle} style={{ fontSize: '1.5rem' }}>Order History</h2>
-          <div className={styles.searchLayout}>
-            <div className={styles.searchBox}>
-              <Search size={18} className={styles.searchIcon} />
-              <input type="text" placeholder="Search order ID, customer..." className={styles.searchInput} />
-            </div>
-            <button className={styles.btnFilter}>
-              <Filter size={18} /> Filters
-            </button>
-          </div>
+        <div className={styles.cardHeader}>
+          <h3 className={styles.cardTitle} style={{ fontSize: '1.5rem' }}>Incoming Pre-Orders</h3>
         </div>
-        
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>ORDER ID</th>
-              <th>DATE</th>
-              <th>CUSTOMER NAME</th>
-              <th>ITEMS ORDERED</th>
-              <th>TOTAL AMOUNT</th>
+              <th>CUSTOMER & SLOT</th>
+              <th>HARVEST ITEMS</th>
+              <th>TOTAL</th>
               <th>STATUS</th>
-              <th>ACTIONS</th>
+              <th>ACTION</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className={styles.tdPrimary}>ORD-1042</td>
-              <td>Oct 24, 2026</td>
-              <td className={styles.tdPrimary}>Adeola Johnson</td>
-              <td>Assorted Veggie Basket</td>
-              <td className={styles.tdPrimary}>₦12,500</td>
-              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
+              <td>
+                <span className={styles.tdPrimary}>Marta Lin</span>
+                <span className={styles.tdSecondary}>8:30 AM - 9:00 AM</span>
+              </td>
+              <td>
+                <span className={styles.tdPrimary}>Fresh Ugu Leaves (3 Bunches)</span>
+                <span className={styles.tdSecondary}>Order #ML-8821</span>
+              </td>
+              <td><span className={styles.tdPrimary}>₦1,500</span></td>
+              <td><span className={`${styles.badge} ${styles.badgePending}`}>Pending</span></td>
+              <td><button className={styles.btnPrimary}>Accept</button></td>
             </tr>
             <tr>
-              <td className={styles.tdPrimary}>ORD-1041</td>
-              <td>Oct 24, 2026</td>
-              <td className={styles.tdPrimary}>Chuks Emmanuel</td>
-              <td>Unripe Plantains (1 Dozen)</td>
-              <td className={styles.tdPrimary}>₦3,800</td>
-              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
+              <td>
+                <span className={styles.tdPrimary}>David Chen</span>
+                <span className={styles.tdSecondary}>9:00 AM - 9:30 AM</span>
+              </td>
+              <td>
+                <span className={styles.tdPrimary}>Cherokee Purple Tomatoes (2kg)</span>
+                <span className={styles.tdSecondary}>Order #ML-8820</span>
+              </td>
+              <td><span className={styles.tdPrimary}>₦4,200</span></td>
+              <td><span className={`${styles.badge} ${styles.badgeAccepted}`}>Accepted</span></td>
+              <td><button className={styles.btnOutline}>Mark Ready</button></td>
             </tr>
             <tr>
-              <td className={styles.tdPrimary}>ORD-1040</td>
-              <td>Oct 23, 2026</td>
-              <td className={styles.tdPrimary}>Fatima Bello</td>
-              <td>Organic Carrots (5kg)</td>
-              <td className={styles.tdPrimary}>₦5,200</td>
-              <td><span className={`${styles.badge} ${styles.badgeCancelled}`}>Cancelled</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
+              <td>
+                <span className={styles.tdPrimary}>Sarah Jenkins</span>
+                <span className={styles.tdSecondary}>10:15 AM - 10:45 AM</span>
+              </td>
+              <td>
+                <span className={styles.tdPrimary}>White Yams (5 Tubers)</span>
+                <span className={styles.tdSecondary}>Order #ML-8819</span>
+              </td>
+              <td><span className={styles.tdPrimary}>₦12,500</span></td>
+              <td><span className={`${styles.badge} ${styles.badgePending}`}>Pending</span></td>
+              <td><button className={styles.btnPrimary}>Accept</button></td>
             </tr>
             <tr>
-              <td className={styles.tdPrimary}>ORD-1039</td>
-              <td>Oct 23, 2026</td>
-              <td className={styles.tdPrimary}>Green Grocers Ltd</td>
-              <td>Wholesale Yams (50 Tubers)</td>
-              <td className={styles.tdPrimary}>₦110,000</td>
-              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
-            </tr>
-            <tr>
-              <td className={styles.tdPrimary}>ORD-1038</td>
-              <td>Oct 22, 2026</td>
-              <td className={styles.tdPrimary}>Tobi Bakre</td>
-              <td>Fresh Spinach (10 Bunches)</td>
-              <td className={styles.tdPrimary}>₦4,500</td>
-              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
+              <td>
+                <span className={styles.tdPrimary}>James Robertson</span>
+                <span className={styles.tdSecondary}>11:30 AM - 12:00 PM</span>
+              </td>
+              <td>
+                <span className={styles.tdPrimary}>Lacinato Kale (4 Bunches)</span>
+                <span className={styles.tdSecondary}>Order #ML-8818</span>
+              </td>
+              <td><span className={styles.tdPrimary}>₦3,000</span></td>
+              <td><span className={`${styles.badge} ${styles.badgePending}`}>Pending</span></td>
+              <td><button className={styles.btnPrimary}>Accept</button></td>
             </tr>
           </tbody>
         </table>
