@@ -1,0 +1,26 @@
+{
+  "name": "marketlink-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/db/seed.js",
+    "indexes": "node -e \"import('./src/config/env.js').then(() => import('./src/db/client.js')).then(({ connectDb, getDb, closeDb }) => connectDb().then(() => import('./src/db/indexes.js')).then(({ ensureIndexes }) => ensureIndexes(getDb())).then(() => { console.log('Indexes created successfully.'); return closeDb(); })).catch(err => { console.error(err); process.exit(1); })\"",
+    "test": "node -e \"import('./src/config/env.js').then(() => import('./src/db/client.js')).then(({ connectDb, closeDb }) => connectDb(process.env.MONGODB_URI, 'marketlink_test')).then(() => import('./src/db/seed.js')).then(({ runSeed }) => runSeed(true)).then(() => import('./src/db/client.js')).then(({ closeDb }) => closeDb(true))\" && node --test --test-concurrency=1 tests/*.test.js",
+    "smoke": "powershell -ExecutionPolicy Bypass -File scripts/smoke.ps1"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.8.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.13.0"
+  }
+}

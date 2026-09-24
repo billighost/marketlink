@@ -1,0 +1,1878 @@
+[
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (355px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (355px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (379px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (502px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (448px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (448px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (502px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (342px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (342px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (366px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (499px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (445px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (445px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (499px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (370px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (370px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (394px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (532px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (466px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (466px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (532px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (333px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (333px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (357px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (505px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (451px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (451px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (505px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (345px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (493px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (438px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (438px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (493px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (332px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (491px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (425px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (425px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (491px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (394px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (422px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (548px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (465px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (493px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (618px) overflows viewport width (320px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "320px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "320px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 20px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "320px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Visit Riverbend …\"] <-> div > button[aria-label=\"Add Heirloom tom…\"]",
+    "message": "Overlap box: 198px x 26px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "320px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Visit Riverbend …\"] <-> div > footer",
+    "message": "Overlap box: 288px x 39px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "320px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 20px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "320px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 23x23px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "320px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "320px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 14px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "320px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (379px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (502px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (448px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (448px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (502px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (366px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (499px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (445px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (445px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (499px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (370px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (370px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (394px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (532px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (466px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (466px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (532px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (505px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (451px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (451px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (505px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (493px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (438px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (438px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (493px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (491px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (425px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (425px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (491px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (394px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (422px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (548px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (465px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (493px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (618px) overflows viewport width (360px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.27, declared 1.00 (73% diff)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "360px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.27, declared 1.00 (73% diff)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "360px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 27x27px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "360px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "360px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (502px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (448px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (448px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (502px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (499px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (445px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (445px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (499px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "li > span",
+    "message": "Right edge (394px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (532px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (466px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (466px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (532px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (505px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (451px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (451px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (505px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (493px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (438px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (438px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (493px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (491px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (425px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (425px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (491px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (394px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (422px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (548px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (465px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (493px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (618px) overflows viewport width (390px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.50, declared 1.00 (50% diff)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "390px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.50, declared 1.00 (50% diff)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "390px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "390px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "390px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (502px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (448px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (448px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (502px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (499px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (445px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (445px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (499px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (532px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (466px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (466px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (532px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (505px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (451px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (451px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (505px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (493px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (438px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "span > span",
+    "message": "Right edge (438px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (493px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "li > div",
+    "message": "Right edge (491px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (491px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (548px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (465px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (493px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (618px) overflows viewport width (430px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.82, declared 1.00 (18% diff)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "430px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.82, declared 1.00 (18% diff)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "430px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "430px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "430px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "600px",
+    "type": "OVERFLOW",
+    "selector": "div > span",
+    "message": "Right edge (618px) overflows viewport width (600px)"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "600px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "600px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "600px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "600px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "768px (tablet portrait)",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERFLOW",
+    "selector": "div > div[role=\"dialog\"]",
+    "message": "Right edge (770px) overflows viewport width (768px)"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERFLOW",
+    "selector": "div > div",
+    "message": "Right edge (770px) overflows viewport width (768px)"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERFLOW",
+    "selector": "div > div",
+    "message": "Right edge (770px) overflows viewport width (768px)"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Remove from favo…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 5px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERLAP",
+    "selector": "div > button <-> div > footer",
+    "message": "Overlap box: 60px x 8px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "768px (tablet portrait)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "820px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "820px",
+    "type": "OVERFLOW",
+    "selector": "div > div[role=\"dialog\"]",
+    "message": "Right edge (825px) overflows viewport width (820px)"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "820px",
+    "type": "OVERFLOW",
+    "selector": "div > div",
+    "message": "Right edge (825px) overflows viewport width (820px)"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "820px",
+    "type": "OVERFLOW",
+    "selector": "div > div",
+    "message": "Right edge (825px) overflows viewport width (820px)"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Remove from favo…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 5px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "article > a[aria-label=\"Rainbow carrots …\"] <-> div > button[aria-label=\"Add Heirloom tom…\"]",
+    "message": "Overlap box: 111px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "article > a[aria-label=\"Rainbow carrots …\"] <-> div > footer",
+    "message": "Overlap box: 192px x 69px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "article > a[aria-label=\"Red and gold bee…\"] <-> div > button[aria-label=\"Add Heirloom tom…\"]",
+    "message": "Overlap box: 192px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "article > a[aria-label=\"Red and gold bee…\"] <-> div > footer",
+    "message": "Overlap box: 192px x 69px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "820px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "820px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "820px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "1024px (tablet landscape)",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > a[aria-label=\"Your profile, Ge…\"] <-> div > button[aria-label=\"Close sheet…\"]",
+    "message": "Overlap box: 24px x 34px"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > a[aria-label=\"Your profile, Ge…\"] <-> div > button[aria-label=\"Close sheet…\"]",
+    "message": "Overlap box: 24px x 34px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Remove from favo…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 5px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > a[aria-label=\"Your profile, Ge…\"] <-> div > button[aria-label=\"Close sheet…\"]",
+    "message": "Overlap box: 24px x 34px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > a[aria-label=\"Your profile, Ge…\"] <-> div > button[aria-label=\"Close sheet…\"]",
+    "message": "Overlap box: 24px x 34px"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > a[aria-label=\"Your profile, Ge…\"] <-> div > button[aria-label=\"Close sheet…\"]",
+    "message": "Overlap box: 24px x 34px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "1024px (tablet landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "1180px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "1180px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1180px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1180px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Remove from favo…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 5px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1180px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1180px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1180px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "1180px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "1180px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "1280px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "1280px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1280px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1280px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Remove from favo…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 5px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1280px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1280px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1280px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "1280px",
+    "type": "OVERFLOW",
+    "selector": "div > div[role=\"dialog\"]",
+    "message": "Right edge (1285px) overflows viewport width (1280px)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "1280px",
+    "type": "OVERFLOW",
+    "selector": "div > div",
+    "message": "Right edge (1285px) overflows viewport width (1280px)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "1280px",
+    "type": "OVERFLOW",
+    "selector": "div > div",
+    "message": "Right edge (1285px) overflows viewport width (1280px)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "1280px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "1280px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "1440px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "1440px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1440px",
+    "type": "OVERFLOW",
+    "selector": "div > div[role=\"dialog\"]",
+    "message": "Right edge (1445px) overflows viewport width (1440px)"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1440px",
+    "type": "OVERFLOW",
+    "selector": "div > div",
+    "message": "Right edge (1445px) overflows viewport width (1440px)"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1440px",
+    "type": "OVERFLOW",
+    "selector": "div > div",
+    "message": "Right edge (1445px) overflows viewport width (1440px)"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1440px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1440px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Remove from favo…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 5px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1440px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1440px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1440px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "1440px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "1440px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "1920px",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Remove from favo…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 5px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button <-> div > button[aria-label=\"Add Heirloom tom…\"]",
+    "message": "Overlap box: 56px x 31px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button <-> div > footer",
+    "message": "Overlap box: 56px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Scroll left…\"] <-> div > button[aria-label=\"Add Heirloom tom…\"]",
+    "message": "Overlap box: 44px x 31px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Scroll left…\"] <-> div > footer",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Scroll right…\"] <-> div > button[aria-label=\"Add Heirloom tom…\"]",
+    "message": "Overlap box: 44px x 31px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Scroll right…\"] <-> div > footer",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1920px",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "1920px",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "1920px",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Guest Home",
+    "viewport": "844x390 (phone landscape)",
+    "type": "SMALL-TARGET",
+    "selector": "div > a",
+    "message": "Target size is 117x22px (minimum 44x44px)"
+  },
+  {
+    "page": "Cart Sheet",
+    "viewport": "844x390 (phone landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "844x390 (phone landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Product Sheet",
+    "viewport": "844x390 (phone landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Remove from favo…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 5px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "844x390 (phone landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "844x390 (phone landscape)",
+    "type": "SMALL-TARGET",
+    "selector": "div > button[aria-label=\"Remove from favo…\"]",
+    "message": "Target size is 28x28px (minimum 44x44px)"
+  },
+  {
+    "page": "Farmer Sheet",
+    "viewport": "844x390 (phone landscape)",
+    "type": "DISTORTED-MEDIA",
+    "selector": "div > svg",
+    "message": "Aspect ratio mismatch: rendered 0.78, declared 1.00 (22% diff)"
+  },
+  {
+    "page": "Order Sheet",
+    "viewport": "844x390 (phone landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  },
+  {
+    "page": "Assistant Sheet",
+    "viewport": "844x390 (phone landscape)",
+    "type": "OVERLAP",
+    "selector": "div > button[aria-label=\"Close sheet…\"] <-> div > header[role=\"banner\"]",
+    "message": "Overlap box: 44px x 44px"
+  }
+]

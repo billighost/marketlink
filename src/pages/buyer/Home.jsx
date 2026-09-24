@@ -162,13 +162,12 @@ export function Home() {
               <div className={styles.assistantCallout}>
                 <p className={styles.assistantText}>
                   Not sure what to cook?{' '}
-                  <button
-                    type="button"
-                    onClick={() => openSheet('/buyer/assistant')}
+                  <Link
+                    to="/buyer/assistant"
                     className={styles.assistantLink}
                   >
                     Ask MarketLink
-                  </button>
+                  </Link>
                   .
                 </p>
               </div>

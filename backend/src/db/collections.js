@@ -1,0 +1,384 @@
+/**
+ * MongoDB collection names, JSON schema validators, and idempotent creation.
+ * Enforces data contracts and type safety at the database level with moderate validation.
+ */
+
+import {
+  ALL_ROLES,
+  ORDER_STATUSES,
+  PRODUCT_AVAILABILITY,
+  PRODUCT_UNITS,
+  CONTACT_TOPICS,
+  ANNOUNCEMENT_AUDIENCES,
+  MODERATION_STATUSES,
+  MODERATION_TARGET_TYPES,
+  REVIEW_TARGET_TYPES,
+  FAVORITE_TARGET_TYPES,
+  MARKET_STATUSES,
+} from '../constants.js';
+
+export const COLLECTIONS = {
+  USERS: 'users',
+  FARMERS: 'farmers',
+  MARKETS: 'markets',
+  CATEGORIES: 'categories',
+  PRODUCTS: 'products',
+  ORDERS: 'orders',
+  REVIEWS: 'reviews',
+  FAVORITES: 'favorites',
+  NOTIFICATIONS: 'notifications',
+  SESSIONS: 'sessions',
+  PASSWORD_RESETS: 'passwordResets',
+  CONTACT_MESSAGES: 'contactMessages',
+  ANNOUNCEMENTS: 'announcements',
+  MODERATION_FLAGS: 'moderationFlags',
+  SEARCH_HISTORY: 'searchHistory',
+  COUNTERS: 'counters',
+};
+
+export const SCHEMAS = {
+  [COLLECTIONS.USERS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['role', 'name', 'email', 'passwordHash', 'status', 'createdAt', 'updatedAt'],
+      properties: {
+        role: { enum: ALL_ROLES },
+        name: { bsonType: 'string' },
+        email: { bsonType: 'string' },
+        passwordHash: { bsonType: 'string' },
+        phone: { bsonType: 'string' },
+        address: { bsonType: 'string' },
+        status: { enum: ['active', 'inactive', 'pending', 'suspended', 'rejected'] },
+        homeMarketId: { bsonType: ['objectId', 'null', 'string'] },
+        savedMarketIds: { bsonType: 'array' },
+        notificationPrefs: { bsonType: 'object' },
+        createdAt: { bsonType: 'date' },
+        updatedAt: { bsonType: 'date' },
+        lastLoginAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.FARMERS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['userId', 'stallName', 'email', 'createdAt', 'updatedAt'],
+      properties: {
+        userId: { bsonType: 'objectId' },
+        stallName: { bsonType: 'string' },
+        contactPerson: { bsonType: 'string' },
+        phone: { bsonType: 'string' },
+        email: { bsonType: 'string' },
+        specialty: { bsonType: 'string' },
+        story: { bsonType: 'string' },
+        since: { bsonType: ['int', 'number'] },
+        stallNumber: { bsonType: 'string' },
+        marketIds: { bsonType: 'array' },
+        operatingDays: { bsonType: 'array' },
+        pickupWindows: { bsonType: 'array' },
+        cutoffMinutesBefore: { bsonType: ['int', 'number'] },
+        address: { bsonType: 'string' },
+        location: { bsonType: 'object' },
+        art: { bsonType: 'string' },
+        listingEnabled: { bsonType: 'bool' },
+        ratingAvg: { bsonType: ['double', 'int', 'number'] },
+        ratingCount: { bsonType: ['int', 'number'] },
+        salesCount: { bsonType: ['int', 'number'] },
+        isTopSeller: { bsonType: 'bool' },
+        isNew: { bsonType: 'bool' },
+        stallNameLower: { bsonType: 'string' },
+        rnd: { bsonType: ['double', 'number', 'int'] },
+        categorySlugs: { bsonType: 'array' },
+        ratingSum: { bsonType: ['int', 'number'] },
+        imageUrl: { bsonType: ['string', 'null'] },
+        createdAt: { bsonType: 'date' },
+        updatedAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.MARKETS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['name', 'slug', 'address', 'status', 'createdAt', 'updatedAt'],
+      properties: {
+        name: { bsonType: 'string' },
+        slug: { bsonType: 'string' },
+        address: { bsonType: 'string' },
+        location: { bsonType: 'object' },
+        schedule: { bsonType: 'array' },
+        timezone: { bsonType: 'string' },
+        note: { bsonType: 'string' },
+        facilities: { bsonType: 'array' },
+        farmerCount: { bsonType: ['int', 'number'] },
+        status: { enum: MARKET_STATUSES },
+        createdAt: { bsonType: 'date' },
+        updatedAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.CATEGORIES]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['name', 'slug', 'sortOrder', 'active'],
+      properties: {
+        name: { bsonType: 'string' },
+        slug: { bsonType: 'string' },
+        sortOrder: { bsonType: ['int', 'number'] },
+        art: { bsonType: 'string' },
+        active: { bsonType: 'bool' },
+      },
+    },
+  },
+
+  [COLLECTIONS.PRODUCTS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['farmerId', 'farmerUserId', 'categoryId', 'name', 'priceCents', 'unit', 'quantityAvailable', 'availability', 'createdAt', 'updatedAt'],
+      properties: {
+        farmerId: { bsonType: 'objectId' },
+        farmerUserId: { bsonType: 'objectId' },
+        farmer: { bsonType: 'object' },
+        marketIds: { bsonType: 'array' },
+        categoryId: { bsonType: 'objectId' },
+        categorySlug: { bsonType: 'string' },
+        name: { bsonType: 'string' },
+        nameLower: { bsonType: 'string' },
+        description: { bsonType: 'string' },
+        priceCents: { bsonType: ['int', 'number'] },
+        unit: { enum: PRODUCT_UNITS },
+        quantityAvailable: { bsonType: ['int', 'number'] },
+        lowStockThreshold: { bsonType: ['int', 'number'] },
+        availability: { enum: PRODUCT_AVAILABILITY },
+        tags: { bsonType: 'array' },
+        art: { bsonType: 'string' },
+        imageUrl: { bsonType: ['string', 'null'] },
+        weekly: { bsonType: 'object' },
+        ratingAvg: { bsonType: ['double', 'int', 'number'] },
+        ratingCount: { bsonType: ['int', 'number'] },
+        ratingSum: { bsonType: ['int', 'number'] },
+        salesCount: { bsonType: ['int', 'number'] },
+        featuredScore: { bsonType: ['int', 'number', 'double'] },
+        listed: { bsonType: 'bool' },
+        rnd: { bsonType: ['double', 'number', 'int'] },
+        moderation: { bsonType: 'object' },
+        createdAt: { bsonType: 'date' },
+        updatedAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.ORDERS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['orderNumber', 'checkoutId', 'customerId', 'farmerId', 'marketId', 'items', 'subtotalCents', 'totalCents', 'status', 'createdAt', 'updatedAt'],
+      properties: {
+        orderNumber: { bsonType: 'string' },
+        checkoutId: { bsonType: 'string' },
+        customerId: { bsonType: 'objectId' },
+        customerName: { bsonType: 'string' },
+        farmerId: { bsonType: 'objectId' },
+        farmerUserId: { bsonType: 'objectId' },
+        farmerName: { bsonType: 'string' },
+        marketId: { bsonType: 'objectId' },
+        items: { bsonType: 'array' },
+        subtotalCents: { bsonType: ['int', 'number'] },
+        totalCents: { bsonType: ['int', 'number'] },
+        status: { enum: ORDER_STATUSES },
+        pickup: { bsonType: 'object' },
+        cutoffAt: { bsonType: 'date' },
+        completedAt: { bsonType: ['date', 'null'] },
+        note: { bsonType: ['string', 'null'] },
+        timeline: { bsonType: 'array' },
+        cancelReason: { bsonType: ['string', 'null'] },
+        reviewed: { bsonType: 'bool' },
+        createdAt: { bsonType: 'date' },
+        updatedAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.REVIEWS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['targetType', 'farmerId', 'customerId', 'orderId', 'rating', 'status', 'createdAt'],
+      properties: {
+        targetType: { enum: REVIEW_TARGET_TYPES },
+        farmerId: { bsonType: 'objectId' },
+        productId: { bsonType: ['objectId', 'null'] },
+        customerId: { bsonType: 'objectId' },
+        customerName: { bsonType: 'string' },
+        orderId: { bsonType: 'objectId' },
+        rating: { bsonType: ['int', 'number'], minimum: 1, maximum: 5 },
+        comment: { bsonType: ['string', 'null'] },
+        reply: { bsonType: ['object', 'null'] },
+        status: { enum: ['visible', 'removed'] },
+        createdAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.FAVORITES]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['userId', 'targetType', 'targetId', 'createdAt'],
+      properties: {
+        userId: { bsonType: 'objectId' },
+        targetType: { enum: FAVORITE_TARGET_TYPES },
+        targetId: { bsonType: 'objectId' },
+        createdAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.NOTIFICATIONS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['userId', 'type', 'title', 'body', 'createdAt'],
+      properties: {
+        userId: { bsonType: 'objectId' },
+        type: { bsonType: 'string' },
+        title: { bsonType: 'string' },
+        body: { bsonType: 'string' },
+        data: { bsonType: 'object' },
+        readAt: { bsonType: ['date', 'null'] },
+        createdAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.SESSIONS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['userId', 'tokenHash', 'createdAt', 'expiresAt'],
+      properties: {
+        userId: { bsonType: 'objectId' },
+        tokenHash: { bsonType: 'string' },
+        createdAt: { bsonType: 'date' },
+        expiresAt: { bsonType: 'date' },
+        revokedAt: { bsonType: ['date', 'null'] },
+        replacedBy: { bsonType: ['string', 'null'] },
+        userAgent: { bsonType: 'string' },
+        ip: { bsonType: 'string' },
+      },
+    },
+  },
+
+  [COLLECTIONS.PASSWORD_RESETS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['userId', 'tokenHash', 'expiresAt'],
+      properties: {
+        userId: { bsonType: 'objectId' },
+        tokenHash: { bsonType: 'string' },
+        expiresAt: { bsonType: 'date' },
+        usedAt: { bsonType: ['date', 'null'] },
+      },
+    },
+  },
+
+  [COLLECTIONS.CONTACT_MESSAGES]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['name', 'email', 'topic', 'message', 'createdAt'],
+      properties: {
+        name: { bsonType: 'string' },
+        email: { bsonType: 'string' },
+        topic: { enum: CONTACT_TOPICS },
+        message: { bsonType: 'string' },
+        createdAt: { bsonType: 'date' },
+        ip: { bsonType: 'string' },
+      },
+    },
+  },
+
+  [COLLECTIONS.ANNOUNCEMENTS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['title', 'body', 'audience', 'publishedAt'],
+      properties: {
+        title: { bsonType: 'string' },
+        body: { bsonType: 'string' },
+        audience: { enum: ANNOUNCEMENT_AUDIENCES },
+        publishedAt: { bsonType: 'date' },
+        expiresAt: { bsonType: ['date', 'null'] },
+        createdBy: { bsonType: 'objectId' },
+      },
+    },
+  },
+
+  [COLLECTIONS.MODERATION_FLAGS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['targetType', 'targetId', 'reason', 'reporterId', 'status', 'createdAt'],
+      properties: {
+        targetType: { enum: MODERATION_TARGET_TYPES },
+        targetId: { bsonType: 'objectId' },
+        reason: { bsonType: 'string' },
+        reporterId: { bsonType: 'objectId' },
+        status: { enum: MODERATION_STATUSES },
+        createdAt: { bsonType: 'date' },
+        resolvedAt: { bsonType: ['date', 'null'] },
+        resolvedBy: { bsonType: ['objectId', 'null'] },
+      },
+    },
+  },
+
+  [COLLECTIONS.SEARCH_HISTORY]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['userId', 'term', 'at'],
+      properties: {
+        userId: { bsonType: 'objectId' },
+        term: { bsonType: 'string' },
+        at: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.COUNTERS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['_id', 'seq'],
+      properties: {
+        _id: { bsonType: 'string' },
+        seq: { bsonType: ['int', 'number', 'long'] },
+      },
+    },
+  },
+};
+
+/**
+ * Creates all collections with their respective JSON schema validators.
+ * Idempotent: modifies existing collections or creates new ones.
+ *
+ * @param {import('mongodb').Db} db
+ */
+export async function createCollections(db) {
+  const existingColls = await db.listCollections().toArray();
+  const existingNames = new Set(existingColls.map((c) => c.name));
+
+  for (const [name, validator] of Object.entries(SCHEMAS)) {
+    if (!existingNames.has(name)) {
+      await db.createCollection(name, {
+        validator,
+        validationLevel: 'moderate',
+        validationAction: 'error',
+      });
+    } else {
+      // Update validator on existing collection
+      try {
+        await db.command({
+          collMod: name,
+          validator,
+          validationLevel: 'moderate',
+          validationAction: 'error',
+        });
+      } catch (err) {
+        // Some storage engines or older versions might log warning
+        console.warn(`[DB] Notice updating validator for ${name}: ${err.message}`);
+      }
+    }
+  }
+}

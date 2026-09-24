@@ -92,8 +92,10 @@
   color: var(--color-ink-soft);
   text-decoration: none;
   min-height: var(--tap-min);
+  min-width: var(--tap-min);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   transition: color var(--duration-fast) var(--ease-standard);
 }
 

@@ -102,3 +102,41 @@ The `/login` screen also provides convenient quick-switch buttons to test each p
 - **Continue as Farmer** (navigates to `/vendor`)
 - **Continue as Admin** (navigates to `/admin`)
 - **Sign Out** returns to the Guest public area.
+
+---
+
+## 5. Backend Architecture & Running Both Services
+
+The MarketLink backend lives in the `backend/` directory alongside the front-end application:
+
+```
+MarketLink/
+├─ src/                  # React front-end application (Vite on port 5173 / 3000)
+├─ backend/              # Node.js + Express 5 + native MongoDB API (port 4000)
+│  ├─ src/               # Server, routes, services, MongoDB connection
+│  ├─ docs/              # DATABASE.md & API.md
+│  └─ README.md          # Full backend setup, credentials & troubleshooting
+```
+
+### Running Both Together
+
+1. **Start the Backend**:
+   ```bash
+   cd backend
+   npm install
+   npm run seed    # Seeds database with realistic demo accounts and products
+   npm run dev     # Runs API on http://localhost:4000/api
+   ```
+
+2. **Start the Frontend** (in a separate terminal at the repository root):
+   ```bash
+   npm install
+   npm run dev     # Starts Vite development server
+   ```
+
+3. **Backend Tests**:
+   ```bash
+   cd backend
+   npm test        # Runs all 61 automated tests against marketlink_test
+   ```
+

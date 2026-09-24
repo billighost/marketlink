@@ -95,6 +95,7 @@
   font-weight: 500;
   color: var(--color-ink-soft, #6B6259);
   text-decoration: none;
+<<<<<<< HEAD
   padding: 6px 14px;
   border-radius: 5px;
   transition: color var(--duration-fast, 120ms) ease,
@@ -103,6 +104,15 @@
   align-items: center;
   line-height: 1.25;
   white-space: nowrap;
+=======
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: var(--space-2);
+  transition: color var(--duration-fast) var(--ease-standard);
+>>>>>>> a1feadc4ed1469840dbd1ea6c02af5e9fc16d745
 }
 
 .navLink:hover {
@@ -129,6 +139,7 @@
   gap: 12px;
 }
 
+<<<<<<< HEAD
 @media (min-width: 768px) {
   .actionsGroup {
     gap: 16px;
@@ -181,6 +192,17 @@
 }
 
 .iconBtn {
+=======
+.signInLink {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+>>>>>>> a1feadc4ed1469840dbd1ea6c02af5e9fc16d745
   display: inline-flex;
   align-items: center;
   justify-content: center;

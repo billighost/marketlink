@@ -23,6 +23,7 @@
   text-decoration: none;
   font-weight: var(--weight-medium);
   font-size: var(--text-body);
+  min-height: var(--tap-min);
 }
 
 .backButton:hover {
@@ -537,4 +538,7 @@
   color: var(--color-primary);
   font-weight: var(--weight-medium);
   cursor: pointer;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
 }
