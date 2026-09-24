@@ -135,6 +135,78 @@ if ($contactRes.StatusCode -eq 201) {
     Write-Host "FAILED ($($contactRes.StatusCode))" -ForegroundColor Red; exit 1
 }
 
+# 11. GET /public/home
+Write-Host -NoNewline "11. Testing GET /public/home... "
+$publicHome = Invoke-RestMethod -Uri "$BaseUrl/public/home" -Method Get
+if ($publicHome.data.board) {
+    Write-Host "OK (200)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 12. GET /categories
+Write-Host -NoNewline "12. Testing GET /categories... "
+$cats = Invoke-RestMethod -Uri "$BaseUrl/categories" -Method Get
+if ($cats.data.Count -gt 0) {
+    Write-Host "OK (200 - $($cats.data.Count) categories)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 13. GET /markets
+Write-Host -NoNewline "13. Testing GET /markets... "
+$markets = Invoke-RestMethod -Uri "$BaseUrl/markets" -Method Get -Headers $patchHeaders
+if ($markets.data.Count -gt 0) {
+    Write-Host "OK (200 - $($markets.data.Count) markets)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 14. GET /farmers
+Write-Host -NoNewline "14. Testing GET /farmers... "
+$farmers = Invoke-RestMethod -Uri "$BaseUrl/farmers" -Method Get -Headers $patchHeaders
+if ($farmers.data.Count -gt 0) {
+    Write-Host "OK (200 - $($farmers.data.Count) farmers)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 15. GET /products
+Write-Host -NoNewline "15. Testing GET /products... "
+$products = Invoke-RestMethod -Uri "$BaseUrl/products?limit=5" -Method Get -Headers $patchHeaders
+if ($products.data.Count -gt 0) {
+    Write-Host "OK (200 - $($products.data.Count) products)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 16. GET /search/suggestions
+Write-Host -NoNewline "16. Testing GET /search/suggestions?q=tom... "
+$suggestions = Invoke-RestMethod -Uri "$BaseUrl/search/suggestions?q=tom" -Method Get -Headers $patchHeaders
+if ($suggestions.data.products) {
+    Write-Host "OK (200)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 17. GET /feed
+Write-Host -NoNewline "17. Testing GET /feed (Batch 0)... "
+$feed = Invoke-RestMethod -Uri "$BaseUrl/feed" -Method Get -Headers $patchHeaders
+if ($feed.data.sections.Count -gt 0) {
+    Write-Host "OK (200 - $($feed.data.sections.Count) sections)" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
+# 18. GET /feed/meta
+Write-Host -NoNewline "18. Testing GET /feed/meta... "
+$feedMeta = Invoke-RestMethod -Uri "$BaseUrl/feed/meta" -Method Get -Headers $patchHeaders
+if ($feedMeta.data.greetingName -eq "George") {
+    Write-Host "OK (200 - '$($feedMeta.data.line)')" -ForegroundColor Green
+} else {
+    Write-Host "FAILED" -ForegroundColor Red; exit 1
+}
+
 Write-Host ""
 Write-Host "========================================================" -ForegroundColor Cyan
 Write-Host "🎉  All smoke test steps passed successfully!" -ForegroundColor Green
