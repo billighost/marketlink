@@ -19,9 +19,11 @@ import styles from './VendorLayout.module.css';
 
 import DashboardTab from '../pages/vendor/DashboardTab';
 import IncomingOrdersTab from '../pages/vendor/IncomingOrdersTab';
+import HistoryTab from '../pages/vendor/HistoryTab';
 import FarmInventoryTab from '../pages/vendor/FarmInventoryTab';
 import SalesTab from '../pages/vendor/SalesTab';
 import StoreSettingsTab from '../pages/vendor/StoreSettingsTab';
+import ProfileTab from '../pages/vendor/ProfileTab';
 
 // --- MAIN APPLICATION SHELL ---
 
@@ -33,9 +35,11 @@ export default function VendorLayout() {
     switch (activeTab) {
       case 'dashboard': return <DashboardTab />;
       case 'orders': return <IncomingOrdersTab />;
+      case 'history': return <HistoryTab />;
       case 'inventory': return <FarmInventoryTab />;
       case 'sales': return <SalesTab />;
       case 'settings': return <StoreSettingsTab />;
+      case 'profile': return <ProfileTab />;
       default: return <DashboardTab />;
     }
   };
@@ -44,9 +48,11 @@ export default function VendorLayout() {
     switch (activeTab) {
       case 'dashboard': return 'Dashboard';
       case 'orders': return 'Incoming Orders';
+      case 'history': return 'Order History';
       case 'inventory': return 'Farm Inventory';
       case 'sales': return 'Sales Insights';
       case 'settings': return 'Stall Settings';
+      case 'profile': return 'My Profile';
       default: return 'Dashboard';
     }
   };
@@ -74,6 +80,13 @@ export default function VendorLayout() {
             title="Incoming Orders"
           >
             <ShoppingCart size={20} /> {!isCollapsed && <span>Incoming Orders</span>}
+          </button>
+          <button 
+            className={`${styles.navButton} ${activeTab === 'history' ? styles.activeTab : ''}`}
+            onClick={() => setActiveTab('history')}
+            title="Order History"
+          >
+            <Clock size={20} /> {!isCollapsed && <span>Order History</span>}
           </button>
           <button 
             className={`${styles.navButton} ${activeTab === 'inventory' ? styles.activeTab : ''}`}
@@ -120,7 +133,12 @@ export default function VendorLayout() {
               <Bell size={20} />
               <div className={styles.notificationDot}></div>
             </div>
-            <div className={styles.userProfile}>
+            <div 
+              className={styles.userProfile} 
+              onClick={() => setActiveTab('profile')}
+              role="button"
+              tabIndex={0}
+            >
               <div className={styles.userInfo}>
                 <div className={styles.userName}>Farmer Ayomide</div>
                 <div className={styles.userRole}>Farm Producer</div>

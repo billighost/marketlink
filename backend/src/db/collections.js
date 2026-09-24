@@ -15,6 +15,12 @@ import {
   REVIEW_TARGET_TYPES,
   FAVORITE_TARGET_TYPES,
   MARKET_STATUSES,
+  NOTIFICATION_TYPES,
+  CHECKOUT_STATUSES,
+  AUDIT_ACTIONS,
+  REPORT_TYPES,
+  SETTINGS_KEYS,
+  CONTACT_STATUSES,
 } from '../constants.js';
 
 export const COLLECTIONS = {
@@ -24,6 +30,7 @@ export const COLLECTIONS = {
   CATEGORIES: 'categories',
   PRODUCTS: 'products',
   ORDERS: 'orders',
+  CHECKOUTS: 'checkouts',
   REVIEWS: 'reviews',
   FAVORITES: 'favorites',
   NOTIFICATIONS: 'notifications',
@@ -34,6 +41,9 @@ export const COLLECTIONS = {
   MODERATION_FLAGS: 'moderationFlags',
   SEARCH_HISTORY: 'searchHistory',
   COUNTERS: 'counters',
+  AUDIT_LOG: 'auditLog',
+  REPORTS: 'reports',
+  SETTINGS: 'settings',
 };
 
 export const SCHEMAS = {
@@ -91,6 +101,8 @@ export const SCHEMAS = {
         categorySlugs: { bsonType: 'array' },
         ratingSum: { bsonType: ['int', 'number'] },
         imageUrl: { bsonType: ['string', 'null'] },
+        slotOverrides: { bsonType: 'array' },
+        maxOrdersPerSlot: { bsonType: ['int', 'number'] },
         createdAt: { bsonType: 'date' },
         updatedAt: { bsonType: 'date' },
       },
@@ -163,6 +175,7 @@ export const SCHEMAS = {
         listed: { bsonType: 'bool' },
         rnd: { bsonType: ['double', 'number', 'int'] },
         moderation: { bsonType: 'object' },
+        archived: { bsonType: 'bool' },
         createdAt: { bsonType: 'date' },
         updatedAt: { bsonType: 'date' },
       },
@@ -175,7 +188,7 @@ export const SCHEMAS = {
       required: ['orderNumber', 'checkoutId', 'customerId', 'farmerId', 'marketId', 'items', 'subtotalCents', 'totalCents', 'status', 'createdAt', 'updatedAt'],
       properties: {
         orderNumber: { bsonType: 'string' },
-        checkoutId: { bsonType: 'string' },
+        checkoutId: { bsonType: ['string', 'objectId'] },
         customerId: { bsonType: 'objectId' },
         customerName: { bsonType: 'string' },
         farmerId: { bsonType: 'objectId' },
@@ -193,8 +206,27 @@ export const SCHEMAS = {
         timeline: { bsonType: 'array' },
         cancelReason: { bsonType: ['string', 'null'] },
         reviewed: { bsonType: 'bool' },
+        idempotencyKey: { bsonType: ['string', 'null'] },
+        slotKey: { bsonType: ['string', 'null'] },
         createdAt: { bsonType: 'date' },
         updatedAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.CHECKOUTS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['customerId', 'idempotencyKey', 'status', 'createdAt'],
+      properties: {
+        customerId: { bsonType: 'objectId' },
+        idempotencyKey: { bsonType: 'string' },
+        status: { enum: CHECKOUT_STATUSES },
+        orderIds: { bsonType: 'array' },
+        orders: { bsonType: 'array' },
+        error: { bsonType: 'object' },
+        createdAt: { bsonType: 'date' },
+        completedAt: { bsonType: ['date', 'null'] },
       },
     },
   },
@@ -238,7 +270,7 @@ export const SCHEMAS = {
       required: ['userId', 'type', 'title', 'body', 'createdAt'],
       properties: {
         userId: { bsonType: 'objectId' },
-        type: { bsonType: 'string' },
+        type: { enum: NOTIFICATION_TYPES },
         title: { bsonType: 'string' },
         body: { bsonType: 'string' },
         data: { bsonType: 'object' },
@@ -287,6 +319,9 @@ export const SCHEMAS = {
         email: { bsonType: 'string' },
         topic: { enum: CONTACT_TOPICS },
         message: { bsonType: 'string' },
+        status: { enum: CONTACT_STATUSES },
+        handledBy: { bsonType: ['objectId', 'null'] },
+        handledAt: { bsonType: ['date', 'null'] },
         createdAt: { bsonType: 'date' },
         ip: { bsonType: 'string' },
       },
@@ -344,6 +379,48 @@ export const SCHEMAS = {
       properties: {
         _id: { bsonType: 'string' },
         seq: { bsonType: ['int', 'number', 'long'] },
+      },
+    },
+  },
+
+  [COLLECTIONS.AUDIT_LOG]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['actorId', 'actorRole', 'action', 'targetType', 'targetId', 'at'],
+      properties: {
+        actorId: { bsonType: ['objectId', 'string'] },
+        actorRole: { bsonType: 'string' },
+        action: { enum: AUDIT_ACTIONS },
+        targetType: { bsonType: 'string' },
+        targetId: { bsonType: ['objectId', 'string'] },
+        meta: { bsonType: 'object' },
+        at: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.REPORTS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['generatedBy', 'reportType', 'params', 'generatedAt'],
+      properties: {
+        generatedBy: { bsonType: 'objectId' },
+        reportType: { enum: REPORT_TYPES },
+        params: { bsonType: 'object' },
+        generatedAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.SETTINGS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['_id', 'value', 'updatedAt'],
+      properties: {
+        _id: { enum: SETTINGS_KEYS },
+        value: { bsonType: ['int', 'number'] },
+        updatedAt: { bsonType: 'date' },
+        updatedBy: { bsonType: ['objectId', 'null'] },
       },
     },
   },

@@ -310,7 +310,6 @@
   margin-top: 2px;
 }
 
-/* Orange dot on Incoming Pre-Orders title */
 .orangeDot {
   width: 8px;
   height: 8px;
@@ -916,4 +915,48 @@
   font-style: italic;
   line-height: var(--lh-body);
   max-width: none;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-2);
+  }
+  .statGrid {
+    grid-template-columns: 1fr;
+  }
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pageHeaderRight {
+    align-items: flex-start;
+  }
+  .pageActions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .btnExport, .btnReview {
+    width: 100%;
+    justify-content: center;
+  }
+  .harvestItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .harvestRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .marketGrid {
+    grid-template-columns: 1fr;
+  }
+  .adjustItem {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .adjustControls {
+    justify-content: space-between;
+  }
 }

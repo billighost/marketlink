@@ -91,6 +91,10 @@ export function layoutCheck() {
   function getFixedOrStickyAncestor(el) {
     let curr = el;
     while (curr && curr !== document.body && curr !== document.documentElement) {
+      if (curr.hasAttribute('data-sheet-overlay') || (typeof curr.className === 'string' && curr.className.includes('overlay'))) {
+        curr = curr.parentElement;
+        continue;
+      }
       const pos = window.getComputedStyle(curr).position;
       if (pos === 'fixed' || pos === 'sticky') return curr;
       curr = curr.parentElement;
@@ -99,10 +103,19 @@ export function layoutCheck() {
   }
 
   // 2. Overlapping interactive or fixed/sticky elements
+  const hasOpenDialog = Boolean(document.querySelector('[role="dialog"]'));
   const interactiveSelector = 'a, button, input, select, textarea, summary, [role="button"], [role="switch"], [role="tab"]';
-  const interactiveEls = Array.from(document.querySelectorAll(interactiveSelector)).filter(isVisible);
+  const interactiveEls = Array.from(document.querySelectorAll(interactiveSelector)).filter(el => {
+    if (!isVisible(el)) return false;
+    if (el.closest && el.closest('[inert]')) return false;
+    if (hasOpenDialog && !el.closest('[role="dialog"]') && !el.closest('[data-sheet-overlay]')) return false;
+    return true;
+  });
+
   const fixedStickyEls = Array.from(document.querySelectorAll('*')).filter(el => {
     if (!isVisible(el)) return false;
+    if (el.closest && el.closest('[inert]')) return false;
+    if (hasOpenDialog && !el.closest('[role="dialog"]') && !el.closest('[data-sheet-overlay]')) return false;
     // Skip aria-hidden dimming backdrops/overlays
     if (el.getAttribute('aria-hidden') === 'true') return false;
     if (typeof el.className === 'string' && (el.className.includes('backdrop') || el.className.includes('overlay'))) return false;

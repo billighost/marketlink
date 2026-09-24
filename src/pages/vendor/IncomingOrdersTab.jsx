@@ -1,84 +1,77 @@
-import React from 'react';
-import { Search, Filter, MoreVertical } from 'lucide-react';
+import React, { useState } from 'react';
 import styles from './IncomingOrdersTab.module.css';
 
+const MOCK_ORDERS = [
+  { id: 'ML-8821', customer: 'Marta Lin', slot: '8:30 AM - 9:00 AM', items: 'Fresh Ugu Leaves (3 Bunches)', total: '₦1,500', status: 'Pending' },
+  { id: 'ML-8820', customer: 'David Chen', slot: '9:00 AM - 9:30 AM', items: 'Cherokee Purple Tomatoes (2kg)', total: '₦4,200', status: 'Accepted' },
+  { id: 'ML-8819', customer: 'Sarah Jenkins', slot: '10:15 AM - 10:45 AM', items: 'White Yams (5 Tubers)', total: '₦12,500', status: 'Pending' },
+  { id: 'ML-8818', customer: 'James Robertson', slot: '11:30 AM - 12:00 PM', items: 'Lacinato Kale (4 Bunches)', total: '₦3,000', status: 'Pending' },
+];
+
 const IncomingOrdersTab = () => {
+  const [orders, setOrders] = useState(MOCK_ORDERS);
+
   return (
     <div className={styles.contentArea}>
       <div className={styles.cardPanel}>
-        <div className={styles.actionHeader}>
-          <h2 className={styles.cardTitle} style={{ fontSize: '1.5rem' }}>Order History</h2>
-          <div className={styles.searchLayout}>
-            <div className={styles.searchBox}>
-              <Search size={18} className={styles.searchIcon} />
-              <input type="text" placeholder="Search order ID, customer..." className={styles.searchInput} />
-            </div>
-            <button className={styles.btnFilter}>
-              <Filter size={18} /> Filters
-            </button>
-          </div>
+        <div className={styles.cardHeader}>
+          <h3 className={styles.cardTitle} style={{ fontSize: '1.5rem' }}>Incoming Pre-Orders</h3>
+          {orders.length > 0 && (
+            <button className={styles.btnOutline} onClick={() => setOrders([])}>Clear (Demo Empty State)</button>
+          )}
         </div>
         
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>ORDER ID</th>
-              <th>DATE</th>
-              <th>CUSTOMER NAME</th>
-              <th>ITEMS ORDERED</th>
-              <th>TOTAL AMOUNT</th>
-              <th>STATUS</th>
-              <th>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className={styles.tdPrimary}>ORD-1042</td>
-              <td>Oct 24, 2026</td>
-              <td className={styles.tdPrimary}>Adeola Johnson</td>
-              <td>Assorted Veggie Basket</td>
-              <td className={styles.tdPrimary}>₦12,500</td>
-              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
-            </tr>
-            <tr>
-              <td className={styles.tdPrimary}>ORD-1041</td>
-              <td>Oct 24, 2026</td>
-              <td className={styles.tdPrimary}>Chuks Emmanuel</td>
-              <td>Unripe Plantains (1 Dozen)</td>
-              <td className={styles.tdPrimary}>₦3,800</td>
-              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
-            </tr>
-            <tr>
-              <td className={styles.tdPrimary}>ORD-1040</td>
-              <td>Oct 23, 2026</td>
-              <td className={styles.tdPrimary}>Fatima Bello</td>
-              <td>Organic Carrots (5kg)</td>
-              <td className={styles.tdPrimary}>₦5,200</td>
-              <td><span className={`${styles.badge} ${styles.badgeCancelled}`}>Cancelled</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
-            </tr>
-            <tr>
-              <td className={styles.tdPrimary}>ORD-1039</td>
-              <td>Oct 23, 2026</td>
-              <td className={styles.tdPrimary}>Green Grocers Ltd</td>
-              <td>Wholesale Yams (50 Tubers)</td>
-              <td className={styles.tdPrimary}>₦110,000</td>
-              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
-            </tr>
-            <tr>
-              <td className={styles.tdPrimary}>ORD-1038</td>
-              <td>Oct 22, 2026</td>
-              <td className={styles.tdPrimary}>Tobi Bakre</td>
-              <td>Fresh Spinach (10 Bunches)</td>
-              <td className={styles.tdPrimary}>₦4,500</td>
-              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
-              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
-            </tr>
-          </tbody>
-        </table>
+        {orders.length === 0 ? (
+          <div className={styles.emptyState}>
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className={styles.emptyIllustration}>
+              <circle cx="60" cy="60" r="48" fill="var(--color-canvas, #F5EFE3)" />
+              <rect x="35" y="45" width="50" height="30" rx="4" stroke="var(--color-wood-line, #E3D3B8)" strokeWidth="3" />
+              <path d="M35 55L60 70L85 55" stroke="var(--color-wood-line, #E3D3B8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="95" cy="40" r="4" fill="var(--color-success, #5C7048)" />
+            </svg>
+            <h3 className={styles.emptyTitle}>No incoming orders yet</h3>
+            <p className={styles.emptySub}>When customers place pre-orders, they will appear here.</p>
+          </div>
+        ) : (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>CUSTOMER & SLOT</th>
+                <th>HARVEST ITEMS</th>
+                <th>TOTAL</th>
+                <th>STATUS</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order.id}>
+                  <td>
+                    <span className={styles.tdPrimary}>{order.customer}</span>
+                    <span className={styles.tdSecondary}>{order.slot}</span>
+                  </td>
+                  <td>
+                    <span className={styles.tdPrimary}>{order.items}</span>
+                    <span className={styles.tdSecondary}>Order #{order.id}</span>
+                  </td>
+                  <td><span className={styles.tdPrimary}>{order.total}</span></td>
+                  <td>
+                    <span className={`${styles.badge} ${order.status === 'Pending' ? styles.badgePending : styles.badgeAccepted}`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td>
+                    {order.status === 'Pending' ? (
+                      <button className={styles.btnPrimary}>Accept</button>
+                    ) : (
+                      <button className={styles.btnOutline}>Mark Ready</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

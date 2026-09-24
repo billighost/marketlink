@@ -141,11 +141,48 @@
   transition: all 180ms ease;
 }
 
+
 .exploreProduceBtn:hover {
   background-color: #ffffff;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(38, 33, 28, 0.12);
   color: #26211c !important;
+}
+/* Mobile arrangement: exactly 3 items, centered, no tags, no overflow */
+@media (max-width: 767px) {
+  .produceCluster {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+    max-width: 100%;
+    margin-top: var(--space-8);
+    overflow: hidden;
+  }
+
+  .produceItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .produceItem.desktopOnlyItem,
+  .produceItem.tabletDesktopItem,
+  .desktopOnlyItem,
+  .tabletDesktopItem {
+    display: none;
+  }
+
+  .produceItem svg {
+    width: clamp(2.5rem, 8vw, 3.5rem);
+    height: clamp(2.5rem, 8vw, 3.5rem);
+  }
+
+  .tag {
+    display: none;
+  }
 }
 
 .btnArrow {

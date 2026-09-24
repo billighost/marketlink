@@ -59,7 +59,12 @@ Farmer profile, exactly 1:1 with a `users` document where `role === 'farmer'`.
 - `listingEnabled`: Boolean (denormalized: true only when user's status is `active`)
 - `ratingAvg`: Double (1.0 to 5.0)
 - `ratingCount`: Integer
+- `ratingSum`: Integer (cumulative rating total for atomic avg recalculation)
 - `salesCount`: Integer (total units sold across completed orders)
+- `stallNameLower`: String (lowercase stallName for anchored prefix suggestions)
+- `categorySlugs`: Array<String> (denormalized from active products for farmer browse filtering)
+- `rnd`: Double in `[0,1)` (assigned via Mulberry32 PRNG for deterministic random sampling)
+- `imageUrl`: String | null
 - `isTopSeller`: Boolean
 - `isNew`: Boolean
 - `createdAt`, `updatedAt`: Date
@@ -98,26 +103,46 @@ Goods offered by farmers for pre-order.
 - `categoryId`: ObjectId (references `categories._id`)
 - `categorySlug`: String (denormalized for fast browse queries)
 - `name`: String
+- `nameLower`: String (lowercase name for anchored prefix queries and text search fallback)
 - `description`: String
 - `priceCents`: Integer (cents)
 - `unit`: `'lb' | 'bunch' | 'loaf' | 'jar' | 'dozen' | 'each' | 'pint' | 'bag'`
 - `quantityAvailable`: Integer (active stock for upcoming market day)
 - `lowStockThreshold`: Integer
 - `availability`: `'in' | 'low' | 'out' | 'hidden'`
+- `listed`: Boolean (denormalized: true iff farmer.listingEnabled, !moderation.removed, and availability !== 'hidden')
 - `tags`: Array<String> ('seasonal', 'organic', 'new', 'bestseller')
 - `art`: String
+- `imageUrl`: String | null
 - `weekly`: `{ enabled: bool, defaultQty: int }` (inventory reset template)
 - `ratingAvg`: Double
 - `ratingCount`: Integer
+- `ratingSum`: Integer
 - `salesCount`: Integer
+- `featuredScore`: Integer (recomputed ranking: salesCount*2 + ratingAvg*ratingCount + bonus)
+- `rnd`: Double in `[0,1)` (assigned via Mulberry32 PRNG for deterministic random sampling in feed)
 - `moderation`: `{ removed: bool, reason?: string, at?: Date }`
 - `createdAt`, `updatedAt`: Date
+
+### `checkouts`
+Idempotent checkout sessions tracking atomic multi-vendor pre-orders.
+- `_id`: ObjectId
+- `customerId`: ObjectId
+- `idempotencyKey`: String
+- `status`: `'pending' | 'completed' | 'failed'`
+- `orderIds`: Array<ObjectId>
+- `orders`: Array<Object> (serialized summary snapshots for cached duplicate replay)
+- `error`: Object | null
+- `createdAt`: Date
+- `completedAt`: Date | null
 
 ### `orders`
 One order per farmer. A multi-farmer checkout creates multiple orders sharing a `checkoutId`.
 - `_id`: ObjectId
 - `orderNumber`: String (unique, e.g. "ML-1041")
-- `checkoutId`: String (grouped checkout session)
+- `checkoutId`: String | ObjectId (grouped checkout session)
+- `idempotencyKey`: String (unique per customer partial)
+- `slotKey`: String (`<farmerId>|<start ISO>` for capacity checks)
 - `customerId`: ObjectId
 - `customerName`: String (snapshot at order placement)
 - `farmerId`: ObjectId
@@ -163,7 +188,7 @@ Customer bookmarks for products and farmers.
 Customer and farmer system alerts.
 - `_id`: ObjectId
 - `userId`: ObjectId
-- `type`: String (e.g. 'order_ready', 'order_accepted')
+- `type`: `'order_placed' | 'order_accepted' | 'order_ready' | 'order_completed' | 'order_declined' | 'order_cancelled' | 'restock' | 'announcement' | 'review_reply' | 'account'`
 - `title`: String
 - `body`: String
 - `data`: Object (e.g. `{ orderId, orderNumber }`)
@@ -272,7 +297,11 @@ Atomic sequence counters for generating sequential order numbers.
 | `products` | `{ marketIds: 1, availability: 1, createdAt: -1 }` | Market product view & "New This Week" row |
 | `products` | `{ salesCount: -1 }` partial (`moderation.removed: false`) | Top selling products row |
 | `products` | Text `{ name: 10, tags: 5, description: 1 }` | Full-text catalog search |
+| `checkouts` | `{ customerId: 1, idempotencyKey: 1 }` **unique** | Enforces idempotent checkout requests per customer |
+| `checkouts` | `{ createdAt: 1 }` | Checkout session ordering and lifecycle tracking |
 | `orders` | `{ orderNumber: 1 }` **unique** | Direct lookup by order number |
+| `orders` | `{ customerId: 1, idempotencyKey: 1 }` **unique partial** | Prevents duplicate order placement on network retries |
+| `orders` | `{ slotKey: 1, status: 1 }` | Fast slot capacity calculation and limits |
 | `orders` | `{ customerId: 1, createdAt: -1 }` | Customer order history |
 | `orders` | `{ customerId: 1, status: 1, createdAt: -1 }` | Customer Active vs. Past order tabs |
 | `orders` | `{ farmerId: 1, status: 1, createdAt: -1 }` | Farmer inbox status filtering |
@@ -282,10 +311,29 @@ Atomic sequence counters for generating sequential order numbers.
 | `reviews` | `{ productId: 1, status: 1, createdAt: -1 }` | Product detail review list |
 | `reviews` | `{ orderId: 1, targetType: 1, productId: 1, farmerId: 1 }` **unique** | Prevents duplicate reviews for the same order item |
 | `favorites` | `{ userId: 1, targetType: 1, targetId: 1 }` **unique** | Prevents duplicate bookmarking |
+| `favorites` | `{ targetType: 1, targetId: 1 }` | Restock alert lookup of customers who favorited a product |
+| `favorites` | `{ userId: 1, targetType: 1, createdAt: -1 }` | Keyset pagination of customer favorites |
 | `favorites` | `{ userId: 1, createdAt: -1 }` | User favorites listing |
 | `notifications` | `{ userId: 1, readAt: 1, createdAt: -1 }` | Unread notifications query |
+| `notifications` | `{ userId: 1, type: 1, createdAt: -1 }` | Deduplication and type-filtered notification lookup |
 | `notifications` | `{ createdAt: 1 }` (TTL: 90 days) | Automatic cleanup of stale notifications |
+| `moderationFlags` | `{ targetType: 1, targetId: 1, reporterId: 1, status: 1 }` | Single open flag per reporter per target verification |
 | `sessions` | `{ tokenHash: 1 }` **unique** | Fast refresh token hash lookup |
+| `farmers` | `{ listingEnabled: 1, stallNameLower: 1 }` | Fast anchored prefix match on farmer stall names |
+| `farmers` | `{ listingEnabled: 1, rnd: 1 }` | Fast index-based pseudo-random sampling for feed |
+| `farmers` | `{ listingEnabled: 1, categorySlugs: 1, ratingAvg: -1 }` | Farmer directory filtered by category slug |
+| `farmers` | `{ listingEnabled: 1, ratingAvg: -1, _id: -1 }` | Keyset pagination for rating sort |
+| `farmers` | `{ listingEnabled: 1, salesCount: -1, _id: -1 }` | Keyset pagination for top sellers sort |
+| `farmers` | `{ listingEnabled: 1, createdAt: -1, _id: -1 }` | Keyset pagination for new farmers sort |
+| `farmers` | `{ listingEnabled: 1, stallName: 1, _id: 1 }` | Keyset pagination for alphabetical name sort |
+| `farmers` | `{ listingEnabled: 1, operatingDays: 1 }` | Resolves active farmers by operating day |
+| `products` | `{ listed: 1, nameLower: 1 }` | Fast anchored prefix matching on product names |
+| `products` | `{ listed: 1, rnd: 1 }` | Fast index-based pseudo-random sampling for feed walker |
+| `products` | `{ listed: 1, availability: 1, createdAt: -1, _id: -1 }` | Keyset pagination for newest sort |
+| `products` | `{ listed: 1, availability: 1, categorySlug: 1, priceCents: 1, _id: 1 }` | Keyset pagination for price_asc with category |
+| `products` | `{ listed: 1, availability: 1, priceCents: 1, _id: 1 }` | Keyset pagination for price_asc / price_desc without category |
+| `products` | `{ listed: 1, availability: 1, salesCount: -1, _id: -1 }` | Keyset pagination for popular sort |
+| `products` | `{ listed: 1, featuredScore: -1, _id: -1 }` | Keyset pagination for featured sort |
 | `sessions` | `{ userId: 1 }` | Global session revocation for a user |
 | `sessions` | `{ expiresAt: 1 }` (TTL: 0s) | Automatic expired session cleanup |
 | `passwordResets` | `{ tokenHash: 1 }` **unique** | Fast password reset token lookup |
@@ -296,3 +344,5 @@ Atomic sequence counters for generating sequential order numbers.
 | `moderationFlags` | `{ targetType: 1, targetId: 1 }` | Content flag status lookups |
 | `searchHistory` | `{ userId: 1, at: -1 }` | Recent searches by user |
 | `searchHistory` | `{ at: 1 }` (TTL: 60 days) | Automatic cleanup of search history |
+
+

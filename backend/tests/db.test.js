@@ -90,6 +90,25 @@ describe('Database Architecture & Query Performance Suite', () => {
     assert.ok(orderIndexNames.includes('idx_orders_farmer_status_created'));
     assert.ok(orderIndexNames.includes('idx_orders_farmer_pickup_schedule'));
     assert.ok(orderIndexNames.includes('idx_orders_checkoutId'));
+    assert.ok(orderIndexNames.includes('idx_orders_customer_idempotency_unique'));
+    assert.ok(orderIndexNames.includes('idx_orders_slotKey_status'));
+
+    // 5b. Checkouts indexes
+    const checkoutIndexes = await db.collection(COLLECTIONS.CHECKOUTS).indexes();
+    const checkoutIndexNames = checkoutIndexes.map((i) => i.name);
+    assert.ok(checkoutIndexNames.includes('idx_checkouts_customer_idempotency_unique'));
+    assert.ok(checkoutIndexNames.includes('idx_checkouts_created'));
+
+    // 5c. Favorites indexes
+    const favIndexes = await db.collection(COLLECTIONS.FAVORITES).indexes();
+    const favIndexNames = favIndexes.map((i) => i.name);
+    assert.ok(favIndexNames.includes('idx_favorites_targetType_targetId'));
+
+    // 5d. Notifications indexes
+    const notifIndexes = await db.collection(COLLECTIONS.NOTIFICATIONS).indexes();
+    const notifIndexNames = notifIndexes.map((i) => i.name);
+    assert.ok(notifIndexNames.includes('idx_notifications_user_type_created'));
+    assert.ok(notifIndexes.some((i) => i.name === 'idx_notifications_ttl_90d' && i.expireAfterSeconds === 7776000));
 
     // 6. TTL Indexes
     const sessionIndexes = await db.collection(COLLECTIONS.SESSIONS).indexes();
@@ -98,11 +117,31 @@ describe('Database Architecture & Query Performance Suite', () => {
     const resetIndexes = await db.collection(COLLECTIONS.PASSWORD_RESETS).indexes();
     assert.ok(resetIndexes.some((i) => i.name === 'idx_passwordResets_ttl' && i.expireAfterSeconds === 0));
 
-    const notifIndexes = await db.collection(COLLECTIONS.NOTIFICATIONS).indexes();
-    assert.ok(notifIndexes.some((i) => i.name === 'idx_notifications_ttl_90d' && i.expireAfterSeconds === 7776000));
-
     const searchIndexes = await db.collection(COLLECTIONS.SEARCH_HISTORY).indexes();
     assert.ok(searchIndexes.some((i) => i.name === 'idx_searchHistory_ttl_60d' && i.expireAfterSeconds === 5184000));
+
+    // 16. Audit Log indexes
+    const auditIndexes = await db.collection(COLLECTIONS.AUDIT_LOG).indexes();
+    const auditIndexNames = auditIndexes.map((i) => i.name);
+    assert.ok(auditIndexNames.includes('idx_auditLog_at'));
+    assert.ok(auditIndexNames.includes('idx_auditLog_target'));
+    assert.ok(auditIndexes.some((i) => i.name === 'idx_auditLog_ttl_365d' && i.expireAfterSeconds === 31536000));
+
+    // 17. Reports indexes
+    const reportIndexes = await db.collection(COLLECTIONS.REPORTS).indexes();
+    const reportIndexNames = reportIndexes.map((i) => i.name);
+    assert.ok(reportIndexNames.includes('idx_reports_generatedAt'));
+
+    // 18. Contact Messages status index
+    const contactIndexes = await db.collection(COLLECTIONS.CONTACT_MESSAGES).indexes();
+    const contactIndexNames = contactIndexes.map((i) => i.name);
+    assert.ok(contactIndexNames.includes('idx_contactMessages_status_created'));
+
+    // 19. Stage 4 Orders reporting and insight indexes
+    assert.ok(orderIndexNames.includes('idx_orders_farmer_status_completed'));
+    assert.ok(orderIndexNames.includes('idx_orders_farmer_created'));
+    assert.ok(orderIndexNames.includes('idx_orders_status_created'));
+    assert.ok(orderIndexNames.includes('idx_orders_market_status_created'));
   });
 
   // ── 3. Unique Index Concurrency ──

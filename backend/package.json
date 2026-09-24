@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "seed": "node src/db/seed.js",
     "indexes": "node -e \"import('./src/config/env.js').then(() => import('./src/db/client.js')).then(({ connectDb, getDb, closeDb }) => connectDb().then(() => import('./src/db/indexes.js')).then(({ ensureIndexes }) => ensureIndexes(getDb())).then(() => { console.log('Indexes created successfully.'); return closeDb(); })).catch(err => { console.error(err); process.exit(1); })\"",
-    "test": "node -e \"import('./src/config/env.js').then(() => import('./src/db/client.js')).then(({ connectDb, closeDb }) => connectDb(process.env.MONGODB_URI, 'marketlink_test')).then(() => import('./src/db/seed.js')).then(({ runSeed }) => runSeed(true)).then(() => import('./src/db/client.js')).then(({ closeDb }) => closeDb(true))\" && node --test --test-concurrency=1 tests/*.test.js",
+    "test": "node -e \"process.env.DB_NAME='marketlink_test'; process.env.NODE_ENV='test'; import('./src/config/env.js').then(() => import('./src/db/seed.js')).then(({ runSeed }) => runSeed(true)).then(() => import('./src/db/client.js')).then(({ closeDb }) => closeDb(true))\" && node --test --test-concurrency=1 tests/*.test.js",
+    "verify:data": "node scripts/verify-data.js",
     "smoke": "powershell -ExecutionPolicy Bypass -File scripts/smoke.ps1"
   },
   "dependencies": {

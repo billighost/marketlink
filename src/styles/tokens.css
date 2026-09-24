@@ -77,7 +77,7 @@
   --lh-ui:      1.5;   /* buttons, labels, table cells */
 
   /* ---------- Typography: tracking and measure ---------- */
-  --tracking-head:   0.005em;
+  --tracking-head:   -0.01em;
   --tracking-normal: 0;
   --measure:         62ch;   /* max width of paragraphs */
   --measure-narrow:  46ch;

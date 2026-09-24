@@ -1,12 +1,320 @@
-import React from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { 
+  Store, 
+  Clock, 
+  Truck, 
+  Settings, 
+  Leaf, 
+  CheckCircle2,
+  AlertCircle,
+  Calendar,
+  MapPin,
+  Save,
+  RotateCcw
+} from 'lucide-react';
 import styles from './StoreSettingsTab.module.css';
 
-const StoreSettingsTab = () => (
-  <div className={styles.contentArea}>
-    <div className={styles.cardPanel}>
-      <h2 className={styles.cardTitle} style={{ fontSize: '1.5rem', marginBottom: '24px' }}>Stall Settings</h2>
+const DEFAULTS = {
+  stallName: 'Cedar Ridge Organic Farm',
+  category: 'Organic Vegetables & Root Crops',
+  location: 'Ibadan Central & Bodija Hub',
+  tagline: 'Farm-to-table organic produce harvested fresh on market mornings.',
+  bio: 'Family-owned organic farm providing fresh, pesticide-free vegetables and root crops harvested directly for market days in Oyo & Lagos state hubs.',
+  phone: '+234 803 456 7890',
+  email: 'orders@cedarridgefarm.ng',
+  badges: ['organic', 'local', 'pesticide'],
+  days: ['wed', 'fri', 'sat'],
+  cutoffDay: 'Mons (Weekly Cutoff)',
+  cutoffTime: '18:00',
+  deliveryNotice: 'Same Day Harvest (Delivered by 2:00 PM)',
+  deliveryZone: 'Ibadan Central, Bodija & Marykal',
+  deliveryFee: '1200',
+  freeDeliveryMin: '15000',
+  weightMetric: 'Metric',
+  pickupAddress: 'Stall B-14, Green Valley Farm Hub',
+  bulkOrders: true,
+  openForPreOrders: true,
+  vacationMode: false,
+  autoPauseZero: true,
+};
+
+const DAY_LABELS = [
+  { key: 'mon', label: 'Mon' },
+  { key: 'tue', label: 'Tue' },
+  { key: 'wed', label: 'Wed' },
+  { key: 'thu', label: 'Thu' },
+  { key: 'fri', label: 'Fri' },
+  { key: 'sat', label: 'Sat' },
+  { key: 'sun', label: 'Sun' },
+];
+
+const ALL_BADGES = [
+  { key: 'organic', label: '100% Organic Certified' },
+  { key: 'local', label: 'Locally Grown' },
+  { key: 'pesticide', label: 'Pesticide Free' },
+  { key: 'hydroponic', label: 'Hydroponic Produce' },
+  { key: 'nongmo', label: 'Non-GMO Verified' },
+  { key: 'family', label: 'Family Farm Owned' },
+];
+
+const StoreSettingsTab = () => {
+  const [activeTab, setActiveTab] = useState('profile');
+  const [saved, setSaved] = useState({ ...DEFAULTS });
+  const [form, setForm] = useState({ ...DEFAULTS });
+
+  const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(saved), [form, saved]);
+
+  const update = useCallback((key, value) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const toggleDay = useCallback((day) => {
+    setForm(prev => ({
+      ...prev,
+      days: prev.days.includes(day) ? prev.days.filter(d => d !== day) : [...prev.days, day],
+    }));
+  }, []);
+
+  const toggleBadge = useCallback((badge) => {
+    setForm(prev => ({
+      ...prev,
+      badges: prev.badges.includes(badge) ? prev.badges.filter(b => b !== badge) : [...prev.badges, badge],
+    }));
+  }, []);
+
+  const handleSave = () => {
+    setSaved({ ...form });
+  };
+
+  const handleRevert = () => {
+    setForm({ ...saved });
+  };
+
+  const activeDayLabels = DAY_LABELS.filter(d => form.days.includes(d.key)).map(d => d.label).join(', ');
+  const isOpen = form.openForPreOrders && !form.vacationMode;
+  const marketStatusText = isOpen ? 'Open for Pre-orders' : 'Pre-orders Paused';
+
+  return (
+    <div className={styles.contentArea}>
+      
+      {/* Page Header */}
+      <div className={styles.pageHeader}>
+        <div>
+          <h1 className={styles.mainTitle}>Stall Settings</h1>
+          <p className={styles.subtitle}>Manage your farm profile and fulfillment preferences.</p>
+        </div>
+        <div className={styles.headerActions}>
+          <div className={styles.statusIndicator}>
+            <div className={`${styles.statusDot} ${isOpen ? '' : styles.statusDotPaused}`}></div>
+            <div className={styles.statusText}>
+              <span className={styles.statusLabel}>Market Status</span>
+              <span className={styles.statusValue}>{marketStatusText}</span>
+            </div>
+          </div>
+          {isDirty && (
+            <button className={styles.btnOutline} onClick={handleRevert}>
+              <RotateCcw size={16} /> Revert
+            </button>
+          )}
+          <button className={styles.btnPrimary} onClick={handleSave}>
+            <Save size={16} /> {isDirty ? 'Save Changes *' : 'Save Settings'}
+          </button>
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className={styles.tabsContainer}>
+        <button className={`${styles.tabBtn} ${activeTab === 'profile' ? styles.activeTabBtn : ''}`} onClick={() => setActiveTab('profile')}>
+          <Store size={18} /> Stall Profile
+        </button>
+        <button className={`${styles.tabBtn} ${activeTab === 'schedule' ? styles.activeTabBtn : ''}`} onClick={() => setActiveTab('schedule')}>
+          <Clock size={18} /> Harvest & Cutoff Schedule
+        </button>
+        <button className={`${styles.tabBtn} ${activeTab === 'fulfillment' ? styles.activeTabBtn : ''}`} onClick={() => setActiveTab('fulfillment')}>
+          <Truck size={18} /> Fulfillment & Operations
+        </button>
+      </div>
+
+      <div className={styles.settingsLayout}>
+        
+        {/* Left: Forms */}
+        <div className={styles.formSection}>
+
+          {/* STALL PROFILE */}
+          {activeTab === 'profile' && (
+            <div className={styles.cardPanel}>
+              <div className={styles.cardHeader}>
+                <div className={styles.iconBox}><Store size={20} className={styles.iconGreen} /></div>
+                <div>
+                  <h2 className={styles.cardTitle}>Public Stall Profile</h2>
+                  <p className={styles.cardSubtitle}>This information will be displayed to shoppers in the marketplace.</p>
+                </div>
+              </div>
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label>STALL / FARM NAME <span className={styles.required}>*</span></label>
+                  <input type="text" value={form.stallName} onChange={e => update('stallName', e.target.value)} className={styles.input} />
+                </div>
+                <div className={styles.row2}>
+                  <div className={styles.formGroup}>
+                    <label>PRIMARY PRODUCT CATEGORY</label>
+                    <select className={styles.select} value={form.category} onChange={e => update('category', e.target.value)}>
+                      <option>Organic Vegetables & Root Crops</option>
+                      <option>Livestock & Poultry</option>
+                      <option>Fruits & Nuts</option>
+                      <option>Grains & Cereals</option>
+                    </select>
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>PRIMARY LOCATION / MARKET HUB</label>
+                    <input type="text" value={form.location} onChange={e => update('location', e.target.value)} className={styles.input} />
+                  </div>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>CATCHY TAGLINE / SLOGAN</label>
+                  <input type="text" value={form.tagline} onChange={e => update('tagline', e.target.value)} className={styles.input} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>STALL BIO & SOURCING PHILOSOPHY</label>
+                  <textarea className={styles.textarea} rows={4} value={form.bio} onChange={e => update('bio', e.target.value)}></textarea>
+                </div>
+                <div className={styles.row2}>
+                  <div className={styles.formGroup}>
+                    <label>SUPPORT PHONE NUMBER</label>
+                    <input type="text" value={form.phone} onChange={e => update('phone', e.target.value)} className={styles.input} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>SUPPORT EMAIL ADDRESS</label>
+                    <input type="email" value={form.email} onChange={e => update('email', e.target.value)} className={styles.input} />
+                  </div>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>FARM BADGES & VERIFICATION FLAGS</label>
+                  <div className={styles.badgesWrapper}>
+                    {ALL_BADGES.map(b => (
+                      <button key={b.key} className={`${styles.badgeBtn} ${form.badges.includes(b.key) ? styles.badgeActive : ''}`} onClick={() => toggleBadge(b.key)}>
+                        <CheckCircle2 size={14} /> {b.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* HARVEST & CUTOFF SCHEDULE */}
+          {activeTab === 'schedule' && (
+            <div className={styles.cardPanel}>
+              <div className={styles.cardHeader}>
+                <div className={styles.iconBox}><Clock size={20} className={styles.iconGreen} /></div>
+                <div>
+                  <h2 className={styles.cardTitle}>Harvest & Cutoff Schedule</h2>
+                  <p className={styles.cardSubtitle}>Define which days your farm harvests and when customer orders lock for processing.</p>
+                </div>
+              </div>
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label>WEEKLY MARKET FULFILLMENT DAYS</label>
+                  <p className={styles.helpText}>Select the days on which you harvest and deliver fresh orders to market hubs.</p>
+                  <div className={styles.daysGrid}>
+                    {DAY_LABELS.map(d => (
+                      <button key={d.key} className={`${styles.dayBox} ${form.days.includes(d.key) ? styles.dayActive : ''}`} onClick={() => toggleDay(d.key)}>
+                        <strong>{d.label}</strong>
+                        <span>{form.days.includes(d.key) ? 'Active' : 'Off'}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.row2}>
+                  <div className={styles.formGroup}>
+                    <label>PRE-ORDER CUTOFF DAY</label>
+                    <select className={styles.select} value={form.cutoffDay} onChange={e => update('cutoffDay', e.target.value)}>
+                      <option>Mons (Weekly Cutoff)</option>
+                      <option>Tues (Weekly Cutoff)</option>
+                      <option>Weds (Weekly Cutoff)</option>
+                    </select>
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>CUTOFF TIME (24H)</label>
+                    <input type="time" value={form.cutoffTime} onChange={e => update('cutoffTime', e.target.value)} className={styles.input} />
+                  </div>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>HARVEST & DELIVERY NOTICE</label>
+                  <input type="text" value={form.deliveryNotice} onChange={e => update('deliveryNotice', e.target.value)} className={styles.input} />
+                  <p className={styles.helpTextIcon}><AlertCircle size={12} /> This notice informs buyers when their harvested items will ship after cutoff.</p>
+                </div>
+                <div className={styles.bannerPreview}>
+                  <div className={styles.bannerHeader}><Calendar size={16} /> <strong>BUYER NOTICE BANNER PREVIEW</strong></div>
+                  <p>"Pre-orders for this market run close on <strong>Friday at {form.cutoffTime}</strong>. Orders placed after cutoff will roll over to the next operating day."</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FULFILLMENT & OPERATIONS */}
+          {activeTab === 'fulfillment' && (
+            <div className={styles.cardPanel}>
+              <div className={styles.cardHeader}>
+                <div className={styles.iconBox}><Truck size={20} className={styles.iconGreen} /></div>
+                <div>
+                  <h2 className={styles.cardTitle}>Fulfillment & Operations</h2>
+                  <p className={styles.cardSubtitle}>Configure delivery rules and manage stall availability.</p>
+                </div>
+              </div>
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label>PRIMARY DELIVERY ZONE / HUB COVERAGE</label>
+                  <input type="text" value={form.deliveryZone} onChange={e => update('deliveryZone', e.target.value)} className={styles.input} />
+                </div>
+                
+                <div className={styles.row2}>
+                  <div className={styles.formGroup}>
+                    <label>STANDARD LOCAL DELIVERY FEE (₦)</label>
+                    <input type="number" value={form.deliveryFee} onChange={e => update('deliveryFee', e.target.value)} className={styles.input} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>MIN. ORDER FOR FREE DELIVERY (₦)</label>
+                    <input type="number" value={form.freeDeliveryMin} onChange={e => update('freeDeliveryMin', e.target.value)} className={styles.input} />
+                  </div>
+                </div>
+
+                <div className={styles.toggleGroup}>
+                  <div>
+                    <span className={styles.toggleLabel}>Open Stall for Pre-Orders</span>
+                    <p className={styles.helpText}>When disabled, buyers can view listings but cannot order.</p>
+                  </div>
+                  <button className={`${styles.toggleTrack} ${form.openForPreOrders ? styles.toggleOn : styles.toggleOff}`} onClick={() => update('openForPreOrders', !form.openForPreOrders)}>
+                    <div className={styles.toggleThumb}></div>
+                  </button>
+                </div>
+
+                <div className={`${styles.toggleGroup} ${styles.vacationBox}`}>
+                  <div>
+                    <span className={styles.toggleLabel}>Vacation / Seasonal Pause Mode</span>
+                    <p className={styles.helpText}>Temporarily close stall for extended breaks.</p>
+                  </div>
+                  <button className={`${styles.toggleTrack} ${form.vacationMode ? styles.toggleOn : styles.toggleOff}`} onClick={() => update('vacationMode', !form.vacationMode)}>
+                    <div className={styles.toggleThumb}></div>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Save Footer */}
+          <div className={styles.bottomSaveBar}>
+            <span className={styles.upToDateText}>
+              <CheckCircle2 size={16} /> {isDirty ? 'You have unsaved changes' : 'All settings up to date'}
+            </span>
+            <button className={styles.btnPrimary} onClick={handleSave}>Save All Settings</button>
+          </div>
+
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default StoreSettingsTab;

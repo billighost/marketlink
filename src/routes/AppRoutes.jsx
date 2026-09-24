@@ -7,6 +7,7 @@ import ProtectedRoute from './ProtectedRoute';
 import GuestLayout from '@/layouts/GuestLayout';
 import VendorLayout from '@/layouts/VendorLayout';
 import BuyerLayout from '@/layouts/BuyerLayout';
+import AdminLayout from '@/layouts/AdminLayout';
 
 // Guest Pages
 import GuestHome from '@/pages/guest/Home';
@@ -26,6 +27,14 @@ import ProductDetail from '@/pages/guest/ProductDetail';
 
 // Vendor Pages
 import Overview from '@/pages/vendor/Overview';
+
+// Admin Pages
+import AdminOverview from '@/pages/admin/Overview';
+import AdminPeople from '@/pages/admin/People';
+import AdminMarkets from '@/pages/admin/Markets';
+import AdminModeration from '@/pages/admin/Moderation';
+import AdminReports from '@/pages/admin/Reports';
+import AdminSettings from '@/pages/admin/Settings';
 
 // Buyer Pages (Main Tabs / Destinations)
 import BuyerHome from '@/pages/buyer/Home';
@@ -97,6 +106,16 @@ export function AppRoutes() {
           <Route path="settings"       element={<PreviewPlaceholder roleName="Stall & Market Settings" />} />
         </Route>
 
+        {/* ── Admin Routes ──────────────────────────────────────── */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminOverview />} />
+          <Route path="people"     element={<AdminPeople />} />
+          <Route path="markets"    element={<AdminMarkets />} />
+          <Route path="moderation" element={<AdminModeration />} />
+          <Route path="reports"    element={<AdminReports />} />
+          <Route path="settings"   element={<AdminSettings />} />
+        </Route>
+
         {/* ── Customer (Buyer) Routes ────────────────────────────── */}
         <Route
           path="/buyer"
@@ -144,9 +163,6 @@ export function AppRoutes() {
           <Route path={PATHS.REGISTER}        element={<Register />} />
           <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
           <Route path={PATHS.UNAUTHORIZED}    element={<Unauthorized />} />
-
-          {/* Temporary Admin Preview */}
-          <Route path={PATHS.ADMIN} element={<PreviewPlaceholder roleName="Admin" />} />
 
           {/* 404 Catch-all */}
           <Route path="*" element={<NotFound />} />

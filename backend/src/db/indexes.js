@@ -208,6 +208,48 @@ export async function ensureIndexes(db) {
     { checkoutId: 1 },
     { name: 'idx_orders_checkoutId' }
   );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { customerId: 1, idempotencyKey: 1 },
+    {
+      unique: true,
+      name: 'idx_orders_customer_idempotency_unique',
+      partialFilterExpression: { idempotencyKey: { $exists: true } },
+    }
+  );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { slotKey: 1, status: 1 },
+    { name: 'idx_orders_slotKey_status' }
+  );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { farmerId: 1, status: 1, completedAt: -1 },
+    { name: 'idx_orders_farmer_status_completed' }
+  );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { farmerId: 1, createdAt: -1 },
+    { name: 'idx_orders_farmer_created' }
+  );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { status: 1, createdAt: -1 },
+    { name: 'idx_orders_status_created' }
+  );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { createdAt: -1 },
+    { name: 'idx_orders_created' }
+  );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { marketId: 1, status: 1, createdAt: -1 },
+    { name: 'idx_orders_market_status_created' }
+  );
+
+  // ── 6b. Checkouts ──
+  await db.collection(COLLECTIONS.CHECKOUTS).createIndex(
+    { customerId: 1, idempotencyKey: 1 },
+    { unique: true, name: 'idx_checkouts_customer_idempotency_unique' }
+  );
+  await db.collection(COLLECTIONS.CHECKOUTS).createIndex(
+    { createdAt: -1 },
+    { name: 'idx_checkouts_created' }
+  );
 
   // ── 7. Reviews ──
   await db.collection(COLLECTIONS.REVIEWS).createIndex(
@@ -236,11 +278,19 @@ export async function ensureIndexes(db) {
     { userId: 1, createdAt: -1 },
     { name: 'idx_favorites_user_created' }
   );
+  await db.collection(COLLECTIONS.FAVORITES).createIndex(
+    { targetType: 1, targetId: 1 },
+    { name: 'idx_favorites_targetType_targetId' }
+  );
 
   // ── 9. Notifications ──
   await db.collection(COLLECTIONS.NOTIFICATIONS).createIndex(
     { userId: 1, readAt: 1, createdAt: -1 },
     { name: 'idx_notifications_user_inbox' }
+  );
+  await db.collection(COLLECTIONS.NOTIFICATIONS).createIndex(
+    { userId: 1, type: 1, createdAt: -1 },
+    { name: 'idx_notifications_user_type_created' }
   );
   await db.collection(COLLECTIONS.NOTIFICATIONS).createIndex(
     { createdAt: 1 },
@@ -276,6 +326,10 @@ export async function ensureIndexes(db) {
     { createdAt: -1 },
     { name: 'idx_contactMessages_created' }
   );
+  await db.collection(COLLECTIONS.CONTACT_MESSAGES).createIndex(
+    { status: 1, createdAt: -1 },
+    { name: 'idx_contactMessages_status_created' }
+  );
 
   // ── 13. Announcements ──
   await db.collection(COLLECTIONS.ANNOUNCEMENTS).createIndex(
@@ -292,6 +346,10 @@ export async function ensureIndexes(db) {
     { targetType: 1, targetId: 1 },
     { name: 'idx_moderationFlags_target' }
   );
+  await db.collection(COLLECTIONS.MODERATION_FLAGS).createIndex(
+    { targetType: 1, targetId: 1, reporterId: 1, status: 1 },
+    { name: 'idx_moderationFlags_target_reporter_status' }
+  );
 
   // ── 15. Search History ──
   await db.collection(COLLECTIONS.SEARCH_HISTORY).createIndex(
@@ -301,5 +359,25 @@ export async function ensureIndexes(db) {
   await db.collection(COLLECTIONS.SEARCH_HISTORY).createIndex(
     { at: 1 },
     { expireAfterSeconds: 60 * 24 * 60 * 60, name: 'idx_searchHistory_ttl_60d' }
+  );
+
+  // ── 16. Audit Log ──
+  await db.collection(COLLECTIONS.AUDIT_LOG).createIndex(
+    { at: -1 },
+    { name: 'idx_auditLog_at' }
+  );
+  await db.collection(COLLECTIONS.AUDIT_LOG).createIndex(
+    { targetType: 1, targetId: 1 },
+    { name: 'idx_auditLog_target' }
+  );
+  await db.collection(COLLECTIONS.AUDIT_LOG).createIndex(
+    { at: 1 },
+    { expireAfterSeconds: 365 * 24 * 60 * 60, name: 'idx_auditLog_ttl_365d' }
+  );
+
+  // ── 17. Reports ──
+  await db.collection(COLLECTIONS.REPORTS).createIndex(
+    { generatedAt: -1 },
+    { name: 'idx_reports_generatedAt' }
   );
 }

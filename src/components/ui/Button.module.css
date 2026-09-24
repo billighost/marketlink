@@ -24,6 +24,10 @@
   pointer-events: none;
 }
 
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .button:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);

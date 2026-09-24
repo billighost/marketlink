@@ -1,0 +1,170 @@
+/* Admin Markets */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-family: 'Idiqlat', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #111;
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.btnPrimary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--color-herb, #5C7048);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btnPrimary:hover {
+  opacity: 0.9;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.marketCard {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.marketTop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotActive {
+  background-color: var(--color-herb, #5C7048);
+}
+
+.dotPaused {
+  background-color: var(--color-carrot, #E07A2C);
+}
+
+.statusLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.marketName {
+  font-family: 'Idiqlat', serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: #111;
+  margin: 0;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.metaRow svg {
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+.cardActions {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+.btnOutline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #374151;
+  transition: background-color 0.15s;
+}
+
+.btnOutline:hover {
+  background-color: #f3f4f6;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    gap: 16px;
+  }
+  .title {
+    font-size: 1.25rem;
+  }
+  .btnPrimary {
+    width: 100%;
+    justify-content: center;
+  }
+  .marketCard {
+    padding: 16px;
+  }
+}

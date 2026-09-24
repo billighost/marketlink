@@ -76,13 +76,17 @@ export async function request(path, options = {}) {
   const url = `${testBaseUrl}${path.startsWith('/') ? path : '/' + path}`;
   const headers = { ...options.headers };
 
-  if (options.body && typeof options.body === 'object' && !(options.body instanceof String)) {
+  let body = options.body;
+  if (options.rawBody !== undefined) {
+    body = options.rawBody;
+  } else if (body && typeof body === 'object' && !Buffer.isBuffer(body) && !(body instanceof Uint8Array)) {
     headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-    options.body = JSON.stringify(options.body);
+    body = JSON.stringify(body);
   }
 
   return fetch(url, {
     ...options,
+    body,
     headers,
   });
 }

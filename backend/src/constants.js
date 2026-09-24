@@ -56,3 +56,104 @@ export const REVIEW_TARGET_TYPES = ['farmer', 'product'];
 export const FAVORITE_TARGET_TYPES = ['product', 'farmer'];
 
 export const MARKET_STATUSES = ['active', 'removed'];
+
+export const NOTIFICATION_TYPES = [
+  'order_placed',
+  'order_accepted',
+  'order_ready',
+  'order_completed',
+  'order_declined',
+  'order_cancelled',
+  'restock',
+  'announcement',
+  'review_reply',
+  'account',
+];
+
+export const CHECKOUT_STATUSES = ['pending', 'done', 'failed'];
+
+export const ALLOWED_ART_KEYS = [
+  'basket',
+  'basket-tomatoes',
+  'crate-carrots',
+  'beet-bunch',
+  'beet',
+  'leafy-greens',
+  'leaves',
+  'sourdough-boule',
+  'loaf',
+  'honey-jar',
+  'honey',
+  'egg-carton',
+  'paper-bag-pears',
+  'radish-bunch',
+  'empty-crate-soldout',
+  'closed-stall',
+  'basket-door',
+  'stall',
+  'crate',
+  'carrot',
+  'tomato',
+  'potatoes',
+  'corn',
+  'squash',
+  'apples',
+  'pears',
+  'strawberries',
+  'blueberries',
+  'croissant',
+  'cheese',
+  'milk-bottle',
+  'herbs',
+  'flowers',
+  'mushrooms',
+  'fish',
+  'sausages',
+  'jam',
+];
+
+export const AUDIT_ACTIONS = [
+  'farmer.approve',
+  'farmer.reject',
+  'farmer.suspend',
+  'farmer.reinstate',
+  'customer.deactivate',
+  'customer.activate',
+  'market.create',
+  'market.update',
+  'market.remove',
+  'product.remove',
+  'review.remove',
+  'moderation.resolve',
+  'category.create',
+  'category.update',
+  'category.delete',
+  'category.reorder',
+  'announcement.create',
+  'announcement.update',
+  'announcement.delete',
+  'announcement.publish',
+  'settings.update',
+  'message.handle',
+  'report.export',
+];
+
+export const REPORT_TYPES = ['orders', 'revenue', 'farmers', 'summary'];
+
+export const SETTINGS_KEYS = ['maxItemsPerOrder', 'defaultCutoffMinutes', 'lowStockDefault'];
+
+export const CONTACT_STATUSES = ['new', 'handled'];
+
+export const MARKET_FACILITIES = [
+  'parking',
+  'step-free',
+  'toilets',
+  'seating',
+  'card-payments',
+  'dog-friendly',
+  'pickup-point',
+  'restrooms',
+  'wheelchair-accessible',
+  'atm',
+];
+

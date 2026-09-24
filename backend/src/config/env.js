@@ -37,7 +37,21 @@ const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://l
 const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:5173';
 const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
 const trustProxy = process.env.TRUST_PROXY === 'true' ? true : false;
+import path from 'node:path';
+import fs from 'node:fs';
+
 const logSlowMs = parseInt(process.env.LOG_SLOW_MS || '150', 10);
+const uploadDir =
+  process.env.UPLOAD_DIR ||
+  (fs.existsSync(path.resolve(process.cwd(), 'backend'))
+    ? path.resolve(process.cwd(), 'backend/uploads')
+    : path.resolve(process.cwd(), 'uploads'));
+
+try {
+  fs.mkdirSync(uploadDir, { recursive: true });
+} catch {
+  // directory already exists or creation deferred
+}
 
 export const env = {
   NODE_ENV: nodeEnv,
@@ -50,6 +64,7 @@ export const env = {
   RATE_LIMIT_DISABLED: rateLimitDisabled,
   TRUST_PROXY: trustProxy,
   LOG_SLOW_MS: logSlowMs,
+  UPLOAD_DIR: uploadDir,
   isProduction: nodeEnv === 'production',
   isTest: nodeEnv === 'test',
   isDevelopment: nodeEnv === 'development',

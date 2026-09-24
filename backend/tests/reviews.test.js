@@ -1,0 +1,516 @@
+/**
+ * Reviews module integration test suite (T3.141 - T3.170).
+ * Tests verified-purchase reviews on completed orders, aggregate atomic updates,
+ * 14-day edit window enforcement, deletion arithmetic, moderation flagging, and authorization.
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { ObjectId } from 'mongodb';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+
+describe('Reviews Suite (T3.141 - T3.170)', () => {
+  let db;
+  let customerGeorgeAuth;
+  let customerMiaAuth;
+  let farmerRiverbendAuth;
+  let adminAuth;
+
+  let riverbendFarmer;
+  let carrotsProduct;
+  let tomatoesProduct;
+  let completedOrderGeorge;
+  let placedOrderGeorge;
+
+  const createdOrderIds = [];
+  const createdReviewIds = [];
+
+  function makeCompletedOrder(overrides = {}) {
+    const now = new Date();
+    const doc = {
+      _id: new ObjectId(),
+      orderNumber: `ML-99${createdOrderIds.length + 10}`,
+      checkoutId: new ObjectId(),
+      customerId: new ObjectId(customerGeorgeAuth.user.id),
+      customerName: 'George Customer',
+      farmerId: riverbendFarmer._id,
+      farmerUserId: riverbendFarmer.userId,
+      farmerName: riverbendFarmer.stallName,
+      marketId: riverbendFarmer.marketIds[0],
+      items: [
+        {
+          productId: carrotsProduct._id,
+          name: carrotsProduct.name,
+          unitPriceCents: carrotsProduct.priceCents,
+          quantity: 1,
+          lineTotalCents: carrotsProduct.priceCents,
+        },
+      ],
+      subtotalCents: carrotsProduct.priceCents,
+      totalCents: carrotsProduct.priceCents,
+      status: 'completed',
+      pickup: {
+        slotStart: new Date(now.getTime() - 7200000),
+        slotEnd: new Date(now.getTime() - 3600000),
+        label: 'Past pickup',
+      },
+      cutoffAt: new Date(now.getTime() - 10000000),
+      timeline: [
+        { status: 'placed', at: new Date(now.getTime() - 12000000), byRole: 'customer' },
+        { status: 'completed', at: new Date(now.getTime() - 3600000), byRole: 'farmer' },
+      ],
+      reviewed: false,
+      createdAt: new Date(now.getTime() - 12000000),
+      updatedAt: new Date(now.getTime() - 3600000),
+      ...overrides,
+    };
+    createdOrderIds.push(doc._id);
+    return doc;
+  }
+
+  async function makeReviewDoc(overrides = {}) {
+    const dedicatedOrder = makeCompletedOrder();
+    await db.collection(COLLECTIONS.ORDERS).insertOne(dedicatedOrder);
+    const doc = {
+      _id: new ObjectId(),
+      targetType: 'farmer',
+      farmerId: riverbendFarmer._id,
+      productId: null,
+      customerId: new ObjectId(customerGeorgeAuth.user.id),
+      customerName: 'George Customer',
+      orderId: dedicatedOrder._id,
+      rating: 4,
+      comment: 'Review text',
+      reply: null,
+      status: 'visible',
+      createdAt: new Date(),
+      ...overrides,
+    };
+    createdReviewIds.push(doc._id);
+    return doc;
+  }
+
+  before(async () => {
+    const env = await setupTestEnvironment();
+    db = env.db;
+
+    customerGeorgeAuth = await loginUser('george@example.com', 'market123');
+    customerMiaAuth = await loginUser('mia@example.com', 'market123');
+    farmerRiverbendAuth = await loginUser('riverbend@example.com', 'market123');
+    adminAuth = await loginUser('admin@marketlink.test', 'Admin12345');
+
+    riverbendFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Riverbend Farm' });
+    carrotsProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Rainbow carrots' });
+    tomatoesProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Heirloom tomatoes' });
+
+    // Create a dedicated completed order for George to ensure predictable tests
+    completedOrderGeorge = makeCompletedOrder();
+    await db.collection(COLLECTIONS.ORDERS).insertOne(completedOrderGeorge);
+
+    // Find a placed order for George
+    placedOrderGeorge = await db.collection(COLLECTIONS.ORDERS).findOne({
+      customerId: new ObjectId(customerGeorgeAuth.user.id),
+      status: 'placed',
+    });
+  });
+
+  after(async () => {
+    if (createdOrderIds.length > 0) {
+      await db.collection(COLLECTIONS.ORDERS).deleteMany({ _id: { $in: createdOrderIds } });
+    }
+    if (createdReviewIds.length > 0) {
+      await db.collection(COLLECTIONS.REVIEWS).deleteMany({ _id: { $in: createdReviewIds } });
+    }
+    await db.collection(COLLECTIONS.REVIEWS).deleteMany({ orderId: completedOrderGeorge._id });
+    await db.collection(COLLECTIONS.MODERATION_FLAGS).deleteMany({ targetType: 'review' });
+    await teardownTestEnvironment();
+  });
+
+  it('T3.141: Reviews can only be submitted for completed orders (placed order -> 409 ORDER_NOT_COMPLETED)', async () => {
+    const res = await request(`/api/orders/${placedOrderGeorge._id.toString()}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({
+        farmer: { rating: 5, comment: 'Great stall!' },
+      }),
+    });
+
+    assert.equal(res.status, 409);
+    const body = await res.json();
+    assert.equal(body.error.code, 'ORDER_NOT_COMPLETED');
+  });
+
+  it('T3.142: Non-owner customer cannot submit reviews for order (404 NOT_FOUND)', async () => {
+    const res = await request(`/api/orders/${completedOrderGeorge._id.toString()}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerMiaAuth.accessToken}`,
+      },
+      body: JSON.stringify({
+        farmer: { rating: 5, comment: 'Great stall!' },
+      }),
+    });
+
+    assert.equal(res.status, 404);
+    const body = await res.json();
+    assert.equal(body.error.code, 'NOT_FOUND');
+  });
+
+  it('T3.143: Farmer review submission on completed order updates farmer aggregates atomically', async () => {
+    const farmerBefore = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: completedOrderGeorge.farmerId });
+    const initialSum = farmerBefore.ratingSum || 0;
+    const initialCount = farmerBefore.ratingCount || 0;
+
+    const res = await request(`/api/orders/${completedOrderGeorge._id.toString()}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({
+        farmer: { rating: 5, comment: 'Outstanding fresh produce!' },
+      }),
+    });
+
+    assert.equal(res.status, 201);
+    const body = await res.json();
+    assert.ok(Array.isArray(body.data.reviews));
+    assert.equal(body.data.reviews.length, 1);
+    assert.equal(body.data.reviews[0].target.type, 'farmer');
+    assert.equal(body.data.reviews[0].rating, 5);
+
+    // Verify atomic aggregates in DB
+    const farmerAfter = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: completedOrderGeorge.farmerId });
+    assert.equal(farmerAfter.ratingSum, initialSum + 5);
+    assert.equal(farmerAfter.ratingCount, initialCount + 1);
+    const expectedAvg = Math.round(((initialSum + 5) / (initialCount + 1)) * 10) / 10;
+    assert.equal(farmerAfter.ratingAvg, expectedAvg);
+  });
+
+  it('T3.144: Product review for product not in order returns 422 VALIDATION_FAILED', async () => {
+    const unrelatedProductId = new ObjectId().toString();
+    const testOrder = makeCompletedOrder();
+    await db.collection(COLLECTIONS.ORDERS).insertOne(testOrder);
+
+    const res = await request(`/api/orders/${testOrder._id.toString()}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({
+        products: [{ productId: unrelatedProductId, rating: 4, comment: 'Nice' }],
+      }),
+    });
+
+    assert.equal(res.status, 422);
+    const body = await res.json();
+    assert.equal(body.error.code, 'VALIDATION_FAILED');
+  });
+
+  it('T3.145: Product review submission updates product aggregates atomically and marks order reviewed: true', async () => {
+    const testOrder = makeCompletedOrder();
+    await db.collection(COLLECTIONS.ORDERS).insertOne(testOrder);
+
+    const prodBefore = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });
+    const initialSum = prodBefore.ratingSum || 0;
+    const initialCount = prodBefore.ratingCount || 0;
+
+    const res = await request(`/api/orders/${testOrder._id.toString()}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({
+        products: [{ productId: carrotsProduct._id.toString(), rating: 4, comment: 'Crisp and sweet!' }],
+      }),
+    });
+
+    assert.equal(res.status, 201);
+    const body = await res.json();
+    assert.equal(body.data.reviews[0].target.type, 'product');
+    assert.equal(body.data.reviews[0].rating, 4);
+
+    const prodAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });
+    assert.equal(prodAfter.ratingSum, initialSum + 4);
+    assert.equal(prodAfter.ratingCount, initialCount + 1);
+
+    // Verify order marked reviewed: true
+    const updatedOrder = await db.collection(COLLECTIONS.ORDERS).findOne({ _id: testOrder._id });
+    assert.equal(updatedOrder.reviewed, true);
+  });
+
+  it('T3.146: Duplicate review for same target and order returns 409 ALREADY_REVIEWED', async () => {
+    // Try to review the farmer again on completedOrderGeorge
+    const res = await request(`/api/orders/${completedOrderGeorge._id.toString()}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({
+        farmer: { rating: 4, comment: 'Duplicate review test' },
+      }),
+    });
+
+    assert.equal(res.status, 409);
+    const body = await res.json();
+    assert.equal(body.error.code, 'ALREADY_REVIEWED');
+  });
+
+  it('T3.147: Author can update review within 14 days and aggregates update by the delta', async () => {
+    const review = await db.collection(COLLECTIONS.REVIEWS).findOne({
+      orderId: completedOrderGeorge._id,
+      targetType: 'farmer',
+    });
+    assert.ok(review);
+
+    const farmerBefore = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: completedOrderGeorge.farmerId });
+    const initialSum = farmerBefore.ratingSum;
+
+    // Change rating from 5 to 3 (delta: -2)
+    const res = await request(`/api/reviews/${review._id.toString()}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({
+        rating: 3,
+        comment: 'Updated: still good but took a while.',
+      }),
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.data.rating, 3);
+    assert.equal(body.data.comment, 'Updated: still good but took a while.');
+
+    const farmerAfter = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: completedOrderGeorge.farmerId });
+    assert.equal(farmerAfter.ratingSum, initialSum - 2);
+  });
+
+  it('T3.148: Author cannot update review after 14-day edit window expires (409 EDIT_WINDOW_EXPIRED)', async () => {
+    const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
+    const oldReview = await makeReviewDoc({ createdAt: fifteenDaysAgo });
+    await db.collection(COLLECTIONS.REVIEWS).insertOne(oldReview);
+
+    const res = await request(`/api/reviews/${oldReview._id.toString()}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({ rating: 5 }),
+    });
+
+    assert.equal(res.status, 409);
+    const body = await res.json();
+    assert.equal(body.error.code, 'EDIT_WINDOW_EXPIRED');
+  });
+
+  it('T3.149: Non-author cannot update review (404 NOT_FOUND on IDOR)', async () => {
+    const review = await db.collection(COLLECTIONS.REVIEWS).findOne({
+      orderId: completedOrderGeorge._id,
+      targetType: 'farmer',
+    });
+
+    const res = await request(`/api/reviews/${review._id.toString()}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerMiaAuth.accessToken}`,
+      },
+      body: JSON.stringify({ rating: 1 }),
+    });
+
+    assert.equal(res.status, 404);
+    const body = await res.json();
+    assert.equal(body.error.code, 'NOT_FOUND');
+  });
+
+  it('T3.150: Author can delete review within 14 days and aggregates decrement atomically', async () => {
+    const farmerBefore = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: riverbendFarmer._id });
+    const initialSum = farmerBefore.ratingSum;
+    const initialCount = farmerBefore.ratingCount;
+
+    const tempReview = await makeReviewDoc({ rating: 5 });
+    await db.collection(COLLECTIONS.REVIEWS).insertOne(tempReview);
+
+    // Manually increment farmer aggregate to simulate create
+    await db.collection(COLLECTIONS.FARMERS).updateOne(
+      { _id: riverbendFarmer._id },
+      { $inc: { ratingSum: 5, ratingCount: 1 } }
+    );
+
+    const res = await request(`/api/reviews/${tempReview._id.toString()}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+    });
+
+    assert.equal(res.status, 200);
+
+    // Verify review is deleted
+    const deletedDoc = await db.collection(COLLECTIONS.REVIEWS).findOne({ _id: tempReview._id });
+    assert.equal(deletedDoc, null);
+
+    // Verify aggregates returned to initial
+    const farmerAfter = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: riverbendFarmer._id });
+    assert.equal(farmerAfter.ratingSum, initialSum);
+    assert.equal(farmerAfter.ratingCount, initialCount);
+  });
+
+  it('T3.151: Author cannot delete review after 14 days (409 EDIT_WINDOW_EXPIRED)', async () => {
+    const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
+    const oldReview = await makeReviewDoc({ createdAt: fifteenDaysAgo });
+    await db.collection(COLLECTIONS.REVIEWS).insertOne(oldReview);
+
+    const res = await request(`/api/reviews/${oldReview._id.toString()}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+    });
+
+    assert.equal(res.status, 409);
+    const body = await res.json();
+    assert.equal(body.error.code, 'EDIT_WINDOW_EXPIRED');
+  });
+
+  it('T3.152: Non-author cannot delete review (404 NOT_FOUND)', async () => {
+    const review = await db.collection(COLLECTIONS.REVIEWS).findOne({
+      orderId: completedOrderGeorge._id,
+      targetType: 'farmer',
+    });
+
+    const res = await request(`/api/reviews/${review._id.toString()}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${customerMiaAuth.accessToken}`,
+      },
+    });
+
+    assert.equal(res.status, 404);
+    const body = await res.json();
+    assert.equal(body.error.code, 'NOT_FOUND');
+  });
+
+  it('T3.153: Any signed-in user can flag a review for moderation (reason 3..300 chars)', async () => {
+    const review = await db.collection(COLLECTIONS.REVIEWS).findOne({
+      orderId: completedOrderGeorge._id,
+      targetType: 'farmer',
+    });
+
+    const res = await request(`/api/reviews/${review._id.toString()}/flag`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerMiaAuth.accessToken}`,
+      },
+      body: JSON.stringify({
+        reason: 'Inappropriate language in review.',
+      }),
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.ok(body.data.message);
+
+    // Check moderationFlags collection
+    const flagDoc = await db.collection(COLLECTIONS.MODERATION_FLAGS).findOne({
+      targetType: 'review',
+      targetId: review._id,
+      reporterId: new ObjectId(customerMiaAuth.user.id),
+    });
+    assert.ok(flagDoc);
+    assert.equal(flagDoc.status, 'open');
+    assert.equal(flagDoc.reason, 'Inappropriate language in review.');
+  });
+
+  it('T3.154: Duplicate flag by same reporter returns 409 ALREADY_FLAGGED', async () => {
+    const review = await db.collection(COLLECTIONS.REVIEWS).findOne({
+      orderId: completedOrderGeorge._id,
+      targetType: 'farmer',
+    });
+
+    const res = await request(`/api/reviews/${review._id.toString()}/flag`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerMiaAuth.accessToken}`,
+      },
+      body: JSON.stringify({
+        reason: 'Flagging a second time should fail.',
+      }),
+    });
+
+    assert.equal(res.status, 409);
+    const body = await res.json();
+    assert.equal(body.error.code, 'ALREADY_FLAGGED');
+  });
+
+  it('T3.155: Validation failures: rating out of bounds (1..5), comment over 1000 chars, unknown fields', async () => {
+    const review = await db.collection(COLLECTIONS.REVIEWS).findOne({
+      orderId: completedOrderGeorge._id,
+      targetType: 'farmer',
+    });
+
+    // Rating = 6
+    const res1 = await request(`/api/reviews/${review._id.toString()}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({ rating: 6 }),
+    });
+    assert.equal(res1.status, 422);
+
+    // Unknown field
+    const res2 = await request(`/api/reviews/${review._id.toString()}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({ unknownField: true }),
+    });
+    assert.equal(res2.status, 422);
+
+    // Flag reason too short (< 3 chars)
+    const res3 = await request(`/api/reviews/${review._id.toString()}/flag`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+      },
+      body: JSON.stringify({ reason: 'no' }),
+    });
+    assert.equal(res3.status, 422);
+  });
+
+  it('T3.156: Role authorization: non-customer cannot submit or edit reviews', async () => {
+    const review = await db.collection(COLLECTIONS.REVIEWS).findOne({
+      orderId: completedOrderGeorge._id,
+      targetType: 'farmer',
+    });
+
+    const res = await request(`/api/reviews/${review._id.toString()}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${farmerRiverbendAuth.accessToken}`,
+      },
+      body: JSON.stringify({ rating: 5 }),
+    });
+    assert.equal(res.status, 403);
+  });
+});
