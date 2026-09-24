@@ -1,0 +1,87 @@
+import React from 'react';
+import { Search, Filter, MoreVertical } from 'lucide-react';
+import styles from './IncomingOrdersTab.module.css';
+
+const IncomingOrdersTab = () => {
+  return (
+    <div className={styles.contentArea}>
+      <div className={styles.cardPanel}>
+        <div className={styles.actionHeader}>
+          <h2 className={styles.cardTitle} style={{ fontSize: '1.5rem' }}>Order History</h2>
+          <div className={styles.searchLayout}>
+            <div className={styles.searchBox}>
+              <Search size={18} className={styles.searchIcon} />
+              <input type="text" placeholder="Search order ID, customer..." className={styles.searchInput} />
+            </div>
+            <button className={styles.btnFilter}>
+              <Filter size={18} /> Filters
+            </button>
+          </div>
+        </div>
+        
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>ORDER ID</th>
+              <th>DATE</th>
+              <th>CUSTOMER NAME</th>
+              <th>ITEMS ORDERED</th>
+              <th>TOTAL AMOUNT</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className={styles.tdPrimary}>ORD-1042</td>
+              <td>Oct 24, 2026</td>
+              <td className={styles.tdPrimary}>Adeola Johnson</td>
+              <td>Assorted Veggie Basket</td>
+              <td className={styles.tdPrimary}>₦12,500</td>
+              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
+              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
+            </tr>
+            <tr>
+              <td className={styles.tdPrimary}>ORD-1041</td>
+              <td>Oct 24, 2026</td>
+              <td className={styles.tdPrimary}>Chuks Emmanuel</td>
+              <td>Unripe Plantains (1 Dozen)</td>
+              <td className={styles.tdPrimary}>₦3,800</td>
+              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
+              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
+            </tr>
+            <tr>
+              <td className={styles.tdPrimary}>ORD-1040</td>
+              <td>Oct 23, 2026</td>
+              <td className={styles.tdPrimary}>Fatima Bello</td>
+              <td>Organic Carrots (5kg)</td>
+              <td className={styles.tdPrimary}>₦5,200</td>
+              <td><span className={`${styles.badge} ${styles.badgeCancelled}`}>Cancelled</span></td>
+              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
+            </tr>
+            <tr>
+              <td className={styles.tdPrimary}>ORD-1039</td>
+              <td>Oct 23, 2026</td>
+              <td className={styles.tdPrimary}>Green Grocers Ltd</td>
+              <td>Wholesale Yams (50 Tubers)</td>
+              <td className={styles.tdPrimary}>₦110,000</td>
+              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
+              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
+            </tr>
+            <tr>
+              <td className={styles.tdPrimary}>ORD-1038</td>
+              <td>Oct 22, 2026</td>
+              <td className={styles.tdPrimary}>Tobi Bakre</td>
+              <td>Fresh Spinach (10 Bunches)</td>
+              <td className={styles.tdPrimary}>₦4,500</td>
+              <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
+              <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default IncomingOrdersTab;
