@@ -159,11 +159,11 @@ export function Home() {
           </Chip>
           {categories.map((cat) => (
             <Chip
-              key={cat.id}
-              onClick={() => handleCategoryClick(cat.name)}
+              key={cat}
+              onClick={() => handleCategoryClick(cat)}
               selected={false}
             >
-              {cat.name}
+              {cat}
             </Chip>
           ))}
         </div>

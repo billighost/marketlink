@@ -38,21 +38,19 @@ export function SheetRoute({
   };
 
   return (
-    <div data-sheet-overlay>
-      <BottomSheet
-        open={true}
-        onClose={handleClose}
-        size={size}
-        title={title}
-        showBack={showBack || Boolean(location.state?.from)}
-        onBack={handleBack}
-        footer={footer}
-      >
-        {React.isValidElement(children)
-          ? React.cloneElement(children, { inSheet: true, onClose: handleClose })
-          : children}
-      </BottomSheet>
-    </div>
+    <BottomSheet
+      open={true}
+      onClose={handleClose}
+      size={size}
+      title={title}
+      showBack={showBack || Boolean(location.state?.from)}
+      onBack={handleBack}
+      footer={footer}
+    >
+      {React.isValidElement(children)
+        ? React.cloneElement(children, { inSheet: true, onClose: handleClose })
+        : children}
+    </BottomSheet>
   );
 }
 

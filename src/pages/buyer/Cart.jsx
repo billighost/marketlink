@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Clock, Info } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { getFarmer, pickupSlots, homeMarket } from '@/data/placeholders';
+import { getFarmer, getProduct, pickupSlots, homeMarket } from '@/data/placeholders';
 import { formatPrice } from '@/utils/format';
 import QuantityStepper from '@/components/ui/QuantityStepper';
 import EmptyState from '@/components/ui/EmptyState';
@@ -26,7 +26,9 @@ export function Cart({ inSheet = true, onClose }) {
   const farmerGroups = useMemo(() => {
     const groups = {};
     items.forEach((cartItem) => {
-      const { product, quantity } = cartItem;
+      const product = getProduct(cartItem.productId);
+      if (!product) return;
+      const quantity = cartItem.quantity;
       const farmer = getFarmer(product.farmerId);
       const farmerId = farmer?.id || 'unknown';
 
@@ -37,7 +39,7 @@ export function Cart({ inSheet = true, onClose }) {
           subtotal: 0,
         };
       }
-      groups[farmerId].items.push(cartItem);
+      groups[farmerId].items.push({ product, quantity });
       groups[farmerId].subtotal += product.price * quantity;
     });
     return Object.values(groups);

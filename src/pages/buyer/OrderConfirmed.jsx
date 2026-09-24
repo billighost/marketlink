@@ -21,13 +21,11 @@ export function OrderConfirmed({
   const navigate = useNavigate();
 
   const handleViewOrders = () => {
-    onClose?.();
-    navigate('/buyer/orders');
+    navigate('/buyer/orders', { replace: true });
   };
 
   const handleKeepBrowsing = () => {
-    onClose?.();
-    navigate('/buyer');
+    navigate('/buyer', { replace: true });
   };
 
   return (

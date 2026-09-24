@@ -74,11 +74,11 @@ export function Farmers() {
           </Chip>
           {categories.map((cat) => (
             <Chip
-              key={cat.id}
-              selected={selectedCategory === cat.name}
-              onClick={() => setSelectedCategory(cat.name)}
+              key={cat}
+              selected={selectedCategory === cat}
+              onClick={() => setSelectedCategory(cat)}
             >
-              {cat.name}
+              {cat}
             </Chip>
           ))}
         </div>

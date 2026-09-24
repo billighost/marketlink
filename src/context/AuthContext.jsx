@@ -9,34 +9,64 @@ import React, { createContext, useContext, useState } from 'react';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [role, setRole] = useState('guest');
-  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(() => {
+    try {
+      return localStorage.getItem('marketlink_role') || 'guest';
+    } catch {
+      return 'guest';
+    }
+  });
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('marketlink_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const login = (userData) => {
-    // Accept a full user object (from demoUsers) or a role string for backward compat
+    let nextRole = 'guest';
+    let nextUser = null;
+
     if (typeof userData === 'string') {
-      // Legacy: called with just a role string (vendor layout uses this)
-      setRole(userData);
-      setUser({
+      nextRole = userData;
+      nextUser = {
         id: 'demo-user',
         name: userData === 'buyer' ? 'Customer Demo' : userData === 'vendor' ? 'Farmer Demo' : 'Admin Demo',
         firstName: userData === 'buyer' ? 'Customer' : userData === 'vendor' ? 'Farmer' : 'Admin',
         role: userData,
-      });
+      };
     } else {
-      // New: called with a user object
-      setRole(userData.role);
-      setUser(userData);
+      nextRole = userData.role;
+      nextUser = userData;
+    }
+
+    setRole(nextRole);
+    setUser(nextUser);
+    try {
+      localStorage.setItem('marketlink_role', nextRole);
+      localStorage.setItem('marketlink_user', JSON.stringify(nextUser));
+    } catch {
+      // ignore storage errors
     }
   };
 
   const logout = () => {
     setRole('guest');
     setUser(null);
+    try {
+      localStorage.removeItem('marketlink_role');
+      localStorage.removeItem('marketlink_user');
+    } catch {
+      // ignore storage errors
+    }
   };
 
+  const isAuthenticated = role !== 'guest' && user !== null;
+
   return (
-    <AuthContext.Provider value={{ role, user, login, logout }}>
+    <AuthContext.Provider value={{ role, user, login, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

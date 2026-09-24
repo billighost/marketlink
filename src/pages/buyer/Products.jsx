@@ -145,11 +145,11 @@ export function Products() {
           </Chip>
           {categories.map((cat) => (
             <Chip
-              key={cat.id}
-              selected={selectedCategory === cat.name}
-              onClick={() => handleCategoryChange(cat.name)}
+              key={cat}
+              selected={selectedCategory === cat}
+              onClick={() => handleCategoryChange(cat)}
             >
-              {cat.name}
+              {cat}
             </Chip>
           ))}
         </div>

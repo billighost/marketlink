@@ -10,7 +10,7 @@ import AppRoutes from '@/routes/AppRoutes';
  */
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <CartProvider>
           <FavoritesProvider>
