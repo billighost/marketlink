@@ -47,11 +47,11 @@
 }
 
 .searchInput:focus { 
-  border-color: var(--color-herb, #5C7048); 
+  border-color: var(--color-success, #5C7048); 
 }
 
 .btnPrimary { 
-  background-color: var(--color-herb, #5C7048); 
+  background-color: var(--color-success, #5C7048); 
   color: #fff; 
   border: none; 
   padding: 7px 14px; 
@@ -70,7 +70,7 @@
 .inventoryCard { 
   background: #fff; 
   border-radius: 12px; 
-  border: 1px solid #e5e7eb; 
+  border: 1px solid var(--color-border); 
   padding: 16px; 
   display: flex; 
   flex-direction: column; 
@@ -133,17 +133,17 @@
 
 .badgeGood { 
   background-color: rgba(92, 112, 72, 0.15); 
-  color: var(--color-herb, #5C7048); 
+  color: var(--color-success, #5C7048); 
 }
 
 .badgeLow { 
   background-color: rgba(224, 122, 44, 0.15); 
-  color: var(--color-carrot, #E07A2C); 
+  color: var(--color-warning, #E07A2C); 
 }
 
 .badgeCritical { 
   background-color: rgba(122, 46, 59, 0.15); 
-  color: var(--color-beet, #7A2E3B); 
+  color: var(--color-primary, #7A2E3B); 
 }
 
 /* ---- RESPONSIVE ---- */

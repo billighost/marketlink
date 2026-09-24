@@ -7,9 +7,8 @@
 .cardPanel { 
   background-color: #fff; 
   border-radius: 12px; 
-  border: 1px solid #e5e7eb; 
+  border: 1px solid var(--color-border); 
   padding: 20px; 
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
 }
 
 .actionHeader { 
@@ -55,7 +54,7 @@
 }
 
 .searchInput:focus { 
-  border-color: var(--color-herb, #5C7048); 
+  border-color: var(--color-success, #5C7048); 
 }
 
 .btnFilter { 
@@ -77,7 +76,7 @@
 .table th { 
   font-family: 'Idiqlat', serif; 
   text-align: left; 
-  padding-bottom: 12px; 
+  padding: 16px 24px; 
   border-bottom: 1px solid #e5e7eb; 
   color: #6b7280; 
   font-size: 0.7rem; 
@@ -86,10 +85,18 @@
 }
 
 .table td { 
-  padding: 12px 0; 
+  padding: 16px 24px; 
   border-bottom: 1px solid #f3f4f6; 
   font-size: 0.85rem; 
   vertical-align: middle; 
+}
+
+.table tr {
+  transition: background-color 0.15s;
+}
+
+.table tr:hover {
+  background-color: var(--color-canvas-soft, #FAF7F0);
 }
 
 .table tr:last-child td { 
@@ -112,12 +119,12 @@
 
 .badgeDelivered { 
   background-color: rgba(92, 112, 72, 0.15); 
-  color: var(--color-herb, #5C7048); 
+  color: var(--color-success, #5C7048); 
 }
 
 .badgeCancelled { 
   background-color: rgba(122, 46, 59, 0.15); 
-  color: var(--color-beet, #7A2E3B); 
+  color: var(--color-primary, #7A2E3B); 
 }
 
 .iconButton { 

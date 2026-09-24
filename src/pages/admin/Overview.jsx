@@ -119,6 +119,33 @@ function getStatusClass(status) {
   }
 }
 
+const Sparkline = ({ trend }) => {
+  const color = trend === 'up' ? 'rgba(92, 112, 72, 0.4)' : 'rgba(224, 122, 44, 0.4)';
+  const stroke = trend === 'up' ? '#5C7048' : '#E07A2C';
+  const points = trend === 'up' 
+    ? "0,20 20,25 40,15 60,18 80,5 100,0 120,5" 
+    : "0,5 20,0 40,15 60,12 80,25 100,20 120,30";
+    
+  return (
+    <svg width="100%" height="40" viewBox="0 0 120 40" preserveAspectRatio="none" className={styles.sparkline}>
+      <defs>
+        <linearGradient id={`grad-${trend}`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline
+        fill={`url(#grad-${trend})`}
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points + " 120,40 0,40"}
+      />
+    </svg>
+  );
+};
+
 export default function Overview() {
   return (
     <div className={styles.page}>
@@ -150,6 +177,7 @@ export default function Overview() {
                 </span>
                 <span className={styles.statSub}>{stat.sub}</span>
               </div>
+              <Sparkline trend={stat.trend} />
             </div>
           );
         })}
