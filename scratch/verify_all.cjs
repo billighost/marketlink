@@ -45,7 +45,7 @@ async function runVerification() {
   try {
     // ── Journey 1: Home Feed & Product Detail Sheet & Add to Cart ──
     console.log('\n--- Testing Journey 1: Home Feed & Product Detail ---');
-    await page.goto('http://localhost:3000/buyer', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3000/buyer', { waitUntil: 'domcontentloaded' });
 
     // Verify Home loaded
     const title = await page.title();
@@ -132,7 +132,7 @@ async function runVerification() {
 
     // ── Journey 3: Browse / Products Directory, Suggestions & Sticky Header ──
     console.log('\n--- Testing Journey 3: Products Directory, Suggestions & Hairline ---');
-    await page.goto('http://localhost:3000/buyer/products', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3000/buyer/products', { waitUntil: 'domcontentloaded' });
 
     // Verify suggestions row
     const suggestions = await page.$$('[class*="suggestionChip"]');
@@ -153,12 +153,12 @@ async function runVerification() {
     // Scroll down to check sticky header hairline class
     await page.evaluate(() => window.scrollTo(0, 100));
     await page.waitForTimeout(200);
-    const isScrolledClass = await page.$eval('[class*="Products_header"]', el => el.className.includes('Scrolled') || el.className.includes('scrolled'));
+    const isScrolledClass = await page.$eval('main [class*="header"]', el => el.className.includes('Scrolled') || el.className.includes('scrolled'));
     console.log(`Sticky header has scrolled hairline class: ${isScrolledClass}`);
 
     // ── Journey 4: Orders & Order Detail Sheet ("Now" badge & live countdown) ──
     console.log('\n--- Testing Journey 4: Orders & OrderDetail Polish ---');
-    await page.goto('http://localhost:3000/buyer/orders', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3000/buyer/orders', { waitUntil: 'domcontentloaded' });
 
     // Open first order
     const firstOrderCard = await page.$('article a, [class*="orderCard"] a');
@@ -185,7 +185,7 @@ async function runVerification() {
 
     // ── Journey 5: Profile Toggles & "Saved" indicator ──
     console.log('\n--- Testing Journey 5: Profile & Toggles ---');
-    await page.goto('http://localhost:3000/buyer/profile', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3000/buyer/profile', { waitUntil: 'domcontentloaded' });
 
     // Toggle reduced motion
     const motionToggle = await page.$('button[role="switch"]');
@@ -198,7 +198,7 @@ async function runVerification() {
 
     // ── Journey 6: Assistant Chat & Recommendations ──
     console.log('\n--- Testing Journey 6: Assistant Chat ---');
-    await page.goto('http://localhost:3000/buyer/assistant', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3000/buyer/assistant', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[class*="textInput"]', { timeout: 3000 });
 
     // Click suggestion "Who sells eggs?"
@@ -215,14 +215,14 @@ async function runVerification() {
 
     // ── Journey 7: De-Slopped Copy Check ──
     console.log('\n--- Testing Journey 7: De-slopped Copy across Pages ---');
-    await page.goto('http://localhost:3000/login', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3000/login', { waitUntil: 'domcontentloaded' });
     const loginHeader = await page.textContent('h1, h2');
     console.log(`Login header text: "${loginHeader}"`);
     if (loginHeader.includes('Welcome back')) {
       throw new Error('Forbidden copy "Welcome back" still in Login.jsx');
     }
 
-    await page.goto('http://localhost:3000/buyer/order-confirmed', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3000/buyer/order-confirmed', { waitUntil: 'domcontentloaded' });
     const confirmedTitle = await page.textContent('h2');
     console.log(`Confirmed title text: "${confirmedTitle}"`);
     if (confirmedTitle.includes('!')) {
@@ -241,7 +241,7 @@ async function runVerification() {
 
     for (const vp of viewports) {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto('http://localhost:3000/buyer', { waitUntil: 'networkidle' });
+      await page.goto('http://localhost:3000/buyer', { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(200);
       console.log(`✓ Rendered cleanly at ${vp.name} (${vp.width}x${vp.height})`);
     }

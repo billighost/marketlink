@@ -245,22 +245,21 @@ export function BottomSheet({
     const deltaY = currentYRef.current - startYRef.current;
     const sheetHeight = sheetRef.current?.offsetHeight || 500;
 
-    // Calculate velocity (px per ms) over last ~100ms
-    const now = performance.now();
-    const recent = historyRef.current.filter((item) => now - item.time <= 100);
+    // Calculate velocity (px per ms) from recent movement history
     let velocity = 0;
-    if (recent.length >= 2) {
-      const first = recent[0];
-      const last = recent[recent.length - 1];
-      const dt = last.time - first.time;
-      if (dt > 10) {
-        velocity = (last.y - first.y) / dt;
+    const historyLen = historyRef.current.length;
+    if (historyLen >= 2) {
+      const last = historyRef.current[historyLen - 1];
+      const prev = historyRef.current[Math.max(0, historyLen - 4)];
+      const dt = last.time - prev.time;
+      if (dt > 0) {
+        velocity = (last.y - prev.y) / dt;
       }
     }
 
-    // Dismiss condition: downward flick (>0.5 px/ms) or dragged down >30% (or >35% for peek)
+    // Dismiss condition: downward flick (>0.4 px/ms) or dragged down >30% (or >35% for peek)
     const distanceThreshold = size === 'peek' ? 0.35 : 0.30;
-    const isFlick = velocity > 0.5;
+    const isFlick = velocity > 0.4;
     const isPastThreshold = deltaY > sheetHeight * distanceThreshold;
 
     if (isFlick || isPastThreshold) {
