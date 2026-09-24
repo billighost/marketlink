@@ -57,13 +57,12 @@
 /* Empty */
 .emptyState {
   text-align: center;
-  padding: 64px 24px;
+  padding: 80px 24px;
   color: #9ca3af;
 }
 
-.emptyIcon {
-  color: var(--color-herb, #5C7048);
-  margin-bottom: 12px;
+.emptyIllustration {
+  margin-bottom: 20px;
 }
 
 .emptyState h3 {

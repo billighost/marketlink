@@ -78,7 +78,13 @@ export default function Moderation() {
       <div className={styles.card}>
         {queue.length === 0 ? (
           <div className={styles.emptyState}>
-            <ShieldCheck size={40} className={styles.emptyIcon} />
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className={styles.emptyIllustration}>
+              <circle cx="60" cy="60" r="48" fill="var(--color-canvas, #F5EFE3)" />
+              <path d="M48 62L56 70L76 48" stroke="var(--color-herb, #5C7048)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M38 38L28 28M82 38L92 28M38 82L28 92M82 82L92 92" stroke="var(--color-wood-line, #E3D3B8)" strokeWidth="3" strokeLinecap="round" />
+              <circle cx="95" cy="60" r="4" fill="var(--color-wood-line, #E3D3B8)" />
+              <circle cx="25" cy="60" r="4" fill="var(--color-wood-line, #E3D3B8)" />
+            </svg>
             <h3>All clear!</h3>
             <p>No items pending moderation right now.</p>
           </div>

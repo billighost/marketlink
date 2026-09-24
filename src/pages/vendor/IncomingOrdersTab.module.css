@@ -7,9 +7,8 @@
 .cardPanel { 
   background-color: #fff; 
   border-radius: 12px; 
-  border: 1px solid #e5e7eb; 
+  border: 1px solid var(--color-border); 
   padding: 20px; 
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
 }
 
 .cardHeader { 
@@ -35,7 +34,7 @@
 .table th { 
   font-family: 'Idiqlat', serif; 
   text-align: left; 
-  padding-bottom: 12px; 
+  padding: 16px 24px; 
   border-bottom: 1px solid #e5e7eb; 
   color: #6b7280; 
   font-size: 0.7rem; 
@@ -44,10 +43,18 @@
 }
 
 .table td { 
-  padding: 12px 0; 
+  padding: 16px 24px; 
   border-bottom: 1px solid #f3f4f6; 
   font-size: 0.85rem; 
   vertical-align: middle; 
+}
+
+.table tr {
+  transition: background-color 0.15s;
+}
+
+.table tr:hover {
+  background-color: var(--color-canvas-soft, #FAF7F0);
 }
 
 .table tr:last-child td { 
@@ -77,16 +84,16 @@
 
 .badgePending { 
   background-color: rgba(224, 122, 44, 0.15); 
-  color: var(--color-carrot, #E07A2C); 
+  color: var(--color-warning, #E07A2C); 
 }
 
 .badgeAccepted { 
   background-color: rgba(92, 112, 72, 0.15); 
-  color: var(--color-herb, #5C7048); 
+  color: var(--color-success, #5C7048); 
 }
 
 .btnPrimary { 
-  background-color: var(--color-herb, #5C7048); 
+  background-color: var(--color-success, #5C7048); 
   color: #fff; 
   border: none; 
   padding: 7px 14px; 
@@ -105,6 +112,32 @@
   font-weight: 500; 
   cursor: pointer; 
   color: #374151; 
+}
+
+.btnOutline:hover {
+  background-color: var(--color-canvas-soft, #FAF7F0);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 24px;
+  color: #9ca3af;
+}
+
+.emptyIllustration {
+  margin-bottom: 20px;
+}
+
+.emptyTitle {
+  font-family: 'Idiqlat', serif;
+  font-size: 1.1rem;
+  color: #374151;
+  margin: 0 0 4px 0;
+}
+
+.emptySub {
+  font-size: 0.85rem;
+  margin: 0;
 }
 
 /* ---- RESPONSIVE ---- */

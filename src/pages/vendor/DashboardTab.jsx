@@ -2,6 +2,33 @@ import React from 'react';
 import { ShoppingCart, BarChart2, Package, Clock } from 'lucide-react';
 import styles from './DashboardTab.module.css';
 
+const Sparkline = ({ trend }) => {
+  const color = trend === 'up' ? 'rgba(92, 112, 72, 0.4)' : 'rgba(224, 122, 44, 0.4)';
+  const stroke = trend === 'up' ? '#5C7048' : '#E07A2C';
+  const points = trend === 'up' 
+    ? "0,20 20,25 40,15 60,18 80,5 100,0 120,5" 
+    : "0,5 20,0 40,15 60,12 80,25 100,20 120,30";
+    
+  return (
+    <svg width="100%" height="40" viewBox="0 0 120 40" preserveAspectRatio="none" className={styles.sparkline}>
+      <defs>
+        <linearGradient id={`vendor-grad-${trend}`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline
+        fill={`url(#vendor-grad-${trend})`}
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points + " 120,40 0,40"}
+      />
+    </svg>
+  );
+};
+
 const DashboardTab = () => (
   <div className={styles.contentArea}>
     <div className={styles.dashboardHeader}>
@@ -17,6 +44,7 @@ const DashboardTab = () => (
         </div>
         <h2 className={styles.statValue}>42</h2>
         <div className={`${styles.statSubtext} ${styles.textGreen}`}>↗ +18% vs previous market</div>
+        <Sparkline trend="up" />
       </div>
       
       <div className={styles.statCard}>
@@ -26,6 +54,7 @@ const DashboardTab = () => (
         </div>
         <h2 className={styles.statValue}>8</h2>
         <div className={`${styles.statSubtext} ${styles.textOrange}`}>Needs action before cutoff</div>
+        <Sparkline trend="down" />
       </div>
       
       <div className={styles.statCard}>
@@ -35,6 +64,7 @@ const DashboardTab = () => (
         </div>
         <h2 className={styles.statValue}>₦425,500</h2>
         <div className={`${styles.statSubtext} ${styles.textGray}`}>Pay-at-pickup on Saturday</div>
+        <Sparkline trend="up" />
       </div>
       
       <div className={styles.statCard}>
@@ -44,6 +74,7 @@ const DashboardTab = () => (
         </div>
         <h2 className={styles.statValue}>16</h2>
         <div className={`${styles.statSubtext} ${styles.textOrange}`}>3 Low Stock warnings</div>
+        <Sparkline trend="down" />
       </div>
     </div>
 
