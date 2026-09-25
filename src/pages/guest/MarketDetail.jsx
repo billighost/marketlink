@@ -28,6 +28,8 @@ import {
   AlertCircle,
   HelpCircle,
   Award,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
@@ -160,7 +162,7 @@ const MARKETS_DB = {
         unit: '/ basket',
         stockLeft: '14 baskets left',
         stockLow: false,
-        image: '/images/product-tomatoes.jpg',
+        image: 'https://avatars.mds.yandex.net/i?id=d2bdd59de0248a5c5027e22529b65cf2867ae6e9-5009165-images-thumbs&n=13',
       },
       {
         id: 'prod-country-sourdough',
@@ -363,7 +365,7 @@ const MARKETS_DB = {
         unit: '/ basket',
         stockLeft: '28 baskets left',
         stockLow: false,
-        image: '/images/product-tomatoes.jpg',
+        image: 'https://avatars.mds.yandex.net/i?id=d2bdd59de0248a5c5027e22529b65cf2867ae6e9-5009165-images-thumbs&n=13',
       },
       {
         id: 'prod-country-sourdough',
@@ -468,7 +470,7 @@ const getFallbackMarket = (id) => ({
       unit: '/ basket',
       stockLeft: '14 left',
       stockLow: false,
-      image: '/images/product-tomatoes.jpg',
+      image: 'https://avatars.mds.yandex.net/i?id=d2bdd59de0248a5c5027e22529b65cf2867ae6e9-5009165-images-thumbs&n=13',
     },
   ],
   sidebar: {
@@ -488,6 +490,93 @@ const getFallbackMarket = (id) => ({
   },
   nearbyMarkets: [],
 });
+
+/**
+ * Interactive click-to-zoom image component.
+ * Zooms into the exact cursor position on click and pans on mouse move while zoomed.
+ */
+function ZoomableGalleryImage({ src, alt, caption, className, isMain = false }) {
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [origin, setOrigin] = useState({ x: 50, y: 50 });
+
+  const updateOrigin = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    setOrigin({ x, y });
+  };
+
+  const handleClick = (e) => {
+    updateOrigin(e);
+    setIsZoomed((prev) => !prev);
+  };
+
+  const handleMouseMove = (e) => {
+    if (isZoomed) {
+      updateOrigin(e);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isZoomed) {
+      setIsZoomed(false);
+    }
+  };
+
+  return (
+    <div
+      className={`${className} ${styles.zoomContainer} ${isZoomed ? styles.isZoomed : ''}`}
+      onClick={handleClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      role="button"
+      tabIndex={0}
+      aria-label={isZoomed ? 'Click to zoom out' : 'Click to zoom into cursor position'}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setIsZoomed((prev) => !prev);
+        } else if (e.key === 'Escape' && isZoomed) {
+          setIsZoomed(false);
+        }
+      }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        className={`${styles.galleryImg} ${styles.zoomImg}`}
+        style={{
+          transformOrigin: `${origin.x}% ${origin.y}%`,
+          transform: isZoomed ? 'scale(2.5)' : undefined,
+        }}
+        draggable={false}
+      />
+
+      {/* Floating Zoom Tooltip / Badge */}
+      <span className={styles.zoomBadge}>
+        {isZoomed ? (
+          <>
+            <ZoomOut size={12} />
+            <span>Click to zoom out</span>
+          </>
+        ) : (
+          <>
+            <ZoomIn size={12} />
+            <span>Click to zoom</span>
+          </>
+        )}
+      </span>
+
+      {/* Caption Pill */}
+      {caption && (
+        <div className={isMain ? styles.galleryCaptionPill : styles.gallerySubPill}>
+          {isMain && <Camera size={13} className={styles.cameraIcon} />}
+          <span>{caption}</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function MarketDetail() {
   const { id } = useParams();
@@ -635,37 +724,29 @@ export function MarketDetail() {
       <section className={styles.gallerySection}>
         <div className="container">
           <div className={styles.galleryCollage} aria-label="Market photos">
-            {/* Main Hero Shot */}
-            <div className={styles.galleryMain}>
-              <img
-                src={market.gallery.main.url}
-                alt={market.name}
-                className={styles.galleryImg}
-              />
-              <div className={styles.galleryCaptionPill}>
-                <Camera size={13} className={styles.cameraIcon} />
-                <span>{market.gallery.main.caption}</span>
-              </div>
-            </div>
+            {/* Main Hero Shot with Click-To-Cursor Zoom */}
+            <ZoomableGalleryImage
+              src={market.gallery.main.url}
+              alt={market.name}
+              caption={market.gallery.main.caption}
+              className={styles.galleryMain}
+              isMain={true}
+            />
 
-            {/* Right Stack */}
+            {/* Right Stack with Click-To-Cursor Zoom */}
             <div className={styles.galleryRightStack}>
-              <div className={styles.gallerySubItem}>
-                <img
-                  src={market.gallery.topRight.url}
-                  alt={market.gallery.topRight.caption}
-                  className={styles.galleryImg}
-                />
-                <span className={styles.gallerySubPill}>{market.gallery.topRight.caption}</span>
-              </div>
-              <div className={styles.gallerySubItem}>
-                <img
-                  src={market.gallery.bottomRight.url}
-                  alt={market.gallery.bottomRight.caption}
-                  className={styles.galleryImg}
-                />
-                <span className={styles.gallerySubPill}>{market.gallery.bottomRight.caption}</span>
-              </div>
+              <ZoomableGalleryImage
+                src={market.gallery.topRight.url}
+                alt={market.gallery.topRight.caption}
+                caption={market.gallery.topRight.caption}
+                className={styles.gallerySubItem}
+              />
+              <ZoomableGalleryImage
+                src={market.gallery.bottomRight.url}
+                alt={market.gallery.bottomRight.caption}
+                caption={market.gallery.bottomRight.caption}
+                className={styles.gallerySubItem}
+              />
             </div>
           </div>
         </div>
@@ -906,9 +987,8 @@ export function MarketDetail() {
                             key={cat}
                             type="button"
                             onClick={() => setSelectedCategory(cat)}
-                            className={`${styles.filterPill} ${
-                              selectedCategory === cat ? styles.filterPillActive : ''
-                            }`}
+                            className={`${styles.filterPill} ${selectedCategory === cat ? styles.filterPillActive : ''
+                              }`}
                           >
                             {cat}
                           </button>
@@ -955,9 +1035,8 @@ export function MarketDetail() {
                               <button
                                 type="button"
                                 onClick={() => handleToggleReserve(p.id)}
-                                className={`${styles.reserveButton} ${
-                                  isReserved ? styles.reserveButtonActive : ''
-                                }`}
+                                className={`${styles.reserveButton} ${isReserved ? styles.reserveButtonActive : ''
+                                  }`}
                               >
                                 <ShoppingBag size={15} />
                                 <span>{isReserved ? '✓ Reserved for Pickup' : 'Reserve for Saturday'}</span>

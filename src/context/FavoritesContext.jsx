@@ -11,6 +11,7 @@ const FavoritesContext = createContext(null);
 export function FavoritesProvider({ children }) {
   const [productIds, setProductIds] = useState(new Set(initialProductIds));
   const [farmerIds, setFarmerIds] = useState(new Set(initialFarmerIds));
+  const [marketIds, setMarketIds] = useState(new Set(['market-elm', 'market-river']));
 
   const toggleProduct = useCallback((id) => {
     setProductIds((prev) => {
@@ -36,19 +37,35 @@ export function FavoritesProvider({ children }) {
     });
   }, []);
 
+  const toggleMarket = useCallback((id) => {
+    setMarketIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
   const isProductFavorite = useCallback((id) => productIds.has(id), [productIds]);
   const isFarmerFavorite = useCallback((id) => farmerIds.has(id), [farmerIds]);
+  const isMarketFavorite = useCallback((id) => marketIds.has(id), [marketIds]);
 
   const value = useMemo(
     () => ({
       productIds: [...productIds],
       farmerIds: [...farmerIds],
+      marketIds: [...marketIds],
       toggleProduct,
       toggleFarmer,
+      toggleMarket,
       isProductFavorite,
       isFarmerFavorite,
+      isMarketFavorite,
     }),
-    [productIds, farmerIds, toggleProduct, toggleFarmer, isProductFavorite, isFarmerFavorite]
+    [productIds, farmerIds, marketIds, toggleProduct, toggleFarmer, toggleMarket, isProductFavorite, isFarmerFavorite, isMarketFavorite]
   );
 
   return (

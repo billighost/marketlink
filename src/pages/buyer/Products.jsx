@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
-import { products, categories, farmers } from '@/data/placeholders';
+import { products, categories, farmers, markets } from '@/data/placeholders';
 import ProductCard from '@/components/domain/ProductCard';
 import Chip from '@/components/ui/Chip';
 import EmptyState from '@/components/ui/EmptyState';
@@ -31,6 +31,8 @@ export function Products() {
   const [selectedCategory, setSelectedCategory] = useState(queryCategory);
   const [inStockOnly, setInStockOnly] = useState(queryStock === 'in');
   const [selectedFarmerId, setSelectedFarmerId] = useState(queryFarmer);
+  const [selectedMarketId, setSelectedMarketId] = useState('');
+  const [sortBy, setSortBy] = useState('featured');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -53,7 +55,7 @@ export function Products() {
 
   // Filter products
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    let list = products.filter((product) => {
       if (search.trim()) {
         const q = search.toLowerCase().trim();
         const matchesName = product.name.toLowerCase().includes(q);
@@ -73,6 +75,11 @@ export function Products() {
         return false;
       }
 
+      if (selectedMarketId) {
+        const f = farmers.find((farm) => farm.id === product.farmerId);
+        if (!f?.marketIds?.includes(selectedMarketId)) return false;
+      }
+
       if (queryStock === 'low' && product.stock !== 'low') {
         return false;
       }
@@ -89,7 +96,17 @@ export function Products() {
 
       return true;
     });
-  }, [search, selectedCategory, inStockOnly, selectedFarmerId, queryFilter, queryStock]);
+
+    if (sortBy === 'price-asc') {
+      list.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-desc') {
+      list.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'name') {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return list;
+  }, [search, selectedCategory, inStockOnly, selectedFarmerId, selectedMarketId, queryFilter, queryStock, sortBy]);
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
@@ -107,6 +124,8 @@ export function Products() {
     setSelectedCategory('All');
     setInStockOnly(false);
     setSelectedFarmerId('');
+    setSelectedMarketId('');
+    setSortBy('featured');
     setSearchParams({});
   };
 
@@ -192,6 +211,22 @@ export function Products() {
           <span className={styles.countText}>
             {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
           </span>
+
+          <div className={styles.sortWrapper}>
+            <span className={styles.sortLabel}>Sort:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className={styles.sortSelect}
+              aria-label="Sort products by"
+            >
+              <option value="featured">Featured Picks</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="name">Name: A to Z</option>
+            </select>
+          </div>
+
           {activeFilterCount > 0 && (
             <button
               type="button"
@@ -287,6 +322,28 @@ export function Products() {
                 onChange={setInStockOnly}
                 label="In stock items only"
               />
+            </div>
+          </div>
+
+          {/* Farmers Market Filter */}
+          <div className={styles.filterSection}>
+            <h2 className={styles.filterSectionTitle}>Farmers Market</h2>
+            <div className={styles.chipWrapGroup}>
+              <Chip
+                selected={!selectedMarketId}
+                onClick={() => setSelectedMarketId('')}
+              >
+                All markets
+              </Chip>
+              {markets.map((m) => (
+                <Chip
+                  key={m.id}
+                  selected={selectedMarketId === m.id}
+                  onClick={() => setSelectedMarketId(m.id)}
+                >
+                  {m.name}
+                </Chip>
+              ))}
             </div>
           </div>
 

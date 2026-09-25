@@ -17,6 +17,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Calendar,
+  RotateCcw,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
@@ -296,6 +297,13 @@ export function Products() {
     return result;
   }, [searchQuery, selectedCategory, selectedMarket, organicOnly, sortBy]);
 
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() ||
+    selectedCategory !== 'All Harvest' ||
+    selectedMarket !== 'All Markets' ||
+    organicOnly
+  );
+
   return (
     <div className={styles.page}>
       {/* ─── 1. HERO SEARCH HEADER ───────────────────────────────── */}
@@ -508,21 +516,114 @@ export function Products() {
 
           {filteredProducts.length === 0 && (
             <div className={styles.emptyState}>
-              <Leaf size={40} className={styles.emptyIcon} />
-              <h3>No products match your search</h3>
-              <p>Try searching for a different harvest crop or clear your market and organic filters.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All Harvest');
-                  setSelectedMarket('All Markets');
-                  setOrganicOnly(false);
-                }}
-                className={styles.resetBtn}
-              >
-                Reset All Filters
-              </button>
+              <div className={styles.emptyIconBadge}>
+                <div className={styles.emptyIconPulse} />
+                <Leaf size={32} className={styles.emptyIcon} />
+              </div>
+
+              <h3 className={styles.emptyTitle}>No products match your search</h3>
+
+              <p className={styles.emptyDesc}>
+                {searchQuery.trim() ? (
+                  <>
+                    No regional harvests found matching &ldquo;<strong>{searchQuery.trim()}</strong>&rdquo;.
+                    Try checking for typos, searching broader crops, or clearing your active filters.
+                  </>
+                ) : (
+                  'We couldn’t find any fresh harvest matching your selected filters. Clear your market or organic filters to see everything available this week.'
+                )}
+              </p>
+
+              {hasActiveFilters && (
+                <div className={styles.activeFilterPills}>
+                  <span className={styles.activeFilterPillsLabel}>Active filters:</span>
+                  {searchQuery.trim() && (
+                    <span className={styles.filterPill}>
+                      Search: &ldquo;{searchQuery}&rdquo;
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className={styles.filterPillRemove}
+                        title="Remove search filter"
+                        aria-label="Remove search filter"
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  )}
+                  {selectedCategory !== 'All Harvest' && (
+                    <span className={styles.filterPill}>
+                      {selectedCategory}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategory('All Harvest')}
+                        className={styles.filterPillRemove}
+                        title="Remove category filter"
+                        aria-label="Remove category filter"
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  )}
+                  {selectedMarket !== 'All Markets' && (
+                    <span className={styles.filterPill}>
+                      {selectedMarket}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMarket('All Markets')}
+                        className={styles.filterPillRemove}
+                        title="Remove market filter"
+                        aria-label="Remove market filter"
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  )}
+                  {organicOnly && (
+                    <span className={styles.filterPill}>
+                      Certified Organic
+                      <button
+                        type="button"
+                        onClick={() => setOrganicOnly(false)}
+                        className={styles.filterPillRemove}
+                        title="Remove organic filter"
+                        aria-label="Remove organic filter"
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className={styles.emptyActionsRow}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All Harvest');
+                    setSelectedMarket('All Markets');
+                    setOrganicOnly(false);
+                  }}
+                  className={styles.resetBtn}
+                >
+                  <RotateCcw size={15} />
+                  <span>Reset All Filters</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All Harvest');
+                    setSelectedMarket('All Markets');
+                    setOrganicOnly(false);
+                  }}
+                  className={styles.secondaryBtn}
+                >
+                  <span>Show All Products</span>
+                </button>
+              </div>
             </div>
           )}
         </div>

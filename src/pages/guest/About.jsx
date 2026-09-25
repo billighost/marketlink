@@ -240,15 +240,24 @@ export function About() {
             {/* Story Visual Imagery Frame */}
             <div className={styles.storyVisualCol}>
               <div className={styles.imageStack}>
+                <div className={styles.ambientGlow} aria-hidden="true" />
+
                 <div className={styles.mainImageWrap}>
                   <img
                     src="/images/market-morning.jpg"
                     alt="Bustling morning at the farmers market with wooden crates full of fresh produce"
                     className={styles.storyMainImg}
                   />
+                  <div className={styles.imageShine} aria-hidden="true" />
+
                   <div className={styles.imageOverlayPill}>
-                    <MapPin size={13} />
+                    <MapPin size={13} className={styles.pillPinIcon} />
                     <span>Abingdon Square Farmers Market, 8:00 AM</span>
+                  </div>
+
+                  <div className={styles.experienceTag}>
+                    <Sparkles size={11} className={styles.tagSparkle} />
+                    <span>Saturday Harvest</span>
                   </div>
                 </div>
 
@@ -258,8 +267,11 @@ export function About() {
                     alt="Riverbend Farm fields in Hudson Valley"
                     className={styles.storySecondaryImg}
                   />
+                  <div className={styles.imageShine} aria-hidden="true" />
+
                   <div className={styles.secondaryBadge}>
-                    <span>🌱 100% Certified Organic Soil</span>
+                    <span className={styles.pulseDot} aria-hidden="true" />
+                    <span>100% Certified Organic Soil</span>
                   </div>
                 </div>
               </div>

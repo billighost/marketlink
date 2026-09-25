@@ -201,6 +201,37 @@
   font-weight: var(--weight-medium);
 }
 
+.sortWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+}
+
+.sortLabel {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  font-weight: 500;
+}
+
+.sortSelect {
+  background-color: #faf5f2;
+  border: 1px solid #ebdcd5;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: #2e2b26;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.sortSelect:focus {
+  border-color: #541722;
+}
+
 .clearAllLink {
   font-size: var(--text-xs);
   color: var(--color-primary);

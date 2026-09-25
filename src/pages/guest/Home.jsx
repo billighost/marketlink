@@ -298,7 +298,7 @@ export function Home() {
 
                   <div className={styles.marketFooter}>
                     <span className={styles.vendorCount}>{market.vendors}</span>
-                    <Link to={market.path} className={styles.viewMarketLink}>
+                    <Link to={PATHS.MARKETS} className={styles.viewMarketLink}>
                       <span>View Market</span>
                       <ArrowRight size={14} />
                     </Link>
@@ -527,7 +527,7 @@ export function Home() {
               </Link>
 
               <Link
-                to={PATHS.BUYER_PRODUCTS || '/buyer/products'}
+                to={PATHS.PRODUCTS || '/buyer/products'}
                 className={styles.ctaSecondaryBtn}
               >
                 Explore All Products

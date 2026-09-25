@@ -207,6 +207,16 @@ export function OrderDetail({ inSheet = true, onClose }) {
           <div className={styles.cardText}>
             <span className={styles.cardLabel}>{market?.name || 'Farmers Market'}</span>
             <span className={styles.cardSubValue}>{market?.address}</span>
+            {market?.address && (
+              <a
+                href={`https://maps.google.com/?q=${encodeURIComponent(market.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.directionsLink}
+              >
+                Get directions on Google Maps ↗
+              </a>
+            )}
             <div className={styles.stallsList}>
               {order.farmerGroups?.map((fg) => (
                 <span key={fg.farmerId} className={styles.stallPill}>
@@ -215,6 +225,13 @@ export function OrderDetail({ inSheet = true, onClose }) {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className={styles.cutoffPolicyRow}>
+          <Clock size={14} className={styles.cutoffIcon} />
+          <span>
+            <strong>Modification Cutoff:</strong> Pre-orders can be cancelled or altered until Friday at 6:00 PM before Saturday market. Payment is collected in person at pickup.
+          </span>
         </div>
       </section>
 

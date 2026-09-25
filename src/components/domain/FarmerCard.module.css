@@ -98,14 +98,36 @@
   min-width: 0;
 }
 
+.card:hover {
+  border-color: #541722;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(84, 23, 34, 0.08);
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.topSellerBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #541722;
+  background-color: #fce8ec;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
 /* Reserved two lines for the name prevents ragged card heights */
 .stallName {
   font-family: var(--font-body);
   font-size: var(--text-body);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  font-weight: 600;
+  color: #24201c;
   line-height: 1.3;
-  min-height: calc(2 * 15px * 1.3);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -128,13 +150,41 @@
 .meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
+  gap: 6px;
   min-width: 0;
+  margin-top: 4px;
+}
+
+.ratingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  color: #24201c;
+  font-weight: 600;
+}
+
+.starIcon {
+  color: #e07a2c;
+  font-size: 0.75rem;
+}
+
+.ratingValue {
+  font-weight: 700;
+}
+
+.reviewCount {
+  color: #8c8175;
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.metaDot {
+  color: #c4b6ab;
 }
 
 .stallNumber {
   font-size: var(--text-xs);
-  color: var(--color-ink-soft);
+  color: #7d7266;
   font-weight: var(--weight-medium);
 }

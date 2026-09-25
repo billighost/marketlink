@@ -14,6 +14,7 @@ import {
   Sparkles,
   ShoppingBag,
   X,
+  RotateCcw,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
@@ -196,6 +197,12 @@ export function Farmers() {
       return true;
     });
   }, [searchQuery, selectedCategory, organicOnly]);
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() ||
+    selectedCategory !== 'All Growers' ||
+    organicOnly
+  );
 
   return (
     <div className={styles.page}>
@@ -387,20 +394,98 @@ export function Farmers() {
 
           {filteredFarmers.length === 0 && (
             <div className={styles.emptyState}>
-              <Leaf size={36} className={styles.emptyIcon} />
-              <h3>No farmers match your filters</h3>
-              <p>Try searching for a different crop name or reset the organic filter.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All Growers');
-                  setOrganicOnly(false);
-                }}
-                className={styles.resetBtn}
-              >
-                Clear all filters
-              </button>
+              <div className={styles.emptyIconBadge}>
+                <div className={styles.emptyIconPulse} />
+                <Leaf size={32} className={styles.emptyIcon} />
+              </div>
+
+              <h3 className={styles.emptyTitle}>No farmers match your filters</h3>
+
+              <p className={styles.emptyDesc}>
+                {searchQuery.trim() ? (
+                  <>
+                    No growers found matching &ldquo;<strong>{searchQuery.trim()}</strong>&rdquo;.
+                    Try checking for typos or searching general crops like &ldquo;greens&rdquo; or &ldquo;berries&rdquo;.
+                  </>
+                ) : (
+                  'We couldn’t find any growers matching your selected category or certification filters. Try resetting to view all regional producers.'
+                )}
+              </p>
+
+              {hasActiveFilters && (
+                <div className={styles.activeFilterPills}>
+                  <span className={styles.activeFilterPillsLabel}>Active filters:</span>
+                  {searchQuery.trim() && (
+                    <span className={styles.filterPill}>
+                      Search: &ldquo;{searchQuery}&rdquo;
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className={styles.filterPillRemove}
+                        title="Remove search filter"
+                        aria-label="Remove search filter"
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  )}
+                  {selectedCategory !== 'All Growers' && (
+                    <span className={styles.filterPill}>
+                      {selectedCategory}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategory('All Growers')}
+                        className={styles.filterPillRemove}
+                        title="Remove category filter"
+                        aria-label="Remove category filter"
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  )}
+                  {organicOnly && (
+                    <span className={styles.filterPill}>
+                      Certified Organic
+                      <button
+                        type="button"
+                        onClick={() => setOrganicOnly(false)}
+                        className={styles.filterPillRemove}
+                        title="Remove organic filter"
+                        aria-label="Remove organic filter"
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className={styles.emptyActionsRow}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All Growers');
+                    setOrganicOnly(false);
+                  }}
+                  className={styles.resetBtn}
+                >
+                  <RotateCcw size={15} />
+                  <span>Reset All Filters</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All Growers');
+                    setOrganicOnly(false);
+                  }}
+                  className={styles.secondaryBtn}
+                >
+                  <span>Show All Farmers</span>
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -173,7 +173,9 @@
 }
 
 .heroPrimaryBtn:hover {
-  background-color: #3e0e16;
+  border: 1px solid #541722;
+  background: white;
+  color: #541722;
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(84, 23, 34, 0.28);
 }
@@ -314,14 +316,32 @@
   margin-top: 24px;
   background-color: #ffffff;
   border-left: 3px solid #541722;
-  border-radius: 0 12px 12px 0;
-  padding: 20px 22px;
-  box-shadow: 0 2px 10px rgba(46, 43, 38, 0.04);
+  border-radius: 0 14px 14px 0;
+  padding: 22px 24px;
+  box-shadow: 0 4px 16px rgba(46, 43, 38, 0.05);
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 350ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-left-color 300ms ease,
+              background-color 300ms ease;
+  cursor: default;
+}
+
+.storyHighlightBox:hover {
+  transform: translateX(4px);
+  background-color: #fffdfb;
+  border-left-color: #8c3f20;
+  box-shadow: 0 8px 24px -4px rgba(84, 23, 34, 0.12);
 }
 
 .quoteIcon {
   color: #8c3f20;
   margin-bottom: 8px;
+  transition: transform 300ms ease, color 300ms ease;
+}
+
+.storyHighlightBox:hover .quoteIcon {
+  transform: scale(1.1);
+  color: #541722;
 }
 
 .quoteText {
@@ -341,54 +361,58 @@
   color: #8c8175;
 }
 
-/* ─── IMAGE STACK ────────────────────────────────────────────────── */
-.imageStack {
+/* ─── STORY VISUAL IMAGERY STACK & HOVER EFFECTS ─── */
+.storyVisualCol {
   position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 6px 36px 6px;
 }
 
+.imageStack {
+  position: relative;
+  width: 100%;
+  max-width: 530px;
+}
+
+/* Ambient warm aura behind the photo collage */
+.ambientGlow {
+  position: absolute;
+  top: 10%;
+  left: 15%;
+  width: 75%;
+  height: 80%;
+  background: radial-gradient(circle at 60% 45%, rgba(140, 63, 32, 0.16), rgba(84, 23, 34, 0.08) 55%, transparent 75%);
+  filter: blur(40px);
+  border-radius: 40px;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 600ms ease, transform 600ms ease, filter 600ms ease;
+}
+
+.imageStack:hover .ambientGlow {
+  opacity: 1;
+  transform: scale(1.08);
+  filter: blur(48px);
+}
+
+/* 1. Main Large Card (Top Market Scene) */
 .mainImageWrap {
   position: relative;
+  z-index: 1;
   width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow:
-    0 4px 6px rgba(46, 43, 38, 0.04),
-    0 12px 40px rgba(46, 43, 38, 0.14),
-    0 0 0 1px rgba(235, 220, 213, 0.6);
-  transition: box-shadow 420ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              transform 420ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.mainImageWrap::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255,255,255,0.12) 0%,
-    transparent 50%,
-    rgba(84, 23, 34, 0.06) 100%
-  );
-  opacity: 0;
-  transition: opacity 420ms ease;
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-.mainImageWrap:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow:
-    0 8px 12px rgba(46, 43, 38, 0.06),
-    0 24px 60px rgba(84, 23, 34, 0.18),
-    0 0 0 2px rgba(84, 23, 34, 0.15);
-}
-
-.mainImageWrap:hover::after {
-  opacity: 1;
+  background-color: #f2ece6;
+  border: 1px solid rgba(235, 220, 213, 0.9);
+  box-shadow: 0 14px 36px -10px rgba(46, 43, 38, 0.16),
+              0 4px 14px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 600ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 400ms ease;
 }
 
 .storyMainImg {
@@ -396,59 +420,141 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 750ms cubic-bezier(0.16, 1, 0.3, 1),
+              filter 500ms ease;
+}
+
+/* Interactive Hover state for Main Image */
+.mainImageWrap:hover {
+  transform: translateY(-8px);
+  border-color: rgba(140, 63, 32, 0.35);
+  box-shadow: 0 26px 54px -12px rgba(84, 23, 34, 0.24),
+              0 10px 24px -4px rgba(0, 0, 0, 0.08);
+  z-index: 2;
 }
 
 .mainImageWrap:hover .storyMainImg {
   transform: scale(1.05);
+  filter: contrast(1.03) brightness(1.02);
 }
 
+/* Dynamic light reflection sheen layer */
+.imageShine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 500ms ease;
+}
+
+.mainImageWrap:hover .imageShine,
+.secondaryImageWrap:hover .imageShine {
+  opacity: 1;
+}
+
+/* Top-right floating experience tag */
+.experienceTag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #541722;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(84, 23, 34, 0.16);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 300ms ease,
+              box-shadow 300ms ease;
+  pointer-events: none;
+}
+
+.tagSparkle {
+  color: #8c3f20;
+}
+
+.mainImageWrap:hover .experienceTag {
+  transform: translateY(-2px);
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(84, 23, 34, 0.14);
+}
+
+/* Bottom-left market location pill */
 .imageOverlayPill {
   position: absolute;
   bottom: 14px;
   left: 14px;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background-color: rgba(20, 17, 13, 0.78);
-  backdrop-filter: blur(10px) saturate(1.4);
-  -webkit-backdrop-filter: blur(10px) saturate(1.4);
-  color: #f5f0eb;
+  gap: 7px;
+  background-color: rgba(24, 20, 16, 0.82);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  color: #ffffff;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.72rem;
+  font-size: 0.73rem;
   font-weight: 500;
   padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.12);
-  transition: background-color 280ms ease, transform 280ms ease;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 300ms ease,
+              border-color 300ms ease,
+              box-shadow 300ms ease;
+  pointer-events: none;
+}
+
+.pillPinIcon {
+  color: #f1b38f;
+  flex-shrink: 0;
 }
 
 .mainImageWrap:hover .imageOverlayPill {
-  background-color: rgba(84, 23, 34, 0.82);
   transform: translateY(-2px);
+  background-color: rgba(20, 16, 12, 0.92);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
 }
 
+/* 2. Secondary Overlapping Card (Riverbend Farm) */
 .secondaryImageWrap {
   position: relative;
-  width: 82%;
-  aspect-ratio: 16 / 9;
-  border-radius: 14px;
+  z-index: 3;
+  width: 78%;
+  aspect-ratio: 16 / 10;
+  border-radius: 16px;
   overflow: hidden;
-  margin-top: -36px;
+  margin-top: -62px;
   margin-left: auto;
-  border: 4px solid #ffffff;
-  box-shadow:
-    0 4px 16px rgba(46, 43, 38, 0.12),
-    0 12px 32px rgba(46, 43, 38, 0.16);
-  transition: box-shadow 380ms ease, transform 380ms ease, border-color 280ms ease;
-}
-
-.secondaryImageWrap:hover {
-  transform: translateY(-5px) translateX(-3px);
-  box-shadow:
-    0 8px 24px rgba(46, 43, 38, 0.16),
-    0 20px 48px rgba(84, 23, 34, 0.14);
-  border-color: #f5ede8;
+  margin-right: -10px;
+  background-color: #ffffff;
+  border: 5px solid #ffffff;
+  box-shadow: 0 18px 42px -8px rgba(46, 43, 38, 0.22),
+              0 6px 18px -2px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 600ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 300ms ease;
 }
 
 .storySecondaryImg {
@@ -456,34 +562,119 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 480ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 750ms cubic-bezier(0.16, 1, 0.3, 1),
+              filter 500ms ease;
+}
+
+/* Interactive Hover state for Secondary Floating Card */
+.secondaryImageWrap:hover {
+  transform: translateY(-12px) scale(1.035);
+  border-color: #fffdfc;
+  box-shadow: 0 30px 60px -10px rgba(84, 23, 34, 0.32),
+              0 12px 28px -4px rgba(0, 0, 0, 0.14);
+  z-index: 4;
 }
 
 .secondaryImageWrap:hover .storySecondaryImg {
-  transform: scale(1.07);
+  transform: scale(1.06);
+  filter: contrast(1.03) brightness(1.02);
 }
 
+/* Soil certified badge */
 .secondaryBadge {
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #1e4d22;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #1e5229;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 7px;
-  border: 1px solid rgba(39, 83, 43, 0.15);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: transform 280ms ease, box-shadow 280ms ease;
+  padding: 4px 11px;
+  border-radius: 8px;
+  border: 1px solid rgba(30, 82, 41, 0.2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition: transform 300ms ease, box-shadow 300ms ease;
+  pointer-events: none;
+}
+
+.pulseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #277933;
+  box-shadow: 0 0 0 0 rgba(39, 121, 51, 0.6);
+  animation: pulseOrganic 2.2s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+@keyframes pulseOrganic {
+  0% {
+    box-shadow: 0 0 0 0 rgba(39, 121, 51, 0.6);
+  }
+  65% {
+    box-shadow: 0 0 0 7px rgba(39, 121, 51, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(39, 121, 51, 0);
+  }
 }
 
 .secondaryImageWrap:hover .secondaryBadge {
   transform: scale(1.04);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* Subtle choreographic lift when hovering the entire stack */
+.imageStack:hover .mainImageWrap {
+  border-color: rgba(140, 63, 32, 0.25);
+}
+
+@media (max-width: 959px) {
+  .storyVisualCol {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+
+  .secondaryImageWrap {
+    margin-right: 0;
+    width: 82%;
+    margin-top: -45px;
+  }
+}
+
+@media (max-width: 600px) {
+  .imageOverlayPill {
+    font-size: 0.68rem;
+    padding: 5px 11px;
+    bottom: 10px;
+    left: 10px;
+  }
+
+  .experienceTag {
+    font-size: 0.62rem;
+    padding: 4px 9px;
+    top: 10px;
+    right: 10px;
+  }
+
+  .secondaryBadge {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    top: 8px;
+    right: 8px;
+  }
+
+  .secondaryImageWrap {
+    margin-top: -35px;
+    width: 86%;
+    border-width: 4px;
+  }
 }
 
 /* ─── CHAPTER 2: VALUES SECTION ──────────────────────────────────── */
@@ -550,59 +741,18 @@
 .valueCard {
   background-color: #faf8f5;
   border: 1px solid #ebdcd5;
-  border-radius: 16px;
-  padding: 28px 24px;
+  border-radius: 14px;
+  padding: 26px 22px;
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  transition:
-    background-color 300ms ease,
-    border-color 300ms ease,
-    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 300ms ease;
-}
-
-.valueCard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(84, 23, 34, 0.04) 0%, transparent 60%);
-  opacity: 0;
-  transition: opacity 300ms ease;
-  pointer-events: none;
-}
-
-.valueCard::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #541722, #8c3f20, #541722);
-  border-radius: 0 0 16px 16px;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 180ms ease;
 }
 
 .valueCard:hover {
   background-color: #ffffff;
-  border-color: rgba(84, 23, 34, 0.3);
-  transform: translateY(-6px);
-  box-shadow:
-    0 4px 8px rgba(84, 23, 34, 0.05),
-    0 16px 36px rgba(84, 23, 34, 0.12),
-    inset 0 1px 0 rgba(255,255,255,0.8);
-}
-
-.valueCard:hover::before {
-  opacity: 1;
-}
-
-.valueCard:hover::after {
-  transform: scaleX(1);
+  border-color: #541722;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(84, 23, 34, 0.08);
 }
 
 .valueCardTop {
@@ -1188,4 +1338,5 @@
 .ctaSecondaryBtn:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-color: #ffffff;
+  color: white;
 }

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, Users, Award, ShieldCheck } from 'lucide-react';
 import { farmers, categories } from '@/data/placeholders';
 import FarmerCard from '@/components/domain/FarmerCard';
 import Chip from '@/components/ui/Chip';
@@ -18,7 +18,7 @@ export function Farmers() {
     return farmers.filter((farmer) => {
       // Search text
       if (search.trim()) {
-        const q = search.toLowerCase();
+        const q = search.toLowerCase().trim();
         const matchesName = farmer.stallName.toLowerCase().includes(q);
         const matchesSpecialty = farmer.specialty.toLowerCase().includes(q);
         const matchesStory = farmer.story.toLowerCase().includes(q);
@@ -39,58 +39,69 @@ export function Farmers() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Farmers & Producers</h1>
+        <div className={styles.titleRow}>
+          <div>
+            <h1 className={styles.title}>Growers & Producers</h1>
+            <p className={styles.subtitle}>
+              100% producer-only directory. Connect directly with the family farms and artisan bakers behind each Saturday stall.
+            </p>
+          </div>
+        </div>
 
         {/* Search Bar */}
-        <div className={styles.searchWrapper}>
-          <Search size={18} className={styles.searchIcon} aria-hidden="true" />
-          <input
-            type="search"
-            className={styles.searchInput}
-            placeholder="Search farm stalls, bakers, beekeepers..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Search farmers and producers"
-          />
-          {search && (
-            <button
-              type="button"
-              className={styles.clearSearch}
-              onClick={() => setSearch('')}
-              aria-label="Clear search"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        <div className={styles.searchRow}>
+          <div className={styles.searchWrapper}>
+            <Search size={18} className={styles.searchIcon} aria-hidden="true" />
+            <input
+              type="search"
+              className={styles.searchInput}
+              placeholder="Search farm stalls, sourdough bakers, beekeepers..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search farmers and producers"
+            />
+            {search && (
+              <button
+                type="button"
+                className={styles.clearSearch}
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
 
-        {/* Category Filter Chips */}
-        <div className={styles.categoryScroll} role="tablist" aria-label="Farmer categories">
-          <Chip
-            selected={selectedCategory === 'All'}
-            onClick={() => setSelectedCategory('All')}
-          >
-            All
-          </Chip>
-          {categories.map((cat) => (
+          {/* Category Filter Chips */}
+          <div className={styles.categoryScroll} role="tablist" aria-label="Farmer categories">
             <Chip
-              key={cat}
-              selected={selectedCategory === cat}
-              onClick={() => setSelectedCategory(cat)}
+              selected={selectedCategory === 'All'}
+              onClick={() => setSelectedCategory('All')}
             >
-              {cat}
+              All Specialties
             </Chip>
-          ))}
+            {categories.map((cat) => (
+              <Chip
+                key={cat}
+                selected={selectedCategory === cat}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </Chip>
+            ))}
+          </div>
         </div>
 
-        <span className={styles.countText}>
-          Showing {filteredFarmers.length} {filteredFarmers.length === 1 ? 'farmer' : 'farmers'}
-        </span>
+        <div className={styles.countRow}>
+          <span className={styles.countText}>
+            Showing {filteredFarmers.length} {filteredFarmers.length === 1 ? 'independent grower' : 'independent growers'}
+          </span>
+        </div>
       </header>
 
-      {/* Farmers List */}
+      {/* Farmers Grid */}
       {filteredFarmers.length > 0 ? (
-        <div className={styles.list}>
+        <div className={styles.grid}>
           {filteredFarmers.map((farmer) => (
             <FarmerCard key={farmer.id} farmer={farmer} variant="list" />
           ))}

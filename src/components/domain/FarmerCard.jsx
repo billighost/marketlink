@@ -50,11 +50,22 @@ export function FarmerCard({
       {/* Details Content */}
       <div className={styles.content}>
         <div className={styles.header}>
-          <h3 className={styles.stallName}>{farmer.stallName}</h3>
+          <div className={styles.titleRow}>
+            <h3 className={styles.stallName}>{farmer.stallName}</h3>
+            {farmer.isTopSeller && (
+              <span className={styles.topSellerBadge}>Top Seller</span>
+            )}
+          </div>
           <p className={styles.specialty}>{farmer.specialty}</p>
         </div>
 
         <div className={styles.meta}>
+          <div className={styles.ratingBadge}>
+            <span className={styles.starIcon}>★</span>
+            <span className={styles.ratingValue}>{farmer.rating}</span>
+            <span className={styles.reviewCount}>({farmer.reviewCount})</span>
+          </div>
+          <span className={styles.metaDot} aria-hidden="true">·</span>
           <span className={styles.stallNumber}>{farmer.stallNumber}</span>
         </div>
       </div>

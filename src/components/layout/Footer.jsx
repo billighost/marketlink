@@ -90,7 +90,7 @@ export function Footer({ withWave = false }) {
         <div className={styles.bottomBar}>
           <div className="container">
             <p className={styles.copyright}>
-              © 2024 MarketLink. All rights reserved.
+              © 2026 MarketLink. All rights reserved.
             </p>
           </div>
         </div>

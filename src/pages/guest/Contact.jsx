@@ -23,11 +23,11 @@ import useDocumentTitle from '@/hooks/useDocumentTitle';
 import styles from './Contact.module.css';
 
 const TOPICS = [
-  { id: 'pickup', label: 'Saturday Pickup Question', icon: '🌾' },
-  { id: 'farmer', label: 'Farmer / Vendor Admission', icon: '🚜' },
-  { id: 'order', label: 'Pre-Order Assistance', icon: '📦' },
-  { id: 'product', label: 'Crop or Item Inquiry', icon: '🍎' },
-  { id: 'feedback', label: 'Market Feedback / Other', icon: '💬' },
+  { id: 'pickup', label: 'Saturday Pickup Question' },
+  { id: 'farmer', label: 'Farmer / Vendor Admission' },
+  { id: 'order', label: 'Pre-Order Assistance' },
+  { id: 'product', label: 'Crop or Item Inquiry' },
+  { id: 'feedback', label: 'Market Feedback / Other' },
 ];
 
 const MARKETS_LIST = [
@@ -390,9 +390,8 @@ export function Contact() {
                             key={t.id}
                             type="button"
                             onClick={() => setFormData((prev) => ({ ...prev, topic: t.label }))}
-                            className={`${styles.topicChip} ${
-                              formData.topic === t.label ? styles.topicChipActive : ''
-                            }`}
+                            className={`${styles.topicChip} ${formData.topic === t.label ? styles.topicChipActive : ''
+                              }`}
                           >
                             <span>{t.icon}</span>
                             <span>{t.label}</span>

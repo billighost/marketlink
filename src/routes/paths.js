@@ -34,6 +34,8 @@ export const PATHS = {
   BUYER_PROFILE_MARKETS: '/buyer/profile/markets',
   BUYER_PROFILE_NOTIFICATIONS: '/buyer/profile/notifications',
   BUYER_PROFILE_HELP: '/buyer/profile/help',
+  BUYER_REVIEWS: '/buyer/reviews',
+  BUYER_NOTIFICATIONS: '/buyer/notifications',
   VENDOR: '/vendor',
   ADMIN: '/admin',
 };
