@@ -1,40 +1,114 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { favoriteProductIds as initialProductIds, favoriteFarmerIds as initialFarmerIds } from '@/data/placeholders';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth } from './AuthContext';
+import { getFavoriteIds, addFavorite, removeFavorite } from '@/api/me';
+import { invalidateQueries } from '@/hooks/useQuery';
 
-/**
- * Favorites context for the Customer app.
- * Tracks saved products and farmers in memory.
- * TEMP: replace with API calls when backend is ready.
- */
 const FavoritesContext = createContext(null);
 
 export function FavoritesProvider({ children }) {
-  const [productIds, setProductIds] = useState(new Set(initialProductIds));
-  const [farmerIds, setFarmerIds] = useState(new Set(initialFarmerIds));
+  const { isAuthenticated } = useAuth();
 
-  const toggleProduct = useCallback((id) => {
-    setProductIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
+  const [productIds, setProductIds] = useState(new Set());
+  const [farmerIds, setFarmerIds] = useState(new Set());
+  const [loading, setLoading] = useState(false);
 
-  const toggleFarmer = useCallback((id) => {
-    setFarmerIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
+  // Fetch favorite IDs once authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setProductIds(new Set());
+      setFarmerIds(new Set());
+      return;
+    }
+
+    let cancelled = false;
+    async function fetchIds() {
+      setLoading(true);
+      try {
+        const data = await getFavoriteIds();
+        if (!cancelled && data) {
+          setProductIds(new Set(data.productIds || []));
+          setFarmerIds(new Set(data.farmerIds || []));
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      return next;
-    });
-  }, []);
+    }
+
+    fetchIds();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
+  const toggleProduct = useCallback(
+    async (id) => {
+      if (!id) return;
+      const isFav = productIds.has(id);
+
+      // Optimistic update
+      setProductIds((prev) => {
+        const next = new Set(prev);
+        if (isFav) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+
+      try {
+        if (isFav) {
+          await removeFavorite('product', id);
+        } else {
+          await addFavorite('product', id);
+        }
+        invalidateQueries('/favorites');
+      } catch (err) {
+        // Rollback on failure
+        setProductIds((prev) => {
+          const next = new Set(prev);
+          if (isFav) next.add(id);
+          else next.delete(id);
+          return next;
+        });
+        throw err;
+      }
+    },
+    [productIds]
+  );
+
+  const toggleFarmer = useCallback(
+    async (id) => {
+      if (!id) return;
+      const isFav = farmerIds.has(id);
+
+      // Optimistic update
+      setFarmerIds((prev) => {
+        const next = new Set(prev);
+        if (isFav) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+
+      try {
+        if (isFav) {
+          await removeFavorite('farmer', id);
+        } else {
+          await addFavorite('farmer', id);
+        }
+        invalidateQueries('/favorites');
+      } catch (err) {
+        // Rollback on failure
+        setFarmerIds((prev) => {
+          const next = new Set(prev);
+          if (isFav) next.add(id);
+          else next.delete(id);
+          return next;
+        });
+        throw err;
+      }
+    },
+    [farmerIds]
+  );
 
   const isProductFavorite = useCallback((id) => productIds.has(id), [productIds]);
   const isFarmerFavorite = useCallback((id) => farmerIds.has(id), [farmerIds]);
@@ -47,8 +121,9 @@ export function FavoritesProvider({ children }) {
       toggleFarmer,
       isProductFavorite,
       isFarmerFavorite,
+      loading,
     }),
-    [productIds, farmerIds, toggleProduct, toggleFarmer, isProductFavorite, isFarmerFavorite]
+    [productIds, farmerIds, toggleProduct, toggleFarmer, isProductFavorite, isFarmerFavorite, loading]
   );
 
   return (

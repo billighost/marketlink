@@ -256,7 +256,7 @@
             {/* Bookmark / Saved Items */}
             <Link
               to={PATHS.BUYER_FAVORITES || '/buyer/favorites'}
-              className={styles.iconBtn}
+              className={`${styles.iconBtn} ${styles.bookmarkBtn}`}
               aria-label="Saved favorites"
             >
               <Bookmark size={18} strokeWidth={1.8} aria-hidden="true" />

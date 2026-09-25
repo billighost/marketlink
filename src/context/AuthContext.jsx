@@ -1,73 +1,198 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { login as apiLogin, logout as apiLogout, refresh as apiRefresh, getMe, registerCustomer as apiRegisterCustomer, registerFarmer as apiRegisterFarmer } from '@/api/auth';
+import { setAccessToken, clearAccessToken } from '@/api/client';
+import { invalidateQueries } from '@/hooks/useQuery';
 
-/**
- * Authentication & role context
- * Roles: 'guest' | 'buyer' | 'vendor' | 'admin'
- * login() accepts a full user object with name, firstName, email, phone, address, homeMarketId.
- * TEMP: replace with real auth when backend is ready.
- */
+export const ROLE_PATHS = {
+  customer: '/buyer',
+  buyer: '/buyer',
+  farmer: '/vendor',
+  vendor: '/vendor',
+  admin: '/admin',
+};
+
+export function homePathFor(role) {
+  if (!role) return '/';
+  const normalized = role.toLowerCase();
+  return ROLE_PATHS[normalized] || '/';
+}
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [role, setRole] = useState(() => {
-    try {
-      return localStorage.getItem('marketlink_role') || 'guest';
-    } catch {
-      return 'guest';
+  const [user, setUser] = useState(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  // Normalize role
+  const role = useMemo(() => {
+    if (!user) return 'guest';
+    const r = user.role || 'guest';
+    return r === 'buyer' ? 'customer' : r === 'vendor' ? 'farmer' : r;
+  }, [user]);
+
+  const isAuthenticated = Boolean(user && user.id && role !== 'guest');
+
+  // Silent session restore on app load (capped at 4000ms)
+  useEffect(() => {
+    let cancelled = false;
+    const timeoutTimer = setTimeout(() => {
+      if (!cancelled) {
+        setIsCheckingSession(false);
+      }
+    }, 4000);
+
+    async function checkExistingSession() {
+      try {
+        const refreshData = await apiRefresh();
+        if (cancelled) return;
+
+        if (refreshData?.accessToken) {
+          setAccessToken(refreshData.accessToken);
+          if (refreshData.user) {
+            setUser(refreshData.user);
+          } else {
+            const me = await getMe();
+            if (!cancelled && me) {
+              setUser(me);
+            }
+          }
+        }
+      } catch {
+        // Not authenticated, user remains guest
+        clearAccessToken();
+      } finally {
+        if (!cancelled) {
+          clearTimeout(timeoutTimer);
+          setIsCheckingSession(false);
+        }
+      }
     }
-  });
-  const [user, setUser] = useState(() => {
+
+    checkExistingSession();
+
+    // Cross-tab signout listener
+    const handleStorageChange = (e) => {
+      if (e.key === 'marketlink_signed_out') {
+        clearAccessToken();
+        setUser(null);
+        invalidateQueries();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutTimer);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const login = useCallback(async (email, password) => {
+    const data = await apiLogin({ email, password });
+    if (data?.user) {
+      setUser(data.user);
+    }
+    return data;
+  }, []);
+
+  const logout = useCallback(async () => {
     try {
-      const saved = localStorage.getItem('marketlink_user');
-      return saved ? JSON.parse(saved) : null;
+      await apiLogout();
+    } catch {
+      // ignore logout errors
+    } finally {
+      setUser(null);
+      clearAccessToken();
+      invalidateQueries();
+      try {
+        localStorage.setItem('marketlink_signed_out', Date.now().toString());
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, []);
+
+  const registerCustomer = useCallback(async (payload) => {
+    const data = await apiRegisterCustomer(payload);
+    if (data?.user) {
+      setUser(data.user);
+    }
+    return data;
+  }, []);
+
+  const registerFarmer = useCallback(async (payload) => {
+    const data = await apiRegisterFarmer(payload);
+    if (data?.user) {
+      setUser(data.user);
+    }
+    return data;
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const me = await getMe();
+      if (me) {
+        setUser(me);
+      }
+      return me;
     } catch {
       return null;
     }
-  });
+  }, []);
 
-  const login = (userData) => {
-    let nextRole = 'guest';
-    let nextUser = null;
-
-    if (typeof userData === 'string') {
-      nextRole = userData;
-      nextUser = {
-        id: 'demo-user',
-        name: userData === 'buyer' ? 'Customer Demo' : userData === 'vendor' ? 'Farmer Demo' : 'Admin Demo',
-        firstName: userData === 'buyer' ? 'Customer' : userData === 'vendor' ? 'Farmer' : 'Admin',
-        role: userData,
-      };
-    } else {
-      nextRole = userData.role;
-      nextUser = userData;
-    }
-
-    setRole(nextRole);
-    setUser(nextUser);
-    try {
-      localStorage.setItem('marketlink_role', nextRole);
-      localStorage.setItem('marketlink_user', JSON.stringify(nextUser));
-    } catch {
-      // ignore storage errors
-    }
-  };
-
-  const logout = () => {
-    setRole('guest');
-    setUser(null);
-    try {
-      localStorage.removeItem('marketlink_role');
-      localStorage.removeItem('marketlink_user');
-    } catch {
-      // ignore storage errors
-    }
-  };
-
-  const isAuthenticated = role !== 'guest' && user !== null;
+  const value = useMemo(
+    () => ({
+      user,
+      role,
+      isAuthenticated,
+      isCheckingSession,
+      login,
+      logout,
+      registerCustomer,
+      registerFarmer,
+      refreshUser,
+      homePathFor,
+    }),
+    [user, role, isAuthenticated, isCheckingSession, login, logout, registerCustomer, registerFarmer, refreshUser]
+  );
 
   return (
-    <AuthContext.Provider value={{ role, user, login, logout, isAuthenticated }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {isCheckingSession ? (
+        <div
+          style={{
+            minHeight: '100dvh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'var(--color-white)',
+            fontFamily: 'var(--font-head)',
+            color: 'var(--color-beet)',
+            gap: 'var(--space-3)',
+          }}
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div style={{ fontSize: 'var(--text-h3)', letterSpacing: '-0.02em' }}>
+            MarketLink
+          </div>
+          <div
+            style={{
+              width: '28px',
+              height: '28px',
+              border: '2px solid var(--color-wood-line)',
+              borderTopColor: 'var(--color-beet)',
+              borderRadius: 'var(--radius-full)',
+              animation: 'spin 0.8s linear infinite',
+            }}
+          />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }

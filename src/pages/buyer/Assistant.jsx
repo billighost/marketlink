@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, ArrowLeft } from 'lucide-react';
-import { assistantReplies, products } from '@/data/placeholders';
+import { sendAssistantMessage } from '@/api/assistant';
+import { getProductDetail } from '@/api/catalog';
 import { useAuth } from '@/context/AuthContext';
 import ProductCard from '@/components/domain/ProductCard';
 import styles from './Assistant.module.css';
 
-const SUGGESTIONS = [
+const DEFAULT_SUGGESTIONS = [
   "What's fresh on Saturday?",
   "Who sells eggs?",
   "When does Elm Street close?",
@@ -13,6 +14,7 @@ const SUGGESTIONS = [
 
 /**
  * Assistant chat sheet ("Ask MarketLink").
+ * Connected to live backend POST /assistant/message.
  */
 export function Assistant({ inSheet = true, onClose }) {
   const { user } = useAuth();
@@ -26,6 +28,7 @@ export function Assistant({ inSheet = true, onClose }) {
       time: 'Just now',
     },
   ]);
+  const [suggestions, setSuggestions] = useState(DEFAULT_SUGGESTIONS);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
@@ -38,9 +41,9 @@ export function Assistant({ inSheet = true, onClose }) {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     const text = (textToSend || inputValue).trim();
-    if (!text) return;
+    if (!text || isTyping) return;
 
     const userMessage = {
       id: `user-${Date.now()}`,
@@ -49,34 +52,30 @@ export function Assistant({ inSheet = true, onClose }) {
       time: 'Just now',
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate assistant reply with recommended product cards
-    setTimeout(() => {
-      let replyText = assistantReplies[text];
-      const lower = text.toLowerCase();
-      let matchedProducts = [];
+    try {
+      // Build lightweight recent history
+      const history = messages
+        .filter((m) => m.id !== 'msg-welcome')
+        .slice(-4)
+        .map((m) => ({
+          role: m.sender === 'user' ? 'user' : 'assistant',
+          content: m.text,
+        }));
 
-      if (!replyText) {
-        if (lower.includes('fresh') || lower.includes('produce') || lower.includes('vegetable')) {
-          replyText = assistantReplies["What's fresh on Saturday?"];
-          matchedProducts = [products.find((p) => p.id === 'p-01'), products.find((p) => p.id === 'p-02')].filter(Boolean);
-        } else if (lower.includes('egg') || lower.includes('chicken') || lower.includes('poultry')) {
-          replyText = assistantReplies["Who sells eggs?"];
-          matchedProducts = [products.find((p) => p.id === 'p-12')].filter(Boolean);
-        } else if (lower.includes('hour') || lower.includes('close') || lower.includes('time') || lower.includes('open')) {
-          replyText = assistantReplies["When does Elm Street close?"];
-        } else {
-          replyText = assistantReplies.default;
-        }
-      } else {
-        if (text === "What's fresh on Saturday?") {
-          matchedProducts = [products.find((p) => p.id === 'p-01'), products.find((p) => p.id === 'p-02')].filter(Boolean);
-        } else if (text === "Who sells eggs?") {
-          matchedProducts = [products.find((p) => p.id === 'p-12')].filter(Boolean);
-        }
+      const res = await sendAssistantMessage(text, history);
+
+      let loadedProducts = [];
+      if (res?.cards && Array.isArray(res.cards)) {
+        const productCards = res.cards.filter((c) => c.type === 'product' && c.id);
+        const resolved = await Promise.all(
+          productCards.map((c) => getProductDetail(c.id).catch(() => null))
+        );
+        loadedProducts = resolved.filter(Boolean);
       }
 
       setMessages((prev) => [
@@ -84,13 +83,28 @@ export function Assistant({ inSheet = true, onClose }) {
         {
           id: `assistant-${Date.now()}`,
           sender: 'assistant',
-          text: replyText,
-          products: matchedProducts,
+          text: res?.reply || "I'm here to help with market schedules, produce prices, and order tracking.",
+          products: loadedProducts,
           time: 'Just now',
         },
       ]);
+
+      if (res?.suggestions && Array.isArray(res.suggestions) && res.suggestions.length > 0) {
+        setSuggestions(res.suggestions);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-${Date.now()}`,
+          sender: 'assistant',
+          text: "I'm having a little trouble looking that up right now, but I'm here to help with market schedules, produce prices, and order tracking.",
+          time: 'Just now',
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 600);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -163,10 +177,10 @@ export function Assistant({ inSheet = true, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested prompts row (shown only on first empty prompt) */}
-      {messages.length <= 1 && (
+      {/* Suggested prompts row */}
+      {suggestions.length > 0 && (
         <div className={styles.suggestionsRow} aria-label="Suggested questions">
-          {SUGGESTIONS.map((suggestion, idx) => (
+          {suggestions.map((suggestion, idx) => (
             <button
               key={idx}
               type="button"
@@ -189,11 +203,12 @@ export function Assistant({ inSheet = true, onClose }) {
           onChange={(e) => setInputValue(e.target.value)}
           enterKeyHint="send"
           aria-label="Type your message"
+          maxLength={300}
         />
         <button
           type="submit"
           className={styles.sendButton}
-          disabled={!inputValue.trim()}
+          disabled={!inputValue.trim() || isTyping}
           aria-label="Send message"
         >
           <Send size={18} aria-hidden="true" />

@@ -1,250 +1,90 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search,
   MapPin,
   Leaf,
-  Filter,
-  Sliders,
-  ChevronDown,
-  ShoppingBag,
+  Store,
   Bookmark,
   Star,
-  Check,
   X,
-  Store,
-  Sparkles,
-  ArrowRight,
   ShieldCheck,
-  Calendar,
+  ShoppingBag,
 } from 'lucide-react';
+import { getProducts, getCategories } from '@/api/catalog';
+import { formatPrice } from '@/utils/format';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import styles from './Products.module.css';
-
-export const GUEST_PRODUCTS_DATA = [
-  {
-    id: 'prod-heirloom-tomatoes',
-    name: 'Organic Heirloom Tomato Mix',
-    category: 'Vegetables & Greens',
-    price: '$6.50',
-    unit: '/ basket',
-    numericPrice: 6.5,
-    farmer: 'Elena Vance',
-    farmName: 'Riverbend Farm',
-    farmerId: 'f-riverbend',
-    location: 'Hudson Valley, NY',
-    markets: ['Greenwich Village', 'Union Square'],
-    image: '/images/product-tomatoes.jpg',
-    badge: 'In Season',
-    badgeType: 'in-season',
-    isOrganic: true,
-    inStock: true,
-    stockText: '14 baskets available',
-    description:
-      'Juicy, vine-ripened mix of Brandywine, Cherokee Purple, and Green Zebra heritage tomatoes. 2 lb basket picked the morning of market.',
-    rating: 4.9,
-    reviews: 38,
-  },
-  {
-    id: 'prod-country-sourdough',
-    name: 'Country Sourdough Loaf',
-    category: 'Artisan Bakery',
-    price: '$8.00',
-    unit: '/ loaf',
-    numericPrice: 8.0,
-    farmer: 'Dan & Priya Patel',
-    farmName: 'Oak & Mill Artisan Bakery',
-    farmerId: 'f-oakmill',
-    location: 'Kingston, NY',
-    markets: ['Greenwich Village', 'Chelsea'],
-    image: '/images/product-sourdough.jpg',
-    badge: 'Freshly Baked',
-    badgeType: 'freshly-baked',
-    isOrganic: false,
-    inStock: true,
-    stockText: '8 loaves left',
-    description:
-      'Naturally fermented 48-hour sourdough made with stone-milled regional grains. Crackly crust and open, tender, airy crumb.',
-    rating: 5.0,
-    reviews: 52,
-  },
-  {
-    id: 'prod-wildflower-honey',
-    name: 'Raw Meadow Wildflower Honey',
-    category: 'Honey & Preserves',
-    price: '$12.00',
-    unit: '/ 16oz jar',
-    numericPrice: 12.0,
-    farmer: 'Sarah Jenkins',
-    farmName: 'Hollow Creek Apiary',
-    farmerId: 'f-hollowcreek',
-    location: 'Morris County, NJ',
-    markets: ['Greenwich Village', 'Tompkins Square'],
-    image: '/images/product-honey.jpg',
-    badge: 'Single Origin',
-    badgeType: 'specialty',
-    isOrganic: true,
-    inStock: true,
-    stockText: '18 jars in stock',
-    description:
-      'Unheated, unpasteurized raw honey harvested from pesticide-free wildflower meadows. Golden amber with notes of clover, thyme, and dandelion.',
-    rating: 4.9,
-    reviews: 44,
-  },
-  {
-    id: 'prod-butterhead-lettuce',
-    name: 'Living Butterhead Lettuce',
-    category: 'Vegetables & Greens',
-    price: '$3.00',
-    unit: '/ head',
-    numericPrice: 3.0,
-    farmer: 'Marcus Chen',
-    farmName: "Chen's Organic Acres",
-    farmerId: 'f-sunburst',
-    location: 'Catskill, NY',
-    markets: ['Union Square', 'Chelsea'],
-    image: '/images/product-lettuce.jpg',
-    badge: 'Harvested Today',
-    badgeType: 'in-season',
-    isOrganic: true,
-    inStock: true,
-    stockText: '11 heads available',
-    description:
-      'Crisp, sweet butterhead lettuce harvested with root ball intact. Stays fresh in your crisper for up to two weeks.',
-    rating: 4.8,
-    reviews: 29,
-  },
-  {
-    id: 'prod-alpine-strawberries',
-    name: 'Organic Alpine Strawberries',
-    category: 'Fruit & Berries',
-    price: '$6.50',
-    unit: '/ pint',
-    numericPrice: 6.5,
-    farmer: 'Claire Dupont',
-    farmName: 'Sunridge Berry Farm',
-    farmerId: 'f-sunridge',
-    location: 'Dutchess County, NY',
-    markets: ['Greenwich Village', 'Union Square'],
-    image: '/images/product-strawberries.jpg',
-    badge: 'Limited Batch',
-    badgeType: 'specialty',
-    isOrganic: true,
-    inStock: true,
-    stockText: '6 pints remaining',
-    description:
-      'Intensely fragrant European heirloom alpine strawberries. Concentrated sweetness with aromatic floral notes.',
-    rating: 5.0,
-    reviews: 41,
-  },
-  {
-    id: 'prod-purple-carrots',
-    name: 'Heritage Purple & Orange Carrots',
-    category: 'Vegetables & Greens',
-    price: '$4.00',
-    unit: '/ bunch',
-    numericPrice: 4.0,
-    farmer: 'Elena Vance',
-    farmName: 'Riverbend Farm',
-    farmerId: 'f-riverbend',
-    location: 'Hudson Valley, NY',
-    markets: ['Greenwich Village', 'Union Square'],
-    image: '/images/hero-carrots.jpg',
-    badge: 'In Season',
-    badgeType: 'in-season',
-    isOrganic: true,
-    inStock: true,
-    stockText: '20 bunches available',
-    description:
-      'Crisp, earthy heirloom carrots with rich purple skins and orange cores. Sweet flavor, loaded with anthocyanin antioxidants.',
-    rating: 4.8,
-    reviews: 26,
-  },
-  {
-    id: 'prod-jersey-butter',
-    name: 'Cultured Farmhouse Butter',
-    category: 'Dairy & Eggs',
-    price: '$7.50',
-    unit: '/ 8oz block',
-    numericPrice: 7.5,
-    farmer: 'Robert Miller',
-    farmName: 'Maplecrest Creamery',
-    farmerId: 'f-maplecrest',
-    location: 'Hunterdon County, NJ',
-    markets: ['Union Square', 'Tompkins Square'],
-    image: '/images/market-central.jpg',
-    badge: 'Grass-Fed',
-    badgeType: 'specialty',
-    isOrganic: true,
-    inStock: true,
-    stockText: '12 blocks left',
-    description:
-      'Slow-churned from cultured pasteurized Jersey cow cream. Rich, golden yellow with 84% butterfat and sea salt crystals.',
-    rating: 4.9,
-    reviews: 33,
-  },
-  {
-    id: 'prod-wildflower-bouquet',
-    name: 'Fresh Market Wildflower Bouquet',
-    category: 'Flowers & Herbs',
-    price: '$15.00',
-    unit: '/ bouquet',
-    numericPrice: 15.0,
-    farmer: 'Elena Vance',
-    farmName: 'The Wildflower Stand',
-    farmerId: 'f-riverbend',
-    location: 'Hudson Valley, NY',
-    markets: ['Greenwich Village'],
-    image: '/images/market-wildflower.jpg',
-    badge: 'Freshly Cut',
-    badgeType: 'freshly-baked',
-    isOrganic: true,
-    inStock: true,
-    stockText: '9 bouquets left',
-    description:
-      'Hand-tied seasonal arrangement of sunflowers, cosmos, cornflowers, and fragrant eucalyptus harvested Friday afternoon.',
-    rating: 5.0,
-    reviews: 19,
-  },
-];
-
-const CATEGORIES = [
-  'All Harvest',
-  'Vegetables & Greens',
-  'Fruit & Berries',
-  'Artisan Bakery',
-  'Dairy & Eggs',
-  'Honey & Preserves',
-];
-
-const MARKETS_LIST = [
-  'All Markets',
-  'Greenwich Village',
-  'Union Square',
-  'Chelsea',
-  'Tompkins Square',
-];
 
 export function Products() {
   useDocumentTitle('Fresh Harvest & Farm Goods — MarketLink');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const [rawProducts, setRawProducts] = useState([]);
+  const [categories, setCategories] = useState(['All Harvest']);
+  const [loading, setLoading] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(
     searchParams.get('category') || 'All Harvest'
   );
-  const [selectedMarket, setSelectedMarket] = useState('All Markets');
-  const [organicOnly, setOrganicOnly] = useState(false);
   const [sortBy, setSortBy] = useState('featured');
-  const [reservedItems, setReservedItems] = useState({});
   const [savedItems, setSavedItems] = useState({});
 
-  const toggleReserve = (id, e) => {
-    if (e) e.stopPropagation();
-    setReservedItems((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+
+    Promise.all([
+      getProducts().catch(() => []),
+      getCategories().catch(() => []),
+    ])
+      .then(([prods, cats]) => {
+        if (!active) return;
+        const pList = Array.isArray(prods) ? prods : prods?.items || prods?.data || [];
+        setRawProducts(pList);
+
+        const cList = Array.isArray(cats) ? cats : cats?.items || cats?.data || [];
+        const catNames = ['All Harvest', ...cList.map((c) => (typeof c === 'string' ? c : c.name || c.id))];
+        setCategories(catNames);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const normalizedProducts = useMemo(() => {
+    return rawProducts.map((p) => {
+      const id = p.id || p._id;
+      const farmName = p.farmer?.stallName || p.farmer?.name || 'Local Farm';
+      return {
+        id,
+        name: p.name,
+        category: p.category || 'Vegetables & Greens',
+        price: formatPrice(p.priceCents || p.price),
+        unit: `/ ${p.unit || 'each'}`,
+        numericPrice: (p.priceCents || 0) / 100,
+        farmer: farmName,
+        farmName,
+        farmerId: p.farmer?.id || p.farmerId,
+        location: p.farmer?.location || 'Local Region',
+        image: p.image || '/images/product-tomatoes.jpg',
+        badge: p.availability === 'in_stock' ? 'In Season' : 'Fresh',
+        badgeType: 'in-season',
+        inStock: p.availability !== 'out',
+        stockText: p.quantityAvailable ? `${p.quantityAvailable} available` : 'Freshly harvested',
+        description: p.description || 'Grown with care by local producers and packed fresh for your Saturday pickup.',
+        rating: p.rating || 4.9,
+        reviews: p.reviewCount || 28,
+      };
+    });
+  }, [rawProducts]);
 
   const toggleSave = (id, e) => {
     if (e) e.stopPropagation();
@@ -252,39 +92,22 @@ export function Products() {
   };
 
   const filteredProducts = useMemo(() => {
-    let result = GUEST_PRODUCTS_DATA.filter((p) => {
-      // Search query
+    let result = normalizedProducts.filter((p) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchesName = p.name.toLowerCase().includes(q);
-        const matchesFarm = p.farmName.toLowerCase().includes(q);
-        const matchesDesc = p.description.toLowerCase().includes(q);
-        const matchesCat = p.category.toLowerCase().includes(q);
-        if (!matchesName && !matchesFarm && !matchesDesc && !matchesCat) return false;
+        const matchesName = p.name?.toLowerCase().includes(q);
+        const matchesFarm = p.farmName?.toLowerCase().includes(q);
+        const matchesDesc = p.description?.toLowerCase().includes(q);
+        if (!matchesName && !matchesFarm && !matchesDesc) return false;
       }
 
-      // Category
       if (selectedCategory !== 'All Harvest' && p.category !== selectedCategory) {
-        return false;
-      }
-
-      // Market
-      if (
-        selectedMarket !== 'All Markets' &&
-        !p.markets.some((m) => m.toLowerCase().includes(selectedMarket.toLowerCase()))
-      ) {
-        return false;
-      }
-
-      // Organic
-      if (organicOnly && !p.isOrganic) {
         return false;
       }
 
       return true;
     });
 
-    // Sort
     if (sortBy === 'price-low') {
       result.sort((a, b) => a.numericPrice - b.numericPrice);
     } else if (sortBy === 'price-high') {
@@ -294,31 +117,31 @@ export function Products() {
     }
 
     return result;
-  }, [searchQuery, selectedCategory, selectedMarket, organicOnly, sortBy]);
+  }, [normalizedProducts, searchQuery, selectedCategory, sortBy]);
 
   return (
     <div className={styles.page}>
-      {/* ─── 1. HERO SEARCH HEADER ───────────────────────────────── */}
+      {/* ─── 1. HERO SEARCH BANNER ─────────────────────────────────── */}
       <section className={styles.heroSection}>
         <div className="container">
           <div className={styles.heroContent}>
             <span className={styles.eyebrow}>
               <Leaf size={14} className={styles.eyebrowIcon} />
-              100% REGIONAL PRODUCER HARVEST
+              HARVEST DIRECTORY
             </span>
-            <h1 className={styles.heroTitle}>Fresh From Fields & Local Stalls</h1>
+            <h1 className={styles.heroTitle}>Explore Fresh Harvest & Artisan Goods</h1>
             <p className={styles.heroSubtitle}>
-              Explore seasonal heirloom vegetables, stone-milled sourdough, raw wildflower honey,
-              and pasture dairy harvested within 150 miles of New York City.
+              Reserve seasonal fruits, heritage vegetables, fresh bread, and farm goods online. Pick up
+              and pay in person at your Saturday market stall.
             </p>
 
-            {/* Combined Search & Market Bar */}
-            <div className={styles.searchBarRow}>
-              <div className={styles.searchInputWrap}>
+            {/* Filter Bar */}
+            <div className={styles.searchBarWrapper}>
+              <div className={styles.searchInputGroup}>
                 <Search size={18} className={styles.searchIcon} />
                 <input
                   type="text"
-                  placeholder="Search heirloom tomatoes, sourdough, wildflower honey, kale..."
+                  placeholder="Search tomatoes, sourdough, peaches, honey..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={styles.searchInput}
@@ -334,24 +157,6 @@ export function Products() {
                   </button>
                 )}
               </div>
-
-              {/* Market Filter Dropdown */}
-              <div className={styles.marketSelectWrap}>
-                <Store size={16} className={styles.marketIcon} />
-                <select
-                  value={selectedMarket}
-                  onChange={(e) => setSelectedMarket(e.target.value)}
-                  className={styles.marketSelect}
-                  aria-label="Filter by market"
-                >
-                  {MARKETS_LIST.map((m) => (
-                    <option key={m} value={m}>
-                      {m === 'All Markets' ? 'All Markets' : `Pickup: ${m}`}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={14} className={styles.selectChevron} />
-              </div>
             </div>
           </div>
         </div>
@@ -361,7 +166,7 @@ export function Products() {
       <div className={styles.categoryBar}>
         <div className="container">
           <div className={styles.categoryScroll} role="tablist">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 type="button"
@@ -382,14 +187,6 @@ export function Products() {
         <div className="container">
           <div className={styles.filterMetaInner}>
             <div className={styles.filterLeftToggles}>
-              <button
-                type="button"
-                onClick={() => setOrganicOnly((v) => !v)}
-                className={`${styles.togglePill} ${organicOnly ? styles.togglePillActive : ''}`}
-              >
-                <ShieldCheck size={14} />
-                <span>Certified Organic</span>
-              </button>
               <span className={styles.resultsCount}>
                 Showing <strong>{filteredProducts.length}</strong> items available for pre-order
               </span>
@@ -418,136 +215,78 @@ export function Products() {
       <main className={styles.productsSection}>
         <div className="container">
           <div className={styles.productsGrid}>
-            {filteredProducts.map((p) => {
-              const isReserved = reservedItems[p.id];
-              const isSaved = savedItems[p.id];
+            {loading ? (
+              <div style={{ gridColumn: '1 / -1', padding: '60px 0', textAlign: 'center', color: '#6e655c' }}>
+                Loading fresh harvest...
+              </div>
+            ) : filteredProducts.length > 0 ? (
+              filteredProducts.map((p) => {
+                const isSaved = savedItems[p.id];
 
-              return (
-                <article
-                  key={p.id}
-                  className={styles.productCard}
-                  onClick={() => navigate(`/products/${p.id}`)}
-                >
-                  {/* Image Wrap */}
-                  <div className={styles.imageWrap}>
-                    <img src={p.image} alt={p.name} className={styles.productImg} />
-                    <span
-                      className={
-                        p.badgeType === 'in-season'
-                          ? styles.badgeSeason
-                          : p.badgeType === 'freshly-baked'
-                          ? styles.badgeBaked
-                          : styles.badgeSpecialty
-                      }
-                    >
-                      {p.badge}
-                    </span>
+                return (
+                  <article
+                    key={p.id}
+                    className={styles.productCard}
+                    onClick={() => navigate(`/products/${p.id}`)}
+                  >
+                    <div className={styles.imageWrap}>
+                      <img src={p.image} alt={p.name} className={styles.productImg} />
+                      <span className={styles.badgeSeason}>{p.badge}</span>
 
-                    <button
-                      type="button"
-                      onClick={(e) => toggleSave(p.id, e)}
-                      className={`${styles.bookmarkBtn} ${isSaved ? styles.bookmarkBtnActive : ''}`}
-                      aria-label="Save product"
-                    >
-                      <Bookmark size={15} fill={isSaved ? '#6A1B29' : 'none'} />
-                    </button>
-                  </div>
-
-                  {/* Body */}
-                  <div className={styles.cardBody}>
-                    <div className={styles.farmAttributionRow}>
-                      <Link
-                        to={`/farmers/${p.farmerId}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className={styles.farmLink}
+                      <button
+                        type="button"
+                        onClick={(e) => toggleSave(p.id, e)}
+                        className={`${styles.bookmarkBtn} ${isSaved ? styles.bookmarkBtnActive : ''}`}
+                        aria-label="Save product"
                       >
-                        {p.farmName}
-                      </Link>
-                      <span className={styles.farmLoc}>• {p.location}</span>
+                        <Bookmark size={15} fill={isSaved ? '#541722' : 'none'} />
+                      </button>
                     </div>
 
-                    <h2 className={styles.productTitle}>
-                      <Link to={`/products/${p.id}`} className={styles.productTitleLink}>
-                        {p.name}
-                      </Link>
-                    </h2>
-
-                    <p className={styles.productDesc}>{p.description}</p>
-
-                    {/* Market Availability Chip */}
-                    <div className={styles.marketAvailRow}>
-                      <Store size={12} className={styles.marketIconSm} />
-                      <span>At {p.markets.join(', ')}</span>
-                    </div>
-
-                    {/* Pricing & Stock Row */}
-                    <div className={styles.pricingRow}>
-                      <div className={styles.priceGroup}>
-                        <span className={styles.priceAmount}>{p.price}</span>
-                        <span className={styles.priceUnit}>{p.unit}</span>
+                    <div className={styles.cardContent}>
+                      <div className={styles.vendorRow}>
+                        <span className={styles.vendorName}>{p.farmName}</span>
+                        <div className={styles.ratingBadge}>
+                          <Star size={11} fill="#D4850A" color="#D4850A" />
+                          <span>{p.rating}</span>
+                        </div>
                       </div>
-                      <span className={styles.stockNotice}>{p.stockText}</span>
+
+                      <h2 className={styles.productTitle}>
+                        <Link to={`/products/${p.id}`} className={styles.titleLink}>
+                          {p.name}
+                        </Link>
+                      </h2>
+
+                      <p className={styles.description}>{p.description}</p>
+
+                      <div className={styles.cardBottomRow}>
+                        <div className={styles.priceGroup}>
+                          <span className={styles.price}>{p.price}</span>
+                          <span className={styles.unit}>{p.unit}</span>
+                        </div>
+                        <span className={styles.stockNote}>{p.stockText}</span>
+                      </div>
+
+                      <div className={styles.cardActions}>
+                        <Link to={`/products/${p.id}`} className={styles.reserveBtn}>
+                          <ShoppingBag size={14} />
+                          <span>Pre-Order Details</span>
+                        </Link>
+                      </div>
                     </div>
-
-                    {/* Reserve Button */}
-                    <button
-                      type="button"
-                      onClick={(e) => toggleReserve(p.id, e)}
-                      className={`${styles.reserveBtn} ${
-                        isReserved ? styles.reserveBtnActive : ''
-                      }`}
-                    >
-                      <ShoppingBag size={15} />
-                      <span>{isReserved ? '✓ Reserved for Pickup' : 'Reserve for Pickup'}</span>
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
+                  </article>
+                );
+              })
+            ) : (
+              <div style={{ gridColumn: '1 / -1', padding: '60px 0', textAlign: 'center', color: '#6e655c' }}>
+                <h3>No harvest items found</h3>
+                <p>Try searching for a different crop or resetting your category filter.</p>
+              </div>
+            )}
           </div>
-
-          {filteredProducts.length === 0 && (
-            <div className={styles.emptyState}>
-              <Leaf size={40} className={styles.emptyIcon} />
-              <h3>No products match your search</h3>
-              <p>Try searching for a different harvest crop or clear your market and organic filters.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All Harvest');
-                  setSelectedMarket('All Markets');
-                  setOrganicOnly(false);
-                }}
-                className={styles.resetBtn}
-              >
-                Reset All Filters
-              </button>
-            </div>
-          )}
         </div>
       </main>
-
-      {/* ─── 5. SEASONAL HARVEST CALENDAR BANNER ─────────────────── */}
-      <section className={styles.calendarBannerSection}>
-        <div className="container">
-          <div className={styles.calendarBanner}>
-            <div className={styles.calendarBannerText}>
-              <span className={styles.calendarTag}>SPRING / EARLY SUMMER CROP</span>
-              <h2>What's Peak in Season This Week</h2>
-              <p>
-                Regional soil yields its best flavor when picked at natural peak ripeness. Right now
-                our Hudson Valley and New Jersey growers are harvesting tender asparagus, sweet alpine
-                strawberries, garlic scapes, and French breakfast radishes.
-              </p>
-            </div>
-            <Link to={PATHS.MARKETS} className={styles.findMarketCta}>
-              <Calendar size={16} />
-              <span>Find Weekend Markets</span>
-            </Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

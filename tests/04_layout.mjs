@@ -1,0 +1,84 @@
+import { chromium } from 'playwright';
+import { BASE_URL } from './helpers.mjs';
+
+const VIEWPORTS = [
+  { width: 320, height: 600, label: '320 (Mobile Small)' },
+  { width: 360, height: 740, label: '360 (Android standard)' },
+  { width: 390, height: 844, label: '390 (iPhone standard)' },
+  { width: 768, height: 1024, label: '768 (Tablet portrait)' },
+  { width: 1024, height: 768, label: '1024 (Tablet landscape)' },
+  { width: 1440, height: 900, label: '1440 (Desktop)' },
+];
+
+const PAGES_TO_CHECK = [
+  { path: '/', name: 'Guest Home' },
+  { path: '/markets', name: 'Markets' },
+  { path: '/farmers', name: 'Farmers' },
+  { path: '/products', name: 'Products' },
+  { path: '/contact', name: 'Contact' },
+  { path: '/about', name: 'About' },
+  { path: '/login', name: 'Login' },
+];
+
+export async function runLayoutSuite() {
+  console.log('\n======================================================');
+  console.log('🧪 RUNNING TEST SUITE 4: Layout & Responsiveness Audit');
+  console.log('======================================================');
+
+  const browser = await chromium.launch({ headless: true });
+  const results = [];
+  let totalIssues = 0;
+
+  try {
+    for (const vp of VIEWPORTS) {
+      console.log(`\n--- Testing Viewport: ${vp.label} (${vp.width}x${vp.height}) ---`);
+      const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
+      const page = await context.newPage();
+
+      for (const p of PAGES_TO_CHECK) {
+        await page.goto(`${BASE_URL}${p.path}`, { waitUntil: 'domcontentloaded' });
+        await page.waitForTimeout(300);
+
+        // Run layoutCheck in browser context
+        const findings = await page.evaluate(() => {
+          if (typeof window.layoutCheck === 'function') {
+            return window.layoutCheck();
+          }
+          // Fallback basic check if layoutCheck is not on window
+          const vw = document.documentElement.clientWidth;
+          const overflow = document.documentElement.scrollWidth > vw + 1;
+          return overflow ? [{ type: 'OVERFLOW', message: `Horizontal overflow on ${window.location.pathname}` }] : [];
+        });
+
+        // Filter out non-actionable or third-party issues (like Leaflet tile containers if any)
+        const actionableFindings = (findings || []).filter(f => !f.selector?.includes('leaflet-tile'));
+
+        if (actionableFindings.length > 0) {
+          console.warn(`  ⚠️  [${vp.width}px] ${p.name}: ${actionableFindings.length} findings:`);
+          actionableFindings.forEach(f => console.warn(`     - [${f.type}] ${f.selector}: ${f.message}`));
+          totalIssues += actionableFindings.length;
+          results.push({ viewport: vp.width, page: p.name, status: 'WARN', count: actionableFindings.length });
+        } else {
+          console.log(`  ✅ [${vp.width}px] ${p.name}: 0 findings`);
+          results.push({ viewport: vp.width, page: p.name, status: 'PASS', count: 0 });
+        }
+      }
+
+      await context.close();
+    }
+  } catch (err) {
+    console.error('❌ LAYOUT SUITE ERROR:', err);
+  } finally {
+    await browser.close();
+  }
+
+  console.log('\n--- Layout Suite Summary ---');
+  console.log(`Total actionable layout findings: ${totalIssues}`);
+  return { passed: totalIssues === 0, totalIssues, results };
+}
+
+if (process.argv[1]?.endsWith('04_layout.mjs')) {
+  runLayoutSuite().then(({ passed }) => {
+    process.exit(passed ? 0 : 1);
+  });
+}

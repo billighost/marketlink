@@ -1,40 +1,44 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Search, X } from 'lucide-react';
-import { farmers, categories } from '@/data/placeholders';
+import { getFarmers, getCategories } from '@/api/catalog';
+import { useQuery } from '@/hooks/useQuery';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import FarmerCard from '@/components/domain/FarmerCard';
 import Chip from '@/components/ui/Chip';
 import EmptyState from '@/components/ui/EmptyState';
+import Skeleton from '@/components/ui/Skeleton';
 import styles from './Farmers.module.css';
 
 /**
  * Customer Farmers directory page.
- * Displays all local producers with search and category filters.
+ * Displays all local producers with real API search and category filtering.
  */
 export function Farmers() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const debouncedSearch = useDebouncedValue(search, 250);
 
-  const filteredFarmers = useMemo(() => {
-    return farmers.filter((farmer) => {
-      // Search text
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        const matchesName = farmer.stallName.toLowerCase().includes(q);
-        const matchesSpecialty = farmer.specialty.toLowerCase().includes(q);
-        const matchesStory = farmer.story.toLowerCase().includes(q);
-        if (!matchesName && !matchesSpecialty && !matchesStory) return false;
-      }
+  const { data: categoriesData } = useQuery(['categories'], ({ signal }) => getCategories(signal));
+  const categoriesList = categoriesData || [];
 
-      // Category match
-      if (selectedCategory !== 'All') {
-        const qCat = selectedCategory.toLowerCase();
-        const matchesSpecialty = farmer.specialty.toLowerCase().includes(qCat);
-        if (!matchesSpecialty) return false;
-      }
+  const { data: farmersData, loading } = useQuery(
+    ['buyer-farmers', debouncedSearch, selectedCategory],
+    ({ signal }) =>
+      getFarmers(
+        {
+          q: debouncedSearch || undefined,
+          category: selectedCategory !== 'All' ? selectedCategory.toLowerCase() : undefined,
+        },
+        signal
+      )
+  );
 
-      return true;
-    });
-  }, [search, selectedCategory]);
+  const farmersList = farmersData?.data || [];
+
+  const handleClear = () => {
+    setSearch('');
+    setSelectedCategory('All');
+  };
 
   return (
     <div className={styles.page}>
@@ -64,49 +68,56 @@ export function Farmers() {
           )}
         </div>
 
-        {/* Category Filter Chips */}
-        <div className={styles.categoryScroll} role="tablist" aria-label="Farmer categories">
+        {/* Category Chips */}
+        <div className={styles.categoriesScroll} role="tablist" aria-label="Farmer categories">
           <Chip
             selected={selectedCategory === 'All'}
             onClick={() => setSelectedCategory('All')}
           >
             All
           </Chip>
-          {categories.map((cat) => (
-            <Chip
-              key={cat}
-              selected={selectedCategory === cat}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </Chip>
-          ))}
+          {categoriesList.map((cat) => {
+            const catName = cat.name || cat;
+            return (
+              <Chip
+                key={cat.id || cat.slug || catName}
+                selected={selectedCategory.toLowerCase() === catName.toLowerCase()}
+                onClick={() => setSelectedCategory(catName)}
+              >
+                {catName}
+              </Chip>
+            );
+          })}
         </div>
-
-        <span className={styles.countText}>
-          Showing {filteredFarmers.length} {filteredFarmers.length === 1 ? 'farmer' : 'farmers'}
-        </span>
       </header>
 
-      {/* Farmers List */}
-      {filteredFarmers.length > 0 ? (
-        <div className={styles.list}>
-          {filteredFarmers.map((farmer) => (
-            <FarmerCard key={farmer.id} farmer={farmer} variant="list" />
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          illustration="closed-stall"
-          title="No farmers match your search"
-          text="Try searching for a different stall name or clear your category filter."
-          actionLabel="View all farmers"
-          onAction={() => {
-            setSearch('');
-            setSelectedCategory('All');
-          }}
-        />
-      )}
+      {/* Farmers Grid */}
+      <div className={styles.contentWrap}>
+        {loading && (
+          <div className={styles.list}>
+            <Skeleton height="88px" borderRadius="var(--radius-md)" />
+            <Skeleton height="88px" borderRadius="var(--radius-md)" />
+            <Skeleton height="88px" borderRadius="var(--radius-md)" />
+          </div>
+        )}
+
+        {!loading && farmersList.length === 0 && (
+          <EmptyState
+            title="No farmers found"
+            description="No producers match your current search criteria. Try clearing your filters."
+            actionLabel="Reset search"
+            onAction={handleClear}
+          />
+        )}
+
+        {!loading && farmersList.length > 0 && (
+          <div className={styles.list}>
+            {farmersList.map((farmer) => (
+              <FarmerCard key={farmer.id} farmer={farmer} variant="row" />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

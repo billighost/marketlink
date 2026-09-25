@@ -20,14 +20,16 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
+import siteContent from '@/content/siteContent';
+import { submitContact } from '@/api/contact';
+import MapView from '@/components/domain/MapView';
 import styles from './Contact.module.css';
 
 const TOPICS = [
-  { id: 'pickup', label: 'Saturday Pickup Question', icon: '🌾' },
-  { id: 'farmer', label: 'Farmer / Vendor Admission', icon: '🚜' },
   { id: 'order', label: 'Pre-Order Assistance', icon: '📦' },
-  { id: 'product', label: 'Crop or Item Inquiry', icon: '🍎' },
-  { id: 'feedback', label: 'Market Feedback / Other', icon: '💬' },
+  { id: 'farmer-help', label: 'Farmer / Producer Support', icon: '🌾' },
+  { id: 'feedback', label: 'Market Feedback', icon: '💬' },
+  { id: 'other', label: 'General Inquiry / Other', icon: '✨' },
 ];
 
 const MARKETS_LIST = [
@@ -86,8 +88,7 @@ export function Contact() {
     name: '',
     email: '',
     phone: '',
-    market: 'Greenwich Village Farmers Market (Abingdon Square)',
-    topic: 'Saturday Pickup Question',
+    topic: 'order',
     message: '',
   });
 
@@ -126,7 +127,7 @@ export function Contact() {
     return errs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -138,12 +139,31 @@ export function Contact() {
     }
 
     setSubmitting(true);
-    // Simulate gentle dispatch
-    setTimeout(() => {
-      setSubmitting(false);
-      setTicketId(`ML-${Math.floor(100000 + Math.random() * 900000)}`);
+    setErrors({});
+    try {
+      const res = await submitContact({
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        topic: formData.topic,
+        message: formData.message.trim(),
+      });
+      setTicketId(res?.id ? `ML-${res.id.slice(-6).toUpperCase()}` : `ML-${Math.floor(100000 + Math.random() * 900000)}`);
       setSubmitted(true);
-    }, 700);
+    } catch (err) {
+      if (err.status === 429 || err.code === 'RATE_LIMITED') {
+        setErrors({ general: "You've sent several notes recently. Please wait a moment before sending another message." });
+      } else if (err.details && Array.isArray(err.details)) {
+        const mapped = {};
+        for (const d of err.details) {
+          if (d.field) mapped[d.field] = d.message;
+        }
+        setErrors(mapped);
+      } else {
+        setErrors({ general: err.message || 'Unable to submit your message. Please check your connection.' });
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -151,8 +171,7 @@ export function Contact() {
       name: '',
       email: '',
       phone: '',
-      market: 'Greenwich Village Farmers Market (Abingdon Square)',
-      topic: 'Saturday Pickup Question',
+      topic: 'order',
       message: '',
     });
     setErrors({});
@@ -160,13 +179,13 @@ export function Contact() {
   };
 
   const handleCopyPhone = () => {
-    navigator.clipboard?.writeText('(212) 555-0198');
+    navigator.clipboard?.writeText(siteContent.contact.phone);
     setCopiedPhone(true);
     setTimeout(() => setCopiedPhone(false), 2000);
   };
 
   const handleCopyEmail = () => {
-    navigator.clipboard?.writeText('hello@marketlink.org');
+    navigator.clipboard?.writeText(siteContent.contact.email);
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2000);
   };
@@ -219,16 +238,16 @@ export function Contact() {
                     <Store size={22} />
                   </div>
                   <div>
-                    <h2 className={styles.boothTitle}>Center Pavilion Info Booth</h2>
-                    <span className={styles.boothSub}>Abingdon Square Market Headquarters</span>
+                    <h2 className={styles.boothTitle}>MarketLink Central Help Desk</h2>
+                    <span className={styles.boothSub}>Community Market Operations Office</span>
                   </div>
                 </div>
 
                 <div className={styles.locationBlock}>
                   <MapPin size={16} className={styles.locationIcon} />
                   <div>
-                    <strong>Abingdon Square Park</strong>
-                    <p>8th Avenue & W 12th St, West Village, New York, NY 10014</p>
+                    <strong>Central Office</strong>
+                    <p>{siteContent.contact.address}</p>
                   </div>
                 </div>
 
@@ -236,16 +255,12 @@ export function Contact() {
                 <div className={styles.scheduleBox}>
                   <h3 className={styles.scheduleTitle}>Market Schedule & Support Hours</h3>
                   <div className={styles.scheduleRow}>
-                    <span className={styles.dayLabel}>Saturday Market Day</span>
-                    <span className={styles.timeValue}>8:00 AM – 2:00 PM (Info Booth Live)</span>
+                    <span className={styles.dayLabel}>Desk Hours</span>
+                    <span className={styles.timeValue}>{siteContent.contact.hours}</span>
                   </div>
                   <div className={styles.scheduleRow}>
-                    <span className={styles.dayLabel}>Friday Harvest Cutoff</span>
-                    <span className={styles.timeValue}>6:00 PM Sharp (Manifests Sent)</span>
-                  </div>
-                  <div className={styles.scheduleRow}>
-                    <span className={styles.dayLabel}>Mon – Thu Desk Inquiries</span>
-                    <span className={styles.timeValue}>9:00 AM – 5:00 PM (Online / Phone)</span>
+                    <span className={styles.dayLabel}>Weekly Pre-Order Cutoff</span>
+                    <span className={styles.timeValue}>Friday 6:00 PM (Harvest Manifests Sent)</span>
                   </div>
                 </div>
 
@@ -256,9 +271,9 @@ export function Contact() {
                       <Phone size={15} />
                     </div>
                     <div className={styles.actionDetails}>
-                      <span className={styles.actionLabel}>Market Day Line</span>
-                      <a href="tel:2125550198" className={styles.actionLink}>
-                        (212) 555-0198
+                      <span className={styles.actionLabel}>Telephone Line</span>
+                      <a href={`tel:${siteContent.contact.phone.replace(/[^0-9+]/g, '')}`} className={styles.actionLink}>
+                        {siteContent.contact.phone}
                       </a>
                     </div>
                     <button
@@ -278,8 +293,8 @@ export function Contact() {
                     </div>
                     <div className={styles.actionDetails}>
                       <span className={styles.actionLabel}>General Inquiries</span>
-                      <a href="mailto:hello@marketlink.org" className={styles.actionLink}>
-                        hello@marketlink.org
+                      <a href={`mailto:${siteContent.contact.email}`} className={styles.actionLink}>
+                        {siteContent.contact.email}
                       </a>
                     </div>
                     <button
@@ -301,41 +316,31 @@ export function Contact() {
                 <div className={styles.deptList}>
                   <div className={styles.deptItem}>
                     <strong>Customer Pre-Orders & Pickups:</strong>
-                    <a href="mailto:orders@marketlink.org">orders@marketlink.org</a>
+                    <a href={`mailto:${siteContent.contact.email}`}>{siteContent.contact.email}</a>
                   </div>
                   <div className={styles.deptItem}>
-                    <strong>Grower & Baker Applications:</strong>
-                    <a href="mailto:growers@marketlink.org">growers@marketlink.org</a>
-                  </div>
-                  <div className={styles.deptItem}>
-                    <strong>Food Access & SNAP / EBT Match:</strong>
-                    <a href="mailto:access@marketlink.org">access@marketlink.org</a>
+                    <strong>Grower & Producer Support:</strong>
+                    <a href={`mailto:${siteContent.contact.email}`}>{siteContent.contact.email}</a>
                   </div>
                 </div>
               </div>
 
-              {/* Visual Map Card */}
+              {/* Real Leaflet Map */}
               <div className={styles.mapCard}>
-                <div className={styles.mapImgWrap}>
-                  <img
-                    src="/images/greenwich-map.jpg"
-                    alt="Map of Greenwich Village Farmers Market at Abingdon Square"
-                    className={styles.mapImg}
-                  />
-                  <a
-                    href="https://maps.google.com/?q=Abingdon+Square+Park+New+York"
-                    target="_blank"
-                    rel="noreferrer"
-                    className={styles.mapDirectionsLink}
-                  >
-                    <span>Open in Google Maps</span>
-                    <ExternalLink size={13} />
-                  </a>
-                </div>
-                <div className={styles.mapCaption}>
-                  <strong>Subway & Transit:</strong>
-                  <p>A, C, E, L to 14th St / 8th Ave (3 min walk) · Free 2-hr Saturday parking along Hudson St.</p>
-                </div>
+                <MapView
+                  markers={[
+                    {
+                      id: 'hq',
+                      lat: siteContent.contact.coordinates.lat,
+                      lng: siteContent.contact.coordinates.lng,
+                      label: `${siteContent.organization.name} Operations`,
+                      subtitle: siteContent.contact.address,
+                    },
+                  ]}
+                  height="260px"
+                  zoom={14}
+                  ariaLabel="MarketLink office location map"
+                />
               </div>
             </div>
 

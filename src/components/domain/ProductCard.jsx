@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { formatPrice } from '@/utils/format';
-import { getFarmer } from '@/data/placeholders';
 import Illustration from '@/components/domain/Illustration';
 import AddToCartButton from '@/components/domain/AddToCartButton';
 import Badge from '@/components/ui/Badge';
@@ -13,7 +12,6 @@ import styles from './ProductCard.module.css';
  *  - Tile aspect ratio: 4/3 compact/grid, 16/10 feature
  *  - Reserved 2-line title height prevents ragged cards
  *  - Clean layout: image tile, name, one muted farm line, price + add button
- *  - Heart removed from compact & feature cards (lives in sheet & favorites)
  *  - Stock badge only when 'out' or 'low'
  *  - Card link covers upper card area without overlapping the add-to-cart button
  */
@@ -27,9 +25,11 @@ export function ProductCard({
 
   if (!product) return null;
 
-  const farmer = farmerProp || getFarmer(product.farmerId);
-  const isSoldOut = product.stock === 'out';
-  const isLowStock = product.stock === 'low';
+  const farmer = farmerProp || product.farmer;
+  const rawAvailability = product.availability || product.stock;
+  const isSoldOut = rawAvailability === 'out';
+  const isLowStock = rawAvailability === 'low';
+  const displayPrice = product.priceCents != null ? product.priceCents : product.price;
 
   const productSheetPath = `/buyer/products/${product.id}`;
   const linkState = { background: location.state?.background || location };
@@ -38,7 +38,7 @@ export function ProductCard({
   return (
     <article
       className={`${styles.card} ${styles[variant] || styles.compact} ${isSoldOut ? styles.soldOutCard : ''} ${className}`}
-      aria-label={`${product.name}, ${formatPrice(product.price)} per ${product.unit}`}
+      aria-label={`${product.name}, ${formatPrice(displayPrice)} per ${product.unit}`}
     >
       {/* Clickable link to product sheet covering image tile and title */}
       <Link
@@ -80,20 +80,21 @@ export function ProductCard({
       <div className={styles.content}>
         <div className={styles.header}>
           <h3 className={styles.name}>{product.name}</h3>
-          {farmer && (
+          {farmer?.stallName && (
             <span className={styles.farmerName}>{farmer.stallName}</span>
           )}
         </div>
 
         <div className={styles.footer}>
           <div className={styles.priceGroup}>
-            <span className={styles.price}>{formatPrice(product.price)}</span>
+            <span className={styles.price}>{formatPrice(displayPrice)}</span>
             <span className={styles.unit}>/ {product.unit}</span>
           </div>
 
           <div className={styles.actionWrapper}>
             <AddToCartButton
               productId={product.id}
+              farmerId={farmer?.id || product.farmerId || product.farmer?.id}
               productName={product.name}
               variant="icon"
               disabled={isSoldOut}

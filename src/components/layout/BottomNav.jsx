@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Store, Search, ShoppingBasket, Receipt, User } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useNotificationCount } from '@/hooks/useNotificationCount';
 import styles from './BottomNav.module.css';
 
 /**
@@ -21,6 +22,7 @@ export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { count } = useCart();
+  const { unreadCount } = useNotificationCount();
 
   // Determine which nav item is active based on current path
   const getIsActive = (item) => {
@@ -81,6 +83,9 @@ export function BottomNav() {
                     <span className={styles.badge} data-cart-badge aria-label={`${count} items in cart`}>
                       {count > 9 ? '9+' : count}
                     </span>
+                  )}
+                  {item.id === 'you' && unreadCount > 0 && (
+                    <span className={styles.unreadDot} aria-label={`${unreadCount} unread notifications`} />
                   )}
                 </span>
                 <span className={styles.label}>{item.label}</span>

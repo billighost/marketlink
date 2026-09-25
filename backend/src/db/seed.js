@@ -58,7 +58,15 @@ export async function runSeed(force = false, targetDb = null) {
   // 1. Drop existing collections to ensure a fresh, clean slate
   const existingCollections = await db.listCollections().toArray();
   for (const coll of existingCollections) {
-    await db.collection(coll.name).drop();
+    if (!coll.name.startsWith('system.')) {
+      try {
+        await db.collection(coll.name).drop();
+      } catch (err) {
+        try {
+          await db.collection(coll.name).deleteMany({});
+        } catch (_) {}
+      }
+    }
   }
   console.log('✓ Cleaned existing collections.');
 

@@ -232,6 +232,10 @@
   font-weight: var(--weight-medium);
   cursor: pointer;
   display: inline;
+  background: none;
+  border: none;
+  font-size: inherit;
+  font-family: inherit;
   padding: 0;
   min-height: auto;
 }

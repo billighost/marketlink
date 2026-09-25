@@ -1,9 +1,8 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Clock, Info } from 'lucide-react';
+import { Trash2, Clock, Info, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
-import { getFarmer, getProduct, pickupSlots, homeMarket } from '@/data/placeholders';
 import { formatPrice } from '@/utils/format';
 import QuantityStepper from '@/components/ui/QuantityStepper';
 import EmptyState from '@/components/ui/EmptyState';
@@ -13,15 +12,30 @@ import styles from './Cart.module.css';
 
 /**
  * Customer Shopping Cart modal sheet.
+ * Connected to live backend cart quote and atomic checkout.
  * Groups items by farmer stall, shows pickup slot options, and submits pre-orders.
  */
 export function Cart({ inSheet = true, onClose }) {
-  const { items, count, subtotal, setQuantity, remove, restoreItem, clear } = useCart();
+  const {
+    items,
+    count,
+    subtotalCents,
+    setQuantity,
+    setSlot,
+    remove,
+    restoreItem,
+    quote,
+    loadingQuote,
+    quoteError,
+    refreshQuote,
+    performCheckout,
+  } = useCart();
+
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const [selectedSlot, setSelectedSlot] = useState(pickupSlots[0]?.id || 'slot-1');
   const [orderNote, setOrderNote] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
   const [swipedProductId, setSwipedProductId] = useState(null);
 
@@ -41,64 +55,48 @@ export function Cart({ inSheet = true, onClose }) {
     }
   };
 
-  const handleRemove = (productOrId, quantityOrName) => {
-    const product = typeof productOrId === 'object' ? productOrId : getProduct(productOrId);
-    const prodId = product?.id || productOrId;
-    const prodName = product?.name || (typeof quantityOrName === 'string' ? quantityOrName : 'item');
-    const quantity = typeof quantityOrName === 'number' ? quantityOrName : 1;
-
-    remove(prodId);
+  const handleRemove = (productId, productName = 'item', quantity = 1, farmerId = null) => {
+    remove(productId);
     setSwipedProductId(null);
     showToast({
-      message: `Removed ${prodName}`,
+      message: `Removed ${productName}`,
       action: 'Undo',
       duration: 4000,
       onAction: () => {
-        restoreItem(prodId, quantity);
+        restoreItem(productId, quantity, farmerId);
       },
     });
   };
 
-  // Group items by farmer stall
-  const farmerGroups = useMemo(() => {
-    const groups = {};
-    items.forEach((cartItem) => {
-      const product = getProduct(cartItem.productId);
-      if (!product) return;
-      const quantity = cartItem.quantity;
-      const farmer = getFarmer(product.farmerId);
-      const farmerId = farmer?.id || 'unknown';
+  const handlePlaceOrder = async () => {
+    if (submitting || !quote?.canCheckout) return;
 
-      if (!groups[farmerId]) {
-        groups[farmerId] = {
-          farmer,
-          items: [],
-          subtotal: 0,
-        };
-      }
-      groups[farmerId].items.push({ product, quantity });
-      groups[farmerId].subtotal += product.price * quantity;
-    });
-    return Object.values(groups);
-  }, [items]);
+    setSubmitting(true);
+    try {
+      const res = await performCheckout(orderNote);
+      const orders = res?.orders || res?.data?.orders || [];
+      const orderNumbers = orders.map((o) => o.orderNumber).filter(Boolean).join(', ');
+      const total = orders.reduce((sum, o) => sum + (o.totalCents || 0), 0) || quote?.totalCents || subtotalCents;
+      const pickupSlot = orders[0]?.pickupWindow?.label || orders[0]?.pickupSlot || 'Saturday morning';
+      const marketName = orders[0]?.marketName || 'Market Stall';
+      const farmerNames = orders.map((o) => o.stallName || o.farmerName).filter(Boolean).join(' & ') || 'Local Farmer';
 
-  // Handle in-sheet pre-order submission
-  const handlePlaceOrder = () => {
-    const orderNumber = `ML-${Math.floor(1000 + Math.random() * 9000)}`;
-    const slotObj = pickupSlots.find((s) => s.id === selectedSlot) || pickupSlots[0];
-    const farmerNames = farmerGroups
-      .map((g) => g.farmer?.stallName || 'Local Farmer')
-      .join(' & ');
-
-    setPlacedOrder({
-      orderNumber,
-      total: subtotal,
-      pickupSlot: slotObj.label,
-      marketName: homeMarket.name,
-      farmerNames,
-    });
-
-    clear();
+      setPlacedOrder({
+        orderNumber: orderNumbers || 'ML-ORDER',
+        total,
+        pickupSlot,
+        marketName,
+        farmerNames,
+      });
+    } catch (err) {
+      showToast({
+        message: err.message || 'Checkout failed. Please review your basket.',
+        type: 'danger',
+      });
+      refreshQuote();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // If order was just placed, show confirmation inside this sheet
@@ -134,59 +132,95 @@ export function Cart({ inSheet = true, onClose }) {
     );
   }
 
+  const groups = quote?.groups || [];
+
   return (
     <div className={styles.container}>
-      {/* Pickup Slot Selection */}
-      <section className={styles.pickupSection} aria-label="Pickup window">
-        <div className={styles.sectionHeader}>
-          <Clock size={16} className={styles.sectionIcon} aria-hidden="true" />
-          <h3 className={styles.sectionTitle}>Pickup time on Saturday</h3>
+      {quoteError && (
+        <div className={styles.groupIssuesBanner} role="alert">
+          <AlertTriangle size={16} aria-hidden="true" />
+          <span style={{ flex: 1 }}>{quoteError.message || 'Unable to update cart pricing.'}</span>
+          <button
+            type="button"
+            onClick={refreshQuote}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            aria-label="Retry cart quote"
+          >
+            <RefreshCw size={14} />
+          </button>
         </div>
-        <div className={styles.slotsGrid}>
-          {pickupSlots.slice(0, 4).map((slot) => (
-            <button
-              key={slot.id}
-              type="button"
-              className={`${styles.slotButton} ${selectedSlot === slot.id ? styles.slotSelected : ''}`}
-              onClick={() => setSelectedSlot(slot.id)}
-              aria-pressed={selectedSlot === slot.id}
-            >
-              {slot.label}
-            </button>
-          ))}
-        </div>
-      </section>
+      )}
 
       {/* Items Grouped by Farmer Stall */}
       <div className={styles.groupsList}>
-        {farmerGroups.map((group) => {
-          const { farmer, items: groupItems, subtotal: groupSubtotal } = group;
+        {groups.map((group) => {
+          const { farmer, lines = [], subtotalCents: groupSubtotal, slots = [], issues = [], farmerId, selectedSlot } = group;
+          const isSlotSelected = (slot) =>
+            selectedSlot?.start === slot.start ||
+            items.find((i) => i.farmerId === farmerId)?.slotStart === slot.start;
+
           return (
             <section
-              key={farmer?.id || 'unknown'}
+              key={farmerId}
               className={styles.farmerGroup}
               aria-label={`Items from ${farmer?.stallName || 'Farmer'}`}
             >
               <div className={styles.stallHeader}>
                 <div className={styles.stallInfo}>
                   <h4 className={styles.stallName}>{farmer?.stallName || 'Local Farmer'}</h4>
-                  <span className={styles.stallNumber}>{farmer?.stallNumber || 'Market Stall'}</span>
+                  {farmer?.stallNumber && <span className={styles.stallNumber}>{farmer.stallNumber}</span>}
                 </div>
                 <span className={styles.stallSubtotal}>{formatPrice(groupSubtotal)}</span>
               </div>
 
+              {issues.length > 0 && (
+                <div className={styles.groupIssuesBanner}>
+                  <AlertTriangle size={16} aria-hidden="true" />
+                  <span>{issues.map((i) => i.message).join(' ')}</span>
+                </div>
+              )}
+
+              {/* Pickup Slot Selection for this stall */}
+              {slots.length > 0 && (
+                <div className={styles.pickupSection} style={{ border: 'none', borderRadius: 0, borderBottom: '1px solid var(--color-border)' }}>
+                  <div className={styles.sectionHeader}>
+                    <Clock size={16} className={styles.sectionIcon} aria-hidden="true" />
+                    <h3 className={styles.sectionTitle}>Pickup time for {farmer?.stallName}</h3>
+                  </div>
+                  <div className={styles.slotsGrid}>
+                    {slots.slice(0, 4).map((slot) => {
+                      const selected = isSlotSelected(slot);
+                      return (
+                        <button
+                          key={slot.start}
+                          type="button"
+                          disabled={!slot.isOpen}
+                          className={`${styles.slotButton} ${selected ? styles.slotSelected : ''} ${!slot.isOpen ? styles.slotClosed : ''}`}
+                          onClick={() => setSlot(farmerId, slot.start)}
+                          aria-pressed={selected}
+                        >
+                          {slot.label} {!slot.isOpen ? '(Closed)' : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Product rows for this stall */}
               <div className={styles.itemsList}>
-                {groupItems.map(({ product, quantity }) => {
-                  const isSwiped = swipedProductId === product.id;
-                  const maxQty = product.quantityLeft || 99;
+                {lines.map((line) => {
+                  const isSwiped = swipedProductId === line.productId;
+                  const maxQty = line.quantityAvailable > 0 ? line.quantityAvailable : 99;
+
                   return (
-                    <div key={product.id} className={styles.rowContainer}>
+                    <div key={line.productId} className={styles.rowContainer}>
                       {isSwiped && (
                         <button
                           type="button"
                           className={styles.swipeAction}
-                          onClick={() => handleRemove(product, quantity)}
-                          aria-label={`Confirm remove ${product.name}`}
+                          onClick={() => handleRemove(line.productId, line.name, line.quantity, farmerId)}
+                          aria-label={`Confirm remove ${line.name}`}
                         >
                           Remove
                         </button>
@@ -194,33 +228,38 @@ export function Cart({ inSheet = true, onClose }) {
                       <div
                         className={`${styles.itemRow} ${isSwiped ? styles.swiped : ''}`}
                         onTouchStart={handleTouchStart}
-                        onTouchMove={(e) => handleTouchMove(e, product.id)}
+                        onTouchMove={(e) => handleTouchMove(e, line.productId)}
                       >
                         <div className={styles.itemVisual}>
-                          <Illustration name={product.art || 'basket'} size="sm" />
+                          <Illustration name={line.art || 'basket'} size="sm" />
                         </div>
 
                         <div className={styles.itemDetails}>
-                          <span className={styles.itemName}>{product.name}</span>
+                          <span className={styles.itemName}>{line.name}</span>
                           <span className={styles.itemPrice}>
-                            {formatPrice(product.price)} / {product.unit}
+                            {formatPrice(line.unitPriceCents)} / {line.unit}
                           </span>
+                          {line.issues?.map((iss) => (
+                            <span key={iss.code} className={styles.lineIssue}>
+                              {iss.message}
+                            </span>
+                          ))}
                         </div>
 
                         <div className={styles.itemActions}>
                           <QuantityStepper
-                            value={quantity}
-                            onChange={(newQty) => setQuantity(product.id, newQty)}
+                            value={line.quantity}
+                            onChange={(newQty) => setQuantity(line.productId, newQty)}
                             min={0}
                             max={maxQty}
-                            productName={product.name}
+                            productName={line.name}
                             compact
                           />
                           <button
                             type="button"
                             className={styles.removeButton}
-                            onClick={() => handleRemove(product, quantity)}
-                            aria-label={`Remove ${product.name} from basket`}
+                            onClick={() => handleRemove(line.productId, line.name, line.quantity, farmerId)}
+                            aria-label={`Remove ${line.name} from basket`}
                           >
                             <Trash2 size={16} aria-hidden="true" />
                           </button>
@@ -244,6 +283,7 @@ export function Cart({ inSheet = true, onClose }) {
           id="order-note"
           className={styles.noteInput}
           rows={2}
+          maxLength={200}
           placeholder="E.g., Please pack ripe tomatoes on top, extra paper bag..."
           value={orderNote}
           onChange={(e) => setOrderNote(e.target.value)}
@@ -254,8 +294,8 @@ export function Cart({ inSheet = true, onClose }) {
       <section className={styles.summarySection} aria-label="Order summary">
         <div className={styles.summaryRow}>
           <span className={styles.summaryLabel}>Subtotal</span>
-          <span key={`subtotal-${subtotal}`} className={`${styles.summaryValue} ${styles.totalValueCrossfade}`}>
-            {formatPrice(subtotal)}
+          <span key={`subtotal-${subtotalCents}`} className={`${styles.summaryValue} ${styles.totalValueCrossfade}`}>
+            {formatPrice(quote?.totalCents ?? subtotalCents)}
           </span>
         </div>
         <div className={styles.summaryRow}>
@@ -264,14 +304,14 @@ export function Cart({ inSheet = true, onClose }) {
         </div>
         <div className={`${styles.summaryRow} ${styles.totalRow}`}>
           <span className={styles.totalLabel}>Total to pay</span>
-          <span key={`total-${subtotal}`} className={`${styles.totalValue} ${styles.totalValueCrossfade}`}>
-            {formatPrice(subtotal)}
+          <span key={`total-${subtotalCents}`} className={`${styles.totalValue} ${styles.totalValueCrossfade}`}>
+            {formatPrice(quote?.totalCents ?? subtotalCents)}
           </span>
         </div>
 
         <div className={styles.payNotice}>
           <Info size={16} className={styles.noticeIcon} aria-hidden="true" />
-          <span>You pay at each stall when picking up on Saturday. Cash or card accepted.</span>
+          <span>You pay at each stall when picking up. Cash or card accepted.</span>
         </div>
       </section>
 
@@ -280,10 +320,17 @@ export function Cart({ inSheet = true, onClose }) {
         <button
           type="button"
           className={styles.placeOrderButton}
+          disabled={!quote?.canCheckout || submitting || loadingQuote}
           onClick={handlePlaceOrder}
         >
-          <span key={`btn-${subtotal}`} className={styles.totalValueCrossfade}>
-            Place pre-order · {formatPrice(subtotal)}
+          <span key={`btn-${subtotalCents}`} className={styles.totalValueCrossfade}>
+            {submitting
+              ? 'Placing pre-order...'
+              : loadingQuote
+              ? 'Updating basket...'
+              : !quote?.canCheckout
+              ? 'Select pickup time to order'
+              : `Place pre-order · ${formatPrice(quote?.totalCents ?? subtotalCents)}`}
           </span>
         </button>
       </footer>

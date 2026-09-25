@@ -276,4 +276,16 @@ describe('Checkout Concurrency & Anti-Overselling Suite (T3.051 - T3.070)', () =
     const finalProd = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: raceProdId });
     assert.equal(finalProd.quantityAvailable, 9, 'Exactly 1 unit must be deducted across all parallel replays');
   });
+
+  after(async () => {
+    if (createdUserIds.length > 0) {
+      await db.collection(COLLECTIONS.USERS).deleteMany({ _id: { $in: createdUserIds } });
+    }
+    if (createdProductIds.length > 0) {
+      await db.collection(COLLECTIONS.PRODUCTS).deleteMany({ _id: { $in: createdProductIds } });
+    }
+    const customerIds = testCustomers.map(c => c.id);
+    await db.collection(COLLECTIONS.ORDERS).deleteMany({ customerId: { $in: customerIds } });
+    await teardownTestEnvironment();
+  });
 });

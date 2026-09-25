@@ -14,6 +14,7 @@ export const PATHS = {
   LOGIN: '/login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
   UNAUTHORIZED: '/unauthorized',
   // Authenticated role roots
   BUYER: '/buyer',
@@ -37,4 +38,5 @@ export const PATHS = {
   VENDOR: '/vendor',
   ADMIN: '/admin',
 };
+
 

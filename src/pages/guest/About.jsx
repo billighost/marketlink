@@ -21,11 +21,12 @@ import {
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
+import siteContent from '@/content/siteContent';
 import styles from './About.module.css';
 
 const STATS = [
   { value: '40+', label: 'Independent Growers', subtext: 'Within 90 miles of our markets' },
-  { value: '8', label: 'Historic Markets', subtext: 'Across Manhattan & Brooklyn' },
+  { value: '4', label: 'Historic Markets', subtext: 'Regional neighborhood markets' },
   { value: '100%', label: 'Direct Producer Takings', subtext: '0% platform take from stall sales' },
   { value: '14,000+', label: 'Harvest Pre-Orders', subtext: 'Fulfilled without food waste' },
 ];
@@ -350,11 +351,16 @@ export function About() {
           </div>
 
           <div className={styles.teamGrid}>
-            {TEAM.map((member, idx) => (
+            {siteContent.team.map((member, idx) => (
               <div key={idx} className={styles.teamCard}>
                 <div className={styles.teamImgWrap}>
-                  <img src={member.image} alt={member.name} className={styles.teamImg} />
-                  <span className={styles.teamFarmTag}>{member.farm}</span>
+                  {member.image ? (
+                    <img src={member.image} alt={member.name} className={styles.teamImg} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-beet)', fontFamily: 'var(--font-head)', fontSize: 'var(--text-h3)' }}>
+                      {member.name.charAt(0)}
+                    </div>
+                  )}
                 </div>
                 <div className={styles.teamCardBody}>
                   <h3 className={styles.memberName}>{member.name}</h3>

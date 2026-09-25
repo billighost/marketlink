@@ -4,8 +4,10 @@ import { Search, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useOpenSheet } from '@/hooks/useOpenSheet';
 import { useFeed } from '@/hooks/useFeed';
+import { useQuery } from '@/hooks/useQuery';
+import { getFeedMeta } from '@/api/catalog';
+import { getHomeSummary } from '@/api/me';
 import { getGreeting } from '@/utils/greeting';
-import { orders, homeMarket, getMarket } from '@/data/placeholders';
 import HorizontalRow from '@/components/layout/HorizontalRow';
 import ProductCard from '@/components/domain/ProductCard';
 import FarmerCard from '@/components/domain/FarmerCard';
@@ -16,9 +18,9 @@ import styles from './Home.module.css';
  * Customer Home page ("Market" tab).
  * Minimal UI specifications:
  *  - Density budget: greeting h1, one muted line, one search field, then first row
- *  - No top category chip row, no top assistant pill
- *  - Quiet text link after 3rd section to Ask MarketLink
- *  - Tablet centered column with bleeding rows
+ *  - Feed sections loaded from GET /api/feed with cursor-based endless scroll
+ *  - Active pickup notification from GET /api/home/summary
+ *  - Sub-line from GET /api/feed/meta
  */
 export function Home() {
   const { user } = useAuth();
@@ -29,13 +31,16 @@ export function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const sentinelRef = useRef(null);
 
-  const currentMarket = (user?.homeMarketId ? getMarket(user.homeMarketId) : null) || homeMarket;
-  const displayName = user?.firstName || user?.name?.split(' ')[0] || 'there';
+  const { data: feedMeta } = useQuery(['feed-meta'], ({ signal }) => getFeedMeta(signal));
+  const { data: homeSummary } = useQuery(['home-summary'], ({ signal }) => getHomeSummary(signal));
 
-  // Check for any active orders
-  const activeOrder = orders.find(
-    (o) => o.status === 'Ready for pickup' || o.status === 'Accepted' || o.status === 'Placed'
-  );
+  const greetingName = feedMeta?.greetingName || user?.firstName || user?.name?.split(' ')[0] || 'there';
+  const scheduleLine =
+    feedMeta?.line ||
+    (feedMeta?.homeMarket?.name ? `${feedMeta.homeMarket.name} · Open Saturday` : 'Local Farmers Market');
+
+  // Active pickup order from server summary
+  const activePickup = homeSummary?.readyForPickup || homeSummary?.nextPickup;
 
   // IntersectionObserver to load endless feed sections as user scrolls down
   useEffect(() => {
@@ -64,8 +69,8 @@ export function Home() {
   };
 
   const handleOpenActiveOrder = () => {
-    if (activeOrder) {
-      openSheet(`/buyer/orders/${activeOrder.id}`);
+    if (activePickup?.id) {
+      openSheet(`/buyer/orders/${activePickup.id}`);
     }
   };
 
@@ -74,10 +79,8 @@ export function Home() {
       {/* ── Header Area ──────────────────────────────────────────────── */}
       <header className={styles.header}>
         <div className={styles.greetingGroup}>
-          <h1 className={styles.greeting}>{getGreeting(displayName)}</h1>
-          <p className={styles.marketSchedule}>
-            {currentMarket.name} · Saturday 8 am – 1 pm
-          </p>
+          <h1 className={styles.greeting}>{getGreeting(greetingName)}</h1>
+          <p className={styles.marketSchedule}>{scheduleLine}</p>
         </div>
 
         {/* Clean, full-width search field */}
@@ -95,7 +98,7 @@ export function Home() {
       </header>
 
       {/* ── Active Pickup Banner (if active order exists) ─────────────── */}
-      {activeOrder && (
+      {activePickup && (
         <section className={styles.pickupBanner} aria-label="Active order notification">
           <div className={styles.pickupContent}>
             <div className={styles.pickupIconWrap}>
@@ -103,13 +106,15 @@ export function Home() {
             </div>
             <div className={styles.pickupText}>
               <div className={styles.pickupStatus}>
-                <span className={styles.pickupBadge}>{activeOrder.status}</span>
-                <span className={styles.pickupNumber}>{activeOrder.number}</span>
+                <span className={styles.pickupBadge}>
+                  {activePickup.status === 'ready' ? 'Ready for pickup' : 'Order Placed'}
+                </span>
+                <span className={styles.pickupNumber}>{activePickup.orderNumber}</span>
               </div>
               <p className={styles.pickupDesc}>
-                {activeOrder.status === 'Ready for pickup'
-                  ? 'Your order is packed and waiting at the market stall.'
-                  : `Scheduled pickup: ${activeOrder.pickupSlot}`}
+                {activePickup.status === 'ready'
+                  ? `Your order is packed and waiting at ${activePickup.farmer?.stallName || 'the stall'}.`
+                  : `Scheduled pickup: ${activePickup.pickup?.label || 'Saturday window'}`}
               </p>
             </div>
           </div>
@@ -117,7 +122,7 @@ export function Home() {
             type="button"
             className={styles.pickupAction}
             onClick={handleOpenActiveOrder}
-            aria-label={`View order ${activeOrder.number} details`}
+            aria-label={`View order ${activePickup.orderNumber} details`}
           >
             <span>View order</span>
             <ArrowRight size={16} aria-hidden="true" />
@@ -134,7 +139,7 @@ export function Home() {
                 title={section.title}
                 subtitle={section.subtitle}
                 seeAllLabel="See all"
-                onSeeAll={() => navigate(section.seeAllPath)}
+                onSeeAll={() => navigate(section.seeAllPath || '/buyer/products')}
               >
                 {section.items.map((item) => {
                   if (section.type === 'farmers') {
@@ -162,12 +167,13 @@ export function Home() {
               <div className={styles.assistantCallout}>
                 <p className={styles.assistantText}>
                   Not sure what to cook?{' '}
-                  <Link
-                    to="/buyer/assistant"
+                  <button
+                    type="button"
+                    onClick={() => openSheet('/buyer/assistant')}
                     className={styles.assistantLink}
                   >
                     Ask MarketLink
-                  </Link>
+                  </button>
                   .
                 </p>
               </div>

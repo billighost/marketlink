@@ -1,35 +1,98 @@
-import React, { useState } from 'react';
-import { markets } from '@/data/placeholders';
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Navigation, Compass } from 'lucide-react';
+import { getMarkets } from '@/api/catalog';
+import { useQuery } from '@/hooks/useQuery';
 import { useAuth } from '@/context/AuthContext';
+import { setHomeMarket } from '@/api/me';
 import MarketCard from '@/components/domain/MarketCard';
-import MapPlaceholder from '@/components/domain/MapPlaceholder';
+import { MapView } from '@/components/domain/MapView';
 import SegmentedControl from '@/components/ui/SegmentedControl';
 import Chip from '@/components/ui/Chip';
+import Skeleton from '@/components/ui/Skeleton';
+import EmptyState from '@/components/ui/EmptyState';
+import Button from '@/components/ui/Button';
 import styles from './Markets.module.css';
 
-const DAYS = ['All days', 'Wednesday', 'Saturday', 'Sunday'];
+const DAY_OPTIONS = [
+  { label: 'All days', val: undefined },
+  { label: 'Wednesday', val: 'wed' },
+  { label: 'Friday', val: 'fri' },
+  { label: 'Saturday', val: 'sat' },
+  { label: 'Sunday', val: 'sun' },
+];
 
 /**
  * Customer Markets directory page.
- * Offers List and Map view toggle, and day of week filters.
+ * Offers List and Map view toggle, day filtering, geolocation distance sorting, and real MapView.
  */
 export function Markets() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('list');
-  const [selectedDay, setSelectedDay] = useState('All days');
-  const [selectedMarketId, setSelectedMarketId] = useState(user?.homeMarketId || 'market-elm');
+  const [selectedDay, setSelectedDay] = useState(undefined);
+  const [userCoords, setUserCoords] = useState(null);
+  const [geoLocating, setGeoLocating] = useState(false);
+  const [geoError, setGeoError] = useState(null);
 
-  const filteredMarkets = markets.filter((market) => {
-    if (selectedDay === 'All days') return true;
-    return market.days?.includes(selectedDay);
-  });
-
-  const handleSelectMarket = (market) => {
-    setSelectedMarketId(market.id);
-    if (user) {
-      user.homeMarketId = market.id;
-    }
+  const queryParams = {
+    day: selectedDay,
+    lat: userCoords?.lat,
+    lng: userCoords?.lng,
+    radiusKm: userCoords ? 50 : undefined,
   };
+
+  const { data: marketsData, loading, refetch } = useQuery(
+    ['buyer-markets', selectedDay, userCoords?.lat, userCoords?.lng],
+    ({ signal }) => getMarkets(queryParams, signal)
+  );
+
+  const markets = marketsData?.data || [];
+  const selectedMarketId = user?.homeMarketId || user?.homeMarket?.id || markets[0]?.id;
+
+  const handleUseMyLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setGeoError('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setGeoLocating(true);
+    setGeoError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserCoords({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setGeoLocating(false);
+      },
+      (err) => {
+        setGeoLocating(false);
+        setGeoError('Location permission denied. Showing all regional markets.');
+      },
+      { timeout: 8000 }
+    );
+  }, []);
+
+  const handleSelectMarket = async (market) => {
+    try {
+      await setHomeMarket(market.id);
+      refreshUser?.();
+    } catch {
+      // ignore
+    }
+    navigate(`/buyer/markets/${market.id}`);
+  };
+
+  const mapMarkers = markets
+    .filter((m) => m.location?.lat && m.location?.lng)
+    .map((m) => ({
+      id: m.id,
+      lat: m.location.lat,
+      lng: m.location.lng,
+      label: m.name,
+    }));
 
   return (
     <div className={styles.page}>
@@ -47,35 +110,51 @@ export function Markets() {
           />
         </div>
 
-        {/* Day of Week Chips */}
+        {/* Day of Week Chips and Location Button */}
         <div className={styles.daysScroll} role="tablist" aria-label="Market days">
-          {DAYS.map((day) => (
+          <button
+            type="button"
+            className={`${styles.locationBtn} ${userCoords ? styles.locationActive : ''}`}
+            onClick={handleUseMyLocation}
+            disabled={geoLocating}
+            aria-label="Sort markets by current location"
+          >
+            <Navigation size={14} className={geoLocating ? styles.spin : ''} />
+            <span>{geoLocating ? 'Locating...' : userCoords ? 'Near me' : 'Use my location'}</span>
+          </button>
+
+          {DAY_OPTIONS.map((opt) => (
             <Chip
-              key={day}
-              selected={selectedDay === day}
-              onClick={() => setSelectedDay(day)}
+              key={opt.label}
+              selected={selectedDay === opt.val}
+              onClick={() => setSelectedDay(opt.val)}
             >
-              {day}
+              {opt.label}
             </Chip>
           ))}
         </div>
+
+        {geoError && (
+          <p className={styles.geoNote} role="status">
+            {geoError}
+          </p>
+        )}
       </header>
 
       {/* View: Map */}
       {viewMode === 'map' && (
         <div className={styles.mapContainer}>
-          <MapPlaceholder
-            address={markets.find((m) => m.id === selectedMarketId)?.name || 'Markets near you'}
-            height="280px"
+          <MapView
+            markers={mapMarkers}
+            selectedId={selectedMarketId}
+            onSelect={(id) => navigate(`/buyer/markets/${id}`)}
+            height="320px"
           />
           <div className={styles.mapCardList}>
-            {filteredMarkets.map((market) => (
+            {markets.map((market) => (
               <MarketCard
                 key={market.id}
-                market={{
-                  ...market,
-                  farmerCount: market.farmerIds?.length || 8,
-                }}
+                market={market}
                 onSelect={handleSelectMarket}
               />
             ))}
@@ -85,17 +164,35 @@ export function Markets() {
 
       {/* View: List */}
       {viewMode === 'list' && (
-        <div className={styles.list}>
-          {filteredMarkets.map((market) => (
-            <MarketCard
-              key={market.id}
-              market={{
-                ...market,
-                farmerCount: market.farmerIds?.length || 8,
-              }}
-              onSelect={handleSelectMarket}
+        <div className={styles.listContainer}>
+          {loading && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <Skeleton height="100px" borderRadius="var(--radius-md)" />
+              <Skeleton height="100px" borderRadius="var(--radius-md)" />
+              <Skeleton height="100px" borderRadius="var(--radius-md)" />
+            </div>
+          )}
+
+          {!loading && markets.length === 0 && (
+            <EmptyState
+              title="No markets found"
+              description="No physical markets operate on this selected day. Try viewing all days."
+              actionLabel="View all days"
+              onAction={() => setSelectedDay(undefined)}
             />
-          ))}
+          )}
+
+          {!loading && markets.length > 0 && (
+            <div className={styles.grid}>
+              {markets.map((market) => (
+                <MarketCard
+                  key={market.id}
+                  market={market}
+                  onSelect={handleSelectMarket}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

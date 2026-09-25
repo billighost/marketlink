@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ShoppingBasket } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { homeMarket, getMarket } from '@/data/placeholders';
+import { getMarkets } from '@/api/catalog';
+import { useQuery } from '@/hooks/useQuery';
 import Illustration from '@/components/domain/Illustration';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './BuyerTopBar.module.css';
@@ -27,6 +28,9 @@ export function BuyerTopBar() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
 
+  const { data: marketsData } = useQuery(['markets'], ({ signal }) => getMarkets({}, signal));
+  const markets = marketsData?.data || [];
+
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY > 4;
@@ -38,7 +42,11 @@ export function BuyerTopBar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const currentMarket = (user?.homeMarketId ? getMarket(user.homeMarketId) : null) || homeMarket;
+  const currentMarket =
+    user?.homeMarket ||
+    (user?.homeMarketId ? markets.find((m) => m.id === user.homeMarketId) : null) ||
+    markets[0] || { name: 'Farmers Market' };
+
   const currentPath = location.state?.background?.pathname || location.pathname;
 
   const getInitials = () => {

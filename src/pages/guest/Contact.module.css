@@ -180,7 +180,15 @@
   border: 1px solid #ebdcd5;
   border-radius: 16px;
   padding: 24px;
+  box-sizing: border-box;
+  max-width: 100%;
   box-shadow: 0 2px 10px rgba(46, 43, 38, 0.04);
+}
+
+@media (max-width: 480px) {
+  .infoBoothCard {
+    padding: 16px;
+  }
 }
 
 .boothHeader {
@@ -367,7 +375,15 @@
   border: 1px solid #ebdcd5;
   border-radius: 14px;
   padding: 18px 20px;
+  box-sizing: border-box;
+  max-width: 100%;
   box-shadow: 0 2px 8px rgba(46, 43, 38, 0.03);
+}
+
+@media (max-width: 480px) {
+  .deptCard {
+    padding: 14px 16px;
+  }
 }
 
 .deptTitle {
@@ -406,12 +422,13 @@
   text-decoration: underline;
 }
 
-/* Map Card */
 .mapCard {
   background-color: #ffffff;
   border: 1px solid #ebdcd5;
   border-radius: 14px;
   overflow: hidden;
+  box-sizing: border-box;
+  max-width: 100%;
   box-shadow: 0 2px 8px rgba(46, 43, 38, 0.03);
 }
 
@@ -482,7 +499,9 @@
   background-color: #ffffff;
   border: 1px solid #ebdcd5;
   border-radius: 18px;
-  padding: clamp(24px, 1.5rem + 1.5vw, 36px);
+  padding: clamp(16px, 1.2rem + 1vw, 36px);
+  box-sizing: border-box;
+  max-width: 100%;
   box-shadow: 0 4px 20px rgba(46, 43, 38, 0.05);
 }
 
@@ -545,7 +564,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px;
+  padding: 0 14px;
+  min-height: 44px;
   background-color: #faf5f2;
   border: 1px solid #ebdcd5;
   border-radius: 8px;
@@ -580,6 +600,7 @@
   border: 1px solid #dcd1c8;
   border-radius: 8px;
   padding: 10px 14px;
+  min-height: 44px;
   transition: all 120ms ease;
   box-sizing: border-box;
 }

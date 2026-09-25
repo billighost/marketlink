@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFavorites } from '@/context/FavoritesContext';
-import { getProduct, getFarmer } from '@/data/placeholders';
+import { getFavoritesList } from '@/api/me';
 import ProductCard from '@/components/domain/ProductCard';
 import FarmerCard from '@/components/domain/FarmerCard';
 import SegmentedControl from '@/components/ui/SegmentedControl';
@@ -10,14 +10,45 @@ import styles from './Favorites.module.css';
 
 /**
  * Customer Favorites page with Products and Farmers tabs.
+ * Connected to live backend GET /favorites?type=product|farmer.
  */
 export function Favorites() {
   const [tab, setTab] = useState('products');
   const { productIds, farmerIds } = useFavorites();
   const navigate = useNavigate();
 
-  const favoriteProducts = productIds.map((id) => getProduct(id)).filter(Boolean);
-  const favoriteFarmers = farmerIds.map((id) => getFarmer(id)).filter(Boolean);
+  const [products, setProducts] = useState([]);
+  const [farmers, setFarmers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+
+    const type = tab === 'products' ? 'product' : 'farmer';
+    getFavoritesList(type)
+      .then((data) => {
+        if (!active) return;
+        if (tab === 'products') {
+          setProducts(Array.isArray(data) ? data : data?.items || []);
+        } else {
+          setFarmers(Array.isArray(data) ? data : data?.items || []);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          if (tab === 'products') setProducts([]);
+          else setFarmers([]);
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [tab, productIds.length, farmerIds.length]);
 
   return (
     <div className={styles.page}>
@@ -28,8 +59,8 @@ export function Favorites() {
           value={tab}
           onChange={setTab}
           options={[
-            { value: 'products', label: `Products (${favoriteProducts.length})` },
-            { value: 'farmers', label: `Farmers (${favoriteFarmers.length})` },
+            { value: 'products', label: `Products (${productIds.length})` },
+            { value: 'farmers', label: `Farmers (${farmerIds.length})` },
           ]}
         />
       </header>
@@ -37,9 +68,15 @@ export function Favorites() {
       {/* Products Tab View */}
       {tab === 'products' && (
         <div className={styles.content}>
-          {favoriteProducts.length > 0 ? (
+          {loading ? (
             <div className={styles.productGrid}>
-              {favoriteProducts.map((product) => (
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} style={{ height: 180, background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-md)' }} />
+              ))}
+            </div>
+          ) : products.length > 0 ? (
+            <div className={styles.productGrid}>
+              {products.map((product) => (
                 <ProductCard key={product.id} product={product} variant="grid" />
               ))}
             </div>
@@ -58,9 +95,15 @@ export function Favorites() {
       {/* Farmers Tab View */}
       {tab === 'farmers' && (
         <div className={styles.content}>
-          {favoriteFarmers.length > 0 ? (
+          {loading ? (
             <div className={styles.farmersList}>
-              {favoriteFarmers.map((farmer) => (
+              {[1, 2, 3].map((i) => (
+                <div key={i} style={{ height: 100, background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-md)' }} />
+              ))}
+            </div>
+          ) : farmers.length > 0 ? (
+            <div className={styles.farmersList}>
+              {farmers.map((farmer) => (
                 <FarmerCard key={farmer.id} farmer={farmer} variant="list" />
               ))}
             </div>

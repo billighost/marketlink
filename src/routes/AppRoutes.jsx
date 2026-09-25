@@ -16,6 +16,7 @@ import Contact from '@/pages/guest/Contact';
 import Login from '@/pages/guest/Login';
 import Register from '@/pages/guest/Register';
 import ForgotPassword from '@/pages/guest/ForgotPassword';
+import ResetPassword from '@/pages/guest/ResetPassword';
 import Unauthorized from '@/pages/guest/Unauthorized';
 import NotFound from '@/pages/guest/NotFound';
 import Market from '@/pages/guest/Market';
@@ -162,6 +163,7 @@ export function AppRoutes() {
           <Route path={PATHS.LOGIN}           element={<Login />} />
           <Route path={PATHS.REGISTER}        element={<Register />} />
           <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
+          <Route path={PATHS.RESET_PASSWORD}  element={<ResetPassword />} />
           <Route path={PATHS.UNAUTHORIZED}    element={<Unauthorized />} />
 
           {/* 404 Catch-all */}

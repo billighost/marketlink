@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useOpenSheet } from '@/hooks/useOpenSheet';
+import { useNotificationCount } from '@/hooks/useNotificationCount';
 import ListRow from '@/components/ui/ListRow';
 import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
@@ -24,6 +25,7 @@ import styles from './Profile.module.css';
 export function Profile() {
   const { user, logout } = useAuth();
   const { openSheet } = useOpenSheet();
+  const { unreadCount } = useNotificationCount();
   const navigate = useNavigate();
 
   const [isSignOutOpen, setIsSignOutOpen] = useState(false);
@@ -79,7 +81,8 @@ export function Profile() {
           />
           <ListRow
             icon={Bell}
-            label="Notification preferences"
+            label="Notifications"
+            value={unreadCount > 0 ? `${unreadCount} new` : undefined}
             onClick={() => openSheet('/buyer/profile/notifications')}
           />
         </div>

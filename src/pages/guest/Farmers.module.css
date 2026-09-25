@@ -80,7 +80,8 @@
   background-color: #ffffff;
   border: 1px solid #dcd1c8;
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 0 14px;
+  min-height: 44px;
   box-shadow: 0 2px 8px rgba(46, 43, 38, 0.04);
 }
 
@@ -95,6 +96,7 @@
   background: transparent;
   outline: none;
   width: 100%;
+  min-height: 44px;
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.875rem;
   color: #2e2b26;
@@ -119,7 +121,8 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 11px 18px;
+  padding: 0 18px;
+  min-height: 44px;
   background-color: #ffffff;
   border: 1px solid #dcd1c8;
   border-radius: 8px;

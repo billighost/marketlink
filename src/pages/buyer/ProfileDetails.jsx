@@ -1,35 +1,49 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
+import { updateProfile } from '@/api/me';
 import FormField from '@/components/ui/FormField';
 import Button from '@/components/ui/Button';
 import styles from './ProfileDetails.module.css';
 
 /**
  * Personal Details sheet for Customer profile.
+ * Connected to live backend PATCH /users/me.
  */
 export function ProfileDetails({ inSheet = true, onClose }) {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const { showToast } = useToast();
 
-  const [name, setName] = useState(user?.name || 'George Adams');
-  const [firstName, setFirstName] = useState(user?.firstName || 'George');
-  const [email, setEmail] = useState(user?.email || 'george@example.com');
-  const [phone, setPhone] = useState(user?.phone || '(555) 234-5678');
-  const [address, setAddress] = useState(user?.address || '74 Elmwood Ave, Maplewood, NJ');
-  const [saved, setSaved] = useState(false);
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [address, setAddress] = useState(user?.address || '');
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (user) {
-      user.name = name;
-      user.firstName = firstName;
-      user.email = email;
-      user.phone = phone;
-      user.address = address;
-    }
-    setSaved(true);
-    setTimeout(() => {
+    if (!name.trim()) return;
+
+    setSaving(true);
+    try {
+      await updateProfile({
+        name: name.trim(),
+        phone: phone.trim() || undefined,
+        address: address.trim() || undefined,
+      });
+      await refreshUser();
+      showToast({
+        message: 'Personal details updated.',
+        type: 'success',
+      });
       onClose?.();
-    }, 500);
+    } catch (err) {
+      showToast({
+        message: err.message || 'Unable to save personal details.',
+        type: 'danger',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -43,19 +57,12 @@ export function ProfileDetails({ inSheet = true, onClose }) {
           required
         />
         <FormField
-          id="firstName"
-          label="First name (for market greetings)"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          required
-        />
-        <FormField
           id="email"
           label="Email address"
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          value={user?.email || ''}
+          disabled
+          hint="Email cannot be changed directly."
         />
         <FormField
           id="phone"
@@ -63,12 +70,14 @@ export function ProfileDetails({ inSheet = true, onClose }) {
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
+          placeholder="(555) 000-0000"
         />
         <FormField
           id="address"
           label="Home address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
+          placeholder="Street address, City, State"
         />
       </div>
 
@@ -78,8 +87,9 @@ export function ProfileDetails({ inSheet = true, onClose }) {
           size="lg"
           type="submit"
           className={styles.submitButton}
+          disabled={saving || !name.trim()}
         >
-          {saved ? 'Saved!' : 'Save changes'}
+          {saving ? 'Saving...' : 'Save changes'}
         </Button>
       </footer>
     </form>

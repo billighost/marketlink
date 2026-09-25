@@ -1,8 +1,9 @@
 import React from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Heart, ChevronRight, Clock, ShieldCheck, ArrowLeft } from 'lucide-react';
-import { getProduct, getFarmer, getReviewsByProduct, getProductsByFarmer, getProductsByCategory } from '@/data/placeholders';
-import { formatPrice } from '@/utils/format';
+import { getProductDetail, getProductReviews, getRelatedProducts } from '@/api/catalog';
+import { useQuery } from '@/hooks/useQuery';
+import { formatPrice, formatCountdown } from '@/utils/format';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useOpenSheet } from '@/hooks/useOpenSheet';
 import Illustration from '@/components/domain/Illustration';
@@ -12,24 +13,56 @@ import ReviewItem from '@/components/domain/ReviewItem';
 import Badge from '@/components/ui/Badge';
 import Stars from '@/components/ui/Stars';
 import HorizontalRow from '@/components/layout/HorizontalRow';
+import Skeleton from '@/components/ui/Skeleton';
 import styles from './ProductDetail.module.css';
 
 /**
  * Product detail view rendered inside a modal bottom sheet (or full-page fallback).
+ * Connected to GET /api/products/:id, /reviews, and /related.
  */
 export function ProductDetail({ inSheet = false, onClose }) {
   const { id } = useParams();
-  const location = useLocation();
   const { openSheet } = useOpenSheet();
   const { isProductFavorite, toggleProduct } = useFavorites();
 
-  const product = getProduct(id);
+  const { data: product, loading, error } = useQuery(
+    ['product-detail', id],
+    ({ signal }) => getProductDetail(id, signal)
+  );
 
-  if (!product) {
+  const { data: reviewsData } = useQuery(
+    ['product-reviews', id],
+    ({ signal }) => getProductReviews(id, {}, signal),
+    { enabled: Boolean(id) }
+  );
+
+  const { data: relatedData } = useQuery(
+    ['product-related', id],
+    ({ signal }) => getRelatedProducts(id, signal),
+    { enabled: Boolean(id) }
+  );
+
+  const reviews = reviewsData?.data || [];
+  const relatedProducts = relatedData || [];
+
+  if (loading) {
+    return (
+      <div className={`${styles.container} ${!inSheet ? styles.standalone : ''}`}>
+        <div style={{ padding: 'var(--space-6)' }}>
+          <Skeleton height="260px" borderRadius="var(--radius-lg)" style={{ marginBottom: 'var(--space-4)' }} />
+          <Skeleton height="32px" width="60%" style={{ marginBottom: 'var(--space-2)' }} />
+          <Skeleton height="24px" width="40%" style={{ marginBottom: 'var(--space-6)' }} />
+          <Skeleton height="80px" borderRadius="var(--radius-md)" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className={styles.notFound}>
         <h2>Product not found</h2>
-        <p>This item might be out of season or no longer listed.</p>
+        <p>This harvest item might be out of season or no longer listed.</p>
         <Link to="/buyer/products" className={styles.backLink}>
           Back to all products
         </Link>
@@ -37,20 +70,22 @@ export function ProductDetail({ inSheet = false, onClose }) {
     );
   }
 
-  const farmer = getFarmer(product.farmerId);
+  const farmer = product.farmer;
   const isFavorite = isProductFavorite(product.id);
-  const reviews = getReviewsByProduct(product.id);
-  const isSoldOut = product.stock === 'out';
-  const isLowStock = product.stock === 'low';
+  const rawAvailability = product.availability || product.stock;
+  const isSoldOut = rawAvailability === 'out';
+  const isLowStock = rawAvailability === 'low';
+  const displayPrice = product.priceCents != null ? product.priceCents : product.price;
 
-  const moreFromFarmer = getProductsByFarmer(product.farmerId).filter((p) => p.id !== product.id);
-  const similarProducts = getProductsByCategory(product.category).filter(
-    (p) => p.id !== product.id && p.farmerId !== product.farmerId
-  );
+  const cutoffCountdown = product.farmerCutoff?.cutoffAt
+    ? formatCountdown(product.farmerCutoff.cutoffAt)
+    : null;
 
   const handleFarmerClick = (e) => {
     e.preventDefault();
-    openSheet(`/buyer/farmers/${farmer.id}`);
+    if (farmer?.id) {
+      openSheet(`/buyer/farmers/${farmer.id}`);
+    }
   };
 
   return (
@@ -110,7 +145,7 @@ export function ProductDetail({ inSheet = false, onClose }) {
             <h1 className={styles.title}>{product.name}</h1>
           </div>
           <div className={styles.priceRow}>
-            <span className={styles.price}>{formatPrice(product.price)}</span>
+            <span className={styles.price}>{formatPrice(displayPrice)}</span>
             <span className={styles.unit}>per {product.unit}</span>
           </div>
         </div>
@@ -124,12 +159,14 @@ export function ProductDetail({ inSheet = false, onClose }) {
             aria-label={`Visit ${farmer.stallName} stall`}
           >
             <div className={styles.farmerAvatar}>
-              <Illustration name={farmer.art || 'crate'} size="sm" />
+              <Illustration name={farmer.art || 'stall'} size="sm" />
             </div>
             <div className={styles.farmerInfo}>
               <span className={styles.farmerLabel}>Grown & prepared by</span>
               <span className={styles.farmerName}>{farmer.stallName}</span>
-              <span className={styles.farmerLocation}>{farmer.stallNumber}</span>
+              {farmer.stallNumber && (
+                <span className={styles.farmerLocation}>{farmer.stallNumber}</span>
+              )}
             </div>
             <ChevronRight size={18} className={styles.farmerChevron} aria-hidden="true" />
           </button>
@@ -143,15 +180,15 @@ export function ProductDetail({ inSheet = false, onClose }) {
 
         {/* Harvest Facts */}
         <div className={styles.factsList}>
-          {product.cutoff && (
+          {cutoffCountdown && (
             <div className={styles.factItem}>
               <Clock size={16} className={styles.factIcon} aria-hidden="true" />
-              <span>{product.cutoff}</span>
+              <span>Order cutoff: {cutoffCountdown}</span>
             </div>
           )}
           <div className={styles.factItem}>
             <ShieldCheck size={16} className={styles.factIcon} aria-hidden="true" />
-            <span>Pay on Saturday at market pickup</span>
+            <span>Pay in person at market stall pickup</span>
           </div>
         </div>
 
@@ -161,7 +198,7 @@ export function ProductDetail({ inSheet = false, onClose }) {
             <h2 className={styles.sectionTitle}>Customer reviews</h2>
             {reviews.length > 0 && (
               <span className={styles.reviewSummary}>
-                <Stars rating={5} />
+                <Stars rating={product.ratingAvg || 5} />
                 <span className={styles.reviewCount}>({reviews.length})</span>
               </span>
             )}
@@ -175,35 +212,20 @@ export function ProductDetail({ inSheet = false, onClose }) {
             </div>
           ) : (
             <p className={styles.noReviews}>
-              No reviews yet for this harvest. Be the first to review this harvest.
+              No reviews yet for this harvest. Be the first to pre-order and review.
             </p>
           )}
         </div>
 
-        {/* More from this farmer */}
-        {moreFromFarmer.length > 0 && (
-          <div className={styles.recommendSection}>
-            <HorizontalRow
-              title={`More from ${farmer?.stallName || 'this farmer'}`}
-              seeAllLabel="View stall"
-              onSeeAll={handleFarmerClick}
-            >
-              {moreFromFarmer.map((item) => (
-                <ProductCard key={item.id} product={item} variant="compact" />
-              ))}
-            </HorizontalRow>
-          </div>
-        )}
-
-        {/* Similar items */}
-        {similarProducts.length > 0 && (
+        {/* Related products */}
+        {relatedProducts.length > 0 && (
           <div className={styles.recommendSection}>
             <HorizontalRow
               title="You might also like"
               seeAllLabel="Browse all"
               onSeeAll={() => openSheet('/buyer/products')}
             >
-              {similarProducts.map((item) => (
+              {relatedProducts.map((item) => (
                 <ProductCard key={item.id} product={item} variant="compact" />
               ))}
             </HorizontalRow>
@@ -215,12 +237,13 @@ export function ProductDetail({ inSheet = false, onClose }) {
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
           <div className={styles.footerPrice}>
-            <span className={styles.footerTotal}>{formatPrice(product.price)}</span>
+            <span className={styles.footerTotal}>{formatPrice(displayPrice)}</span>
             <span className={styles.footerUnit}>/ {product.unit}</span>
           </div>
           <div className={styles.footerAction}>
             <AddToCartButton
               productId={product.id}
+              farmerId={farmer?.id || product.farmerId || product.farmer?.id}
               productName={product.name}
               variant="wide"
               disabled={isSoldOut}

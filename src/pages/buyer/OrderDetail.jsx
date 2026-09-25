@@ -1,68 +1,169 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, AlertCircle, ArrowLeft, RotateCcw, Star, Check, Clock } from 'lucide-react';
-import { orders, getProduct, getMarket } from '@/data/placeholders';
-import { formatPrice, formatDate, formatTime } from '@/utils/format';
+import { getOrderDetail, cancelOrder, createOrderReview, getReorderPreview } from '@/api/orders';
+import { formatPrice, formatDate, formatTime, formatCountdown } from '@/utils/format';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 import StatusDot from '@/components/ui/StatusDot';
 import Illustration from '@/components/domain/Illustration';
 import Stars from '@/components/ui/Stars';
 import Button from '@/components/ui/Button';
+import { MapView } from '@/components/domain/MapView';
 import styles from './OrderDetail.module.css';
 
 /**
  * Order detail view inside a modal bottom sheet (or full-page fallback).
- * Includes in-sheet cancel confirmation and review submission steps.
+ * Connected to real backend GET /orders/:id, cancellation, and reviews.
  */
 export function OrderDetail({ inSheet = true, onClose }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { add } = useCart();
+  const { showToast } = useToast();
+
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [inSheetStep, setInSheetStep] = useState('detail'); // 'detail' | 'cancel_confirm' | 'review' | 'review_success'
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
-  const [cancelSuccess, setCancelSuccess] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
 
-  const order = orders.find((o) => o.id === id);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    getOrderDetail(id)
+      .then((data) => {
+        if (active) {
+          setOrder(data);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          setError(err.message || 'Order not found');
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
-  if (!order) {
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div style={{ padding: 'var(--space-8) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <div style={{ height: 28, width: '40%', background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-sm)' }} />
+          <div style={{ height: 140, background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-md)' }} />
+          <div style={{ height: 120, background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-md)' }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
     return (
       <div className={styles.notFound}>
         <h2>Order not found</h2>
-        <p>This order may have been removed or does not exist.</p>
-        <button type="button" className={styles.backLink} onClick={onClose}>
+        <p>{error || 'This order may have been removed or does not exist.'}</p>
+        <button type="button" className={styles.backLink} onClick={onClose || (() => navigate('/buyer/orders'))}>
           Close
         </button>
       </div>
     );
   }
 
-  const market = getMarket(order.marketId);
-  const isCancellable = (order.status === 'Placed' || order.status === 'Accepted') && !cancelSuccess;
-  const isCompleted = order.status === 'Completed';
+  const isCancellable = order.canCancel && order.status !== 'cancelled' && order.status !== 'declined';
+  const isCompleted = order.status === 'completed';
 
-  const handleBuyAgain = () => {
-    if (order.items) {
-      order.items.forEach((item) => {
-        for (let i = 0; i < (item.quantity || 1); i++) {
-          add(item.productId);
+  const handleBuyAgain = async () => {
+    try {
+      const preview = await getReorderPreview(order.id);
+      const previewItems = preview?.items || order.items || [];
+      let addedCount = 0;
+
+      previewItems.forEach((item) => {
+        if (item.available !== false) {
+          for (let i = 0; i < (item.quantity || 1); i++) {
+            add(item.productId, { farmerId: order.farmer?.id });
+          }
+          addedCount += item.quantity || 1;
         }
       });
+
+      if (addedCount > 0) {
+        showToast({
+          message: `Added ${addedCount} items to your basket`,
+          type: 'success',
+        });
+      } else {
+        showToast({
+          message: 'Items from this order are currently out of season',
+          type: 'warning',
+        });
+      }
+    } catch {
+      // Fallback: direct items add
+      if (order.items) {
+        order.items.forEach((item) => {
+          for (let i = 0; i < (item.quantity || 1); i++) {
+            add(item.productId, { farmerId: order.farmer?.id });
+          }
+        });
+      }
     }
     onClose?.();
     navigate('/buyer/cart');
   };
 
-  const handleConfirmCancel = () => {
-    setCancelSuccess(true);
-    order.status = 'Cancelled';
-    setInSheetStep('detail');
+  const handleConfirmCancel = async () => {
+    setCancelling(true);
+    try {
+      const updated = await cancelOrder(order.id, cancelReason);
+      setOrder(updated);
+      setInSheetStep('detail');
+      showToast({
+        message: `Order ${order.orderNumber} cancelled successfully.`,
+        type: 'neutral',
+      });
+    } catch (err) {
+      showToast({
+        message: err.message || 'Unable to cancel order.',
+        type: 'danger',
+      });
+    } finally {
+      setCancelling(false);
+    }
   };
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
-    setInSheetStep('review_success');
+    setSubmittingReview(true);
+    try {
+      await createOrderReview(order.id, {
+        farmer: {
+          rating: reviewRating,
+          comment: reviewText.trim() || undefined,
+        },
+      });
+      setOrder((prev) => ({ ...prev, reviewed: true }));
+      setInSheetStep('review_success');
+    } catch (err) {
+      showToast({
+        message: err.message || 'Unable to submit review.',
+        type: 'danger',
+      });
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   // Step: Cancel confirmation
@@ -74,21 +175,40 @@ export function OrderDetail({ inSheet = true, onClose }) {
         </div>
         <h2 className={styles.stepTitle}>Cancel this pre-order?</h2>
         <p className={styles.stepDesc}>
-          Are you sure you want to cancel order {order.number}? The farmers will be notified not to harvest or pack your items.
+          Are you sure you want to cancel order {order.orderNumber}? The farmers will be notified not to harvest or pack your items.
         </p>
+
+        <div className={styles.reviewInputGroup} style={{ width: '100%' }}>
+          <label htmlFor="cancel-reason" className={styles.reviewLabel}>
+            Reason for cancellation (optional)
+          </label>
+          <input
+            id="cancel-reason"
+            type="text"
+            className={styles.reviewTextarea}
+            style={{ height: 'var(--control-h)', minHeight: 'unset' }}
+            maxLength={200}
+            placeholder="E.g., Plans changed, unable to attend..."
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+          />
+        </div>
+
         <div className={styles.stepActions}>
           <Button
             variant="danger"
             size="lg"
             className={styles.fullWidthButton}
             onClick={handleConfirmCancel}
+            disabled={cancelling}
           >
-            Yes, cancel order
+            {cancelling ? 'Cancelling...' : 'Yes, cancel order'}
           </Button>
           <button
             type="button"
             className={styles.cancelLink}
             onClick={() => setInSheetStep('detail')}
+            disabled={cancelling}
           >
             Keep my order
           </button>
@@ -101,9 +221,9 @@ export function OrderDetail({ inSheet = true, onClose }) {
   if (inSheetStep === 'review') {
     return (
       <form className={styles.stepContainer} onSubmit={handleSubmitReview}>
-        <h2 className={styles.stepTitle}>Review your items</h2>
+        <h2 className={styles.stepTitle}>Review your harvest</h2>
         <p className={styles.stepDesc}>
-          How was the harvest from {order.farmerGroups?.map((g) => g.stallName).join(', ')}?
+          How was the produce from {order.farmer?.stallName || 'the farmer'}?
         </p>
 
         <div className={styles.starsWrapper}>
@@ -118,6 +238,7 @@ export function OrderDetail({ inSheet = true, onClose }) {
             id="review-text"
             className={styles.reviewTextarea}
             rows={4}
+            maxLength={1000}
             placeholder="Tell other market customers about the freshness, taste, and stall experience..."
             value={reviewText}
             onChange={(e) => setReviewText(e.target.value)}
@@ -125,13 +246,20 @@ export function OrderDetail({ inSheet = true, onClose }) {
         </div>
 
         <div className={styles.stepActions}>
-          <Button variant="primary" size="lg" type="submit" className={styles.fullWidthButton}>
-            Submit review
+          <Button
+            variant="primary"
+            size="lg"
+            type="submit"
+            className={styles.fullWidthButton}
+            disabled={submittingReview}
+          >
+            {submittingReview ? 'Submitting...' : 'Submit review'}
           </Button>
           <button
             type="button"
             className={styles.cancelLink}
             onClick={() => setInSheetStep('detail')}
+            disabled={submittingReview}
           >
             Cancel
           </button>
@@ -163,6 +291,11 @@ export function OrderDetail({ inSheet = true, onClose }) {
     );
   }
 
+  const market = order.market;
+  const coords = market?.location || market?.coordinates;
+  const hasCoordinates = Boolean(coords?.lat && coords?.lng);
+  const displayTotal = order.totalCents != null ? order.totalCents : order.total;
+
   return (
     <div className={`${styles.container} ${!inSheet ? styles.standalone : ''}`}>
       {/* Fallback top bar for standalone view */}
@@ -178,7 +311,7 @@ export function OrderDetail({ inSheet = true, onClose }) {
       {/* Header Info */}
       <header className={styles.orderHeader}>
         <div className={styles.titleRow}>
-          <h1 className={styles.orderTitle}>Order {order.number}</h1>
+          <h1 className={styles.orderTitle}>Order {order.orderNumber}</h1>
           <StatusDot label={order.status} />
         </div>
         {order.timeline?.[0] && (
@@ -194,28 +327,53 @@ export function OrderDetail({ inSheet = true, onClose }) {
           <Calendar size={18} className={styles.cardIcon} aria-hidden="true" />
           <div className={styles.cardText}>
             <span className={styles.cardLabel}>Pickup window</span>
-            <span className={styles.cardValue}>{order.pickupSlot}</span>
-            <div className={styles.pickupCountdown}>
-              <Clock size={12} aria-hidden="true" />
-              <span>Closes at 1:00 pm, 2 hours left</span>
-            </div>
+            <span className={styles.cardValue}>{order.pickup?.label || 'Pickup window'}</span>
+            {order.cutoffAt && (
+              <div className={styles.pickupCountdown}>
+                <Clock size={12} aria-hidden="true" />
+                <span>{formatCountdown(order.cutoffAt)}</span>
+              </div>
+            )}
           </div>
         </div>
 
         <div className={styles.pickupRow}>
           <MapPin size={18} className={styles.cardIcon} aria-hidden="true" />
           <div className={styles.cardText}>
-            <span className={styles.cardLabel}>{market?.name || 'Farmers Market'}</span>
-            <span className={styles.cardSubValue}>{market?.address}</span>
+            <span className={styles.cardLabel}>{market?.name || 'Local Farmers Market'}</span>
+            {market?.address && <span className={styles.cardSubValue}>{market.address}</span>}
             <div className={styles.stallsList}>
-              {order.farmerGroups?.map((fg) => (
-                <span key={fg.farmerId} className={styles.stallPill}>
-                  {fg.stallName} · <strong className={styles.stallNumberHighlight}>{fg.stallNumber}</strong>
-                </span>
-              ))}
+              <span className={styles.stallPill}>
+                {order.farmer?.stallName || 'Farm Stall'}
+                {order.farmer?.stallNumber && (
+                  <> · <strong className={styles.stallNumberHighlight}>{order.farmer.stallNumber}</strong></>
+                )}
+              </span>
             </div>
           </div>
         </div>
+
+        {/* Real Leaflet MapView */}
+        {hasCoordinates && (
+          <div className={styles.mapWrapper}>
+            <MapView
+              markers={[
+                {
+                  id: market.id || 'order-pickup-market',
+                  lat: coords.lat,
+                  lng: coords.lng,
+                  title: market.name,
+                  subtitle: market.address,
+                },
+              ]}
+              height="140px"
+              zoom={15}
+              interactive={false}
+              showDirectionsLink={true}
+              ariaLabel={`Map of ${market.name}`}
+            />
+          </div>
+        )}
       </section>
 
       {/* Status Timeline */}
@@ -239,6 +397,7 @@ export function OrderDetail({ inSheet = true, onClose }) {
                     <span className={styles.timelineTime}>
                       {formatDate(step.at)} · {formatTime(step.at)}
                     </span>
+                    {step.note && <span className={styles.timelineNote}>{step.note}</span>}
                   </div>
                 </div>
               );
@@ -248,7 +407,7 @@ export function OrderDetail({ inSheet = true, onClose }) {
       )}
 
       {/* Cancelled Notice */}
-      {order.status === 'Cancelled' && (
+      {order.status === 'cancelled' && (
         <div className={styles.cancelNotice}>
           <AlertCircle size={18} className={styles.cancelIcon} aria-hidden="true" />
           <p className={styles.cancelText}>
@@ -261,33 +420,40 @@ export function OrderDetail({ inSheet = true, onClose }) {
       <section className={styles.itemsSection} aria-label="Items ordered">
         <h3 className={styles.sectionHeading}>Items</h3>
         <div className={styles.itemsList}>
-          {order.items?.map((item, idx) => {
-            const product = getProduct(item.productId);
-            return (
-              <div key={idx} className={styles.itemRow}>
-                <div className={styles.itemVisual}>
-                  <Illustration name={product?.art || 'basket'} size="sm" />
-                </div>
-                <div className={styles.itemInfo}>
-                  <span className={styles.itemName}>{item.name}</span>
-                  <span className={styles.itemCalc}>
-                    {item.quantity} × {formatPrice(item.price)} / {item.unit}
-                  </span>
-                </div>
-                <span className={styles.itemTotal}>
-                  {formatPrice(item.price * item.quantity)}
+          {order.items?.map((item, idx) => (
+            <div key={item.productId || idx} className={styles.itemRow}>
+              <div className={styles.itemVisual}>
+                <Illustration name={item.art || 'basket'} size="sm" />
+              </div>
+              <div className={styles.itemInfo}>
+                <span className={styles.itemName}>{item.name}</span>
+                <span className={styles.itemCalc}>
+                  {item.quantity} × {formatPrice(item.priceCents || item.price)} / {item.unit}
                 </span>
               </div>
-            );
-          })}
+              <span className={styles.itemTotal}>
+                {formatPrice(item.lineTotalCents || (item.priceCents || item.price) * item.quantity)}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
+
+      {/* Customer note if any */}
+      {order.note && (
+        <section className={styles.summarySection} aria-label="Note for farmer">
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-soft)', fontWeight: 'var(--weight-semibold)' }}>
+            Note for farmer:
+          </span>
+          <p style={{ margin: 0, fontSize: 'var(--text-body)', color: 'var(--color-ink)' }}>{order.note}</p>
+        </section>
+      )}
 
       {/* Total Summary */}
       <section className={styles.summarySection} aria-label="Payment summary">
         <div className={styles.summaryRow}>
           <span>Subtotal</span>
-          <span>{formatPrice(order.total)}</span>
+          <span>{formatPrice(displayTotal)}</span>
         </div>
         <div className={styles.summaryRow}>
           <span>Market fee</span>
@@ -295,13 +461,13 @@ export function OrderDetail({ inSheet = true, onClose }) {
         </div>
         <div className={`${styles.summaryRow} ${styles.totalRow}`}>
           <span>Total to pay at pickup</span>
-          <span>{formatPrice(order.total)}</span>
+          <span>{formatPrice(displayTotal)}</span>
         </div>
       </section>
 
       {/* In-Sheet Order Action Buttons */}
       <footer className={styles.orderActions}>
-        {isCompleted && (
+        {isCompleted && !order.reviewed && (
           <button
             type="button"
             className={styles.reviewButton}

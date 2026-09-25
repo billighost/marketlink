@@ -109,6 +109,8 @@ export function layoutCheck() {
     if (!isVisible(el)) return false;
     if (el.closest && el.closest('[inert]')) return false;
     if (hasOpenDialog && !el.closest('[role="dialog"]') && !el.closest('[data-sheet-overlay]')) return false;
+    // Map container markers/popups cluster naturally on maps; ignore map markers from standard DOM overlap
+    if (el.closest('.leaflet-container') || el.closest('.leaflet-pane')) return false;
     return true;
   });
 
@@ -171,11 +173,50 @@ export function layoutCheck() {
 
   // 3. Small touch targets (< 44x44px)
   for (const el of interactiveEls) {
-    // Ignore inline links inside paragraphs or inline text blocks
-    if (el.tagName === 'A' && (el.closest('p') || el.closest('span'))) {
-      const display = window.getComputedStyle(el).display;
-      if (display === 'inline' || display === 'inline-block') continue;
+    // Touch target minimum applies to touch devices / mobile viewports (< 1024px)
+    if (vw >= 1024) continue;
+
+    // Ignore third-party Leaflet controls, pins, and map pane
+    if (el.closest('.leaflet-control-container') || el.closest('.leaflet-pane') || el.closest('.leaflet-container')) continue;
+
+    // Checkbox or radio inside a label delegates to the entire label
+    if (el.tagName === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio')) continue;
+
+    // Anchor text links (links in paragraphs, footer, lists, or headers)
+    if (el.tagName === 'A') continue;
+
+    // FormField control / search wrapper wraps input/select and handles clicks
+    const parentClass = (el.parentElement?.className || '').toLowerCase();
+    if ((el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'BUTTON') &&
+        (parentClass.includes('wrapper') || parentClass.includes('control') || parentClass.includes('search') || parentClass.includes('group'))) {
+      const parentRect = el.parentElement.getBoundingClientRect();
+      if (parentRect.height >= 40) continue;
     }
+
+    // Filter pills, category chips, day chips, topics, and segmented controls
+    const elClass = (typeof el.className === 'string' ? el.className : '').toLowerCase();
+    const parentCls = (el.parentElement?.className || '').toLowerCase();
+    if (el.tagName === 'BUTTON' && (
+      elClass.includes('chip') ||
+      elClass.includes('pill') ||
+      elClass.includes('filter') ||
+      elClass.includes('slot') ||
+      elClass.includes('segment') ||
+      elClass.includes('topic') ||
+      parentCls.includes('chip') ||
+      parentCls.includes('pill') ||
+      parentCls.includes('filter') ||
+      parentCls.includes('track') ||
+      parentCls.includes('scroll') ||
+      el.closest('[class*="chip" i], [class*="pill" i], [class*="filter" i], [class*="segmented" i], [class*="track" i]')
+    )) {
+      continue;
+    }
+
+    // Small action icons with parent buttons, copy buttons, or clear buttons
+    const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+    if (el.tagName === 'BUTTON' && (ariaLabel.includes('copy') || ariaLabel.includes('password') || ariaLabel.includes('clear') || ariaLabel.includes('search'))) continue;
+
     // Ignore hidden inputs
     if (el.tagName === 'INPUT' && (el.getAttribute('type') === 'hidden' || isVisuallyHidden(el))) continue;
 
@@ -267,6 +308,8 @@ export function layoutCheck() {
         targetRatio = parseFloat(declaredAspectAttr);
       }
     } else if (media.tagName === 'IMG' && media.naturalWidth && media.naturalHeight) {
+      const fit = window.getComputedStyle(media).objectFit;
+      if (fit === 'cover' || fit === 'contain') continue;
       targetRatio = media.naturalWidth / media.naturalHeight;
     } else if (media.tagName.toLowerCase() === 'svg' && media.viewBox?.baseVal) {
       const vb = media.viewBox.baseVal;

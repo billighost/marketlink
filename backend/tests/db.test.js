@@ -166,17 +166,21 @@ describe('Database Architecture & Query Performance Suite', () => {
       updatedAt: new Date(),
     };
 
-    const results = await Promise.allSettled([
-      db.collection(COLLECTIONS.USERS).insertOne(doc1),
-      db.collection(COLLECTIONS.USERS).insertOne(doc2),
-    ]);
+    try {
+      const results = await Promise.allSettled([
+        db.collection(COLLECTIONS.USERS).insertOne(doc1),
+        db.collection(COLLECTIONS.USERS).insertOne(doc2),
+      ]);
 
-    const fulfilled = results.filter((r) => r.status === 'fulfilled');
-    const rejected = results.filter((r) => r.status === 'rejected');
+      const fulfilled = results.filter((r) => r.status === 'fulfilled');
+      const rejected = results.filter((r) => r.status === 'rejected');
 
-    assert.equal(fulfilled.length, 1, 'Exactly one concurrent insert must succeed');
-    assert.equal(rejected.length, 1, 'Exactly one concurrent insert must be rejected');
-    assert.equal(rejected[0].reason.code, 11000, 'Rejection must be a duplicate key error (11000)');
+      assert.equal(fulfilled.length, 1, 'Exactly one concurrent insert must succeed');
+      assert.equal(rejected.length, 1, 'Exactly one concurrent insert must be rejected');
+      assert.equal(rejected[0].reason.code, 11000, 'Rejection must be a duplicate key error (11000)');
+    } finally {
+      await db.collection(COLLECTIONS.USERS).deleteMany({ email: testEmail });
+    }
   });
 
   // ── 4. Explain Plan Proof (No COLLSCAN) ──
