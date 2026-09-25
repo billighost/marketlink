@@ -174,3 +174,49 @@ export function getCutoffCountdown(targetDay = 'Friday', targetHour = 18) {
 export function getLivePickupCountdown(slotLabel = '') {
   return 'Closes at 1:00 pm, 2 hours left';
 }
+
+/**
+ * Format market schedule safely for display (handles strings, objects {day, openMin, closeMin}, and arrays)
+ * @param {object} market - Market object
+ * @returns {string}
+ */
+export function formatMarketSchedule(market) {
+  if (!market) return '';
+  if (typeof market.schedule === 'string') return market.schedule;
+
+  const formatMinToTime = (min) => {
+    if (min == null) return '';
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const displayH = h % 12 || 12;
+    const displayM = m > 0 ? `:${m.toString().padStart(2, '0')}` : '';
+    return `${displayH}${displayM} ${ampm}`;
+  };
+
+  const formatScheduleItem = (s) => {
+    if (!s) return '';
+    if (typeof s === 'string') return s;
+    const dayName = s.day ? (s.day.charAt(0).toUpperCase() + s.day.slice(1)) : '';
+    const openTime = formatMinToTime(s.openMin != null ? s.openMin : 480);
+    const closeTime = formatMinToTime(s.closeMin != null ? s.closeMin : 780);
+    const timeStr = `${openTime} – ${closeTime}`;
+    return dayName ? `${dayName} · ${timeStr}` : timeStr;
+  };
+
+  // If schedule is an array of objects [{ day, openMin, closeMin }]
+  if (Array.isArray(market.schedule) && market.schedule.length > 0) {
+    return market.schedule.map(formatScheduleItem).filter(Boolean).join(', ');
+  }
+
+  // If schedule is a single object { day, openMin, closeMin }
+  if (market.schedule && typeof market.schedule === 'object') {
+    return formatScheduleItem(market.schedule);
+  }
+
+  // Fallback to days/hours or day
+  const daysStr = Array.isArray(market.days) ? market.days.join(', ') : (market.day || 'Saturday');
+  const hoursStr = market.hours || '8 am – 1 pm';
+  return `${daysStr} · ${hoursStr}`;
+}
+

@@ -45,6 +45,10 @@
   align-items: center;
 }
 
+.grid {
+  width: 100%;
+}
+
 /* Image Tile */
 .imageTile {
   position: relative;

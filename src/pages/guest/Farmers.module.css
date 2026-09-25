@@ -263,6 +263,12 @@
   }
 }
 
+@media (min-width: 1280px) {
+  .farmersGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .farmerCard {
   background-color: #ffffff;
   border: 1px solid #ece4de;

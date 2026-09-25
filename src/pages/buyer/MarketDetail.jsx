@@ -12,6 +12,7 @@ import HorizontalRow from '@/components/layout/HorizontalRow';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
+import { formatMarketSchedule } from '@/utils/format';
 import styles from './MarketDetail.module.css';
 
 /**
@@ -174,7 +175,7 @@ export function MarketDetail({ inSheet = true, onClose }) {
           <div className={styles.detailContent}>
             <span className={styles.detailLabel}>Operating Schedule</span>
             <span className={styles.detailValue}>
-              {market.schedule?.map((s) => `${s.day?.toUpperCase()} 8:00 AM – 1:00 PM`).join(', ') || 'Weekly market day'}
+              {formatMarketSchedule(market)}
             </span>
           </div>
         </div>

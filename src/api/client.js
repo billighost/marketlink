@@ -210,6 +210,26 @@ export async function apiFetch(path, options = {}) {
     return { data: null, meta: null };
   }
 
+  // Handle blob responses (such as CSV exports)
+  if (options.responseType === 'blob' || reqHeaders['Accept'] === 'text/csv') {
+    if (!response.ok) {
+      let msg = response.statusText || 'Export failed';
+      try {
+        const text = await response.text();
+        const errObj = JSON.parse(text);
+        msg = errObj?.error?.message || msg;
+      } catch {
+        // ignore JSON parse error
+      }
+      throw new ApiError({
+        status: response.status,
+        code: `HTTP_${response.status}`,
+        message: msg,
+      });
+    }
+    return await response.blob();
+  }
+
   // Attempt to parse JSON response
   let json = null;
   try {

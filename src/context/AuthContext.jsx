@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { login as apiLogin, logout as apiLogout, refresh as apiRefresh, getMe, registerCustomer as apiRegisterCustomer, registerFarmer as apiRegisterFarmer } from '@/api/auth';
+import { setHomeMarket } from '@/api/me';
 import { setAccessToken, clearAccessToken } from '@/api/client';
 import { invalidateQueries } from '@/hooks/useQuery';
 
@@ -141,12 +142,53 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const [guestMarketId, setGuestMarketId] = useState(() => {
+    try {
+      return localStorage.getItem('marketlink_selected_market') || 'market-elm';
+    } catch {
+      return 'market-elm';
+    }
+  });
+
+  const selectedMarketId = user?.homeMarketId || user?.homeMarket?.id || guestMarketId;
+
+  const switchMarket = useCallback(async (marketId) => {
+    if (!marketId) return;
+    setGuestMarketId(marketId);
+    try {
+      localStorage.setItem('marketlink_selected_market', marketId);
+    } catch {
+      // ignore
+    }
+
+    if (isAuthenticated) {
+      try {
+        await setHomeMarket(marketId);
+        setUser((prev) => (prev ? { ...prev, homeMarketId: marketId } : prev));
+      } catch (err) {
+        console.warn('Could not sync home market to user profile:', err);
+      }
+    }
+
+    invalidateQueries('feed');
+    invalidateQueries('markets');
+    invalidateQueries('buyer-markets');
+    invalidateQueries('home-summary');
+    invalidateQueries('feed-meta');
+    invalidateQueries('buyer-products');
+
+    window.dispatchEvent(new CustomEvent('marketlink:refresh-feed'));
+    window.dispatchEvent(new CustomEvent('marketlink:market-changed', { detail: { marketId } }));
+  }, [isAuthenticated]);
+
   const value = useMemo(
     () => ({
       user,
       role,
       isAuthenticated,
       isCheckingSession,
+      selectedMarketId,
+      switchMarket,
       login,
       logout,
       registerCustomer,
@@ -154,7 +196,7 @@ export function AuthProvider({ children }) {
       refreshUser,
       homePathFor,
     }),
-    [user, role, isAuthenticated, isCheckingSession, login, logout, registerCustomer, registerFarmer, refreshUser]
+    [user, role, isAuthenticated, isCheckingSession, selectedMarketId, switchMarket, login, logout, registerCustomer, registerFarmer, refreshUser]
   );
 
   return (

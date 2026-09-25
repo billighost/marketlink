@@ -27,7 +27,7 @@ const DAY_OPTIONS = [
  * Offers List and Map view toggle, day filtering, geolocation distance sorting, and real MapView.
  */
 export function Markets() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, switchMarket } = useAuth();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('list');
   const [selectedDay, setSelectedDay] = useState(undefined);
@@ -75,14 +75,8 @@ export function Markets() {
     );
   }, []);
 
-  const handleSelectMarket = async (market) => {
-    try {
-      await setHomeMarket(market.id);
-      refreshUser?.();
-    } catch {
-      // ignore
-    }
-    navigate(`/buyer/markets/${market.id}`);
+  const handleSelectMarket = (market) => {
+    switchMarket?.(market.id);
   };
 
   const mapMarkers = markets

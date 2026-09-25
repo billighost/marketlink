@@ -6,6 +6,7 @@ import { Router } from 'express';
 import {
   getAdminReportsSummary,
   exportCsvReport,
+  getReportsHistory,
 } from './reports.service.js';
 import { defineRoutes } from '../../../utils/defineRoutes.js';
 
@@ -21,6 +22,22 @@ const routes = [
     handler: async (req, res, next) => {
       try {
         const data = await getAdminReportsSummary(req.query.range || '30d');
+        res.json({ data });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+
+  // GET /api/admin/reports/history
+  {
+    method: 'get',
+    path: '/history',
+    auth: 'admin',
+    summary: 'List recent administrative CSV export generation history',
+    handler: async (req, res, next) => {
+      try {
+        const data = await getReportsHistory();
         res.json({ data });
       } catch (err) {
         next(err);

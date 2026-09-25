@@ -12,6 +12,7 @@ import {
 } from '@/api/catalog';
 import { useQuery } from '@/hooks/useQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useAuth } from '@/context/AuthContext';
 import ProductCard from '@/components/domain/ProductCard';
 import Chip from '@/components/ui/Chip';
 import EmptyState from '@/components/ui/EmptyState';
@@ -31,6 +32,7 @@ import styles from './Products.module.css';
  *  - Filter sheet with server parameters
  */
 export function Products() {
+  const { selectedMarketId } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const querySearch = searchParams.get('search') || '';
@@ -87,6 +89,7 @@ export function Products() {
         category: categoryParam,
         includeSoldOut: !inStockOnly,
         farmer: selectedFarmerId || undefined,
+        market: selectedMarketId || undefined,
         sort: selectedSort || 'featured',
         cursor: nextCursor || undefined,
         limit: 20,
@@ -105,7 +108,7 @@ export function Products() {
       setLoading(false);
       inFlightRef.current = false;
     }
-  }, [debouncedSearch, selectedCategory, inStockOnly, selectedFarmerId, selectedSort]);
+  }, [debouncedSearch, selectedCategory, inStockOnly, selectedFarmerId, selectedSort, selectedMarketId]);
 
   // Refetch when filters or search change
   useEffect(() => {

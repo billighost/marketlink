@@ -23,7 +23,7 @@ import styles from './Home.module.css';
  *  - Sub-line from GET /api/feed/meta
  */
 export function Home() {
-  const { user } = useAuth();
+  const { user, selectedMarketId } = useAuth();
   const { openSheet } = useOpenSheet();
   const { sections, loadMore, loading, hasMore } = useFeed();
   const navigate = useNavigate();
@@ -31,8 +31,8 @@ export function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const sentinelRef = useRef(null);
 
-  const { data: feedMeta } = useQuery(['feed-meta'], ({ signal }) => getFeedMeta(signal));
-  const { data: homeSummary } = useQuery(['home-summary'], ({ signal }) => getHomeSummary(signal));
+  const { data: feedMeta } = useQuery(['feed-meta', selectedMarketId], ({ signal }) => getFeedMeta(signal));
+  const { data: homeSummary } = useQuery(['home-summary', selectedMarketId], ({ signal }) => getHomeSummary(signal));
 
   const greetingName = feedMeta?.greetingName || user?.firstName || user?.name?.split(' ')[0] || 'there';
   const scheduleLine =

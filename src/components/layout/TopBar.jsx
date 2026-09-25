@@ -5,6 +5,7 @@
   import { useAuth } from '@/context/AuthContext';
   import { useCart } from '@/context/CartContext';
   import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
+  import MarketDropdown from '@/components/layout/MarketDropdown';
   import styles from './TopBar.module.css';
 
   /**
@@ -252,6 +253,9 @@
                 <Search size={18} strokeWidth={1.8} aria-hidden="true" />
               </button>
             </div> */}
+
+            {/* Market Selector Dropdown */}
+            <MarketDropdown variant="guest" align="right" />
 
             {/* Bookmark / Saved Items */}
             <Link

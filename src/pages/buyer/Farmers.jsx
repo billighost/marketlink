@@ -113,7 +113,7 @@ export function Farmers() {
         {!loading && farmersList.length > 0 && (
           <div className={styles.list}>
             {farmersList.map((farmer) => (
-              <FarmerCard key={farmer.id} farmer={farmer} variant="row" />
+              <FarmerCard key={farmer.id} farmer={farmer} variant="grid" />
             ))}
           </div>
         )}

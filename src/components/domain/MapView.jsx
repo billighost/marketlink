@@ -12,6 +12,8 @@ export function MapView({
   markers = [],
   selectedId,
   onSelect,
+  draggable = false,
+  onMove,
   height = '260px',
   zoom,
   interactive = true,
@@ -124,10 +126,24 @@ export function MapView({
         popupAnchor: [0, -32],
       });
 
+      const isDraggable = Boolean(marker.draggable || draggable);
       const leafletMarker = L.marker([marker.lat, marker.lng], {
         icon: customIcon,
         title: marker.label || 'Location',
+        draggable: isDraggable,
       }).addTo(map);
+
+      if (isDraggable) {
+        leafletMarker.on('dragend', (e) => {
+          const latLng = e.target.getLatLng();
+          const newPos = {
+            lat: parseFloat(latLng.lat.toFixed(6)),
+            lng: parseFloat(latLng.lng.toFixed(6)),
+          };
+          if (marker.onMove) marker.onMove(newPos);
+          if (onMove) onMove({ ...newPos, id: marker.id });
+        });
+      }
 
       if (marker.label) {
         leafletMarker.bindPopup(
@@ -148,6 +164,17 @@ export function MapView({
       markerLayersRef.current.set(marker.id, leafletMarker);
     });
 
+    // Map click for repositioning pin when in draggable mode
+    if (draggable && onMove) {
+      map.on('click', (e) => {
+        const newPos = {
+          lat: parseFloat(e.latlng.lat.toFixed(6)),
+          lng: parseFloat(e.latlng.lng.toFixed(6)),
+        };
+        onMove(newPos);
+      });
+    }
+
     // Update bounds when markers change
     if (validMarkers.length === 1) {
       map.setView([validMarkers[0].lat, validMarkers[0].lng], zoom || 15);
@@ -155,7 +182,7 @@ export function MapView({
       const bounds = L.latLngBounds(validMarkers.map((m) => [m.lat, m.lng]));
       map.fitBounds(bounds, { padding: [30, 30] });
     }
-  }, [JSON.stringify(validMarkers), selectedId]);
+  }, [JSON.stringify(validMarkers), selectedId, draggable]);
 
   const singleMarker = validMarkers.length === 1 ? validMarkers[0] : null;
   const directionsUrl = singleMarker

@@ -4,6 +4,7 @@ import { MapPin, Clock, Users, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import Badge from '@/components/ui/Badge';
 import Illustration from '@/components/domain/Illustration';
+import { formatMarketSchedule } from '@/utils/format';
 import styles from './MarketCard.module.css';
 
 /**
@@ -15,18 +16,22 @@ export function MarketCard({
   className = '',
 }) {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, isAuthenticated, selectedMarketId, switchMarket } = useAuth();
 
   if (!market) return null;
 
-  const isCurrentMarket = user?.homeMarketId === market.id || (!user?.homeMarketId && market.id === 'market-elm');
+  const currentId = user?.homeMarketId || selectedMarketId;
+  const isCurrentMarket = currentId ? currentId === market.id : market.id === 'market-elm';
 
-  const marketSheetPath = `/buyer/markets/${market.id}`;
+  const marketSheetPath = isAuthenticated ? `/buyer/markets/${market.id}` : `/markets/${market.id}`;
   const linkState = { background: location.state?.background || location };
 
   const handleSelect = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (switchMarket) {
+      switchMarket(market.id);
+    }
     onSelect?.(market);
   };
 
@@ -70,7 +75,7 @@ export function MarketCard({
       <div className={styles.details}>
         <div className={styles.detailItem}>
           <Clock size={14} className={styles.metaIcon} aria-hidden="true" />
-          <span>{market.schedule || `${market.days?.join(', ')} · ${market.hours || '8 am – 1 pm'}`}</span>
+          <span>{formatMarketSchedule(market)}</span>
         </div>
         {market.farmerCount && (
           <div className={styles.detailItem}>

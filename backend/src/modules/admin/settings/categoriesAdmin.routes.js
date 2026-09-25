@@ -40,7 +40,26 @@ const routes = [
     body: 'reorderCategories',
     handler: async (req, res, next) => {
       try {
-        const result = await reorderCategories(req.user, req.body?.order);
+        const order = req.body?.order || (Array.isArray(req.body) ? req.body : []);
+        const result = await reorderCategories(req.user, order);
+        res.json({ data: result });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+
+  // PUT /api/admin/categories/order
+  {
+    method: 'put',
+    path: '/order',
+    auth: 'admin',
+    summary: 'Reorder category display sequence via PUT',
+    body: 'reorderCategories',
+    handler: async (req, res, next) => {
+      try {
+        const order = req.body?.order || (Array.isArray(req.body) ? req.body : []);
+        const result = await reorderCategories(req.user, order);
         res.json({ data: result });
       } catch (err) {
         next(err);

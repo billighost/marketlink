@@ -7,6 +7,7 @@ import { getMarkets } from '@/api/catalog';
 import { useQuery } from '@/hooks/useQuery';
 import Illustration from '@/components/domain/Illustration';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
+import MarketDropdown from '@/components/layout/MarketDropdown';
 import styles from './BuyerTopBar.module.css';
 
 /**
@@ -82,21 +83,8 @@ export function BuyerTopBar() {
           <MarketLinkLogo size="sm" />
         </Link>
 
-        {/* Center / Mobile Left: Market selector button */}
-        <button
-          type="button"
-          onClick={handleOpenMarkets}
-          className={styles.marketSelector}
-          aria-label={`Current market: ${currentMarket.name}. Click to change market.`}
-        >
-          <div className={styles.marketInfo}>
-            <span className={styles.marketLabel}>Picking up from</span>
-            <span className={styles.marketName}>
-              {currentMarket.name}
-              <ChevronDown size={14} className={styles.chevron} aria-hidden="true" />
-            </span>
-          </div>
-        </button>
+        {/* Center / Mobile Left: Market selector dropdown */}
+        <MarketDropdown variant="buyer" />
 
         {/* Desktop Nav Links (>=1024px only) */}
         <nav className={styles.desktopNav} aria-label="Customer navigation">

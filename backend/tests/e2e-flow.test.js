@@ -27,6 +27,7 @@ import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
 import { runMinimalSeed } from '../src/db/seedMinimal.js';
+import { runSeed } from '../src/db/seed.js';
 import { runVerifyData } from '../scripts/verify-data.js';
 
 describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', () => {
@@ -58,6 +59,7 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
   });
 
   after(async () => {
+    await runSeed(true, db);
     await teardownTestEnvironment();
   });
 

@@ -1,0 +1,53 @@
+import { useEffect, useRef } from 'react';
+
+/**
+ * Runs callback periodically only while the browser tab is visible (visibilitychange).
+ *
+ * @param {function} callback
+ * @param {number} [delay=45000]
+ * @param {boolean} [active=true]
+ */
+export function useVisibleInterval(callback, delay = 45000, active = true) {
+  const savedCallback = useRef(callback);
+
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    if (!active || !delay || delay <= 0) return;
+
+    let timer = null;
+
+    const tick = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        if (savedCallback.current) {
+          savedCallback.current();
+        }
+      }
+    };
+
+    timer = setInterval(tick, delay);
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        if (savedCallback.current) {
+          savedCallback.current();
+        }
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
+  }, [delay, active]);
+}
+
+export default useVisibleInterval;
