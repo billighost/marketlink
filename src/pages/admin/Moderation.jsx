@@ -1,135 +1,228 @@
-import React, { useState } from 'react';
-import { ShieldCheck, Check, X, Eye, MessageSquare } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { getModerationFlags, resolveModerationFlag } from '../../api/admin';
+import ConfirmStep from '../../components/ui/ConfirmStep';
+import { useToast } from '../../components/ui/Toast';
+import { formatCurrency, formatDate } from '../../utils/format';
+import { useAdmin } from '../../layouts/AdminLayout';
 import styles from './Moderation.module.css';
 
-const QUEUE = [
-  {
-    id: 'MOD-301',
-    type: 'Product Listing',
-    subject: 'Organic Honey — Raw Wildflower 500ml',
-    submittedBy: 'Hollow Creek Apiary',
-    date: '2026-09-24',
-    reason: 'New listing review',
-  },
-  {
-    id: 'MOD-300',
-    type: 'Vendor Application',
-    subject: 'Sunrise Orchards — New vendor registration',
-    submittedBy: 'Sunrise Orchards',
-    date: '2026-09-24',
-    reason: 'Identity verification',
-  },
-  {
-    id: 'MOD-299',
-    type: 'Report',
-    subject: 'Customer reported misleading product photo',
-    submittedBy: 'Marta Lin',
-    date: '2026-09-23',
-    reason: 'Content dispute',
-  },
-  {
-    id: 'MOD-298',
-    type: 'Product Listing',
-    subject: 'Artisan Sourdough Bread — Walnut & Raisin',
-    submittedBy: 'Oak & Mill Bakery',
-    date: '2026-09-23',
-    reason: 'New listing review',
-  },
-  {
-    id: 'MOD-297',
-    type: 'Report',
-    subject: 'Vendor not fulfilling pre-orders consistently',
-    submittedBy: 'David Chen',
-    date: '2026-09-22',
-    reason: 'Vendor complaint',
-  },
-];
-
-function getTypeBadge(type, s) {
-  switch (type) {
-    case 'Product Listing': return s.typeListing;
-    case 'Vendor Application': return s.typeVendor;
-    case 'Report': return s.typeReport;
-    default: return '';
-  }
-}
-
 export default function Moderation() {
-  const [queue, setQueue] = useState(QUEUE);
+  const toast = useToast();
+  const { refreshCounts } = useAdmin();
+  const [flags, setFlags] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('open'); // 'open' | 'all' | 'listing' | 'review'
+  const [actionFlag, setActionFlag] = useState(null); // flag currently being acted upon
+  const [actionType, setActionType] = useState(null); // 'remove' | 'dismiss'
 
-  const handleAction = (id, action) => {
-    setQueue(prev => prev.filter(item => item.id !== id));
-    console.log(`${action} item ${id}`);
+  const fetchFlags = useCallback(async () => {
+    try {
+      setLoading(true);
+      const query = {};
+      if (activeTab === 'open') {
+        query.status = 'open';
+      } else if (activeTab === 'listing' || activeTab === 'review') {
+        query.targetType = activeTab;
+      }
+      const res = await getModerationFlags(query);
+      setFlags(res.data || []);
+    } catch (err) {
+      toast.show(err.message || 'Failed to load moderation flags', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, toast]);
+
+  useEffect(() => {
+    fetchFlags();
+  }, [fetchFlags]);
+
+  const handleResolve = async (reason = '') => {
+    if (!actionFlag || !actionType) return;
+    try {
+      await resolveModerationFlag(actionFlag.id || actionFlag._id, {
+        action: actionType,
+        note: reason,
+      });
+      toast.show(
+        actionType === 'remove'
+          ? 'Item removed and flag resolved.'
+          : 'Flag dismissed.',
+        'success'
+      );
+      setActionFlag(null);
+      setActionType(null);
+      fetchFlags();
+      if (refreshCounts) refreshCounts();
+    } catch (err) {
+      toast.show(err.message || 'Action failed', 'error');
+    }
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.pageHeader}>
-        <div>
-          <h1 className={styles.title}>Moderation</h1>
-          <p className={styles.subtitle}>Review pending listings, applications, and reports.</p>
-        </div>
-        <div className={styles.queueCount}>
-          <ShieldCheck size={18} />
-          <span>{queue.length} items in queue</span>
-        </div>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Moderation</h1>
       </div>
 
-      <div className={styles.card}>
-        {queue.length === 0 ? (
-          <div className={styles.emptyState}>
-            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className={styles.emptyIllustration}>
-              <circle cx="60" cy="60" r="48" fill="var(--color-canvas, #F5EFE3)" />
-              <path d="M48 62L56 70L76 48" stroke="var(--color-herb, #5C7048)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M38 38L28 28M82 38L92 28M38 82L28 92M82 82L92 92" stroke="var(--color-wood-line, #E3D3B8)" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="95" cy="60" r="4" fill="var(--color-wood-line, #E3D3B8)" />
-              <circle cx="25" cy="60" r="4" fill="var(--color-wood-line, #E3D3B8)" />
-            </svg>
-            <h3>All clear!</h3>
-            <p>No items pending moderation right now.</p>
-          </div>
-        ) : (
-          <div className={styles.list}>
-            {queue.map((item) => (
-              <div key={item.id} className={styles.listItem}>
-                <div className={styles.itemMain}>
-                  <div className={styles.itemTop}>
-                    <span className={`${styles.typeBadge} ${getTypeBadge(item.type, styles)}`}>
-                      {item.type}
-                    </span>
-                    <span className={styles.itemDate}>{item.date}</span>
-                  </div>
-                  <h4 className={styles.itemSubject}>{item.subject}</h4>
-                  <div className={styles.itemMeta}>
-                    <span>by {item.submittedBy}</span>
-                    <span className={styles.metaSep}>·</span>
-                    <span>{item.reason}</span>
-                  </div>
-                </div>
-                <div className={styles.itemActions}>
-                  <button
-                    className={styles.btnApprove}
-                    onClick={() => handleAction(item.id, 'Approved')}
-                    title="Approve"
-                  >
-                    <Check size={16} /> Approve
-                  </button>
-                  <button
-                    className={styles.btnReject}
-                    onClick={() => handleAction(item.id, 'Rejected')}
-                    title="Reject"
-                  >
-                    <X size={16} /> Reject
-                  </button>
-                  <button className={styles.btnView} title="View details">
-                    <Eye size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className={styles.tabs}>
+        <button
+          type="button"
+          className={`${styles.tab} ${activeTab === 'open' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('open')}
+        >
+          Open Queue
+        </button>
+        <button
+          type="button"
+          className={`${styles.tab} ${activeTab === 'listing' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('listing')}
+        >
+          Listings
+        </button>
+        <button
+          type="button"
+          className={`${styles.tab} ${activeTab === 'review' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('review')}
+        >
+          Reviews
+        </button>
+        <button
+          type="button"
+          className={`${styles.tab} ${activeTab === 'all' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('all')}
+        >
+          All Flags
+        </button>
       </div>
+
+      {loading ? (
+        <p>Loading flags...</p>
+      ) : flags.length === 0 ? (
+        <p>No moderation flags found in this view.</p>
+      ) : (
+        <div className={styles.flagsList}>
+          {flags.map((flag) => {
+            const isActing = actionFlag && (actionFlag.id || actionFlag._id) === (flag.id || flag._id);
+            return (
+              <div key={flag.id || flag._id} className={styles.flagCard}>
+                <div className={styles.flagHeader}>
+                  <div className={styles.flagMeta}>
+                    <span className={styles.typeBadge}>{flag.targetType}</span>
+                    <span className={styles.flagDate}>
+                      Flagged {formatDate(flag.createdAt)}
+                    </span>
+                  </div>
+                  <span className={styles.statusTag}>{flag.status}</span>
+                </div>
+
+                <div className={styles.flagReason}>
+                  <strong>Reason:</strong> {flag.reason || 'Flagged for content violation'}
+                </div>
+
+                {/* Target preview */}
+                <div className={styles.previewBlock}>
+                  <div className={styles.previewTitle}>Flagged Target</div>
+                  {flag.targetType === 'listing' && flag.preview && (
+                    <div className={styles.listingPreview}>
+                      {flag.preview.imageUrl ? (
+                        <img
+                          src={flag.preview.imageUrl}
+                          alt={flag.preview.name}
+                          className={styles.previewImg}
+                        />
+                      ) : (
+                        <div className={styles.previewImg} style={{ display: 'grid', placeItems: 'center', fontSize: '1.5rem' }}>
+                          🥬
+                        </div>
+                      )}
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{flag.preview.name}</div>
+                        <div style={{ fontSize: '0.8125rem', color: 'var(--color-ink-muted)' }}>
+                          Farmer: {flag.preview.farmerName || 'Unknown stall'} ·{' '}
+                          {formatCurrency(flag.preview.priceCents)}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', marginTop: '2px' }}>
+                          Status: {flag.preview.listed ? 'Active listing' : 'Delisted'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {flag.targetType === 'review' && flag.preview && (
+                    <div>
+                      <div className={styles.reviewStars}>
+                        {'★'.repeat(flag.preview.rating || 5)}
+                        {'☆'.repeat(5 - (flag.preview.rating || 5))}
+                      </div>
+                      <div className={styles.reviewComment}>
+                        "{flag.preview.comment}"
+                      </div>
+                      <div className={styles.reviewAuthor}>
+                        By {flag.preview.authorName || 'Customer'} on {flag.preview.stallName || 'Stall'}
+                      </div>
+                    </div>
+                  )}
+
+                  {!flag.preview && (
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--color-ink-muted)' }}>
+                      Target preview unavailable or item was already removed.
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions / Confirmation */}
+                {flag.status === 'open' && (
+                  <>
+                    {isActing ? (
+                      <ConfirmStep
+                        title={actionType === 'remove' ? 'Remove Content' : 'Dismiss Flag'}
+                        message={
+                          actionType === 'remove'
+                            ? 'Are you sure you want to remove this item? It will be delisted or hidden immediately.'
+                            : 'Dismiss this report? The item will remain visible.'
+                        }
+                        confirmLabel={actionType === 'remove' ? 'Confirm Removal' : 'Confirm Dismiss'}
+                        onConfirm={handleResolve}
+                        onCancel={() => {
+                          setActionFlag(null);
+                          setActionType(null);
+                        }}
+                        showReason
+                        reasonPlaceholder="Admin note (optional)..."
+                        danger={actionType === 'remove'}
+                      />
+                    ) : (
+                      <div className={styles.cardActions}>
+                        <button
+                          type="button"
+                          className={styles.dismissBtn}
+                          onClick={() => {
+                            setActionFlag(flag);
+                            setActionType('dismiss');
+                          }}
+                        >
+                          Keep & Dismiss
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.removeBtn}
+                          onClick={() => {
+                            setActionFlag(flag);
+                            setActionType('remove');
+                          }}
+                        >
+                          Remove Content
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

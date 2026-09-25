@@ -7,17 +7,18 @@ export function ToastProvider({ children }) {
   const [toastData, setToastData] = useState(null);
   const toastKeyRef = useRef(0);
 
-  const showToast = useCallback(({ message, action, onAction, duration = 3000 }) => {
+  const showToast = useCallback((param) => {
     toastKeyRef.current += 1;
+    const opts = typeof param === 'string' ? { message: param } : (param || {});
     setToastData({
       key: toastKeyRef.current,
-      message,
-      action,
+      message: opts.message || '',
+      action: opts.action,
       onAction: () => {
-        onAction?.();
+        opts.onAction?.();
         setToastData(null);
       },
-      duration,
+      duration: opts.duration || 3000,
     });
   }, []);
 
@@ -25,7 +26,11 @@ export function ToastProvider({ children }) {
     setToastData(null);
   }, []);
 
-  const value = useMemo(() => ({ showToast, hideToast }), [showToast, hideToast]);
+  const show = useCallback((msg) => {
+    showToast(msg);
+  }, [showToast]);
+
+  const value = useMemo(() => ({ showToast, hideToast, show }), [showToast, hideToast, show]);
 
   return (
     <ToastContext.Provider value={value}>

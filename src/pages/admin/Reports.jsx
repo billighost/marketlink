@@ -1,129 +1,217 @@
-import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Package } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  getAdminReportsSummary,
+  exportAdminReport,
+  getReportsHistory,
+} from '../../api/admin';
+import { BarChart } from '../../components/domain/BarChart';
+import { useToast } from '../../components/ui/Toast';
+import { formatCurrency, formatDate } from '../../utils/format';
 import styles from './Reports.module.css';
 
-const PERIOD_OPTIONS = ['Last 7 days', 'Last 30 days', 'Last 90 days', 'This year'];
-
-const SUMMARY = [
-  { label: 'Total Revenue', value: '₦12,875,000', change: '+6.1%', trend: 'up', icon: DollarSign },
-  { label: 'Total Orders', value: '3,842', change: '+12.3%', trend: 'up', icon: ShoppingCart },
-  { label: 'New Users', value: '412', change: '+8.7%', trend: 'up', icon: Users },
-  { label: 'Products Listed', value: '1,024', change: '-2.1%', trend: 'down', icon: Package },
-];
-
-const TOP_VENDORS = [
-  { rank: 1, name: 'Green Valley Farms', revenue: '₦1,245,000', orders: 312 },
-  { rank: 2, name: 'Hollow Creek Apiary', revenue: '₦980,500', orders: 254 },
-  { rank: 3, name: 'Riverbend Farm', revenue: '₦875,200', orders: 198 },
-  { rank: 4, name: 'Oak & Mill Bakery', revenue: '₦720,000', orders: 187 },
-  { rank: 5, name: 'Farmer Ayomide', revenue: '₦685,300', orders: 165 },
-];
-
-const TOP_PRODUCTS = [
-  { rank: 1, name: 'Heirloom Tomatoes', vendor: 'Green Valley Farms', sold: 840 },
-  { rank: 2, name: 'Raw Wildflower Honey', vendor: 'Hollow Creek Apiary', sold: 625 },
-  { rank: 3, name: 'Sourdough Bread', vendor: 'Oak & Mill Bakery', sold: 510 },
-  { rank: 4, name: 'Free-Range Eggs', vendor: 'Riverbend Farm', sold: 480 },
-  { rank: 5, name: 'Organic Spinach', vendor: 'Farmer Ayomide', sold: 390 },
-];
-
 export default function Reports() {
-  const [period, setPeriod] = useState('Last 30 days');
+  const toast = useToast();
+  const [range, setRange] = useState('30d');
+  const [summary, setSummary] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [exportingType, setExportingType] = useState(null);
+
+  const fetchReports = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [sumRes, histRes] = await Promise.all([
+        getAdminReportsSummary(range),
+        getReportsHistory().catch(() => ({ data: [] })),
+      ]);
+      setSummary(sumRes.data || sumRes);
+      setHistory(histRes.data || []);
+    } catch (err) {
+      toast.show(err.message || 'Failed to load report data', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [range, toast]);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
+
+  const handleExport = async (type) => {
+    try {
+      setExportingType(type);
+      toast.show('Preparing your file...', 'info');
+      const blob = await exportAdminReport(type, range);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `marketlink-${type}-${range}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.show('Export downloaded successfully', 'success');
+      // Refresh history to show newly generated report
+      const histRes = await getReportsHistory().catch(() => ({ data: [] }));
+      setHistory(histRes.data || []);
+    } catch (err) {
+      toast.show(err.message || 'Export failed', 'error');
+    } finally {
+      setExportingType(null);
+    }
+  };
+
+  const marketChartData = (summary?.revenueByMarket || []).map((m) => ({
+    label: m.name || 'Market',
+    value: (m.revenueCents || 0) / 100,
+    valueLabel: formatCurrency(m.revenueCents || 0),
+  }));
+
+  const dailyChartData = (summary?.byDay || []).map((d) => ({
+    label: d.date ? d.date.slice(5) : d._id ? d._id.slice(5) : '',
+    value: d.orders || 0,
+    valueLabel: `${d.orders} orders`,
+  }));
+
+  const totalOrders = summary?.totalOrders || 0;
+  const revenueCents = summary?.revenueCents || 0;
+  const avgOrderCents = totalOrders > 0 ? Math.round(revenueCents / totalOrders) : 0;
 
   return (
-    <div className={styles.page}>
-      <div className={styles.pageHeader}>
-        <div>
-          <h1 className={styles.title}>Analytics</h1>
-          <p className={styles.subtitle}>Platform performance and insights.</p>
-        </div>
-        <select
-          className={styles.periodSelect}
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-        >
-          {PERIOD_OPTIONS.map((p) => (
-            <option key={p} value={p}>{p}</option>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Reports & Analytics</h1>
+        <div className={styles.rangePills}>
+          {['7d', '30d', '90d', '365d'].map((r) => (
+            <button
+              key={r}
+              type="button"
+              className={`${styles.rangePill} ${range === r ? styles.rangePillActive : ''}`}
+              onClick={() => setRange(r)}
+            >
+              {r}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className={styles.statGrid}>
-        {SUMMARY.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <div key={i} className={styles.statCard}>
-              <div className={styles.statTop}>
-                <span className={styles.statLabel}>{stat.label}</span>
-                <Icon size={18} className={styles.statIcon} />
+      {loading && !summary ? (
+        <p>Loading analytics...</p>
+      ) : (
+        <>
+          {/* Key Metric Totals */}
+          <div className={styles.metricsGrid}>
+            <div className={styles.metricCard}>
+              <div className={styles.metricLabel}>Total Revenue</div>
+              <div className={styles.metricValue}>
+                {formatCurrency(revenueCents)}
               </div>
-              <div className={styles.statValue}>{stat.value}</div>
-              <span className={`${styles.statChange} ${stat.trend === 'up' ? styles.changeUp : styles.changeDown}`}>
-                {stat.trend === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                {stat.change}
-              </span>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Two-column: Top Vendors & Top Products */}
-      <div className={styles.twoCol}>
-        {/* Top Vendors */}
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Top Vendors</h2>
+            <div className={styles.metricCard}>
+              <div className={styles.metricLabel}>Total Orders</div>
+              <div className={styles.metricValue}>{totalOrders}</div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricLabel}>Avg. Order Value</div>
+              <div className={styles.metricValue}>
+                {formatCurrency(avgOrderCents)}
+              </div>
+            </div>
           </div>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Vendor</th>
-                <th>Revenue</th>
-                <th>Orders</th>
-              </tr>
-            </thead>
-            <tbody>
-              {TOP_VENDORS.map((v) => (
-                <tr key={v.rank}>
-                  <td className={styles.tdMuted}>{v.rank}</td>
-                  <td className={styles.tdBold}>{v.name}</td>
-                  <td>{v.revenue}</td>
-                  <td className={styles.tdMuted}>{v.orders}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
 
-        {/* Top Products */}
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Top Products</h2>
+          {/* Revenue by Market (Horizontal BarChart) */}
+          <div className={styles.chartCard}>
+            <div className={styles.chartHeader}>
+              <h2 className={styles.chartTitle}>Revenue by Market</h2>
+            </div>
+            <BarChart
+              data={marketChartData}
+              layout="horizontal"
+              valueFormatter={(v) => formatCurrency(v * 100)}
+              ariaLabel="Revenue by market horizontal chart"
+            />
           </div>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Product</th>
-                <th>Vendor</th>
-                <th>Sold</th>
-              </tr>
-            </thead>
-            <tbody>
-              {TOP_PRODUCTS.map((p) => (
-                <tr key={p.rank}>
-                  <td className={styles.tdMuted}>{p.rank}</td>
-                  <td className={styles.tdBold}>{p.name}</td>
-                  <td className={styles.tdMuted}>{p.vendor}</td>
-                  <td>{p.sold}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+
+          {/* Orders per Day (Vertical BarChart) */}
+          <div className={styles.chartCard}>
+            <div className={styles.chartHeader}>
+              <h2 className={styles.chartTitle}>Orders per Day</h2>
+            </div>
+            <BarChart
+              data={dailyChartData}
+              layout="vertical"
+              height={180}
+              valueFormatter={(v) => `${v} orders`}
+              ariaLabel="Orders per day chart"
+            />
+          </div>
+
+          {/* CSV Exports */}
+          <div className={styles.exportsSection}>
+            <h2 className={styles.exportsTitle}>Export CSV Data</h2>
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-ink-muted)', margin: 0 }}>
+              Export full datasets for external accounting, audits, and spreadsheet analysis.
+            </p>
+            <div className={styles.exportButtons}>
+              <button
+                type="button"
+                className={styles.exportBtn}
+                disabled={Boolean(exportingType)}
+                onClick={() => handleExport('orders')}
+              >
+                📥 {exportingType === 'orders' ? 'Preparing file...' : 'Export Orders CSV'}
+              </button>
+              <button
+                type="button"
+                className={styles.exportBtn}
+                disabled={Boolean(exportingType)}
+                onClick={() => handleExport('revenue')}
+              >
+                📥 {exportingType === 'revenue' ? 'Preparing file...' : 'Export Revenue CSV'}
+              </button>
+              <button
+                type="button"
+                className={styles.exportBtn}
+                disabled={Boolean(exportingType)}
+                onClick={() => handleExport('farmers')}
+              >
+                📥 {exportingType === 'farmers' ? 'Preparing file...' : 'Export Farmers CSV'}
+              </button>
+            </div>
+          </div>
+
+          {/* Report History */}
+          {history.length > 0 && (
+            <div className={styles.historySection}>
+              <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--color-border)' }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Recent Generated Reports</h3>
+              </div>
+              <table className={styles.historyTable}>
+                <thead>
+                  <tr>
+                    <th className={styles.historyTh}>Type</th>
+                    <th className={styles.historyTh}>Range</th>
+                    <th className={styles.historyTh}>Generated</th>
+                    <th className={styles.historyTh}>Records</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((h) => (
+                    <tr key={h.id || h._id}>
+                      <td className={styles.historyTd} style={{ textTransform: 'capitalize', fontWeight: 500 }}>
+                        {h.type}
+                      </td>
+                      <td className={styles.historyTd}>{h.range}</td>
+                      <td className={styles.historyTd}>{formatDate(h.createdAt)}</td>
+                      <td className={styles.historyTd}>{h.recordCount ?? h.rows ?? '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -5,16 +5,16 @@
   top: 0;
   z-index: var(--z-sticky);
   background-color: var(--color-white);
-  border-bottom: 1px solid transparent;
+  box-shadow: none;
   min-height: var(--header-height);
   display: flex;
   align-items: center;
-  transition: border-bottom-color var(--duration-fast) var(--ease-standard);
+  transition: box-shadow var(--duration-base) var(--ease-standard);
   width: 100%;
 }
 
 .headerScrolled {
-  border-bottom-color: var(--color-border);
+  box-shadow: var(--shadow-control);
 }
 
 .container {
@@ -120,8 +120,8 @@
 .desktopNav {
   display: none;
   align-items: center;
-  gap: var(--space-4);
-  margin-inline-start: var(--space-2);
+  gap: var(--space-5);
+  margin-inline-start: var(--space-4);
   margin-inline-end: auto;
   white-space: nowrap;
   flex-shrink: 0;
@@ -175,7 +175,7 @@
   align-items: center;
   gap: var(--space-2);
   background: none;
-  border: 1px solid var(--color-border);
+  border: var(--border-input);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-full);
   font-size: var(--text-sm);
@@ -191,6 +191,7 @@
 
 .cartButton:hover {
   background-color: var(--color-canvas-soft);
+  border-color: var(--color-border-input-hover);
 }
 
 .cartButton:focus-visible {
@@ -233,11 +234,12 @@
   letter-spacing: 0.05em;
   transition: background-color var(--duration-fast) var(--ease-standard);
   flex-shrink: 0;
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
 }
 
 .avatarButton:hover {
-  background-color: var(--color-canvas-soft);
+  background-color: var(--color-beet-tint);
+  color: var(--color-primary);
 }
 
 .avatarButton:focus-visible {
@@ -275,12 +277,12 @@
 /* ─── Large Desktop: 1280px and up ─── */
 @media (min-width: 1280px) {
   .container {
-    gap: var(--space-6);
+    gap: var(--space-8);
   }
 
   .desktopNav {
     gap: var(--space-6);
-    margin-inline-start: var(--space-4);
+    margin-inline-start: var(--space-6);
   }
 
   .marketSelector {

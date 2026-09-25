@@ -1,4 +1,4 @@
-import { apiFetch } from './client';
+import { apiFetch } from './client.js';
 
 /**
  * Farmer Overview & Insights
@@ -89,6 +89,10 @@ export async function setFarmerProductAvailable(id, data = {}) {
   });
 }
 
+export async function updateProductStock(id, quantity) {
+  return updateFarmerProduct(id, { quantity });
+}
+
 export async function setFarmerProductHidden(id, hide = true) {
   return apiFetch(`/farmer/products/${id}/${hide ? 'hide' : 'unhide'}`, {
     method: 'POST',
@@ -116,6 +120,8 @@ export async function updateWeeklyTemplate(items) {
   });
 }
 
+export const saveWeeklyTemplate = updateWeeklyTemplate;
+
 export async function applyWeeklyTemplate() {
   return apiFetch('/farmer/weekly-template/apply', {
     method: 'POST',
@@ -132,6 +138,8 @@ export async function getFarmerOrders(query = {}, signal) {
 export async function getFarmerOrderDetail(id, signal) {
   return apiFetch(`/farmer/orders/${id}`, { signal });
 }
+
+export const getFarmerOrderById = getFarmerOrderDetail;
 
 export async function acceptFarmerOrder(id) {
   return apiFetch(`/farmer/orders/${id}/accept`, {
@@ -183,6 +191,8 @@ export async function replyFarmerReview(reviewId, text) {
   });
 }
 
+export const replyToReview = replyFarmerReview;
+
 export async function deleteFarmerReviewReply(reviewId) {
   return apiFetch(`/farmer/reviews/${reviewId}/reply`, {
     method: 'DELETE',
@@ -217,3 +227,6 @@ export async function uploadFarmerImage(file, kind = 'product') {
     },
   });
 }
+
+export const uploadProductPhoto = (file) => uploadFarmerImage(file, 'product');
+

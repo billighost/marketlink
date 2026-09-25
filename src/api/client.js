@@ -7,7 +7,7 @@
  * - Idempotency-Key support
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '/api';
 
 let inMemoryAccessToken = null;
 let refreshPromise = null;

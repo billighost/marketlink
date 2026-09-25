@@ -1,33 +1,9 @@
 import React from 'react';
 import styles from './TimeSelect.module.css';
 
-/**
- * Formats minutes from midnight into 12-hour am/pm string (e.g. 480 -> "8:00am")
- */
-export function formatMinutesToTime(totalMin) {
-  if (totalMin === undefined || totalMin === null || isNaN(totalMin)) return '';
-  const num = Number(totalMin);
-  const hours = Math.floor(num / 60);
-  const mins = num % 60;
-  const period = hours >= 12 && hours < 24 ? 'pm' : 'am';
-  const displayHour = hours % 12 === 0 ? 12 : hours % 12;
-  const displayMin = mins.toString().padStart(2, '0');
-  return `${displayHour}:${displayMin}${period}`;
-}
+import { formatMinutesToTime, generateTimeOptions } from '../../utils/format.js';
 
-/**
- * Generates options list in 30-minute increments from min to max.
- */
-export function generateTimeOptions(startMin = 300, endMin = 1380, stepMin = 30) {
-  const options = [];
-  for (let m = startMin; m <= endMin; m += stepMin) {
-    options.push({
-      value: m,
-      label: formatMinutesToTime(m),
-    });
-  }
-  return options;
-}
+export { formatMinutesToTime, generateTimeOptions };
 
 /**
  * TimeSelect component for 30-minute pickup windows and market operating schedules.

@@ -1,212 +1,177 @@
-/* Admin Reports */
-
-.page {
+.container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 1200px;
+  gap: var(--space-6);
+  padding-bottom: var(--space-12);
 }
 
-.pageHeader {
+.header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
 .title {
-  font-family: 'Idiqlat', serif;
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: #111;
-  margin: 0 0 4px 0;
-}
-
-.subtitle {
-  font-size: 0.85rem;
-  color: #6b7280;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-ink);
   margin: 0;
 }
 
-.periodSelect {
-  padding: 8px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  color: #374151;
-  background: #fff;
-  outline: none;
+.rangePills {
+  display: flex;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+}
+
+.rangePill {
+  border: none;
+  background: transparent;
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  font-family: inherit;
 }
 
-.periodSelect:focus {
-  border-color: var(--color-herb, #5C7048);
+.rangePillActive {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-weight: 600;
 }
 
-/* Stat Cards */
-.statGrid {
+.metricsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
 }
 
-.statCard {
-  background-color: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 20px;
+.metricCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+}
+
+.metricLabel {
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+
+.metricValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.chartCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-4);
 }
 
-.statTop {
+.chartHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.statLabel {
-  font-size: 0.75rem;
+.chartTitle {
+  font-size: 1.125rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #6b7280;
-}
-
-.statIcon {
-  color: #9ca3af;
-}
-
-.statValue {
-  font-family: 'Idiqlat', serif;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #111;
-  line-height: 1.1;
-}
-
-.statChange {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.changeUp {
-  color: var(--color-herb, #5C7048);
-}
-
-.changeDown {
-  color: var(--color-beet, #7A2E3B);
-}
-
-/* Two Column */
-.twoCol {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-/* Card */
-.card {
-  background-color: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.cardHeader {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.cardTitle {
-  font-family: 'Idiqlat', serif;
-  font-size: 1rem;
-  font-weight: 400;
-  color: #111;
+  color: var(--color-ink);
   margin: 0;
 }
 
-/* Table */
-.table {
+.exportsSection {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.exportsTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.exportButtons {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.exportBtn {
+  background: var(--color-surface-sunken);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+}
+
+.exportBtn:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  border-color: var(--color-beet);
+}
+
+.exportBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.historySection {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.historyTable {
   width: 100%;
   border-collapse: collapse;
-}
-
-.table thead th {
-  padding: 10px 20px;
   text-align: left;
-  font-size: 0.7rem;
+  font-size: 0.875rem;
+}
+
+.historyTh {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-sunken);
+  color: var(--color-ink-muted);
   font-weight: 600;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #6b7280;
-  background-color: #fafafa;
-  border-bottom: 1px solid #e5e7eb;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.table tbody tr {
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.table tbody tr:last-child {
-  border-bottom: none;
-}
-
-.table tbody tr:hover {
-  background-color: #fafafa;
-}
-
-.table tbody td {
-  padding: 12px 20px;
-  font-size: 0.85rem;
-  color: #374151;
-}
-
-.tdBold {
-  font-weight: 600;
-  color: #111;
-}
-
-.tdMuted {
-  color: #9ca3af;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .statGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .twoCol {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .statGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .page {
-    gap: 16px;
-  }
-  .title {
-    font-size: 1.25rem;
-  }
-  .periodSelect {
-    width: 100%;
-  }
-  .statCard {
-    padding: 16px;
-  }
-  .statValue {
-    font-size: 1.5rem;
-  }
+.historyTd {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-ink);
+  border-bottom: 1px solid var(--color-border);
 }

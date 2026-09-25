@@ -22,6 +22,8 @@ export function formatPrice(cents) {
   }).format(dollars);
 }
 
+export const formatCurrency = formatPrice;
+
 /**
  * Parses a dollar string ($4.50 or 4.5) to integer cents using integer math.
  * Split on '.' and pad string - no floating point math allowed.
@@ -249,4 +251,38 @@ export function formatMarketSchedule(market) {
   const hoursStr = market.hours || '8 am – 1 pm';
   return `${daysStr} · ${hoursStr}`;
 }
+
+/**
+ * Formats minutes from midnight into 12-hour am/pm string (e.g. 480 -> "8:00am")
+ * @param {number} totalMin
+ * @returns {string}
+ */
+export function formatMinutesToTime(totalMin) {
+    if (totalMin === undefined || totalMin === null || isNaN(totalMin)) return '';
+    const num = Number(totalMin);
+    const hours = Math.floor(num / 60);
+    const mins = num % 60;
+    const period = hours >= 12 && hours < 24 ? 'pm' : 'am';
+    const displayHour = hours % 12 === 0 ? 12 : hours % 12;
+    const displayMin = mins.toString().padStart(2, '0');
+    return `${displayHour}:${displayMin} ${period}`;
+  }
+
+  /**
+   * Generates options list in 30-minute increments from min to max.
+   * @param {number} [startMin=300]
+   * @param {number} [endMin=1380]
+   * @param {number} [stepMin=30]
+   * @returns {Array<{ value: number, label: string }>}
+   */
+  export function generateTimeOptions(startMin = 300, endMin = 1380, stepMin = 30) {
+    const options = [];
+    for (let m = startMin; m <= endMin; m += stepMin) {
+      options.push({
+        value: m,
+        label: formatMinutesToTime(m),
+      });
+    }
+    return options;
+  }
 

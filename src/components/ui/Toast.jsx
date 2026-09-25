@@ -33,4 +33,5 @@ export function Toast({ message, action, onAction, duration = 2000, onDismiss })
   return typeof document !== 'undefined' ? createPortal(content, document.body) : null;
 }
 
+export { useToast } from '../../context/ToastContext';
 export default Toast;

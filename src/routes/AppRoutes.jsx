@@ -27,7 +27,12 @@ import Products from '@/pages/guest/Products';
 import ProductDetail from '@/pages/guest/ProductDetail';
 
 // Vendor Pages
-import Overview from '@/pages/vendor/Overview';
+import VendorOverview from '@/pages/vendor/Overview';
+import VendorStock from '@/pages/vendor/Stock';
+import VendorOrders from '@/pages/vendor/Orders';
+import VendorInsights from '@/pages/vendor/Insights';
+import VendorReviews from '@/pages/vendor/Reviews';
+import VendorMyStall from '@/pages/vendor/MyStall';
 
 // Admin Pages
 import AdminOverview from '@/pages/admin/Overview';
@@ -97,24 +102,37 @@ export function AppRoutes() {
       {/* ── Base Routes Block (remains mounted under modal sheets) ──────── */}
       <Routes location={background || location}>
         {/* ── Vendor (Producer) Routes ───────────────────────────── */}
-        <Route path="/vendor" element={<VendorLayout />}>
-          <Route index element={<Overview />} />
-          <Route path="stock"          element={<PreviewPlaceholder roleName="Stock & Inventory" />} />
-          <Route path="stock-template" element={<PreviewPlaceholder roleName="Weekly Stock Template" />} />
-          <Route path="orders"         element={<PreviewPlaceholder roleName="Incoming Pre-Orders" />} />
-          <Route path="insights"       element={<PreviewPlaceholder roleName="Sales Insights" />} />
-          <Route path="reviews"        element={<PreviewPlaceholder roleName="Customer Reviews" />} />
-          <Route path="settings"       element={<PreviewPlaceholder roleName="Stall & Market Settings" />} />
+        <Route
+          path="/vendor"
+          element={
+            <ProtectedRoute allowedRoles={['farmer', 'vendor']}>
+              <VendorLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<VendorOverview />} />
+          <Route path="stock" element={<VendorStock />} />
+          <Route path="orders" element={<VendorOrders />} />
+          <Route path="insights" element={<VendorInsights />} />
+          <Route path="reviews" element={<VendorReviews />} />
+          <Route path="settings" element={<VendorMyStall />} />
         </Route>
 
         {/* ── Admin Routes ──────────────────────────────────────── */}
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<AdminOverview />} />
-          <Route path="people"     element={<AdminPeople />} />
-          <Route path="markets"    element={<AdminMarkets />} />
+          <Route path="people" element={<AdminPeople />} />
+          <Route path="markets" element={<AdminMarkets />} />
           <Route path="moderation" element={<AdminModeration />} />
-          <Route path="reports"    element={<AdminReports />} />
-          <Route path="settings"   element={<AdminSettings />} />
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="settings" element={<AdminSettings />} />
         </Route>
 
         {/* ── Customer (Buyer) Routes ────────────────────────────── */}
