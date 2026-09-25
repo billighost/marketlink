@@ -198,7 +198,7 @@ export async function listProducts({
 
     const cards = await db
       .collection(COLLECTIONS.PRODUCTS)
-      .find({ _id: { $in: pageIds } })
+      .find({ _id: { $in: pageIds }, ...baseFilter })
       .toArray();
 
     // Re-order by original text score order

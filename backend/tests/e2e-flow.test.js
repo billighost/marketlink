@@ -79,8 +79,8 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
         name: 'Highland Park Greenmarket',
         address: '500 Highland Ave, Highland Park, NJ',
         location: {
-          type: 'Point',
-          coordinates: [-74.425, 40.495],
+          lat: 40.495,
+          lng: -74.425,
         },
         schedule: [{ day: 'sat', openMin: 540, closeMin: 780 }],
         timezone: 'America/New_York',
@@ -138,11 +138,12 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
       headers: { Authorization: `Bearer ${farmerToken}` },
       body: {
         name: 'Heirloom Russet Potatoes',
-        categorySlug: 'organic-roots',
+        categoryId: createdCategoryId,
         priceCents: 450,
         unit: 'bunch',
         quantityAvailable: 30,
-        marketIds: [createdMarketId],
+        tags: ['organic'],
+        art: 'carrot',
       },
     });
     assert.equal(prodRes.status, 403);
@@ -158,9 +159,9 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
     });
     assert.equal(listRes.status, 200);
     const listData = await listRes.json();
-    const targetFarmer = listData.data.find((f) => f.userId === farmerUserId || f.stallName === 'Heritage Orchard & Roots');
+    const targetFarmer = listData.data.find((f) => f.userId === farmerUserId || f.id === farmerUserId || f.stallName === 'Heritage Orchard & Roots');
     assert.ok(targetFarmer, 'Pending farmer found in admin queue');
-    farmerProfileId = targetFarmer.id;
+    farmerProfileId = targetFarmer.farmerId || targetFarmer.id;
 
     const approveRes = await request(`/api/admin/farmers/${farmerProfileId}/approve`, {
       method: 'POST',
@@ -195,13 +196,13 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
       body: {
         name: 'Heirloom Russet Potatoes',
         description: 'Naturally grown farm-fresh potatoes.',
-        categorySlug: 'organic-roots',
+        categoryId: createdCategoryId,
         priceCents: 450,
         unit: 'bunch',
         quantityAvailable: 50,
         lowStockThreshold: 5,
-        organic: true,
-        marketIds: [createdMarketId],
+        tags: ['organic'],
+        art: 'carrot',
       },
     });
     assert.equal(prodRes.status, 201);
@@ -217,8 +218,8 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
         items: [
           {
             productId: createdProductId,
-            defaultQuantity: 40,
-            autoRestock: true,
+            defaultQty: 40,
+            enabled: true,
           },
         ],
       },
@@ -269,15 +270,11 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
     assert.ok(searchData.data.length >= 1, 'Search returned newly created product');
 
     // 8c. Add to Favorites
-    const favRes = await request('/api/favorites', {
-      method: 'POST',
+    const favRes = await request(`/api/favorites/product/${createdProductId}`, {
+      method: 'PUT',
       headers: { Authorization: `Bearer ${customerToken}` },
-      body: {
-        targetType: 'product',
-        targetId: createdProductId,
-      },
     });
-    assert.equal(favRes.status, 201);
+    assert.equal(favRes.status, 200);
 
     const favIdsRes = await request('/api/favorites/ids', {
       headers: { Authorization: `Bearer ${customerToken}` },
@@ -313,15 +310,14 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
     const checkoutRes = await request('/api/orders/checkout', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${customerToken}` ,
+        Authorization: `Bearer ${customerToken}`,
         'Idempotency-Key': 'e2e-checkout-key-001',
       },
       body: {
-        marketId: createdMarketId,
         groups: [
           {
             farmerId: farmerProfileId,
-            slotStart: selectedSlot.slotStart,
+            slotStart: selectedSlot.start,
             items: [{ productId: createdProductId, quantity: 2 }],
           },
         ],
@@ -353,7 +349,7 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
     });
     assert.equal(acceptRes.status, 200);
     const acceptData = await acceptRes.json();
-    assert.equal(acceptData.data.status, 'confirmed');
+    assert.equal(acceptData.data.status, 'accepted');
 
     // 10c. Mark Ready
     const readyRes = await request(`/api/farmer/orders/${createdOrderId}/ready`, {
@@ -417,7 +413,7 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
       method: 'POST',
       headers: { Authorization: `Bearer ${farmerToken}` },
       body: {
-        reply: 'Thank you Clara! We look forward to seeing you next Saturday.',
+        text: 'Thank you Clara! We look forward to seeing you next Saturday.',
       },
     });
     assert.equal(replyRes.status, 200);
@@ -459,7 +455,7 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
     });
     assert.equal(modRes.status, 200);
     const modData = await modRes.json();
-    const targetFlag = modData.data.flags.find((f) => f.targetId === createdReviewId);
+    const targetFlag = modData.data.find((f) => f.targetId === createdReviewId);
     assert.ok(targetFlag, 'Flagged review found in moderation queue');
     createdFlagId = targetFlag.id;
 
@@ -468,14 +464,16 @@ describe('Stage 5 Full End-to-End Scenario Suite (18 Steps from Minimal Seed)', 
       method: 'POST',
       headers: { Authorization: `Bearer ${adminToken}` },
       body: {
-        action: 'remove_content',
+        action: 'remove',
         note: 'Violates content policy.',
       },
     });
     assert.equal(resolveRes.status, 200);
 
     // Verify review status is now removed
-    const farmerProfRes = await request(`/api/farmers/${farmerProfileId}`);
+    const farmerProfRes = await request(`/api/farmers/${farmerProfileId}`, {
+      headers: { Authorization: `Bearer ${customerToken}` },
+    });
     assert.equal(farmerProfRes.status, 200);
     const farmerData = await farmerProfRes.json();
     // Rating sum/count should have rolled back

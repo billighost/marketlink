@@ -185,7 +185,7 @@ export async function updateFarmerProfile(userId, updates) {
   }
 
   if (updates.marketIds !== undefined) {
-    await syncFarmerMarkets(farmer._id, updates.marketIds, farmer.marketIds, { db });
+    await syncFarmerMarkets(farmer._id, updates.marketIds, farmer.marketIds || [], { db });
   }
 
   // Clear slots cache so upcoming slots reflect changes

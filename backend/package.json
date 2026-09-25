@@ -19,6 +19,7 @@
     "migrate:uploads": "node scripts/migrate-uploads-to-cloudinary.js",
     "verify:data": "node scripts/verify-data.js",
     "export:json": "node scripts/export-json.js",
+    "profile:report": "node scripts/profile-report.js",
     "smoke": "powershell -ExecutionPolicy Bypass -File scripts/smoke.ps1",
     "prove:api": "node scripts/prove-api.js"
   },

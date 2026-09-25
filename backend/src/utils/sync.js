@@ -194,13 +194,13 @@ export async function syncFarmerStallInfo(farmerId, { stallName, stallNumber }, 
  * @param {object} [options]
  * @returns {Promise<{ productsUpdatedCount: number, marketsUpdatedCount: number }>}
  */
-export async function syncFarmerMarkets(farmerId, newMarketIds, oldMarketIds = [], { db: dbInstance } = {}) {
+export async function syncFarmerMarkets(farmerId, newMarketIds, oldMarketIds = null, { db: dbInstance } = {}) {
   const db = dbInstance || getDb();
   const fid = toObjectId(farmerId);
 
   const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: fid });
   const isListed = farmer?.listingEnabled ?? false;
-  const currentOldMarketIds = oldMarketIds.length > 0 ? oldMarketIds : (farmer?.marketIds || []);
+  const currentOldMarketIds = Array.isArray(oldMarketIds) ? oldMarketIds : (farmer?.marketIds || []);
 
   const oldStrs = new Set(currentOldMarketIds.map((id) => id.toString()));
   const newStrs = new Set((newMarketIds || []).map((id) => id.toString()));
