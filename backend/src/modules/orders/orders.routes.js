@@ -4,10 +4,7 @@
  */
 
 import { Router } from 'express';
-import { requireAuth, requireRole } from '../../middleware/auth.js';
-import { checkoutRateLimiter, reviewRateLimiter } from '../../middleware/rateLimits.js';
-import { ROLES } from '../../constants.js';
-import { isValidObjectId, toObjectId } from '../../utils/ids.js';
+import { isValidObjectId } from '../../utils/ids.js';
 import {
   rejectUnknownFields,
   validateInteger,
@@ -24,386 +21,428 @@ import {
   cancelCustomerOrder,
   getReorderPreview,
 } from './orders.service.js';
+import { defineRoutes } from '../../utils/defineRoutes.js';
 
 export const ordersRouter = Router();
 
-// POST /orders/checkout (Customer only, Idempotency-Key required)
-ordersRouter.post(
-  '/checkout',
-  requireAuth,
-  requireRole(ROLES.CUSTOMER),
-  checkoutRateLimiter,
-  async (req, res) => {
-    // Validate Idempotency-Key header (8..64 chars [A-Za-z0-9-])
-    const rawKey = req.headers['idempotency-key'];
-    if (!rawKey || typeof rawKey !== 'string') {
-      throw AppError.unprocessable([
-        { field: 'idempotency-key', message: 'Idempotency-Key header is required.' },
-      ]);
-    }
-
-    const idempotencyKey = rawKey.trim();
-    if (
-      idempotencyKey.length < 8 ||
-      idempotencyKey.length > 64 ||
-      !/^[A-Za-z0-9-]+$/.test(idempotencyKey)
-    ) {
-      throw AppError.unprocessable([
-        {
-          field: 'idempotency-key',
-          message: 'Idempotency-Key must be 8-64 alphanumeric characters or hyphens.',
-        },
-      ]);
-    }
-
-    rejectUnknownFields(req.body, ['groups']);
-    const details = [];
-
-    if (!req.body || !Array.isArray(req.body.groups)) {
-      throw AppError.unprocessable([{ field: 'groups', message: 'groups must be an array.' }]);
-    }
-
-    const { groups } = req.body;
-    if (groups.length < 1 || groups.length > 10) {
-      throw AppError.unprocessable([
-        { field: 'groups', message: 'groups must contain between 1 and 10 vendor orders.' },
-      ]);
-    }
-
-    const validatedGroups = [];
-
-    for (let gIdx = 0; gIdx < groups.length; gIdx++) {
-      const g = groups[gIdx];
-      if (typeof g !== 'object' || g === null || Array.isArray(g)) {
-        details.push({ field: `groups[${gIdx}]`, message: 'group must be an object.' });
-        continue;
+const routes = [
+  // POST /orders/checkout (Customer only, Idempotency-Key required)
+  {
+    method: 'post',
+    path: '/checkout',
+    auth: 'customer',
+    limiter: 'checkout',
+    summary: 'Submit pre-order checkout with idempotency',
+    body: 'checkout',
+    handler: async (req, res) => {
+      // Validate Idempotency-Key header (8..64 chars [A-Za-z0-9-])
+      const rawKey = req.headers['idempotency-key'];
+      if (!rawKey || typeof rawKey !== 'string') {
+        throw AppError.unprocessable([
+          { field: 'idempotency-key', message: 'Idempotency-Key header is required.' },
+        ]);
       }
 
-      rejectUnknownFields(g, ['farmerId', 'slotStart', 'note', 'items']);
-
-      if (!g.farmerId || !isValidObjectId(g.farmerId)) {
-        details.push({ field: `groups[${gIdx}].farmerId`, message: 'farmerId must be a valid identifier.' });
+      const idempotencyKey = rawKey.trim();
+      if (
+        idempotencyKey.length < 8 ||
+        idempotencyKey.length > 64 ||
+        !/^[A-Za-z0-9-]+$/.test(idempotencyKey)
+      ) {
+        throw AppError.unprocessable([
+          {
+            field: 'idempotency-key',
+            message: 'Idempotency-Key must be 8-64 alphanumeric characters or hyphens.',
+          },
+        ]);
       }
 
-      const slotStartDate = validateDate(g.slotStart, `groups[${gIdx}].slotStart`, details, { required: true });
+      rejectUnknownFields(req.body, ['groups']);
+      const details = [];
 
-      const note = validateString(g.note, `groups[${gIdx}].note`, details, {
-        required: false,
-        max: 200,
-      });
-
-      if (!Array.isArray(g.items) || g.items.length < 1 || g.items.length > 30) {
-        details.push({ field: `groups[${gIdx}].items`, message: 'items must contain 1-30 items.' });
-        continue;
+      if (!req.body || !Array.isArray(req.body.groups)) {
+        throw AppError.unprocessable([{ field: 'groups', message: 'groups must be an array.' }]);
       }
 
-      const seenProducts = new Set();
-      const validatedItems = [];
+      const { groups } = req.body;
+      if (groups.length < 1 || groups.length > 10) {
+        throw AppError.unprocessable([
+          { field: 'groups', message: 'groups must contain between 1 and 10 vendor orders.' },
+        ]);
+      }
 
-      for (let iIdx = 0; iIdx < g.items.length; iIdx++) {
-        const item = g.items[iIdx];
-        if (typeof item !== 'object' || item === null || Array.isArray(item)) {
-          details.push({ field: `groups[${gIdx}].items[${iIdx}]`, message: 'item must be an object.' });
+      const validatedGroups = [];
+
+      for (let gIdx = 0; gIdx < groups.length; gIdx++) {
+        const g = groups[gIdx];
+        if (typeof g !== 'object' || g === null || Array.isArray(g)) {
+          details.push({ field: `groups[${gIdx}]`, message: 'group must be an object.' });
           continue;
         }
 
-        rejectUnknownFields(item, ['productId', 'quantity']);
+        rejectUnknownFields(g, ['farmerId', 'slotStart', 'note', 'items']);
 
-        if (!item.productId || !isValidObjectId(item.productId)) {
-          details.push({
-            field: `groups[${gIdx}].items[${iIdx}].productId`,
-            message: 'productId must be a valid identifier.',
-          });
-        } else {
-          const pidStr = item.productId.toString();
-          if (seenProducts.has(pidStr)) {
+        if (!g.farmerId || !isValidObjectId(g.farmerId)) {
+          details.push({ field: `groups[${gIdx}].farmerId`, message: 'farmerId must be a valid identifier.' });
+        }
+
+        const slotStartDate = validateDate(g.slotStart, `groups[${gIdx}].slotStart`, details, { required: true });
+
+        const note = validateString(g.note, `groups[${gIdx}].note`, details, {
+          required: false,
+          max: 200,
+        });
+
+        if (!Array.isArray(g.items) || g.items.length < 1 || g.items.length > 30) {
+          details.push({ field: `groups[${gIdx}].items`, message: 'items must contain 1-30 items.' });
+          continue;
+        }
+
+        const seenProducts = new Set();
+        const validatedItems = [];
+
+        for (let iIdx = 0; iIdx < g.items.length; iIdx++) {
+          const item = g.items[iIdx];
+          if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+            details.push({ field: `groups[${gIdx}].items[${iIdx}]`, message: 'item must be an object.' });
+            continue;
+          }
+
+          rejectUnknownFields(item, ['productId', 'quantity']);
+
+          if (!item.productId || !isValidObjectId(item.productId)) {
             details.push({
               field: `groups[${gIdx}].items[${iIdx}].productId`,
-              message: 'duplicate productId in order group.',
+              message: 'productId must be a valid identifier.',
             });
           } else {
-            seenProducts.add(pidStr);
+            const pidStr = item.productId.toString();
+            if (seenProducts.has(pidStr)) {
+              details.push({
+                field: `groups[${gIdx}].items[${iIdx}].productId`,
+                message: 'duplicate productId in order group.',
+              });
+            } else {
+              seenProducts.add(pidStr);
+            }
           }
+
+          const quantity = validateInteger(
+            item.quantity,
+            `groups[${gIdx}].items[${iIdx}].quantity`,
+            details,
+            { required: true, min: 1, max: 20 }
+          );
+
+          validatedItems.push({
+            productId: item.productId,
+            quantity,
+          });
         }
 
-        const quantity = validateInteger(
-          item.quantity,
-          `groups[${gIdx}].items[${iIdx}].quantity`,
-          details,
-          { required: true, min: 1, max: 20 }
-        );
-
-        validatedItems.push({
-          productId: item.productId,
-          quantity,
+        validatedGroups.push({
+          farmerId: g.farmerId,
+          slotStart: slotStartDate ? slotStartDate.toISOString() : undefined,
+          note: note || '',
+          items: validatedItems,
         });
       }
 
-      validatedGroups.push({
-        farmerId: g.farmerId,
-        slotStart: slotStartDate ? slotStartDate.toISOString() : undefined,
-        note: note || '',
-        items: validatedItems,
+      assertValid(details);
+
+      const result = await processCheckout({
+        user: req.user,
+        idempotencyKey,
+        groups: validatedGroups,
+        reqId: req.id,
       });
-    }
 
-    assertValid(details);
-
-    const result = await processCheckout({
-      user: req.user,
-      idempotencyKey,
-      groups: validatedGroups,
-      reqId: req.id,
-    });
-
-    res.status(result.statusCode).json({
-      data: result.data,
-    });
-  }
-);
-
-// GET /orders (Customer order list)
-ordersRouter.get('/', requireAuth, requireRole(ROLES.CUSTOMER), async (req, res) => {
-  const { tab = 'active', cursor, limit = 10 } = req.query;
-
-  if (tab !== 'active' && tab !== 'past') {
-    throw AppError.unprocessable([
-      { field: 'tab', message: "tab must be either 'active' or 'past'." },
-    ]);
-  }
-
-  const result = await listCustomerOrders(req.user.id, { tab, cursor, limit });
-
-  res.status(200).json({
-    data: result.orders,
-    meta: {
-      nextCursor: result.nextCursor,
-      limit: result.limit,
+      res.status(result.statusCode).json({
+        data: result.data,
+      });
     },
-  });
-});
+  },
 
-// GET /orders/:id (Customer order detail)
-ordersRouter.get('/:id', requireAuth, requireRole(ROLES.CUSTOMER), async (req, res) => {
-  if (!isValidObjectId(req.params.id)) {
-    throw AppError.notFound('Order not found.');
-  }
+  // GET /orders (Customer order list)
+  {
+    method: 'get',
+    path: '/',
+    auth: 'customer',
+    summary: 'List customer orders with tab filtering and keyset pagination',
+    handler: async (req, res) => {
+      const { tab = 'active', cursor, limit = 10 } = req.query;
 
-  const orderDetail = await getCustomerOrderDetail(req.params.id, req.user.id);
+      if (tab !== 'active' && tab !== 'past') {
+        throw AppError.unprocessable([
+          { field: 'tab', message: "tab must be either 'active' or 'past'." },
+        ]);
+      }
 
-  res.status(200).json({
-    data: orderDetail,
-  });
-});
+      const result = await listCustomerOrders(req.user.id, { tab, cursor, limit });
 
-// PATCH /orders/:id (Modify order before cutoff)
-ordersRouter.patch('/:id', requireAuth, requireRole(ROLES.CUSTOMER), async (req, res) => {
-  if (!isValidObjectId(req.params.id)) {
-    throw AppError.notFound('Order not found.');
-  }
+      res.status(200).json({
+        data: result.orders,
+        meta: {
+          nextCursor: result.nextCursor,
+          limit: result.limit,
+        },
+      });
+    },
+  },
 
-  rejectUnknownFields(req.body, ['items', 'note', 'slotStart']);
+  // GET /orders/:id (Customer order detail)
+  {
+    method: 'get',
+    path: '/:id',
+    auth: 'customer',
+    summary: 'Get customer order detail by ID',
+    handler: async (req, res) => {
+      if (!isValidObjectId(req.params.id)) {
+        throw AppError.notFound('Order not found.');
+      }
 
-  if (
-    req.body.items === undefined &&
-    req.body.note === undefined &&
-    req.body.slotStart === undefined
-  ) {
-    throw AppError.unprocessable([
-      { field: 'body', message: 'At least one of items, note, or slotStart must be provided.' },
-    ]);
-  }
+      const orderDetail = await getCustomerOrderDetail(req.params.id, req.user.id);
 
-  const details = [];
-  const updates = {};
+      res.status(200).json({
+        data: orderDetail,
+      });
+    },
+  },
 
-  if (req.body.items !== undefined) {
-    if (!Array.isArray(req.body.items)) {
-      details.push({ field: 'items', message: 'items must be an array.' });
-    } else {
-      const validatedItems = [];
-      const seenProductIds = new Set();
+  // PATCH /orders/:id (Modify order before cutoff)
+  {
+    method: 'patch',
+    path: '/:id',
+    auth: 'customer',
+    summary: 'Modify order items, note, or pickup slot before cutoff',
+    body: 'modifyOrder',
+    handler: async (req, res) => {
+      if (!isValidObjectId(req.params.id)) {
+        throw AppError.notFound('Order not found.');
+      }
 
-      for (let i = 0; i < req.body.items.length; i++) {
-        const it = req.body.items[i];
-        if (typeof it !== 'object' || it === null || Array.isArray(it)) {
-          details.push({ field: `items[${i}]`, message: 'item must be an object.' });
-          continue;
-        }
+      rejectUnknownFields(req.body, ['items', 'note', 'slotStart']);
 
-        rejectUnknownFields(it, ['productId', 'quantity']);
+      if (
+        req.body.items === undefined &&
+        req.body.note === undefined &&
+        req.body.slotStart === undefined
+      ) {
+        throw AppError.unprocessable([
+          { field: 'body', message: 'At least one of items, note, or slotStart must be provided.' },
+        ]);
+      }
 
-        if (!it.productId || !isValidObjectId(it.productId)) {
-          details.push({ field: `items[${i}].productId`, message: 'productId must be a valid identifier.' });
+      const details = [];
+      const updates = {};
+
+      if (req.body.items !== undefined) {
+        if (!Array.isArray(req.body.items)) {
+          details.push({ field: 'items', message: 'items must be an array.' });
         } else {
-          const pid = it.productId.toString();
-          if (seenProductIds.has(pid)) {
-            details.push({ field: `items[${i}].productId`, message: 'duplicate productId in items array.' });
-          } else {
-            seenProductIds.add(pid);
+          const validatedItems = [];
+          const seenProductIds = new Set();
+
+          for (let i = 0; i < req.body.items.length; i++) {
+            const it = req.body.items[i];
+            if (typeof it !== 'object' || it === null || Array.isArray(it)) {
+              details.push({ field: `items[${i}]`, message: 'item must be an object.' });
+              continue;
+            }
+
+            rejectUnknownFields(it, ['productId', 'quantity']);
+
+            if (!it.productId || !isValidObjectId(it.productId)) {
+              details.push({ field: `items[${i}].productId`, message: 'productId must be a valid identifier.' });
+            } else {
+              const pid = it.productId.toString();
+              if (seenProductIds.has(pid)) {
+                details.push({ field: `items[${i}].productId`, message: 'duplicate productId in items array.' });
+              } else {
+                seenProductIds.add(pid);
+              }
+            }
+
+            const qty = validateInteger(it.quantity, `items[${i}].quantity`, details, {
+              required: true,
+              min: 0,
+              max: 20,
+            });
+
+            validatedItems.push({
+              productId: it.productId,
+              quantity: qty,
+            });
+          }
+
+          updates.items = validatedItems;
+        }
+      }
+
+      if (req.body.note !== undefined) {
+        updates.note = validateString(req.body.note, 'note', details, { required: false, max: 200 });
+      }
+
+      if (req.body.slotStart !== undefined) {
+        const parsedDate = validateDate(req.body.slotStart, 'slotStart', details, { required: false });
+        if (parsedDate) {
+          updates.slotStart = parsedDate.toISOString();
+        }
+      }
+
+      assertValid(details);
+
+      const updatedDetail = await modifyCustomerOrder(req.params.id, req.user.id, updates);
+
+      res.status(200).json({
+        data: updatedDetail,
+      });
+    },
+  },
+
+  // POST /orders/:id/cancel (Customer cancel order)
+  {
+    method: 'post',
+    path: '/:id/cancel',
+    auth: 'customer',
+    summary: 'Cancel order before cutoff',
+    body: 'cancelOrder',
+    handler: async (req, res) => {
+      if (!isValidObjectId(req.params.id)) {
+        throw AppError.notFound('Order not found.');
+      }
+
+      rejectUnknownFields(req.body, ['reason']);
+
+      const details = [];
+      let reason = undefined;
+      if (req.body.reason !== undefined && req.body.reason !== null) {
+        reason = validateString(req.body.reason, 'reason', details, { required: false, max: 200 });
+      }
+      assertValid(details);
+
+      const cancelledDetail = await cancelCustomerOrder(req.params.id, req.user.id, { reason });
+
+      res.status(200).json({
+        data: cancelledDetail,
+      });
+    },
+  },
+
+  // GET /orders/:id/reorder-preview (Buy again preview)
+  {
+    method: 'get',
+    path: '/:id/reorder-preview',
+    auth: 'customer',
+    summary: 'Preview availability and pricing to rebuy items from previous order',
+    handler: async (req, res) => {
+      if (!isValidObjectId(req.params.id)) {
+        throw AppError.notFound('Order not found.');
+      }
+
+      const preview = await getReorderPreview(req.params.id, req.user.id);
+
+      res.status(200).json({
+        data: preview,
+      });
+    },
+  },
+
+  // POST /orders/:id/reviews (Customer review submission for completed order)
+  {
+    method: 'post',
+    path: '/:id/reviews',
+    auth: 'customer',
+    limiter: 'review',
+    summary: 'Submit reviews for farmer and products on completed order',
+    body: 'orderReviews',
+    handler: async (req, res) => {
+      if (!isValidObjectId(req.params.id)) {
+        throw AppError.notFound('Order not found.');
+      }
+
+      rejectUnknownFields(req.body, ['farmer', 'products']);
+      const details = [];
+
+      if (req.body.farmer === undefined && req.body.products === undefined) {
+        throw AppError.unprocessable([
+          { field: 'body', message: 'At least one of farmer or products review must be provided.' },
+        ]);
+      }
+
+      let farmerPayload = undefined;
+      if (req.body.farmer !== undefined) {
+        if (typeof req.body.farmer !== 'object' || req.body.farmer === null || Array.isArray(req.body.farmer)) {
+          details.push({ field: 'farmer', message: 'farmer review must be an object.' });
+        } else {
+          rejectUnknownFields(req.body.farmer, ['rating', 'comment']);
+          const rating = validateInteger(req.body.farmer.rating, 'farmer.rating', details, {
+            required: true,
+            min: 1,
+            max: 5,
+          });
+          const comment = validateString(req.body.farmer.comment, 'farmer.comment', details, {
+            required: false,
+            max: 1000,
+          });
+          farmerPayload = { rating, comment };
+        }
+      }
+
+      let productsPayload = undefined;
+      if (req.body.products !== undefined) {
+        if (!Array.isArray(req.body.products) || req.body.products.length === 0) {
+          details.push({ field: 'products', message: 'products must be a non-empty array.' });
+        } else {
+          productsPayload = [];
+          for (let i = 0; i < req.body.products.length; i++) {
+            const pRev = req.body.products[i];
+            if (typeof pRev !== 'object' || pRev === null || Array.isArray(pRev)) {
+              details.push({ field: `products[${i}]`, message: 'product review must be an object.' });
+              continue;
+            }
+
+            rejectUnknownFields(pRev, ['productId', 'rating', 'comment']);
+
+            if (!pRev.productId || !isValidObjectId(pRev.productId)) {
+              details.push({ field: `products[${i}].productId`, message: 'productId must be a valid identifier.' });
+            }
+
+            const rating = validateInteger(pRev.rating, `products[${i}].rating`, details, {
+              required: true,
+              min: 1,
+              max: 5,
+            });
+
+            const comment = validateString(pRev.comment, `products[${i}].comment`, details, {
+              required: false,
+              max: 1000,
+            });
+
+            productsPayload.push({
+              productId: pRev.productId,
+              rating,
+              comment,
+            });
           }
         }
-
-        const qty = validateInteger(it.quantity, `items[${i}].quantity`, details, {
-          required: true,
-          min: 0,
-          max: 20,
-        });
-
-        validatedItems.push({
-          productId: it.productId,
-          quantity: qty,
-        });
       }
 
-      updates.items = validatedItems;
-    }
-  }
+      assertValid(details);
 
-  if (req.body.note !== undefined) {
-    updates.note = validateString(req.body.note, 'note', details, { required: false, max: 200 });
-  }
-
-  if (req.body.slotStart !== undefined) {
-    const parsedDate = validateDate(req.body.slotStart, 'slotStart', details, { required: false });
-    if (parsedDate) {
-      updates.slotStart = parsedDate.toISOString();
-    }
-  }
-
-  assertValid(details);
-
-  const updatedDetail = await modifyCustomerOrder(req.params.id, req.user.id, updates);
-
-  res.status(200).json({
-    data: updatedDetail,
-  });
-});
-
-// POST /orders/:id/cancel (Customer cancel order)
-ordersRouter.post('/:id/cancel', requireAuth, requireRole(ROLES.CUSTOMER), async (req, res) => {
-  if (!isValidObjectId(req.params.id)) {
-    throw AppError.notFound('Order not found.');
-  }
-
-  rejectUnknownFields(req.body, ['reason']);
-
-  const details = [];
-  let reason = undefined;
-  if (req.body.reason !== undefined && req.body.reason !== null) {
-    reason = validateString(req.body.reason, 'reason', details, { required: false, max: 200 });
-  }
-  assertValid(details);
-
-  const cancelledDetail = await cancelCustomerOrder(req.params.id, req.user.id, { reason });
-
-  res.status(200).json({
-    data: cancelledDetail,
-  });
-});
-
-// GET /orders/:id/reorder-preview (Buy again preview)
-ordersRouter.get('/:id/reorder-preview', requireAuth, requireRole(ROLES.CUSTOMER), async (req, res) => {
-  if (!isValidObjectId(req.params.id)) {
-    throw AppError.notFound('Order not found.');
-  }
-
-  const preview = await getReorderPreview(req.params.id, req.user.id);
-
-  res.status(200).json({
-    data: preview,
-  });
-});
-
-// POST /orders/:id/reviews (Customer review submission for completed order)
-ordersRouter.post(
-  '/:id/reviews',
-  reviewRateLimiter,
-  requireAuth,
-  requireRole(ROLES.CUSTOMER),
-  async (req, res) => {
-  if (!isValidObjectId(req.params.id)) {
-    throw AppError.notFound('Order not found.');
-  }
-
-  rejectUnknownFields(req.body, ['farmer', 'products']);
-  const details = [];
-
-  if (req.body.farmer === undefined && req.body.products === undefined) {
-    throw AppError.unprocessable([
-      { field: 'body', message: 'At least one of farmer or products review must be provided.' },
-    ]);
-  }
-
-  let farmerPayload = undefined;
-  if (req.body.farmer !== undefined) {
-    if (typeof req.body.farmer !== 'object' || req.body.farmer === null || Array.isArray(req.body.farmer)) {
-      details.push({ field: 'farmer', message: 'farmer review must be an object.' });
-    } else {
-      rejectUnknownFields(req.body.farmer, ['rating', 'comment']);
-      const rating = validateInteger(req.body.farmer.rating, 'farmer.rating', details, {
-        required: true,
-        min: 1,
-        max: 5,
+      const { createOrderReviews } = await import('../reviews/reviews.service.js');
+      const reviews = await createOrderReviews(req.params.id, req.user.id, {
+        farmer: farmerPayload,
+        products: productsPayload,
       });
-      const comment = validateString(req.body.farmer.comment, 'farmer.comment', details, {
-        required: false,
-        max: 1000,
+
+      res.status(201).json({
+        data: {
+          reviews,
+        },
       });
-      farmerPayload = { rating, comment };
-    }
-  }
-
-  let productsPayload = undefined;
-  if (req.body.products !== undefined) {
-    if (!Array.isArray(req.body.products) || req.body.products.length === 0) {
-      details.push({ field: 'products', message: 'products must be a non-empty array.' });
-    } else {
-      productsPayload = [];
-      for (let i = 0; i < req.body.products.length; i++) {
-        const pRev = req.body.products[i];
-        if (typeof pRev !== 'object' || pRev === null || Array.isArray(pRev)) {
-          details.push({ field: `products[${i}]`, message: 'product review must be an object.' });
-          continue;
-        }
-
-        rejectUnknownFields(pRev, ['productId', 'rating', 'comment']);
-
-        if (!pRev.productId || !isValidObjectId(pRev.productId)) {
-          details.push({ field: `products[${i}].productId`, message: 'productId must be a valid identifier.' });
-        }
-
-        const rating = validateInteger(pRev.rating, `products[${i}].rating`, details, {
-          required: true,
-          min: 1,
-          max: 5,
-        });
-
-        const comment = validateString(pRev.comment, `products[${i}].comment`, details, {
-          required: false,
-          max: 1000,
-        });
-
-        productsPayload.push({
-          productId: pRev.productId,
-          rating,
-          comment,
-        });
-      }
-    }
-  }
-
-  assertValid(details);
-
-  const { createOrderReviews } = await import('../reviews/reviews.service.js');
-  const reviews = await createOrderReviews(req.params.id, req.user.id, {
-    farmer: farmerPayload,
-    products: productsPayload,
-  });
-
-  res.status(201).json({
-    data: {
-      reviews,
     },
-  });
-});
+  },
+];
+
+defineRoutes(ordersRouter, 'orders', routes, { basePath: '/api/orders' });

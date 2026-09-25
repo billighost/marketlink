@@ -67,6 +67,13 @@ export async function getAdminOverview() {
       markets: marketsCount,
       orders: ordersCount,
     },
+    metrics: {
+      totalUsers: farmersCount + customersCount,
+      farmers: farmersCount,
+      customers: customersCount,
+      markets: marketsCount,
+      orders: ordersCount,
+    },
     pendingFarmers,
     openFlags,
     unhandledMessages,

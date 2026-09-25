@@ -6,11 +6,21 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "db:check": "node scripts/db-check.js",
     "seed": "node src/db/seed.js",
+    "seed:minimal": "node src/db/seedMinimal.js",
+    "seed:large": "node src/db/seedLarge.js",
+    "routes": "node scripts/routes.js",
+    "loadtest": "node scripts/loadtest.js",
     "indexes": "node -e \"import('./src/config/env.js').then(() => import('./src/db/client.js')).then(({ connectDb, getDb, closeDb }) => connectDb().then(() => import('./src/db/indexes.js')).then(({ ensureIndexes }) => ensureIndexes(getDb())).then(() => { console.log('Indexes created successfully.'); return closeDb(); })).catch(err => { console.error(err); process.exit(1); })\"",
     "test": "node -e \"process.env.DB_NAME='marketlink_test'; process.env.NODE_ENV='test'; import('./src/config/env.js').then(() => import('./src/db/seed.js')).then(({ runSeed }) => runSeed(true)).then(() => import('./src/db/client.js')).then(({ closeDb }) => closeDb(true))\" && node --test --test-concurrency=1 tests/*.test.js",
+    "test:storage": "node scripts/test-storage.js",
+    "jobs:media": "node scripts/media-cleanup.js",
+    "migrate:uploads": "node scripts/migrate-uploads-to-cloudinary.js",
     "verify:data": "node scripts/verify-data.js",
-    "smoke": "powershell -ExecutionPolicy Bypass -File scripts/smoke.ps1"
+    "export:json": "node scripts/export-json.js",
+    "smoke": "powershell -ExecutionPolicy Bypass -File scripts/smoke.ps1",
+    "prove:api": "node scripts/prove-api.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

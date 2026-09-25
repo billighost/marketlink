@@ -101,19 +101,48 @@ Health check endpoint: `http://localhost:4000/api/health`.
 
 ---
 
-## 6. Running Tests & Smoke Verification
-
 ```bash
-# Run all automated tests (node:test against marketlink_test database)
+# 1. Run all automated tests (using isolated memory driver against marketlink_test database)
 npm test
 
-# Run manual smoke test against a running local server
-# Windows (PowerShell):
+# 2. Run targeted Cloudinary / storage unit tests
+node --test tests/safetyGuard.test.js tests/storage.test.js tests/uploads.test.js
+
+# 3. Test real Cloudinary connection (upload, fetch, variant transformation, and delete)
+npm run test:storage
+
+# 4. Run automated 39-step end-to-end API smoke test against running server
 npm run smoke
 
-# Linux / macOS:
-bash scripts/smoke.sh
+# 5. Run live API proof script (authentication, catalog read, Cloudinary upload & attachment)
+npm run prove:api
+
+# 6. Verify data integrity across 12 relational invariants
+npm run verify:data
+# Automatically fix any orphan records:
+npm run verify:data -- --fix
 ```
+
+---
+
+## 7. Cloudinary & Media Storage Architecture
+
+MarketLink supports three pluggable storage drivers configured via `STORAGE_DRIVER`:
+1. `cloudinary` (Production & Development): Secure direct signed streaming uploads to Cloudinary with dynamic transformation variants (`card`, `detail`, `thumb`).
+2. `local` (Offline fallback): Serves local files from `uploads/` directory with strict dotfile/directory traversal guards.
+3. `memory` (Test double): Ephemeral in-memory Map driver used automatically during test runs for fast, isolated testing without network overhead.
+
+### Media Scripts:
+- `npm run jobs:media`: Cleanup job that scans `mediaUploads` and purges unattached uploads older than 24 hours.
+- `npm run migrate:uploads`: One-way idempotent migration utility to migrate local disk assets to Cloudinary.
+
+---
+
+## 8. Database Safety Guard & Atlas Connectivity
+
+- **Safety Guard**: Destructive operations (`dropDatabase`, `seed` without `--force`, test teardowns) strictly verify the database name against `_test` suffix or explicit developer flags.
+- **URI Masking**: Sensitive passwords, replica set keys, and API secrets are automatically masked in console outputs and server logs (`maskUri.js`).
+- **Atlas Verification**: Run `npm run db:check` at any time to verify SSL/TLS replica set connectivity, schema validation, compound/geospatial/text indexes, and write round-trip latency.
 
 ---
 

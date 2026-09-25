@@ -5,19 +5,29 @@
 
 import { Router } from 'express';
 import { listCategories } from './categories.service.js';
+import { defineRoutes } from '../../utils/defineRoutes.js';
 
 export const categoriesRouter = Router();
 
-/**
- * GET /api/categories
- * Returns active taxonomy with cached product counts.
- */
-categoriesRouter.get('/', async (req, res, next) => {
-  try {
-    const data = await listCategories();
-    res.set('Cache-Control', 'public, max-age=60');
-    return res.json({ data });
-  } catch (err) {
-    next(err);
-  }
-});
+defineRoutes(
+  categoriesRouter,
+  'categories',
+  [
+    {
+      method: 'get',
+      path: '/',
+      auth: 'public',
+      summary: 'List active product categories with product counts',
+      handler: async (req, res, next) => {
+        try {
+          const data = await listCategories();
+          res.set('Cache-Control', 'public, max-age=60');
+          return res.json({ data });
+        } catch (err) {
+          next(err);
+        }
+      },
+    },
+  ],
+  { basePath: '/api/categories' }
+);

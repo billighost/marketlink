@@ -4,6 +4,8 @@
  */
 
 import dotenv from 'dotenv';
+import path from 'node:path';
+import fs from 'node:fs';
 
 // Load .env file
 dotenv.config();
@@ -26,9 +28,55 @@ if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
 }
 
 const nodeEnv = process.env.NODE_ENV || 'development';
+const isProduction = nodeEnv === 'production';
+const isTest = nodeEnv === 'test';
+const isDevelopment = nodeEnv === 'development';
+
+const testDbName = process.env.TEST_DB_NAME || 'marketlink_test';
+const dbName = isTest ? testDbName : (process.env.DB_NAME || 'marketlink');
+
+// ── Storage Driver Configuration ──
+const hasCloudinaryCreds = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+let storageDriver = process.env.STORAGE_DRIVER;
+if (isTest) {
+  storageDriver = process.env.TEST_STORAGE_DRIVER || 'memory';
+} else if (!storageDriver) {
+  if (hasCloudinaryCreds) {
+    storageDriver = 'cloudinary';
+  } else {
+    storageDriver = 'local';
+  }
+}
+
+const validDrivers = ['cloudinary', 'local', 'memory'];
+if (!validDrivers.includes(storageDriver)) {
+  throw new Error(`[Config Error] Invalid STORAGE_DRIVER "${storageDriver}". Must be one of: ${validDrivers.join(', ')}`);
+}
+
+if (isProduction && storageDriver !== 'cloudinary') {
+  throw new Error("[Config Error] In production, STORAGE_DRIVER must be 'cloudinary' and all Cloudinary credentials must be set.");
+}
+
+if (storageDriver === 'cloudinary') {
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !/^[a-z0-9_-]+$/i.test(process.env.CLOUDINARY_CLOUD_NAME)) {
+    throw new Error('[Config Error] CLOUDINARY_CLOUD_NAME must be set and match [a-z0-9_-]+');
+  }
+  if (!process.env.CLOUDINARY_API_KEY || !/^\d+$/.test(process.env.CLOUDINARY_API_KEY)) {
+    throw new Error('[Config Error] CLOUDINARY_API_KEY must be set and contain digits only');
+  }
+  if (!process.env.CLOUDINARY_API_SECRET) {
+    throw new Error('[Config Error] CLOUDINARY_API_SECRET must be set');
+  }
+}
+
+const cloudinaryFolder = process.env.CLOUDINARY_FOLDER || 'marketlink';
 const port = parseInt(process.env.PORT || '4000', 10);
 const mongodbUri = process.env.MONGODB_URI;
-const dbName = process.env.DB_NAME || (nodeEnv === 'test' ? 'marketlink_test' : 'marketlink');
 const jwtSecret = process.env.JWT_SECRET;
 const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000')
   .split(',')
@@ -36,21 +84,22 @@ const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://l
   .filter(Boolean);
 const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:5173';
 const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
-const trustProxy = process.env.TRUST_PROXY === 'true' ? true : false;
-import path from 'node:path';
-import fs from 'node:fs';
-
+const trustProxy = process.env.TRUST_PROXY === 'true';
 const logSlowMs = parseInt(process.env.LOG_SLOW_MS || '150', 10);
+const latencyAllowanceMs = parseInt(process.env.LATENCY_ALLOWANCE_MS || '0', 10);
+
 const uploadDir =
   process.env.UPLOAD_DIR ||
   (fs.existsSync(path.resolve(process.cwd(), 'backend'))
     ? path.resolve(process.cwd(), 'backend/uploads')
     : path.resolve(process.cwd(), 'uploads'));
 
-try {
-  fs.mkdirSync(uploadDir, { recursive: true });
-} catch {
-  // directory already exists or creation deferred
+if (storageDriver === 'local') {
+  try {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  } catch {
+    // directory already exists or creation deferred
+  }
 }
 
 export const env = {
@@ -58,14 +107,21 @@ export const env = {
   PORT: port,
   MONGODB_URI: mongodbUri,
   DB_NAME: dbName,
+  TEST_DB_NAME: testDbName,
   JWT_SECRET: jwtSecret,
   CORS_ORIGINS: corsOrigins,
   APP_BASE_URL: appBaseUrl,
   RATE_LIMIT_DISABLED: rateLimitDisabled,
   TRUST_PROXY: trustProxy,
   LOG_SLOW_MS: logSlowMs,
+  LATENCY_ALLOWANCE_MS: latencyAllowanceMs,
+  STORAGE_DRIVER: storageDriver,
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
+  CLOUDINARY_FOLDER: cloudinaryFolder,
   UPLOAD_DIR: uploadDir,
-  isProduction: nodeEnv === 'production',
-  isTest: nodeEnv === 'test',
-  isDevelopment: nodeEnv === 'development',
+  isProduction,
+  isTest,
+  isDevelopment,
 };

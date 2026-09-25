@@ -9,10 +9,12 @@ import http from 'node:http';
 process.env.NODE_ENV = 'test';
 process.env.DB_NAME = 'marketlink_test';
 process.env.RATE_LIMIT_DISABLED = 'true';
+process.env.STORAGE_DRIVER = 'memory';
 
 import { connectDb, closeDb, getDb } from '../src/db/client.js';
 import { createApp } from '../src/app.js';
 import { runSeed } from '../src/db/seed.js';
+import { assertSafeDatabase } from '../src/db/safetyGuard.js';
 
 let testServerInstance = null;
 let testBaseUrl = '';
@@ -25,11 +27,17 @@ let testBaseUrl = '';
  */
 export async function setupTestEnvironment() {
   process.env.NODE_ENV = 'test';
-  process.env.DB_NAME = 'marketlink_test';
+  const testDbName = process.env.TEST_DB_NAME || 'marketlink_test';
+  process.env.DB_NAME = testDbName;
   process.env.RATE_LIMIT_DISABLED = 'true';
+  process.env.STORAGE_DRIVER = 'memory';
 
-  // 1. Connect to marketlink_test database and ensure seeded once
-  const db = await connectDb(process.env.MONGODB_URI, 'marketlink_test');
+  assertSafeDatabase(testDbName, process.env.MONGODB_URI, 'test database setup', {
+    nodeEnv: 'test',
+  });
+
+  // 1. Connect to test database and ensure seeded once
+  const db = await connectDb(process.env.MONGODB_URI, testDbName);
   const userCount = await db.collection('users').countDocuments();
   if (userCount === 0) {
     await runSeed(true);
@@ -118,3 +126,21 @@ export async function loginUser(email, password = 'market123') {
     user: body.data.user,
   };
 }
+
+let cachedDbLatency = null;
+/**
+ * Measures single round-trip ping latency to database.
+ * Returns ~0ms on local MongoDB and ~100-200ms on remote Atlas clusters.
+ */
+export async function getDbLatency(db) {
+  if (cachedDbLatency !== null) return cachedDbLatency;
+  try {
+    const t0 = performance.now();
+    await db.command({ ping: 1 });
+    cachedDbLatency = Math.round(performance.now() - t0);
+  } catch {
+    cachedDbLatency = 0;
+  }
+  return cachedDbLatency;
+}
+

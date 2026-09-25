@@ -13,6 +13,7 @@ import { env } from '../config/env.js';
 import { connectDb, closeDb } from './client.js';
 import { COLLECTIONS, createCollections } from './collections.js';
 import { ensureIndexes } from './indexes.js';
+import { assertSafeDatabase } from './safetyGuard.js';
 import {
   getNextWeekday,
   getPastWeekday,
@@ -35,19 +36,24 @@ export function createMulberry32(seed = 123456789) {
   };
 }
 
-export async function runSeed(force = false) {
-  // Safety check: Never run in production without explicit --force
-  if (env.isProduction && !force && !process.argv.includes('--force')) {
-    console.error('[SEED ERROR] Refusing to run seed in production environment without --force flag.');
-    process.exit(1);
-  }
+export async function runSeed(force = false, targetDb = null) {
+  const hasForce = force || process.argv.includes('--force');
+  const targetDbName = process.env.DB_NAME || env.DB_NAME;
+  const isExplicitDevSeed = env.isDevelopment || targetDbName === 'marketlink_test';
+
+  // Run safety guard check before touching any database
+  assertSafeDatabase(targetDbName, env.MONGODB_URI, 'seed reset', {
+    isExplicitDevSeed,
+    nodeEnv: env.NODE_ENV,
+    force: hasForce,
+  });
 
   const startTime = Date.now();
   console.log(`\n======================================================`);
-  console.log(`🌱  Starting MarketLink Database Seed (${env.NODE_ENV})...`);
+  console.log(`🌱  Starting MarketLink Database Seed on "${targetDbName}" (${env.NODE_ENV})...`);
   console.log(`======================================================\n`);
 
-  const db = await connectDb();
+  const db = targetDb || (await connectDb(env.MONGODB_URI, targetDbName));
 
   // 1. Drop existing collections to ensure a fresh, clean slate
   const existingCollections = await db.listCollections().toArray();
@@ -578,6 +584,7 @@ export async function runSeed(force = false) {
       },
       art: f.art,
       imageUrl: null,
+      imagePublicId: null,
       slotOverrides: [],
       maxOrdersPerSlot: 30,
       listingEnabled: f.status === 'active',
@@ -708,6 +715,7 @@ export async function runSeed(force = false) {
       tags: def.tags,
       art: def.art,
       imageUrl: null,
+      imagePublicId: null,
       weekly: {
         enabled: true,
         defaultQty: def.qty + 10,

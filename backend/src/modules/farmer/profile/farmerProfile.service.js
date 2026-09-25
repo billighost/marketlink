@@ -12,6 +12,7 @@ import { AppError } from '../../../utils/errors.js';
 import { clearSlotsCache } from '../../../utils/slots.js';
 import { syncFarmerStallInfo, syncFarmerMarkets } from '../../../utils/sync.js';
 import { env } from '../../../config/env.js';
+import { validateAndAttachImage } from '../../uploads/attachHelper.js';
 
 /**
  * Retrieves the farmer profile for an authenticated user.
@@ -138,24 +139,22 @@ export async function updateFarmerProfile(userId, updates) {
     }
   }
 
-  // Validate imageUrl if supplied
-  if (updates.imageUrl !== undefined && updates.imageUrl !== null) {
-    if (typeof updates.imageUrl !== 'string' || !updates.imageUrl.startsWith('/uploads/')) {
-      throw AppError.unprocessable([
-        { field: 'imageUrl', message: "imageUrl must start with '/uploads/'." },
-      ]);
-    }
-    const filename = updates.imageUrl.replace(/^\/uploads\//, '');
-    const filePath = path.join(env.UPLOAD_DIR, filename);
-    if (!fs.existsSync(filePath)) {
-      throw AppError.unprocessable([
-        { field: 'imageUrl', message: 'Uploaded image file does not exist on server.' },
-      ]);
-    }
-  }
-
   // Format location as GeoJSON Point if supplied
   const docUpdates = { ...updates, updatedAt: new Date() };
+
+  // Validate imageUrl if supplied
+  if (updates.imageUrl !== undefined) {
+    const attachRes = await validateAndAttachImage({
+      db,
+      imageUrl: updates.imageUrl,
+      imagePublicId: updates.imagePublicId,
+      ownerUserId: uid,
+      attachTo: { type: 'farmer', id: farmer._id },
+      oldPublicId: farmer.imagePublicId,
+    });
+    docUpdates.imageUrl = attachRes.imageUrl;
+    docUpdates.imagePublicId = attachRes.imagePublicId;
+  }
   if (updates.location && typeof updates.location.lat === 'number' && typeof updates.location.lng === 'number') {
     docUpdates.location = {
       type: 'Point',

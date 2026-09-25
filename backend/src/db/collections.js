@@ -44,6 +44,7 @@ export const COLLECTIONS = {
   AUDIT_LOG: 'auditLog',
   REPORTS: 'reports',
   SETTINGS: 'settings',
+  MEDIA_UPLOADS: 'mediaUploads',
 };
 
 export const SCHEMAS = {
@@ -65,6 +66,8 @@ export const SCHEMAS = {
         createdAt: { bsonType: 'date' },
         updatedAt: { bsonType: 'date' },
         lastLoginAt: { bsonType: 'date' },
+        failedLogins: { bsonType: ['int', 'number'] },
+        lockUntil: { bsonType: ['date', 'null'] },
       },
     },
   },
@@ -101,6 +104,7 @@ export const SCHEMAS = {
         categorySlugs: { bsonType: 'array' },
         ratingSum: { bsonType: ['int', 'number'] },
         imageUrl: { bsonType: ['string', 'null'] },
+        imagePublicId: { bsonType: ['string', 'null'] },
         slotOverrides: { bsonType: 'array' },
         maxOrdersPerSlot: { bsonType: ['int', 'number'] },
         createdAt: { bsonType: 'date' },
@@ -166,6 +170,7 @@ export const SCHEMAS = {
         tags: { bsonType: 'array' },
         art: { bsonType: 'string' },
         imageUrl: { bsonType: ['string', 'null'] },
+        imagePublicId: { bsonType: ['string', 'null'] },
         weekly: { bsonType: 'object' },
         ratingAvg: { bsonType: ['double', 'int', 'number'] },
         ratingCount: { bsonType: ['int', 'number'] },
@@ -421,6 +426,24 @@ export const SCHEMAS = {
         value: { bsonType: ['int', 'number'] },
         updatedAt: { bsonType: 'date' },
         updatedBy: { bsonType: ['objectId', 'null'] },
+      },
+    },
+  },
+
+  [COLLECTIONS.MEDIA_UPLOADS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['publicId', 'url', 'ownerUserId', 'kind', 'bytes', 'width', 'height', 'createdAt'],
+      properties: {
+        publicId: { bsonType: 'string' },
+        url: { bsonType: 'string' },
+        ownerUserId: { bsonType: 'objectId' },
+        kind: { enum: ['product', 'farmer'] },
+        bytes: { bsonType: ['int', 'long', 'number'] },
+        width: { bsonType: ['int', 'number'] },
+        height: { bsonType: ['int', 'number'] },
+        attachedTo: { bsonType: ['object', 'null'] },
+        createdAt: { bsonType: 'date' },
       },
     },
   },

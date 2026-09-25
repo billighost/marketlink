@@ -8,8 +8,11 @@ import { env } from '../config/env.js';
 
 export function requestLogger(req, res, next) {
   const startTime = process.hrtime.bigint();
-  const requestId = crypto.randomUUID();
+  const requestId = req.headers['x-request-id'] || crypto.randomUUID();
   req.id = requestId;
+
+  // Always set X-Request-Id header on response
+  res.setHeader('X-Request-Id', requestId);
 
   // Track response finish
   res.on('finish', () => {
@@ -22,13 +25,28 @@ export function requestLogger(req, res, next) {
       res.setHeader('Server-Timing', `total;dur=${roundedMs}`);
     }
 
+    // Redact sensitive query parameters in URL
+    const sanitizedUrl = req.originalUrl.replace(/([?&](token|password|secret|key)=)[^&]+/gi, '$1[REDACTED]');
+
+    const logEntry = {
+      requestId,
+      method: req.method,
+      path: sanitizedUrl,
+      status: res.statusCode,
+      durationMs: roundedMs,
+      userId: req.user?.id || req.user?.sub || null,
+      role: req.user?.role || null,
+    };
+
     if (durationMs > env.LOG_SLOW_MS) {
       console.warn(
-        `[SLOW REQUEST WARNING] ${req.method} ${req.originalUrl} ${res.statusCode} took ${roundedMs}ms (threshold: ${env.LOG_SLOW_MS}ms) [reqId: ${requestId}]`
+        `[SLOW REQUEST WARNING] ${req.method} ${sanitizedUrl} ${res.statusCode} took ${roundedMs}ms (threshold: ${env.LOG_SLOW_MS}ms) [reqId: ${requestId}]`
       );
+    } else if (process.env.LOG_FORMAT === 'json') {
+      console.log(JSON.stringify(logEntry));
     } else if (env.isDevelopment && !req.originalUrl.includes('/health')) {
       console.log(
-        `[HTTP] ${req.method} ${req.originalUrl} ${res.statusCode} ${roundedMs}ms`
+        `[HTTP] ${req.method} ${sanitizedUrl} ${res.statusCode} ${roundedMs}ms`
       );
     }
   });

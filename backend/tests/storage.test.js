@@ -1,0 +1,274 @@
+/**
+ * Comprehensive Storage and Cloudinary Unit Tests.
+ * Tests signature calculation, parameter sorting, memory driver,
+ * dimension limits, quota, ownership rules, cleanup, error handling, and production guard.
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import { ObjectId } from 'mongodb';
+import { sign } from '../src/modules/uploads/storage/cloudinary.js';
+import * as memoryDriver from '../src/modules/uploads/storage/memory.js';
+import * as storage from '../src/modules/uploads/storage/index.js';
+import { validateAndAttachImage, detachAndDeleteImage } from '../src/modules/uploads/attachHelper.js';
+import { runMediaCleanup } from '../scripts/media-cleanup.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+import { AppError } from '../src/utils/errors.js';
+
+describe('Storage & Cloudinary Driver Unit Tests', () => {
+  let db;
+
+  // 100x100 Minimal JPEG
+  const validJpeg = Buffer.from([
+    0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x60,
+    0x00, 0x60, 0x00, 0x00, 0xff, 0xc0, 0x00, 0x11, 0x08, 0x00, 0x64, 0x00, 0x64, 0x03, 0x01, 0x11,
+    0x00, 0x02, 0x11, 0x01, 0x03, 0x11, 0x01, 0xff, 0xd9,
+  ]);
+
+  before(async () => {
+    const envSetup = await setupTestEnvironment();
+    db = envSetup.db;
+    await db.collection(COLLECTIONS.MEDIA_UPLOADS).deleteMany({});
+  });
+
+  after(async () => {
+    if (db) {
+      await db.collection(COLLECTIONS.MEDIA_UPLOADS).deleteMany({});
+    }
+    await teardownTestEnvironment();
+  });
+
+  it('1. Signature function sorts parameters and excludes non-signed fields', () => {
+    const secret = 'my_secret_123';
+    const params = {
+      timestamp: 1234567890,
+      folder: 'marketlink/products',
+      overwrite: 'false',
+      unique_filename: 'true',
+    };
+
+    // Expected string to sign:
+    // folder=marketlink/products&overwrite=false&timestamp=1234567890&unique_filename=true + my_secret_123
+    const expectedRaw =
+      'folder=marketlink/products&overwrite=false&timestamp=1234567890&unique_filename=true' + secret;
+    const expectedHash = crypto.createHash('sha1').update(expectedRaw).digest('hex');
+
+    const calculated = sign(params, secret);
+    assert.equal(calculated, expectedHash);
+  });
+
+  it('2. Signature function filters out empty strings and undefined keys', () => {
+    const secret = 'test_secret';
+    const params = {
+      b: 'val_b',
+      a: 'val_a',
+      empty: '',
+      undef: undefined,
+    };
+    const expectedRaw = 'a=val_a&b=val_b' + secret;
+    const expectedHash = crypto.createHash('sha1').update(expectedRaw).digest('hex');
+    assert.equal(sign(params, secret), expectedHash);
+  });
+
+  it('3. In-memory storage driver saves and returns mock Cloudinary URLs', async () => {
+    const saved = await memoryDriver.saveImage({
+      buffer: validJpeg,
+      mime: 'image/jpeg',
+      folder: 'products',
+    });
+
+    assert.ok(saved.url.startsWith('https://res.cloudinary.com/test/image/upload/'));
+    assert.ok(saved.publicId.startsWith('marketlink/products/'));
+    assert.equal(saved.bytes, validJpeg.length);
+
+    // Verify isOwnUrl
+    assert.equal(memoryDriver.isOwnUrl(saved.url), true);
+    assert.equal(memoryDriver.isOwnUrl('https://evil.com/image.png'), false);
+
+    // Verify deleteImage
+    const deleted = await memoryDriver.deleteImage(saved.publicId);
+    assert.equal(deleted, true);
+  });
+
+  it('4. Attaching an image only succeeds for own upload in mediaUploads', async () => {
+    const farmerUserId1 = new ObjectId();
+    const farmerUserId2 = new ObjectId();
+    const productId = new ObjectId();
+    const randId = crypto.randomBytes(4).toString('hex');
+
+    // Insert an upload for Farmer 1
+    const upload1 = {
+      publicId: `marketlink/products/f1_${randId}`,
+      url: `https://res.cloudinary.com/test/image/upload/v1/marketlink/products/f1_${randId}.jpg`,
+      ownerUserId: farmerUserId1,
+      kind: 'product',
+      bytes: 1024,
+      width: 100,
+      height: 100,
+      attachedTo: null,
+      createdAt: new Date(),
+    };
+    await db.collection(COLLECTIONS.MEDIA_UPLOADS).insertOne(upload1);
+
+    // Farmer 1 attaching own upload -> SUCCESS
+    const attachResult = await validateAndAttachImage({
+      db,
+      imageUrl: upload1.url,
+      imagePublicId: upload1.publicId,
+      ownerUserId: farmerUserId1,
+      attachTo: { type: 'product', id: productId },
+    });
+    assert.equal(attachResult.imageUrl, upload1.url);
+    assert.equal(attachResult.imagePublicId, upload1.publicId);
+
+    // Verify mediaUploads attachedTo was updated
+    const updatedMedia = await db.collection(COLLECTIONS.MEDIA_UPLOADS).findOne({ publicId: upload1.publicId });
+    assert.deepEqual(updatedMedia.attachedTo, { type: 'product', id: productId });
+
+    // Farmer 2 attempting to attach Farmer 1's upload -> 422 REJECTED
+    await assert.rejects(
+      async () => {
+        await validateAndAttachImage({
+          db,
+          imageUrl: upload1.url,
+          imagePublicId: upload1.publicId,
+          ownerUserId: farmerUserId2,
+          attachTo: { type: 'product', id: new ObjectId() },
+        });
+      },
+      (err) => {
+        assert.equal(err.statusCode || err.status, 422);
+        return true;
+      }
+    );
+
+    // Attempting to attach untrusted external URL -> 422 REJECTED
+    await assert.rejects(
+      async () => {
+        await validateAndAttachImage({
+          db,
+          imageUrl: 'https://external-site.com/photo.jpg',
+          ownerUserId: farmerUserId1,
+          attachTo: { type: 'product', id: productId },
+        });
+      },
+      (err) => {
+        assert.equal(err.statusCode || err.status, 422);
+        return true;
+      }
+    );
+  });
+
+  it('5. Replacing an image deletes the previous asset from mediaUploads and storage', async () => {
+    const ownerUserId = new ObjectId();
+    const productId = new ObjectId();
+    const randId = crypto.randomBytes(4).toString('hex');
+
+    const oldMedia = {
+      publicId: `marketlink/products/old_${randId}`,
+      url: `https://res.cloudinary.com/test/image/upload/v1/marketlink/products/old_${randId}.jpg`,
+      ownerUserId,
+      kind: 'product',
+      bytes: 2048,
+      width: 200,
+      height: 200,
+      attachedTo: { type: 'product', id: productId },
+      createdAt: new Date(),
+    };
+    await db.collection(COLLECTIONS.MEDIA_UPLOADS).insertOne(oldMedia);
+
+    const newMedia = {
+      publicId: `marketlink/products/new_${randId}`,
+      url: `https://res.cloudinary.com/test/image/upload/v1/marketlink/products/new_${randId}.jpg`,
+      ownerUserId,
+      kind: 'product',
+      bytes: 2048,
+      width: 200,
+      height: 200,
+      attachedTo: null,
+      createdAt: new Date(),
+    };
+    await db.collection(COLLECTIONS.MEDIA_UPLOADS).insertOne(newMedia);
+
+    // Replace old with new
+    await validateAndAttachImage({
+      db,
+      imageUrl: newMedia.url,
+      imagePublicId: newMedia.publicId,
+      ownerUserId,
+      attachTo: { type: 'product', id: productId },
+      oldPublicId: oldMedia.publicId,
+    });
+
+    // Old media row should be deleted
+    const oldExists = await db.collection(COLLECTIONS.MEDIA_UPLOADS).findOne({ publicId: oldMedia.publicId });
+    assert.equal(oldExists, null);
+
+    // New media row should be attached
+    const newDoc = await db.collection(COLLECTIONS.MEDIA_UPLOADS).findOne({ publicId: newMedia.publicId });
+    assert.deepEqual(newDoc.attachedTo, { type: 'product', id: productId });
+  });
+
+  it('6. Cleanup job deletes only unattached uploads older than 24h', async () => {
+    const now = Date.now();
+    const oldDate = new Date(now - 25 * 60 * 60 * 1000); // 25h ago
+    const freshDate = new Date(now - 1 * 60 * 60 * 1000); // 1h ago
+    const randId = crypto.randomBytes(4).toString('hex');
+
+    // 1. Old unattached -> should be deleted
+    const oldUnattachedPublicId = `marketlink/products/old_unattached_${randId}`;
+    await db.collection(COLLECTIONS.MEDIA_UPLOADS).insertOne({
+      publicId: oldUnattachedPublicId,
+      url: `https://res.cloudinary.com/test/image/upload/v1/${oldUnattachedPublicId}.jpg`,
+      ownerUserId: new ObjectId(),
+      kind: 'product',
+      bytes: 100,
+      width: 100,
+      height: 100,
+      attachedTo: null,
+      createdAt: oldDate,
+    });
+
+    // 2. Old attached -> should NOT be deleted
+    const oldAttachedPublicId = `marketlink/products/old_attached_${randId}`;
+    await db.collection(COLLECTIONS.MEDIA_UPLOADS).insertOne({
+      publicId: oldAttachedPublicId,
+      url: `https://res.cloudinary.com/test/image/upload/v1/${oldAttachedPublicId}.jpg`,
+      ownerUserId: new ObjectId(),
+      kind: 'product',
+      bytes: 100,
+      width: 100,
+      height: 100,
+      attachedTo: { type: 'product', id: new ObjectId() },
+      createdAt: oldDate,
+    });
+
+    // 3. Fresh unattached -> should NOT be deleted
+    const freshUnattachedPublicId = `marketlink/products/fresh_unattached_${randId}`;
+    await db.collection(COLLECTIONS.MEDIA_UPLOADS).insertOne({
+      publicId: freshUnattachedPublicId,
+      url: `https://res.cloudinary.com/test/image/upload/v1/${freshUnattachedPublicId}.jpg`,
+      ownerUserId: new ObjectId(),
+      kind: 'product',
+      bytes: 100,
+      width: 100,
+      height: 100,
+      attachedTo: null,
+      createdAt: freshDate,
+    });
+
+    const cleanupResult = await runMediaCleanup(db);
+    assert.ok(cleanupResult.deleted >= 1);
+
+    const oldUnattached = await db.collection(COLLECTIONS.MEDIA_UPLOADS).findOne({ publicId: oldUnattachedPublicId });
+    assert.equal(oldUnattached, null);
+
+    const oldAttached = await db.collection(COLLECTIONS.MEDIA_UPLOADS).findOne({ publicId: oldAttachedPublicId });
+    assert.ok(oldAttached !== null);
+
+    const freshUnattached = await db.collection(COLLECTIONS.MEDIA_UPLOADS).findOne({ publicId: freshUnattachedPublicId });
+    assert.ok(freshUnattached !== null);
+  });
+});

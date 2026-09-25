@@ -11,11 +11,22 @@ export class AppError extends Error {
    * @param {Array<{ field?: string, message: string }>} [details=[]] - Optional validation or error details
    */
   constructor(statusCode, code, message, details = []) {
-    super(message);
+    let resolvedStatus = statusCode;
+    let resolvedCode = code;
+    let resolvedMessage = message;
+    let resolvedDetails = details;
+
+    if (typeof statusCode === 'string' && typeof code === 'number') {
+      resolvedStatus = code;
+      resolvedCode = message;
+      resolvedMessage = statusCode;
+    }
+
+    super(resolvedMessage);
     this.name = 'AppError';
-    this.statusCode = statusCode;
-    this.code = code;
-    this.details = details;
+    this.statusCode = resolvedStatus;
+    this.code = resolvedCode;
+    this.details = resolvedDetails;
     Error.captureStackTrace(this, this.constructor);
   }
 

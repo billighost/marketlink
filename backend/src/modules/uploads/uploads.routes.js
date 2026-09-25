@@ -1,13 +1,14 @@
 /**
  * Image upload routes.
- * Exposes POST /farmer/uploads/image with raw body streaming and magic-byte validation.
+ * Exposes POST /farmer/uploads/image with raw body streaming, magic-byte validation,
+ * quota enforcement, and Cloudinary/storage driver persistence.
  */
 
 import express, { Router } from 'express';
-import { requireAuth, requireRole } from '../../middleware/auth.js';
 import { requireApprovedFarmer } from '../../middleware/requireApprovedFarmer.js';
-import { saveUploadedImage } from './uploads.service.js';
+import { processAndSaveUpload } from './uploads.service.js';
 import { AppError } from '../../utils/errors.js';
+import { defineRoutes } from '../../utils/defineRoutes.js';
 
 export const uploadsRouter = Router();
 
@@ -17,35 +18,46 @@ const rawParser = express.raw({
   limit: '1048577', // 1MB + 1 byte so our service or parser can cleanly throw 413
 });
 
-/**
- * POST /api/farmer/uploads/image
- * Accepts binary image payload and returns public URL.
- */
-uploadsRouter.post(
-  '/image',
-  requireAuth,
-  requireRole('farmer'),
-  requireApprovedFarmer,
-  rawParser,
-  async (req, res, next) => {
-    try {
-      const buffer = req.body;
-      if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
-        throw new AppError(422, 'INVALID_IMAGE', 'Upload payload is empty or invalid.');
-      }
+defineRoutes(
+  uploadsRouter,
+  'uploads',
+  [
+    {
+      method: 'post',
+      path: '/image',
+      auth: 'farmer',
+      middlewares: [requireApprovedFarmer, rawParser],
+      limiter: 'upload',
+      summary: 'Upload stall or product image with magic-byte validation',
+      handler: async (req, res, next) => {
+        try {
+          const buffer = req.body;
+          if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+            throw new AppError(422, 'INVALID_IMAGE', 'Upload payload is empty or invalid.');
+          }
 
-      if (buffer.length > 1048576) {
-        throw new AppError(413, 'PAYLOAD_TOO_LARGE', 'Image exceeds 1MB limit.');
-      }
+          if (buffer.length > 1048576) {
+            throw new AppError(413, 'PAYLOAD_TOO_LARGE', 'Image exceeds 1MB limit.');
+          }
 
-      const contentType = req.headers['content-type'] || '';
-      const imageUrl = await saveUploadedImage(buffer, contentType);
+          const contentType = req.headers['content-type'] || '';
+          const kind = req.query.kind === 'farmer' ? 'farmer' : 'product';
 
-      res.status(201).json({
-        data: { imageUrl },
-      });
-    } catch (err) {
-      next(err);
-    }
-  }
+          const uploadResult = await processAndSaveUpload({
+            buffer,
+            contentType,
+            ownerUserId: req.user?.id || req.user?._id,
+            kind,
+          });
+
+          res.status(201).json({
+            data: uploadResult,
+          });
+        } catch (err) {
+          next(err);
+        }
+      },
+    },
+  ],
+  { basePath: '/api/farmer/uploads' }
 );

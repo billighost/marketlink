@@ -1,0 +1,60 @@
+/**
+ * In-memory storage driver (test double).
+ * Stores image buffers in a Map and generates mock Cloudinary URLs.
+ */
+
+import crypto from 'node:crypto';
+import { parseDimensions } from '../uploads.service.js';
+
+const storageMap = new Map();
+
+export async function saveImage({ buffer, mime, folder = 'products' }) {
+  let ext = 'jpg';
+  if (mime === 'image/png') ext = 'png';
+  if (mime === 'image/webp') ext = 'webp';
+
+  const id = crypto.randomBytes(8).toString('hex');
+  const publicId = `marketlink/${folder}/${id}`;
+  const url = `https://res.cloudinary.com/test/image/upload/v1/${publicId}.${ext}`;
+
+  const dims = parseDimensions(buffer, mime) || { width: 200, height: 200 };
+
+  storageMap.set(publicId, {
+    buffer,
+    mime,
+    url,
+    publicId,
+    width: dims.width,
+    height: dims.height,
+    bytes: buffer.length,
+  });
+
+  return {
+    url,
+    publicId,
+    width: dims.width,
+    height: dims.height,
+    bytes: buffer.length,
+  };
+}
+
+export async function deleteImage(publicId) {
+  if (storageMap.has(publicId)) {
+    storageMap.delete(publicId);
+    return true;
+  }
+  return true; // Cloudinary returns ok even if already deleted or not found
+}
+
+export function isOwnUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  return url.startsWith('https://res.cloudinary.com/');
+}
+
+export function getInMemoryStore() {
+  return storageMap;
+}
+
+export function clearInMemoryStore() {
+  storageMap.clear();
+}

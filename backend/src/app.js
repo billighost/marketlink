@@ -67,8 +67,23 @@ export function createApp() {
     app.set('trust proxy', 1);
   }
 
-  // Security headers with Helmet
-  app.use(helmet());
+  // Security headers with Helmet and Cloudinary/Leaflet CSP
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+          'img-src': [
+            "'self'",
+            'data:',
+            'https://res.cloudinary.com',
+            'https://tile.openstreetmap.org',
+            'https://*.tile.openstreetmap.org',
+          ],
+        },
+      },
+    })
+  );
 
   // CORS configuration
   app.use(
@@ -147,17 +162,19 @@ export function createApp() {
   app.use('/api/admin', adminPeopleRouter);
   app.use('/api/admin', adminModerationRouter);
 
-  // Static uploads directory serving
-  app.use(
-    '/uploads',
-    express.static(env.UPLOAD_DIR, {
-      index: false,
-      dotfiles: 'deny',
-      maxAge: '30d',
-      immutable: true,
-      setHeaders: (res) => res.set('X-Content-Type-Options', 'nosniff'),
-    })
-  );
+  // Static uploads directory serving (development fallback only when using local driver)
+  if (env.STORAGE_DRIVER === 'local' && !env.isProduction) {
+    app.use(
+      '/uploads',
+      express.static(env.UPLOAD_DIR, {
+        index: false,
+        dotfiles: 'deny',
+        maxAge: '30d',
+        immutable: true,
+        setHeaders: (res) => res.set('X-Content-Type-Options', 'nosniff'),
+      })
+    );
+  }
 
   // 404 handler for unmatched routes
   app.use(notFound);

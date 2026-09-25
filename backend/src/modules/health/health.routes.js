@@ -1,41 +1,79 @@
 /**
- * Health and readiness endpoints.
+ * Health, readiness, and service version endpoints.
  * /health for fast load-balancer ping (no DB call) and /ready for database connection check.
  */
 
 import { Router } from 'express';
 import { getDb } from '../../db/client.js';
+import { getIndexStatus } from '../../db/indexes.js';
+import { defineRoutes } from '../../utils/defineRoutes.js';
 
 export const healthRouter = Router();
 
-// GET /health - Lightweight uptime check
-healthRouter.get('/health', (req, res) => {
-  res.status(200).json({
-    data: {
-      status: 'ok',
-      uptimeSec: Math.floor(process.uptime()),
-      time: new Date().toISOString(),
+defineRoutes(
+  healthRouter,
+  'health',
+  [
+    {
+      method: 'get',
+      path: '/health',
+      auth: 'public',
+      summary: 'Lightweight load-balancer probe without database overhead',
+      handler: (req, res) => {
+        const data = {
+          status: 'ok',
+          uptimeSec: Math.floor(process.uptime()),
+          time: new Date().toISOString(),
+        };
+        if (req.query.debug === '1') {
+          const mem = process.memoryUsage();
+          data.memoryMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+        }
+        res.status(200).json({ data });
+      },
     },
-  });
-});
-
-// GET /ready - Database ping
-healthRouter.get('/ready', async (req, res) => {
-  try {
-    const db = getDb();
-    await db.command({ ping: 1 });
-    res.status(200).json({
-      data: {
-        status: 'ready',
-        db: 'connected',
+    {
+      method: 'get',
+      path: '/ready',
+      auth: 'public',
+      summary: 'Database readiness probe verifying active MongoDB connection',
+      handler: async (req, res) => {
+        try {
+          const db = getDb();
+          await db.command({ ping: 1 });
+          res.status(200).json({
+            data: {
+              status: 'ready',
+              db: 'connected',
+              dbStatus: 'up',
+              indexes: getIndexStatus(),
+            },
+          });
+        } catch (err) {
+          res.status(503).json({
+            error: {
+              code: 'DB_UNAVAILABLE',
+              message: 'Database is not reachable.',
+            },
+          });
+        }
       },
-    });
-  } catch (err) {
-    res.status(503).json({
-      error: {
-        code: 'DB_UNAVAILABLE',
-        message: 'Database is not reachable.',
+    },
+    {
+      method: 'get',
+      path: '/version',
+      auth: 'public',
+      summary: 'Backend service name, version, and build info',
+      handler: (req, res) => {
+        res.status(200).json({
+          data: {
+            name: 'marketlink-backend',
+            version: '1.0.0',
+            commit: process.env.GIT_COMMIT || 'development',
+          },
+        });
       },
-    });
-  }
-});
+    },
+  ],
+  { basePath: '/api' }
+);
