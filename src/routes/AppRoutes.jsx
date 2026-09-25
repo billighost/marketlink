@@ -50,6 +50,7 @@ import BuyerFavorites from '@/pages/buyer/Favorites';
 import BuyerProfile from '@/pages/buyer/Profile';
 import BuyerMarkets from '@/pages/buyer/Markets';
 import BuyerFarmers from '@/pages/buyer/Farmers';
+import BuyerReviews from '@/pages/buyer/Reviews';
 
 // Buyer Sheet Views (Modal details & sub-screens)
 import BuyerProductDetail from '@/pages/buyer/ProductDetail';
@@ -152,6 +153,7 @@ export function AppRoutes() {
           <Route path="profile" element={<BuyerProfile />} />
           <Route path="markets" element={<BuyerMarkets />} />
           <Route path="farmers" element={<BuyerFarmers />} />
+          <Route path="reviews" element={<BuyerReviews />} />
 
           {/* Direct URLs and browser refreshes open in the SheetRoute frame */}
           <Route path="products/:id" element={<SheetRoute size="tall"><BuyerProductDetail /></SheetRoute>} />
@@ -161,6 +163,7 @@ export function AppRoutes() {
           <Route path="order-confirmed" element={<SheetRoute size="peek"><BuyerOrderConfirmed /></SheetRoute>} />
           <Route path="orders/:id" element={<SheetRoute size="tall"><BuyerOrderDetail /></SheetRoute>} />
           <Route path="assistant" element={<SheetRoute size="full"><BuyerAssistant /></SheetRoute>} />
+          <Route path="notifications" element={<SheetRoute size="tall" title="Notifications"><BuyerProfileNotifications /></SheetRoute>} />
           <Route path="profile/details" element={<SheetRoute size="tall"><BuyerProfileDetails /></SheetRoute>} />
           <Route path="profile/markets" element={<SheetRoute size="tall"><BuyerSavedMarkets /></SheetRoute>} />
           <Route path="profile/notifications" element={<SheetRoute size="tall"><BuyerProfileNotifications /></SheetRoute>} />
@@ -261,6 +264,14 @@ export function AppRoutes() {
             element={
               <SheetRoute size="tall" title="Saved markets">
                 <BuyerSavedMarkets />
+              </SheetRoute>
+            }
+          />
+          <Route
+            path="/buyer/notifications"
+            element={
+              <SheetRoute size="tall" title="Notifications">
+                <BuyerProfileNotifications />
               </SheetRoute>
             }
           />

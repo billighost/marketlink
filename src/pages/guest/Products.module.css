@@ -567,42 +567,187 @@
 
 /* Empty State */
 .emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 48px 20px;
-  background-color: #faf5f2;
-  border-radius: 12px;
-  border: 1px dashed #dcd1c8;
+  max-width: 680px;
+  margin: 32px auto 48px auto;
+  padding: clamp(36px, 5vw, 54px) clamp(20px, 4vw, 40px);
+  background: linear-gradient(180deg, #fdfaf7 0%, #f6efe8 100%);
+  border-radius: 18px;
+  border: 1.5px dashed #dbc9be;
+  box-shadow: 0 4px 20px rgba(50, 30, 20, 0.04);
+}
+
+.emptyIconBadge {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #edf6ec;
+  border: 1.5px solid #cee5cb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #235d29;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 14px rgba(35, 93, 41, 0.1);
+}
+
+.emptyIconPulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px dashed rgba(46, 125, 50, 0.28);
+  animation: rotateSlow 24s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotateSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .emptyIcon {
-  color: #27532b;
-  margin-bottom: 12px;
+  display: block;
+  margin: 0 auto;
 }
 
-.emptyState h3 {
-  font-family: Georgia, 'Playfair Display', serif;
-  font-size: 1.25rem;
+.emptyTitle {
+  font-family: var(--font-head, Georgia, 'Playfair Display', serif);
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  font-weight: 700;
   color: #4a1521;
-  margin: 0 0 6px 0;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.01em;
 }
 
-.emptyState p {
+.emptyDesc {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.875rem;
-  color: #6b6259;
-  margin: 0 0 16px 0;
+  font-size: 0.9375rem;
+  color: #6c6158;
+  line-height: 1.6;
+  max-width: 480px;
+  margin: 0 0 20px 0;
+}
+
+.emptyDesc strong {
+  color: #4a1521;
+  font-weight: 600;
+}
+
+/* Active filter pills row in empty state */
+.activeFilterPills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  max-width: 520px;
+}
+
+.activeFilterPillsLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8c7e73;
+}
+
+.filterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #dfd3c8;
+  color: #44372e;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.filterPillRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f0e6dc;
+  color: #634d40;
+  cursor: pointer;
+  padding: 0;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.filterPillRemove:hover {
+  background: #541722;
+  color: #ffffff;
+}
+
+/* Action buttons */
+.emptyActionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }
 
 .resetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background-color: #541722;
   color: #ffffff;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 6px;
+  border: 1px solid #541722;
+  padding: 10px 22px;
+  border-radius: 8px;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(84, 23, 34, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.resetBtn:hover {
+  background-color: #3b0e16;
+  border-color: #3b0e16;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(84, 23, 34, 0.28);
+}
+
+.resetBtn:active {
+  transform: translateY(0);
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  color: #541722;
+  border: 1px solid #d4c2b6;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondaryBtn:hover {
+  background-color: #f7efe8;
+  border-color: #bfaaa0;
+  color: #3b0e16;
 }
 
 /* ─── 5. HARVEST CALENDAR BANNER ─────────────────────────────── */
