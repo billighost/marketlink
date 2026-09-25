@@ -335,6 +335,14 @@
   min-width: 0;
 }
 
+.textInput:focus,
+.textInput:focus-visible {
+  border: none !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
 .togglePasswordBtn {
   background: transparent;
   border: none;

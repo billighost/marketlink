@@ -23,6 +23,36 @@ export function formatPrice(cents) {
 }
 
 /**
+ * Parses a dollar string ($4.50 or 4.5) to integer cents using integer math.
+ * Split on '.' and pad string - no floating point math allowed.
+ * @param {string} str
+ * @returns {number|null}
+ */
+export function parseDollarsToCents(str) {
+  if (typeof str !== 'string') str = String(str || '');
+  const clean = str.trim().replace(/^\$/, '');
+  if (!/^\d{1,4}(\.\d{1,2})?$/.test(clean)) {
+    return null;
+  }
+  const parts = clean.split('.');
+  const dollars = parseInt(parts[0], 10) || 0;
+  const cents = parts[1] ? parseInt(parts[1].padEnd(2, '0').slice(0, 2), 10) : 0;
+  return dollars * 100 + cents;
+}
+
+/**
+ * Formats integer cents into a raw decimal dollar string for input fields (450 -> "4.50")
+ * @param {number} cents
+ * @returns {string}
+ */
+export function formatCentsToDollarsInput(cents) {
+  if (typeof cents !== 'number' || isNaN(cents)) return '';
+  const dollars = Math.floor(cents / 100);
+  const rem = cents % 100;
+  return `${dollars}.${rem.toString().padStart(2, '0')}`;
+}
+
+/**
  * Format an ISO date string to a readable date (Sep 14, 2026)
  * @param {string|Date} isoDate
  * @param {string} [timeZone]

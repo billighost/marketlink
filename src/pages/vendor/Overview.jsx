@@ -1,504 +1,266 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  Download,
-  Eye,
-  Clock,
-  DollarSign,
-  Boxes,
-  AlertCircle,
-  CalendarDays,
-  RefreshCw,
-  Minus,
-  Plus,
   ChevronRight,
+  AlertCircle,
+  Clock,
+  Plus,
+  Package,
+  ShoppingBag,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useVendor } from '@/layouts/VendorLayout';
+import {
+  getFarmerOverview,
+  getFarmerInsights,
+  getFarmerOrders,
+  getFarmerProducts,
+} from '@/api/farmer';
+import BottomSheet from '@/components/ui/BottomSheet';
+import Button from '@/components/ui/Button';
+import Skeleton from '@/components/ui/Skeleton';
+import OrderDetail from './OrderDetail';
+import { formatPrice } from '@/utils/format';
 import styles from './Overview.module.css';
 
-/* ─── Static demo data ────────────────────────────────────────────────────── */
-
-const STAT_CARDS = [
-  {
-    id: 'total-orders',
-    label: 'Total Orders',
-    value: '42',
-    sub: '+18% vs. previous market run',
-    subPositive: true,
-    icon: Clock,
-  },
-  {
-    id: 'pending-review',
-    label: 'Pending Review',
-    value: '8',
-    tag: 'Needs Action',
-    sub: 'Accept by 6:00 PM cutoff',
-    icon: AlertCircle,
-    urgent: true,
-  },
-  {
-    id: 'reserved-value',
-    label: 'Reserved Value',
-    value: '$1,485.50',
-    sub: 'Stall Collection · Pay-at-pickup on Saturday',
-    icon: DollarSign,
-  },
-  {
-    id: 'active-inventory',
-    label: 'Active Inventory',
-    value: '16',
-    tag: '3 Low Stock',
-    sub: '4 fresh seasonal harvests',
-    icon: Boxes,
-    warning: true,
-  },
-];
-
-const ORDERS = [
-  {
-    id: 'CR-8821',
-    customer: 'Marta Lin',
-    slot: '8:30 AM – 9:00 AM',
-    items: 'Heirloom...',
-    total: '$20.25',
-    payment: 'Stall Cash/Card',
-    status: 'Placed',
-    action: 'Accept',
-  },
-  {
-    id: 'CR-8820',
-    customer: 'David Chen',
-    slot: '9:00 AM – 9:30 AM',
-    items: 'Wildflow...',
-    total: '$18.50',
-    payment: 'Prepaid Online',
-    status: 'Accepted',
-    action: 'Mark Ready',
-  },
-  {
-    id: 'CR-8819',
-    customer: 'Sarah Jenkins',
-    slot: '10:15 AM – 10:45 AM',
-    items: 'Heirloom...',
-    total: '$32.25',
-    payment: 'Stall Cash/Card',
-    status: 'Packing',
-    action: 'Complete Pack',
-  },
-  {
-    id: 'CR-8818',
-    customer: 'James Robertson',
-    slot: '11:30 AM – 12:00 PM',
-    items: 'Honeycri...',
-    total: '$30.00',
-    payment: 'Stall Cash/Card',
-    status: 'Placed',
-    action: 'Accept',
-  },
-];
-
-const TOP_SELLING = [
-  {
-    id: 'ts-1',
-    emoji: '🍅',
-    name: 'Cherokee Purple Tomatoes',
-    price: '$4.50 / lb',
-    reserved: 68,
-    total: 74,
-    pct: 92,
-    label: '92% reserved',
-  },
-  {
-    id: 'ts-2',
-    emoji: '🍎',
-    name: 'Honeycrisp Mountain Apples',
-    price: '$3.75 / lb',
-    reserved: 45,
-    total: 52,
-    pct: 85,
-    label: '85% reserved',
-  },
-  {
-    id: 'ts-3',
-    emoji: '🍯',
-    name: 'Raw Wildflower Honey (16oz)',
-    price: '$12.00 / jar',
-    reserved: 18,
-    total: 18,
-    pct: 100,
-    soldOut: true,
-    label: 'Sold Out',
-  },
-  {
-    id: 'ts-4',
-    emoji: '🥬',
-    name: 'Fresh Lacinato Kale',
-    price: '$3.25 / bunch',
-    reserved: 24,
-    total: 40,
-    pct: 60,
-    label: '60% reserved',
-  },
-];
-
-const QUICK_ADJUST = [
-  { id: 'qa-peppers', name: 'Sweet Bell Peppers', sub: 'Current quota: 14 lbs', qty: 14 },
-  { id: 'qa-chard', name: 'Rainbow Chard', sub: 'Low: 4 bunches', qty: 4, low: true },
-];
-
-const CUSTOMER_NOTES = [
-  {
-    id: 'cn-1',
-    customer: 'Marta Lin',
-    order: '#8821',
-    slot: '8:30 AM Slot',
-    note: '"Please pack firmer heirloom tomatoes if possible—using them for a dinner salad Sunday night!"',
-  },
-  {
-    id: 'cn-2',
-    customer: 'David Chen',
-    order: '#8820',
-    slot: '9:00 AM Slot',
-    note: '"Will arrive right at 9:00 AM sharp before soccer practice. Thank you Elias!"',
-  },
-];
-
-const MARKETS = [
-  {
-    id: 'market-1',
-    badge: 'This Saturday',
-    stallNo: '#14',
-    name: 'Grandview Farmers Market',
-    location: 'Grandview Square, Main Promenade',
-    time: '8:00 AM – 1:00 PM',
-    preorders: 42,
-    active: true,
-  },
-  {
-    id: 'market-2',
-    badge: 'Upcoming Wednesday',
-    stallNo: '#06',
-    name: 'Midweek Plaza Market',
-    location: 'Arts District Civic Center',
-    time: '3:00 PM – 7:00 PM',
-    preorders: 18,
-    active: false,
-  },
-];
-
-/* ─── Status pill helper ─────────────────────────────────────────────────── */
-
-function statusClass(status) {
-  switch (status) {
-    case 'Accepted':  return styles.statusAccepted;
-    case 'Packing':   return styles.statusPacking;
-    default:          return styles.statusPlaced;
-  }
-}
-
-function actionClass(action) {
-  if (action === 'Accept') return styles.actionAccept;
-  return styles.actionDefault;
-}
-
-/* ─── Component ──────────────────────────────────────────────────────────── */
-
 export function Overview() {
-  const [qtys, setQtys] = useState(
-    Object.fromEntries(QUICK_ADJUST.map((i) => [i.id, i.qty]))
-  );
-  const [orderStatuses, setOrderStatuses] = useState(
-    Object.fromEntries(ORDERS.map((o) => [o.id, { status: o.status, action: o.action }]))
-  );
-  const [soldOut, setSoldOut] = useState({ 'qa-chard': false });
+  const { user } = useAuth();
+  const { stallInfo, isPending, refreshCounts } = useVendor();
+  const navigate = useNavigate();
 
-  const adjust = (id, delta) => {
-    setQtys((prev) => ({ ...prev, [id]: Math.max(0, prev[id] + delta) }));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [overviewData, setOverviewData] = useState(null);
+  const [weekInsights, setWeekInsights] = useState(null);
+  const [newOrders, setNewOrders] = useState([]);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
+
+  // Selected order for sheet
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [ovRes, insRes, ordersRes, stockRes] = await Promise.all([
+        getFarmerOverview().catch(() => ({ data: null })),
+        getFarmerInsights('7d').catch(() => ({ data: null })),
+        getFarmerOrders({ status: 'placed', limit: 5 }).catch(() => ({ data: [] })),
+        getFarmerProducts({ availability: 'low', limit: 5 }).catch(() => ({ data: [] })),
+      ]);
+
+      setOverviewData(ovRes?.data || null);
+      setWeekInsights(insRes?.data || null);
+      setNewOrders(ordersRes?.data || []);
+      setLowStockProducts(stockRes?.data || []);
+    } catch (err) {
+      setError(err?.message || 'Failed to load dashboard overview.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    const name = stallInfo?.contactPerson || user?.name?.split(' ')[0] || 'Farmer';
+    if (hour < 12) return `Good morning, ${name}`;
+    if (hour < 17) return `Good afternoon, ${name}`;
+    return `Good evening, ${name}`;
   };
 
-  const handleAction = (orderId, action) => {
-    setOrderStatuses((prev) => {
-      const next = { ...prev };
-      if (action === 'Accept')       next[orderId] = { status: 'Accepted',  action: 'Mark Ready' };
-      else if (action === 'Mark Ready') next[orderId] = { status: 'Packing', action: 'Complete Pack' };
-      else                           next[orderId] = { status: 'Complete', action: '—' };
-      return next;
-    });
+  // Subtitle with stall market and status
+  const getSubtitle = () => {
+    if (stallInfo?.address) {
+      return stallInfo.address;
+    }
+    return 'Manage orders, inventory, and your market stall.';
   };
 
   return (
-    <div className={styles.page}>
-      {/* ── Page header ─────────────────────────────────────────── */}
-      <div className={styles.pageHeader}>
-        <div className={styles.pageHeaderLeft}>
-          <p className={styles.pageStatus}>
-            <span className={styles.statusDotGreen} />
-            Active Stall #14 · Verified Grower Member
-          </p>
-          <h1 className={styles.greeting}>Good morning, Elias</h1>
-          <p className={styles.greetingSub}>
-            Cedar Ridge Farm · Next Fulfillment:{' '}
-            <strong>Grandview Farmers Market</strong> (Saturday, Oct 14 · 8:00 AM – 1:00 PM)
-          </p>
-        </div>
+    <div className={styles.container}>
+      {/* Page Header */}
+      <header className={styles.header}>
+        <h1 className={styles.greeting}>{getGreeting()}</h1>
+        <p className={styles.subtitle}>{getSubtitle()}</p>
+      </header>
 
-        <div className={styles.pageHeaderRight}>
-          <div className={styles.cutoffBox}>
-            <p className={styles.cutoffLabel}>Pre-Order Cutoff</p>
-            <p className={styles.cutoffTime}>Friday 6:00 PM (14h 22m left)</p>
-          </div>
-          <div className={styles.pageActions}>
-            <button className={styles.btnExport}>
-              <Download size={15} />
-              Export Packing Slips
-            </button>
-            <button className={styles.btnReview}>
-              <Eye size={15} />
-              Review 8 New
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Stat cards ──────────────────────────────────────────── */}
-      <div className={styles.statGrid}>
-        {STAT_CARDS.map(({ id, label, value, sub, tag, icon: Icon, urgent, warning, subPositive }) => (
-          <div key={id} className={styles.statCard}>
-            <div className={styles.statTop}>
-              <span className={styles.statLabel}>{label}</span>
-              <Icon
-                size={16}
-                className={`${styles.statIcon} ${urgent ? styles.statIconUrgent : ''} ${warning ? styles.statIconWarning : ''}`}
-              />
+      {/* Pending Approval Calm Card */}
+      {isPending && (
+        <section className={styles.pendingCard} aria-label="Approval status">
+          <div className={styles.pendingContent}>
+            <div className={styles.pendingTitleRow}>
+              <AlertCircle size={18} className={styles.pendingIcon} aria-hidden="true" />
+              <strong>Your stall is waiting for approval</strong>
             </div>
-            <div className={styles.statValue}>{value}</div>
-            {tag && (
-              <span className={`${styles.statTag} ${urgent ? styles.statTagUrgent : ''} ${warning ? styles.statTagWarning : ''}`}>
-                {tag}
-              </span>
+            <p className={styles.pendingDescription}>
+              You can set up your stall profile, pickup windows, and location while our team reviews your application.
+            </p>
+          </div>
+          <Link to="/vendor/stall" className={styles.pendingLink}>
+            Set up My stall <ChevronRight size={16} aria-hidden="true" />
+          </Link>
+        </section>
+      )}
+
+      {loading ? (
+        <div className={styles.skeletonContainer}>
+          <Skeleton height="80px" />
+          <Skeleton height="140px" />
+          <Skeleton height="100px" />
+        </div>
+      ) : error ? (
+        <div className={styles.errorBox}>
+          <p>{error}</p>
+          <Button variant="secondary" size="sm" onClick={loadData}>
+            Try again
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* New Orders Section */}
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>New orders</h2>
+              <Link to="/vendor/orders" className={styles.seeAllLink}>
+                See all
+              </Link>
+            </div>
+
+            {newOrders.length === 0 ? (
+              <div className={styles.emptyCard}>
+                <ShoppingBag size={20} className={styles.emptyIcon} aria-hidden="true" />
+                <span>No new pre-orders waiting for acceptance.</span>
+              </div>
+            ) : (
+              <div className={styles.listCard}>
+                {newOrders.map((order) => (
+                  <button
+                    key={order.id}
+                    type="button"
+                    className={styles.orderRow}
+                    onClick={() => setSelectedOrderId(order.id)}
+                  >
+                    <div className={styles.orderLeft}>
+                      <span className={styles.orderNumber}>{order.orderNumber}</span>
+                      <span className={styles.customerName}>{order.customerName}</span>
+                    </div>
+                    <div className={styles.orderRight}>
+                      <span className={styles.orderSlot}>
+                        {order.pickup?.windowLabel || order.pickup?.dayLabel || 'Upcoming'}
+                      </span>
+                      <span className={styles.orderTotal}>
+                        {formatPrice(order.totalCents)}
+                      </span>
+                      <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+                    </div>
+                  </button>
+                ))}
+              </div>
             )}
-            <p className={`${styles.statSub} ${subPositive ? styles.statSubPositive : ''}`}>{sub}</p>
-          </div>
-        ))}
-      </div>
+          </section>
 
-      {/* ── Two column grid ─────────────────────────────────────── */}
-      <div className={styles.twoCol}>
-        {/* LEFT COLUMN */}
-        <div className={styles.leftCol}>
-          {/* Incoming Pre-Orders table */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div>
-                <h2 className={styles.cardTitle}>
-                  <span className={styles.orangeDot} />
-                  Incoming Pre-Orders
-                </h2>
-                <p className={styles.cardSub}>12 pending fulfillment</p>
+          {/* This Week Section (3 numbers, no boxes) */}
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>This week</h2>
+            <div className={styles.quickNumbersRow}>
+              <div className={styles.quickNumberCol}>
+                <span className={styles.quickNumLabel}>Orders</span>
+                <span className={styles.quickNumValue}>
+                  {weekInsights?.totalOrders ?? 0}
+                </span>
               </div>
-              <div className={styles.orderTabs}>
-                <button className={styles.tabAll}>All (42)</button>
-                <button className={styles.tabActive}>Unaccepted (8)</button>
-                <button className={styles.tabGhost}>Packing (15)</button>
+              <div className={styles.quickNumberCol}>
+                <span className={styles.quickNumLabel}>Pending</span>
+                <span className={styles.quickNumValue}>
+                  {overviewData?.pendingOrders ?? weekInsights?.pendingOrders ?? 0}
+                </span>
               </div>
-            </div>
-
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Customer &amp; Window</th>
-                    <th>Harvest Items</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Quick Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ORDERS.map((order) => {
-                    const current = orderStatuses[order.id];
-                    return (
-                      <tr key={order.id}>
-                        <td>
-                          <span className={styles.customerName}>{order.customer}</span>
-                          <span className={styles.customerSlot}>Slot: {order.slot}</span>
-                        </td>
-                        <td>
-                          <span className={styles.itemName}>{order.items}</span>
-                          <span className={styles.orderNum}>Order #{order.id}</span>
-                        </td>
-                        <td>
-                          <span className={styles.orderTotal}>{order.total}</span>
-                          <span className={styles.orderPayment}>{order.payment}</span>
-                        </td>
-                        <td>
-                          <span className={`${styles.statusPill} ${statusClass(current.status)}`}>
-                            {current.status}
-                          </span>
-                        </td>
-                        <td>
-                          {current.action !== '—' && (
-                            <button
-                              className={`${styles.actionBtn} ${actionClass(current.action)}`}
-                              onClick={() => handleAction(order.id, current.action)}
-                            >
-                              {current.action}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className={styles.tableFooter}>
-              <span>Showing 4 of 12 recent pre-orders</span>
-              <a href="#" className={styles.viewAll}>
-                View All Incoming Orders <ChevronRight size={13} />
-              </a>
-            </div>
-          </div>
-
-          {/* Upcoming Market Schedule */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Upcoming Market Schedule</h2>
-              <button className={styles.syncBtn}>
-                <RefreshCw size={13} />
-                Sync with Calendar
-              </button>
-            </div>
-            <div className={styles.marketGrid}>
-              {MARKETS.map((m) => (
-                <div key={m.id} className={`${styles.marketCard} ${m.active ? styles.marketCardActive : ''}`}>
-                  <div className={styles.marketCardTop}>
-                    <span className={`${styles.marketBadge} ${m.active ? styles.marketBadgeActive : styles.marketBadgeMuted}`}>
-                      {m.badge}
-                    </span>
-                    <span className={styles.marketStall}>{m.stallNo}</span>
-                  </div>
-                  <h3 className={styles.marketName}>{m.name}</h3>
-                  <p className={styles.marketLocation}>{m.location}</p>
-                  <div className={styles.marketMeta}>
-                    <span className={styles.marketMetaItem}>
-                      <Clock size={12} />
-                      {m.time}
-                    </span>
-                    <span className={styles.marketMetaItem}>
-                      <CalendarDays size={12} />
-                      {m.preorders} Pre-Orders
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div className={styles.rightCol}>
-          {/* Top Selling Harvest */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div>
-                <h2 className={styles.cardTitle}>Top Selling Harvest</h2>
-                <p className={styles.cardSub}>Saturday Market Quota Progress</p>
+              <div className={styles.quickNumberCol}>
+                <span className={styles.quickNumLabel}>Revenue</span>
+                <span className={styles.quickNumValue}>
+                  {formatPrice(weekInsights?.revenueCents ?? 0)}
+                </span>
               </div>
             </div>
-            <ul className={styles.harvestList} role="list">
-              {TOP_SELLING.map((item) => (
-                <li key={item.id} className={styles.harvestItem}>
-                  <span className={styles.harvestEmoji}>{item.emoji}</span>
-                  <div className={styles.harvestInfo}>
-                    <div className={styles.harvestRow}>
-                      <span className={styles.harvestName}>{item.name}</span>
-                      <span className={styles.harvestReserved}>{item.label}</span>
-                    </div>
-                    <div className={styles.harvestRow}>
-                      <span className={styles.harvestPrice}>{item.price}</span>
-                      <span className={styles.harvestFraction}>{item.reserved} / {item.total}</span>
-                    </div>
-                    <div className={styles.progressBar}>
-                      <div
-                        className={`${styles.progressFill} ${item.soldOut ? styles.progressSoldOut : item.pct >= 85 ? styles.progressHigh : ''}`}
-                        style={{ width: `${item.pct}%` }}
-                      />
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+          </section>
 
-          {/* Quick Harvest Adjust */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Quick Harvest Adjust</h2>
-              <span className={styles.liveTag}>Live Stall Sync</span>
+          {/* Low Stock Section */}
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Low stock</h2>
+              <Link to="/vendor/stock" className={styles.seeAllLink}>
+                Manage stock
+              </Link>
             </div>
-            <ul className={styles.adjustList} role="list">
-              {QUICK_ADJUST.map((item) => (
-                <li key={item.id} className={styles.adjustItem}>
-                  <div className={styles.adjustInfo}>
-                    <span className={styles.adjustName}>{item.name}</span>
-                    <span className={styles.adjustSub}>{item.sub}</span>
-                  </div>
-                  <div className={styles.adjustControls}>
-                    <button
-                      className={styles.adjustBtn}
-                      onClick={() => adjust(item.id, -1)}
-                      aria-label={`Decrease ${item.name}`}
-                    >
-                      <Minus size={13} />
-                    </button>
-                    <span className={styles.adjustQty}>{qtys[item.id]}</span>
-                    <button
-                      className={styles.adjustBtn}
-                      onClick={() => adjust(item.id, 1)}
-                      aria-label={`Increase ${item.name}`}
-                    >
-                      <Plus size={13} />
-                    </button>
-                    {item.low ? (
-                      <button
-                        className={`${styles.adjustAction} ${soldOut[item.id] ? styles.adjustActionSoldOut : styles.adjustActionHalt}`}
-                        onClick={() => setSoldOut((p) => ({ ...p, [item.id]: !p[item.id] }))}
-                      >
-                        {soldOut[item.id] ? 'Restock' : 'Sold Out'}
-                      </button>
-                    ) : (
-                      <button className={`${styles.adjustAction} ${styles.adjustActionHalt}`}>
-                        Halt
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
 
-          {/* Customer Harvest Notes */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Customer Harvest Notes</h2>
-              <span className={styles.noteCount}>2 instructions</span>
+            {lowStockProducts.length === 0 ? (
+              <div className={styles.emptyCard}>
+                <Package size={20} className={styles.emptyIcon} aria-hidden="true" />
+                <span>All listed items are well stocked.</span>
+              </div>
+            ) : (
+              <div className={styles.listCard}>
+                {lowStockProducts.map((product) => (
+                  <Link
+                    key={product.id}
+                    to={`/vendor/stock?edit=${product.id}`}
+                    className={styles.stockRow}
+                  >
+                    <span className={styles.productName}>{product.name}</span>
+                    <div className={styles.stockRight}>
+                      <span className={styles.stockRemaining}>
+                        {product.quantity} left
+                      </span>
+                      <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Primary Action Button (Hidden when pending) */}
+          {!isPending && (
+            <div className={styles.primaryActionContainer}>
+              <Button
+                as={Link}
+                to="/vendor/stock?action=new"
+                variant="primary"
+                size="lg"
+                className={styles.addBtn}
+              >
+                <Plus size={18} aria-hidden="true" />
+                <span>Add a product</span>
+              </Button>
             </div>
-            <ul className={styles.notesList} role="list">
-              {CUSTOMER_NOTES.map((note) => (
-                <li key={note.id} className={styles.noteItem}>
-                  <div className={styles.noteHeader}>
-                    <span className={styles.noteCustomer}>
-                      {note.customer} (Order {note.order})
-                    </span>
-                    <span className={styles.noteSlot}>{note.slot}</span>
-                  </div>
-                  <p className={styles.noteText}>{note.note}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
+          )}
+        </>
+      )}
+
+      {/* Order Detail Sheet */}
+      {selectedOrderId && (
+        <BottomSheet
+          isOpen={Boolean(selectedOrderId)}
+          onClose={() => setSelectedOrderId(null)}
+          size="tall"
+          title="Order Details"
+        >
+          <OrderDetail
+            orderId={selectedOrderId}
+            onClose={() => setSelectedOrderId(null)}
+            onUpdated={() => {
+              loadData();
+              refreshCounts();
+            }}
+          />
+        </BottomSheet>
+      )}
     </div>
   );
 }

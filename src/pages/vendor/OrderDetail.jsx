@@ -1,0 +1,323 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  acceptFarmerOrder,
+  declineFarmerOrder,
+  readyFarmerOrder,
+  completeFarmerOrder,
+  cancelFarmerOrder,
+  getFarmerOrderDetail,
+} from '@/api/farmer';
+import { useVendor } from '@/layouts/VendorLayout';
+import StatusDot from '@/components/ui/StatusDot';
+import Button from '@/components/ui/Button';
+import ConfirmStep from '@/components/ui/ConfirmStep';
+import Skeleton from '@/components/ui/Skeleton';
+import { formatPrice } from '@/utils/format';
+import { Phone, Clock, FileText, AlertTriangle } from 'lucide-react';
+import styles from './OrderDetail.module.css';
+
+/**
+ * Detailed Farmer view for an individual customer order.
+ * Can be rendered directly in a BottomSheet or as a standalone sheet page.
+ */
+export function OrderDetail({ orderId: propOrderId, onClose, onUpdated }) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const { refreshCounts } = useVendor();
+
+  const orderId = propOrderId || params.id;
+
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [activeStep, setActiveStep] = useState('view'); // 'view' | 'decline' | 'cancel'
+  const [actionError, setActionError] = useState('');
+
+  const loadOrder = useCallback(async () => {
+    if (!orderId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getFarmerOrderDetail(orderId);
+      setOrder(res?.data || null);
+    } catch (err) {
+      setError(err?.message || 'Could not load order details.');
+    } finally {
+      setLoading(false);
+    }
+  }, [orderId]);
+
+  useEffect(() => {
+    loadOrder();
+  }, [loadOrder]);
+
+  const handleAction = async (actionFn, ...args) => {
+    setActionLoading(true);
+    setActionError('');
+    try {
+      const res = await actionFn(orderId, ...args);
+      setOrder(res?.data || null);
+      setActiveStep('view');
+      refreshCounts();
+      if (onUpdated) onUpdated(res?.data);
+    } catch (err) {
+      if (err?.code === 'INVALID_STATE' || err?.code === 'ORDER_CHANGED') {
+        setActionError('This order was updated. Showing the latest.');
+        loadOrder();
+      } else {
+        setActionError(err?.message || 'Action failed. Please try again.');
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <Skeleton height="32px" width="60%" />
+        <Skeleton height="20px" width="80%" />
+        <div style={{ marginTop: 'var(--space-4)' }}>
+          <Skeleton height="120px" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className={styles.errorContainer}>
+        <p className={styles.errorText}>{error || 'Order not found.'}</p>
+        <Button variant="secondary" size="sm" onClick={loadOrder}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
+  // Format Status Label
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'placed': return 'Placed';
+      case 'accepted': return 'Accepted';
+      case 'ready': return 'Ready for pickup';
+      case 'completed': return 'Completed';
+      case 'cancelled': return 'Cancelled';
+      case 'declined': return 'Declined';
+      default: return status;
+    }
+  };
+
+  const isPlaced = order.status === 'placed';
+  const isAccepted = order.status === 'accepted';
+  const isReady = order.status === 'ready';
+  const isTerminal = ['completed', 'cancelled', 'declined'].includes(order.status);
+
+  // In-sheet Decline Step
+  if (activeStep === 'decline') {
+    return (
+      <ConfirmStep
+        title="Decline order"
+        message={`Are you sure you want to decline order ${order.orderNumber}? Products will be returned to your inventory.`}
+        confirmLabel="Decline order"
+        confirmVariant="danger"
+        cancelLabel="Back to order"
+        requireReason={true}
+        reasonLabel="Reason for declining"
+        reasonPlaceholder="e.g. Item out of harvest, stall closing early..."
+        onConfirm={(reason) => handleAction(declineFarmerOrder, reason)}
+        onCancel={() => setActiveStep('view')}
+        isLoading={actionLoading}
+        error={actionError}
+      />
+    );
+  }
+
+  // In-sheet Cancel Step
+  if (activeStep === 'cancel') {
+    return (
+      <ConfirmStep
+        title="Cancel order"
+        message={`Cancel order ${order.orderNumber}? The customer will be notified and stock will be restored.`}
+        confirmLabel="Cancel order"
+        confirmVariant="danger"
+        cancelLabel="Back to order"
+        requireReason={true}
+        reasonLabel="Reason for cancellation"
+        reasonPlaceholder="e.g. Unforeseen harvest shortage..."
+        onConfirm={(reason) => handleAction(cancelFarmerOrder, reason)}
+        onCancel={() => setActiveStep('view')}
+        isLoading={actionLoading}
+        error={actionError}
+      />
+    );
+  }
+
+  return (
+    <div className={styles.container}>
+      {/* Header Info */}
+      <div className={styles.header}>
+        <div className={styles.orderNumberRow}>
+          <h2 className={styles.orderNumber}>Order {order.orderNumber}</h2>
+          <div className={styles.statusBadge}>
+            <StatusDot status={order.status === 'declined' ? 'cancelled' : order.status} />
+            <span>{getStatusLabel(order.status)}</span>
+          </div>
+        </div>
+
+        <div className={styles.customerMeta}>
+          <span className={styles.customerName}>{order.customerName}</span>
+          {order.customerPhone && (
+            <a href={`tel:${order.customerPhone}`} className={styles.phoneLink}>
+              <Phone size={14} aria-hidden="true" />
+              <span>{order.customerPhone}</span>
+            </a>
+          )}
+        </div>
+
+        {order.pickup && (
+          <div className={styles.pickupRow}>
+            <Clock size={15} aria-hidden="true" className={styles.pickupIcon} />
+            <span>
+              {order.pickup.dayLabel || 'Pickup'}: {order.pickup.windowLabel || order.pickup.start || 'Time window'}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {actionError && (
+        <div className={styles.actionError} role="alert">
+          <AlertTriangle size={16} aria-hidden="true" />
+          <span>{actionError}</span>
+        </div>
+      )}
+
+      {/* Note from customer */}
+      {order.notes && (
+        <div className={styles.noteBox}>
+          <FileText size={16} aria-hidden="true" className={styles.noteIcon} />
+          <div className={styles.noteContent}>
+            <strong>Note from customer:</strong>
+            <p>{order.notes}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Reason if cancelled/declined */}
+      {order.cancellationReason && (
+        <div className={styles.cancellationBox}>
+          <strong>Reason:</strong>
+          <p>{order.cancellationReason}</p>
+        </div>
+      )}
+
+      {/* Line Items */}
+      <div className={styles.itemsSection}>
+        <h3 className={styles.itemsTitle}>Items ({order.items?.length || 0})</h3>
+        <div className={styles.itemsList}>
+          {order.items?.map((item, idx) => (
+            <div key={idx} className={styles.itemRow}>
+              <div className={styles.itemInfo}>
+                <span className={styles.itemName}>{item.name}</span>
+                <span className={styles.itemQty}>x{item.quantity}</span>
+              </div>
+              <span className={styles.itemPrice}>
+                {formatPrice(item.lineTotalCents || item.priceCents * item.quantity)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Total & Payment Method */}
+      <div className={styles.totalSection}>
+        <div className={styles.totalRow}>
+          <span>Total</span>
+          <span className={styles.totalAmount}>{formatPrice(order.totalCents)}</span>
+        </div>
+        <div className={styles.paymentNote}>Paid at pickup</div>
+      </div>
+
+      {/* Action Footer */}
+      {!isTerminal && (
+        <div className={styles.footerActions}>
+          {isPlaced && (
+            <>
+              <Button
+                type="button"
+                variant="primary"
+                size="lg"
+                onClick={() => handleAction(acceptFarmerOrder)}
+                disabled={actionLoading}
+                loading={actionLoading}
+                className={styles.primaryAction}
+              >
+                Accept order
+              </Button>
+              <button
+                type="button"
+                onClick={() => setActiveStep('decline')}
+                className={styles.dangerTextBtn}
+                disabled={actionLoading}
+              >
+                Decline order
+              </button>
+            </>
+          )}
+
+          {isAccepted && (
+            <>
+              <Button
+                type="button"
+                variant="primary"
+                size="lg"
+                onClick={() => handleAction(readyFarmerOrder)}
+                disabled={actionLoading}
+                loading={actionLoading}
+                className={styles.primaryAction}
+              >
+                Mark ready for pickup
+              </Button>
+              <button
+                type="button"
+                onClick={() => setActiveStep('cancel')}
+                className={styles.dangerTextBtn}
+                disabled={actionLoading}
+              >
+                Cancel order
+              </button>
+            </>
+          )}
+
+          {isReady && (
+            <>
+              <Button
+                type="button"
+                variant="primary"
+                size="lg"
+                onClick={() => handleAction(completeFarmerOrder)}
+                disabled={actionLoading}
+                loading={actionLoading}
+                className={styles.primaryAction}
+              >
+                Mark completed
+              </Button>
+              <button
+                type="button"
+                onClick={() => setActiveStep('cancel')}
+                className={styles.dangerTextBtn}
+                disabled={actionLoading}
+              >
+                Cancel order
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default OrderDetail;

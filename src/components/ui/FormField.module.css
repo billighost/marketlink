@@ -64,6 +64,14 @@
   outline: none;
 }
 
+.control:focus,
+.control:focus-visible {
+  border: none !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
 .control:disabled {
   background-color: var(--color-canvas-soft);
   color: var(--color-text-disabled);
