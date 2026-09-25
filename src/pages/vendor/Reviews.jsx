@@ -12,6 +12,8 @@ import Skeleton from '@/components/ui/Skeleton';
 import BottomSheet from '@/components/ui/BottomSheet';
 import ConfirmStep from '@/components/ui/ConfirmStep';
 import Toast from '@/components/ui/Toast';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorState from '@/components/ui/ErrorState';
 import { MessageSquare, Flag, Trash2, Edit2, MessageCircle } from 'lucide-react';
 import { formatDateShort } from '@/utils/format';
 import styles from './Reviews.module.css';
@@ -189,17 +191,13 @@ export function Reviews() {
           <Skeleton height="90px" />
         </div>
       ) : error ? (
-        <div className={styles.errorBox}>
-          <p>{error}</p>
-          <Button variant="secondary" size="sm" onClick={fetchReviews}>
-            Try again
-          </Button>
-        </div>
+        <ErrorState title="Couldn't load this" text={error} onRetry={fetchReviews} />
       ) : reviews.length === 0 ? (
-        <div className={styles.emptyState}>
-          <MessageCircle size={28} className={styles.emptyIcon} aria-hidden="true" />
-          <p>No reviews yet. They appear after Customers collect orders.</p>
-        </div>
+        <EmptyState
+          illustration="basket"
+          title="No reviews yet"
+          text="They appear after Customers collect orders."
+        />
       ) : (
         <div className={styles.reviewList}>
           {reviews.map((rev) => {

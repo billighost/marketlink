@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -27,22 +27,26 @@ import styles from './Home.module.css';
 
 const HOW_IT_WORKS = [
   {
-    num: '1',
+    num: '01',
+    icon: MapPin,
     title: 'Find Your Market',
     desc: 'Locate local farmers markets operating in your neighborhood on market days.',
   },
   {
-    num: '2',
+    num: '02',
+    icon: ShoppingBag,
     title: 'Browse Fresh Harvest',
     desc: 'View seasonal crops, artisanal bakery items, and fresh dairy directly from certified local growers.',
   },
   {
-    num: '3',
+    num: '03',
+    icon: Clock,
     title: 'Reserve Before Cutoff',
-    desc: 'Lock in your items throughout the week before Friday evening cutoff so growers harvest to order.',
+    desc: 'Lock in your items throughout the week before the cutoff deadline so growers harvest to order.',
   },
   {
-    num: '4',
+    num: '04',
+    icon: Store,
     title: 'Pick Up & Pay in Person',
     desc: 'Visit the stall on market morning to inspect your fresh produce and pay the farmer in person.',
   },
@@ -375,11 +379,11 @@ export function Home() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇΓöÇ 5. HOW MARKETLINK WORKS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* 5. HOW MARKETLINK WORKS */}
       <section className={styles.howItWorksSection}>
         <div className="container">
           <div className={styles.howHeader}>
-            <p className={styles.howEyebrow}>FARM TO TOTE</p>
+            <span className={styles.howEyebrow}>FARM TO TOTE</span>
             <h2 className={styles.howTitle}>How MarketLink Works</h2>
             <p className={styles.howSubtitle}>
               Skip the 6:00 AM rush. Guaranteed farm-fresh pre-orders without delivery markups.
@@ -387,13 +391,48 @@ export function Home() {
           </div>
 
           <div className={styles.stepsGrid}>
-            {HOW_IT_WORKS.map((step) => (
-              <div key={step.num} className={styles.stepCard}>
-                <div className={styles.stepNumCircle}>{step.num}</div>
-                <h3 className={styles.stepTitle}>{step.title}</h3>
-                <p className={styles.stepDesc}>{step.desc}</p>
+            {HOW_IT_WORKS.map((step) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.num} className={styles.stepCard}>
+                  <div className={styles.stepCardHeader}>
+                    <div className={styles.stepIconWrapper}>
+                      <Icon size={20} strokeWidth={2.2} />
+                    </div>
+                    <span className={styles.stepBadge}>Step {step.num}</span>
+                  </div>
+                  <h3 className={styles.stepTitle}>{step.title}</h3>
+                  <p className={styles.stepDesc}>{step.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. CALL TO ACTION BANNER */}
+      <section className={styles.ctaBannerSection}>
+        <div className="container">
+          <div className={styles.ctaCard}>
+            <div className={styles.ctaContent}>
+              <div className={styles.ctaBadge}>
+                <Sprout size={14} strokeWidth={2.4} />
+                <span>FRESH COMMUNITY HARVEST</span>
               </div>
-            ))}
+              <h2 className={styles.ctaTitle}>Ready to taste real, local produce?</h2>
+              <p className={styles.ctaSubtitle}>
+                Connect directly with family growers in your neighborhood. Pre-order by Friday, collect in person on the weekend.
+              </p>
+              <div className={styles.ctaButtons}>
+                <Link to={PATHS.PRODUCTS} className={styles.ctaPrimaryBtn}>
+                  <span>Explore Harvest</span>
+                  <ArrowRight size={16} />
+                </Link>
+                <Link to={PATHS.MARKETS} className={styles.ctaSecondaryBtn}>
+                  <span>Find Markets</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

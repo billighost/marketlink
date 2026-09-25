@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +12,7 @@ import HorizontalRow from '@/components/layout/HorizontalRow';
 import ProductCard from '@/components/domain/ProductCard';
 import FarmerCard from '@/components/domain/FarmerCard';
 import { SkeletonCard } from '@/components/ui/Skeleton';
+import EmptyState from '@/components/ui/EmptyState';
 import styles from './Home.module.css';
 
 /**
@@ -188,6 +189,15 @@ export function Home() {
             <SkeletonCard />
             <SkeletonCard />
           </div>
+        )}
+
+        {!loading && sections.length === 0 && (
+          <EmptyState
+            title="Nothing on the stalls yet"
+            text="Farmers are still setting up. Check back soon."
+            actionLabel="Browse markets"
+            onAction={() => navigate('/buyer/markets')}
+          />
         )}
 
         {/* Intersection Sentinel */}

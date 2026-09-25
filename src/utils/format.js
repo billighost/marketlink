@@ -12,8 +12,9 @@ export function formatPrice(cents) {
   if (typeof cents !== 'number' || isNaN(cents)) {
     return '$0.00';
   }
-  // Convert integer cents to currency representation
-  const dollars = cents >= 100 || Number.isInteger(cents) ? cents / 100 : cents;
+  // All monetary calculations in Marketlink use integer cents.
+  // Math.round guards against any inadvertent float representation.
+  const dollars = Math.round(cents) / 100;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -114,46 +115,56 @@ export function formatPickup(slot, timeZone = 'America/New_York') {
   if (!slot) return '';
   if (typeof slot === 'string') return slot;
 
-  if (slot.label) return slot.label;
+  if (slot.label && !slot.startTime && !slot.start) return slot.label;
 
-  if (slot.startTime && slot.endTime) {
-    const start = new Date(slot.startTime);
-    const end = new Date(slot.endTime);
+  const rawStart = slot.startTime || slot.start;
+  const rawEnd = slot.endTime || slot.end;
+
+  if (rawStart && rawEnd) {
+    const start = new Date(rawStart);
+    const end = new Date(rawEnd);
     const dayStr = start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone });
     const startTimeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone }).toLowerCase();
     const endTimeStr = end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone }).toLowerCase();
     return `${dayStr} • ${startTimeStr} – ${endTimeStr}`;
   }
 
-  return slot.name || '';
+  return slot.label || slot.name || '';
 }
 
 /**
  * Format a countdown to an order cutoff timestamp
- * @param {string|Date} cutoffAt - ISO string or Date
+ * @param {string|Date|number} cutoffAt - ISO string, timestamp, or Date
+ * @param {string|Date|number} [referenceTime] - Optional reference time for testing (defaults to now)
  * @returns {string}
  */
-export function formatCountdown(cutoffAt) {
+export function formatCountdown(cutoffAt, referenceTime = Date.now()) {
   if (!cutoffAt) return '';
-  const now = Date.now();
-  const target = new Date(cutoffAt).getTime();
+  const now = typeof referenceTime === 'number' ? referenceTime : new Date(referenceTime).getTime();
+  const target = typeof cutoffAt === 'number' ? cutoffAt : new Date(cutoffAt).getTime();
   const diffMs = target - now;
 
   if (diffMs <= 0) {
     return 'Cutoff passed';
   }
 
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
   if (diffDays > 0) {
-    return `${diffDays}d ${diffHours % 24}h left to order`;
+    const remHours = diffHours % 24;
+    return `${diffDays}d ${remHours}h left to order`;
   }
   if (diffHours > 0) {
-    return `${diffHours}h ${diffMins}m left to order`;
+    const remMins = diffMins % 60;
+    return `${diffHours}h ${remMins}m left to order`;
   }
-  return `${Math.max(1, diffMins)}m left to order`;
+  if (diffMins > 0) {
+    return `${diffMins}m left to order`;
+  }
+  return `${diffSecs}s left to order`;
 }
 
 /**
@@ -201,10 +212,6 @@ export function getCutoffCountdown(targetDay = 'Friday', targetHour = 18) {
   }
 
   return formatCountdown(targetDate);
-}
-
-export function getLivePickupCountdown(slotLabel = '') {
-  return 'Closes at 1:00 pm, 2 hours left';
 }
 
 /**

@@ -32,22 +32,26 @@ export async function runMinimalSeed(force = false, targetDb = null) {
 
   const db = targetDb || (await connectDb(env.MONGODB_URI, targetDbName));
 
-  // 1. Ensure collections and indexes exist
-  await createCollections(db);
-  await ensureIndexes(db);
+  // 1. Ensure collections exist if not yet created
+  const existingColls = await db.listCollections().toArray();
+  const existingNames = new Set(existingColls.map((c) => c.name));
+  const missingColls = Object.values(COLLECTIONS).filter((name) => !existingNames.has(name));
 
-  // 2. Clear existing documents across collections to ensure a fresh, clean slate
-  for (const collName of Object.values(COLLECTIONS)) {
-    try {
-      await db.collection(collName).deleteMany({});
-    } catch {
-      // Ignore if collection does not exist
-    }
+  if (missingColls.length > 0) {
+    await createCollections(db);
+    await ensureIndexes(db);
   }
+
+  // 2. Clear existing documents across collections concurrently
+  await Promise.all(
+    Object.values(COLLECTIONS).map((collName) =>
+      db.collection(collName).deleteMany({}).catch(() => {})
+    )
+  );
   console.log('✓ Cleared all entity data from collections.');
 
   const now = new Date();
-  const adminPasswordHash = await bcrypt.hash('Admin12345', 10);
+  const adminPasswordHash = '$2a$10$SfBJ4vhZ1aX0dCsGDzQ4FeFZh69OEF8U093z9g0QvJ1VdP66PbcxS';
 
   // 3. Single Market: Elm Street Market
   const elmMarket = {
@@ -116,8 +120,22 @@ export async function runMinimalSeed(force = false, targetDb = null) {
   );
   console.log('✓ Initialized order sequence counter.');
 
+  // 7. Seed settings defaults
+  const settingsDocs = [
+    { _id: 'maxItemsPerOrder', value: 30, updatedAt: now, updatedBy: null },
+    { _id: 'defaultCutoffMinutes', value: 720, updatedAt: now, updatedBy: null },
+    { _id: 'lowStockDefault', value: 5, updatedAt: now, updatedBy: null },
+  ];
+  await db.collection(COLLECTIONS.SETTINGS).insertMany(settingsDocs);
+  console.log('✓ Initialized default settings.');
+
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
   console.log(`\n🎉 Minimal Seed completed successfully in ${duration}s.`);
+  console.log('\n======================================================');
+  console.log('🔑  Admin Credentials:');
+  console.log('    Email:    admin@marketlink.test');
+  console.log('    Password: Admin12345');
+  console.log('======================================================\n');
 
   return {
     adminUser,

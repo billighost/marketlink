@@ -59,7 +59,12 @@ export function createIdempotencyKey() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  return 'idemp_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const arr = new Uint32Array(4);
+    crypto.getRandomValues(arr);
+    return Array.from(arr, (n) => n.toString(16).padStart(8, '0')).join('-');
+  }
+  return 'idemp_' + Date.now().toString(36) + '_' + (typeof performance !== 'undefined' ? performance.now().toString(36).replace('.', '') : '0');
 }
 
 /**

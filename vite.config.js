@@ -25,4 +25,37 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('leaflet')) {
+              return 'leaflet';
+            }
+            if (id.includes('lucide-react')) {
+              return 'lucide';
+            }
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor';
+            }
+            return 'vendor-misc';
+          }
+          if (id.includes('/pages/admin/')) {
+            return 'admin';
+          }
+          if (id.includes('/pages/vendor/')) {
+            return 'vendor-pages';
+          }
+          if (id.includes('/components/domain/MapView')) {
+            return 'maps';
+          }
+        },
+      },
+    },
+  },
+  esbuild: {
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
 });

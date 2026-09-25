@@ -30,7 +30,10 @@ export async function connectDb(customUri, customDbName) {
   client = new MongoClient(uri, {
     maxPoolSize: 20,
     minPoolSize: 2,
-    serverSelectionTimeoutMS: 8000,
+    serverSelectionTimeoutMS: 30000,
+    connectTimeoutMS: 30000,
+    socketTimeoutMS: 45000,
+    heartbeatFrequencyMS: 30000,
     retryWrites: true,
     appName: 'MarketLink',
   });

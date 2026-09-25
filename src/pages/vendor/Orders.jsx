@@ -7,6 +7,8 @@ import Button from '@/components/ui/Button';
 import StatusDot from '@/components/ui/StatusDot';
 import Skeleton from '@/components/ui/Skeleton';
 import BottomSheet from '@/components/ui/BottomSheet';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorState from '@/components/ui/ErrorState';
 import OrderDetail from './OrderDetail';
 import PickList from './PickList';
 import { ClipboardList, ChevronRight, Package, ListChecks } from 'lucide-react';
@@ -145,17 +147,13 @@ export function Orders() {
           <Skeleton height="72px" />
         </div>
       ) : error ? (
-        <div className={styles.errorBox}>
-          <p>{error}</p>
-          <Button variant="secondary" size="sm" onClick={() => fetchOrders()}>
-            Try again
-          </Button>
-        </div>
+        <ErrorState title="Couldn't load this" text={error} onRetry={() => fetchOrders()} />
       ) : orders.length === 0 ? (
-        <div className={styles.emptyState}>
-          <Package size={24} className={styles.emptyIcon} aria-hidden="true" />
-          <p>No orders found under {STATUS_TABS.find((t) => t.id === activeTab)?.label.toLowerCase()}.</p>
-        </div>
+        <EmptyState
+          illustration="basket"
+          title="Nothing here"
+          text="Orders in this stage will appear here."
+        />
       ) : (
         <div className={styles.orderList}>
           {orders.map((order) => {

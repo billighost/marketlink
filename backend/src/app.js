@@ -119,6 +119,16 @@ export function createApp() {
   // Global rate limiter
   app.use(globalRateLimiter);
 
+  // Development artificial latency simulation (ignored in production)
+  if (env.isDevelopment && process.env.DEV_LATENCY_MS) {
+    const latency = parseInt(process.env.DEV_LATENCY_MS, 10);
+    if (!isNaN(latency) && latency > 0) {
+      app.use((req, res, next) => {
+        setTimeout(next, latency);
+      });
+    }
+  }
+
   // API Routes mounted under /api
   app.use('/api', healthRouter);
   app.use('/api/auth', authRouter);

@@ -1,23 +1,24 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Store, Leaf, Users, Star, ArrowRight, Clock, MapPin } from 'lucide-react';
-import { products, farmers, markets } from '@/data/placeholders';
+import { Search, X, Store, Leaf, Users, ArrowRight } from 'lucide-react';
+import { getSearchSuggestions, getMarkets } from '@/api/catalog';
 import { formatPrice } from '@/utils/format';
-import Stars from '@/components/ui/Stars';
 import styles from './GlobalSearchModal.module.css';
 
 const POPULAR_SEARCHES = [
   'Heirloom tomatoes',
   'Sourdough boule',
   'Raw meadow honey',
-  'Riverbend Farm',
-  'Oak & Mill Bakery',
-  'Elm Street Market',
+  'Fresh eggs',
+  'Carrots',
+  'Apples',
 ];
 
 export function GlobalSearchModal({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'products' | 'farmers' | 'markets'
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -27,6 +28,8 @@ export function GlobalSearchModal({ isOpen, onClose }) {
       document.body.classList.add('noScroll');
     } else {
       document.body.classList.remove('noScroll');
+      setQuery('');
+      setSearchResults([]);
     }
     return () => document.body.classList.remove('noScroll');
   }, [isOpen]);
@@ -41,78 +44,86 @@ export function GlobalSearchModal({ isOpen, onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Unified multi-type search results
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
+  // Live backend search for suggestions across products, farmers, and markets
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
 
-    let list = [];
+    let active = true;
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const [suggRes, marketsRes] = await Promise.allSettled([
+          getSearchSuggestions(q),
+          getMarkets({ q }),
+        ]);
 
-    // 1. Search Products
-    if (activeFilter === 'all' || activeFilter === 'products') {
-      products.forEach((p) => {
-        const matchesName = p.name.toLowerCase().includes(q);
-        const matchesCat = p.category?.toLowerCase().includes(q);
-        const matchesDesc = p.description?.toLowerCase().includes(q);
-        if (matchesName || matchesCat || matchesDesc) {
-          const farmer = farmers.find((f) => f.id === p.farmerId);
+        if (!active) return;
+
+        const suggestionsData = suggRes.status === 'fulfilled' ? suggRes.value : { products: [], farmers: [] };
+        const marketsData = marketsRes.status === 'fulfilled' ? (marketsRes.value?.data || []) : [];
+
+        const list = [];
+
+        (suggestionsData?.products || []).forEach((p) => {
           list.push({
             type: 'PRODUCT',
             id: p.id,
             title: p.name,
-            subtitle: farmer?.stallName || p.category,
-            detail: `${formatPrice(p.price)} / ${p.unit}`,
-            tag: p.category,
+            subtitle: p.categorySlug || 'Harvest produce',
+            detail: p.priceCents ? `${formatPrice(p.priceCents)} / ${p.unit || 'item'}` : (p.unit || ''),
             path: `/buyer/products/${p.id}`,
-            rating: p.rating || 4.9,
           });
-        }
-      });
-    }
+        });
 
-    // 2. Search Farmers
-    if (activeFilter === 'all' || activeFilter === 'farmers') {
-      farmers.forEach((f) => {
-        const matchesName = f.stallName.toLowerCase().includes(q);
-        const matchesSpec = f.specialty?.toLowerCase().includes(q);
-        const matchesStory = f.story?.toLowerCase().includes(q);
-        if (matchesName || matchesSpec || matchesStory) {
+        (suggestionsData?.farmers || []).forEach((f) => {
           list.push({
             type: 'FARMER',
             id: f.id,
             title: f.stallName,
-            subtitle: f.specialty,
-            detail: f.stallNumber,
-            tag: 'Grower & Producer',
+            subtitle: f.specialty || 'Grower & Producer',
+            detail: f.stallNumber ? `Stall ${f.stallNumber}` : 'Local Stall',
             path: `/buyer/farmers/${f.id}`,
-            rating: f.rating || 4.9,
           });
-        }
-      });
-    }
+        });
 
-    // 3. Search Markets
-    if (activeFilter === 'all' || activeFilter === 'markets') {
-      markets.forEach((m) => {
-        const matchesName = m.name.toLowerCase().includes(q);
-        const matchesAddr = m.address.toLowerCase().includes(q);
-        if (matchesName || matchesAddr) {
+        (marketsData || []).forEach((m) => {
           list.push({
             type: 'MARKET',
             id: m.id,
             title: m.name,
             subtitle: m.address,
-            detail: `${m.days?.join(', ')} · ${m.hours}`,
-            tag: 'Market Location',
+            detail: m.schedule ? 'Open Saturday' : 'Market Location',
             path: `/buyer/markets/${m.id}`,
-            distance: m.distance,
           });
-        }
-      });
-    }
+        });
 
-    return list;
-  }, [query, activeFilter]);
+        setSearchResults(list);
+      } catch {
+        if (active) setSearchResults([]);
+      } finally {
+        if (active) setIsSearching(false);
+      }
+    }, 200);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [query]);
+
+  // Filter results by selected category tab
+  const filteredResults = useMemo(() => {
+    if (activeFilter === 'all') return searchResults;
+    if (activeFilter === 'products') return searchResults.filter((r) => r.type === 'PRODUCT');
+    if (activeFilter === 'farmers') return searchResults.filter((r) => r.type === 'FARMER');
+    if (activeFilter === 'markets') return searchResults.filter((r) => r.type === 'MARKET');
+    return searchResults;
+  }, [searchResults, activeFilter]);
 
   if (!isOpen) return null;
 
@@ -167,7 +178,7 @@ export function GlobalSearchModal({ isOpen, onClose }) {
             className={`${styles.filterChip} ${activeFilter === 'all' ? styles.filterChipActive : ''}`}
             onClick={() => setActiveFilter('all')}
           >
-            All Results {query && `(${results.length})`}
+            All Results {query && `(${filteredResults.length})`}
           </button>
           <button
             type="button"
@@ -195,9 +206,13 @@ export function GlobalSearchModal({ isOpen, onClose }) {
         {/* Results Area */}
         <div className={styles.resultsArea}>
           {query.trim() ? (
-            results.length > 0 ? (
+            isSearching ? (
+              <div className={styles.noResults}>
+                <p className={styles.noResultsSub}>Searching marketplace catalog...</p>
+              </div>
+            ) : filteredResults.length > 0 ? (
               <div className={styles.resultsList}>
-                {results.map((item) => (
+                {filteredResults.map((item) => (
                   <button
                     key={`${item.type}-${item.id}`}
                     type="button"
@@ -219,8 +234,12 @@ export function GlobalSearchModal({ isOpen, onClose }) {
                       </div>
                       <div className={styles.itemSubRow}>
                         <span className={styles.itemSubtitle}>{item.subtitle}</span>
-                        <span className={styles.dot}>·</span>
-                        <span className={styles.itemDetail}>{item.detail}</span>
+                        {item.detail && (
+                          <>
+                            <span className={styles.dot}>·</span>
+                            <span className={styles.itemDetail}>{item.detail}</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -256,7 +275,7 @@ export function GlobalSearchModal({ isOpen, onClose }) {
 
               <div className={styles.hintNotice}>
                 <Store size={15} />
-                <span>MarketLink Global Search checks all 36 weekly harvests, 12 regional growers, and 4 local markets.</span>
+                <span>MarketLink Global Search checks all registered harvests, growers, and market locations.</span>
               </div>
             </div>
           )}

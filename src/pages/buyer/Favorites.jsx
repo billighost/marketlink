@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFavorites } from '@/context/FavoritesContext';
 import { getFavoritesList } from '@/api/me';
@@ -83,9 +83,9 @@ export function Favorites() {
           ) : (
             <EmptyState
               illustration="basket"
-              title="No favorite products yet"
-              text="Tap the heart icon on any harvest or baked good to save it here for fast re-ordering."
-              actionLabel="Explore fresh market items"
+              title="Nothing saved yet"
+              text="Tap the heart on anything you love."
+              actionLabel="Browse the market"
               onAction={() => navigate('/buyer/products')}
             />
           )}

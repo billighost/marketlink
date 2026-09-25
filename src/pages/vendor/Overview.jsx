@@ -19,6 +19,8 @@ import {
 import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorState from '@/components/ui/ErrorState';
 import OrderDetail from './OrderDetail';
 import { formatPrice } from '@/utils/format';
 import styles from './Overview.module.css';
@@ -115,12 +117,7 @@ export function Overview() {
           <Skeleton height="100px" />
         </div>
       ) : error ? (
-        <div className={styles.errorBox}>
-          <p>{error}</p>
-          <Button variant="secondary" size="sm" onClick={loadData}>
-            Try again
-          </Button>
-        </div>
+        <ErrorState title="Couldn't load this" text={error} onRetry={loadData} />
       ) : (
         <>
           {/* New Orders Section */}
@@ -133,10 +130,13 @@ export function Overview() {
             </div>
 
             {newOrders.length === 0 ? (
-              <div className={styles.emptyCard}>
-                <ShoppingBag size={20} className={styles.emptyIcon} aria-hidden="true" />
-                <span>No new pre-orders waiting for acceptance.</span>
-              </div>
+              <EmptyState
+                illustration="basket"
+                title="No orders yet"
+                text="New pre-orders will appear here."
+                actionLabel="Add a product"
+                onAction={() => navigate('/vendor/stock?action=new')}
+              />
             ) : (
               <div className={styles.listCard}>
                 {newOrders.map((order) => (

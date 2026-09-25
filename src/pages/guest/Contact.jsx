@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   MapPin,
   Clock,
@@ -147,7 +147,8 @@ export function Contact() {
         topic: formData.topic,
         message: formData.message.trim(),
       });
-      setTicketId(res?.id ? `ML-${res.id.slice(-6).toUpperCase()}` : `ML-${Math.floor(100000 + Math.random() * 900000)}`);
+      const refId = res?.data?.id || res?.id;
+      setTicketId(refId ? `ML-${refId.slice(-6).toUpperCase()}` : `ML-${Date.now().toString(36).slice(-6).toUpperCase()}`);
       setSubmitted(true);
     } catch (err) {
       if (err.status === 429 || err.code === 'RATE_LIMITED') {

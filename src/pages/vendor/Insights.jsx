@@ -5,6 +5,8 @@ import SegmentedControl from '@/components/ui/SegmentedControl';
 import BarChart from '@/components/domain/BarChart';
 import Skeleton from '@/components/ui/Skeleton';
 import Button from '@/components/ui/Button';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorState from '@/components/ui/ErrorState';
 import { TrendingUp, Award, ShoppingBag } from 'lucide-react';
 import styles from './Insights.module.css';
 
@@ -68,12 +70,15 @@ export function Insights() {
           <Skeleton height="120px" />
         </div>
       ) : error ? (
-        <div className={styles.errorBox}>
-          <p>{error}</p>
-          <Button variant="secondary" size="sm" onClick={loadInsights}>
-            Try again
-          </Button>
-        </div>
+        <ErrorState title="Couldn't load this" text={error} onRetry={loadInsights} />
+      ) : (data?.totalOrders ?? 0) === 0 && (data?.revenueCents ?? 0) === 0 ? (
+        <EmptyState
+          illustration="basket"
+          title="No sales in this period"
+          text="Try a longer range."
+          actionLabel="90 days"
+          onAction={() => setRange('90d')}
+        />
       ) : (
         <>
           {/* Key Numbers Row (Three only) */}

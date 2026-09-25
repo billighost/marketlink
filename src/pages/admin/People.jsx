@@ -18,6 +18,8 @@ import Skeleton from '@/components/ui/Skeleton';
 import BottomSheet from '@/components/ui/BottomSheet';
 import ConfirmStep from '@/components/ui/ConfirmStep';
 import Toast from '@/components/ui/Toast';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorState from '@/components/ui/ErrorState';
 import { formatDateShort } from '@/utils/format';
 import { Search, UserCheck, UserX, AlertTriangle, ShieldCheck } from 'lucide-react';
 import styles from './People.module.css';
@@ -237,16 +239,17 @@ export function People() {
           <Skeleton height="56px" />
         </div>
       ) : error ? (
-        <div className={styles.errorBox}>
-          <p>{error}</p>
-          <Button variant="secondary" size="sm" onClick={() => fetchPeople()}>
-            Try again
-          </Button>
-        </div>
+        <ErrorState title="Couldn't load this" text={error} onRetry={() => fetchPeople()} />
       ) : people.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p>No {activeTab} found matching your filters.</p>
-        </div>
+        <EmptyState
+          title="No one matches"
+          text="Try another status or search."
+          actionLabel="Clear filters"
+          onAction={() => {
+            setSearch('');
+            setStatusFilter('all');
+          }}
+        />
       ) : (
         <div className={styles.tableWrapper}>
           <table className={styles.table}>

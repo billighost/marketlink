@@ -5,6 +5,8 @@ import {
   getReportsHistory,
 } from '../../api/admin';
 import { BarChart } from '../../components/domain/BarChart';
+import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import { useToast } from '../../components/ui/Toast';
 import { formatCurrency, formatDate } from '../../utils/format';
 import styles from './Reports.module.css';
@@ -97,6 +99,14 @@ export default function Reports() {
 
       {loading && !summary ? (
         <p>Loading analytics...</p>
+      ) : totalOrders === 0 ? (
+        <EmptyState
+          illustration="basket"
+          title="No orders in this period"
+          text="Try a longer range."
+          actionLabel="365 days"
+          onAction={() => setRange('365d')}
+        />
       ) : (
         <>
           {/* Key Metric Totals */}

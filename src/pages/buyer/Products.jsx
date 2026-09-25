@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, SlidersHorizontal, X, History, Sparkles } from 'lucide-react';
 import {
@@ -332,9 +332,9 @@ export function Products() {
           </div>
         ) : !loading ? (
           <EmptyState
-            title="No products found"
-            description="Try changing your search keywords or resetting your filter criteria."
-            actionLabel="Reset filters"
+            title="Nothing matches that"
+            text="Try fewer filters or a different word."
+            actionLabel="Clear filters"
             onAction={handleClearFilters}
           />
         ) : null}

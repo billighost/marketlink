@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Clock, Info, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -120,9 +120,9 @@ export function Cart({ inSheet = true, onClose }) {
       <div className={styles.emptyContainer}>
         <EmptyState
           illustration="basket"
-          title="Your basket is empty"
-          text="Explore seasonal produce, artisan bakery, and farm goods from local stalls."
-          actionLabel="Start shopping"
+          title="Your cart is empty"
+          text="Browse what's fresh this week."
+          actionLabel="Browse the market"
           onAction={() => {
             onClose?.();
             navigate('/buyer/products');

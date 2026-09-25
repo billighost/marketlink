@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getOrders } from '@/api/orders';
 import OrderRow from '@/components/domain/OrderRow';
@@ -109,11 +109,11 @@ export function Orders() {
             title={tab === 'active' ? 'No active orders' : 'No past orders yet'}
             text={
               tab === 'active'
-                ? 'Pre-order before cutoff to pick up fresh produce on market day.'
-                : 'Items you order will appear here for easy one-tap re-ordering.'
+                ? 'When you place a pre-order it shows up here.'
+                : 'Collected orders will appear here.'
             }
-            actionLabel="Browse Saturday market"
-            onAction={() => navigate('/buyer')}
+            actionLabel={tab === 'active' ? 'Browse the market' : undefined}
+            onAction={tab === 'active' ? () => navigate('/buyer/products') : undefined}
           />
         )}
       </div>

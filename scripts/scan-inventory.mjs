@@ -1,0 +1,66 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+const SRC_DIR = path.resolve('src');
+
+const PATTERNS = [
+  { name: 'placeholder_keywords', regex: /placeholder|mock|dummy|fake|lorem|sample|demo|temp|todo|fixme|hardcod/i, category: 'placeholder data' },
+  { name: 'setTimeout', regex: /setTimeout\(/, category: 'fake delay' },
+  { name: 'random', regex: /Math\.random|faker/i, category: 'random' },
+  { name: 'dead_link', regex: /href="#"|to="#"/, category: 'dead link' },
+  { name: 'console', regex: /console\.(log|warn|error)/, category: 'debug log' },
+  { name: 'inline_array', regex: /\[\s*\{\s*id\s*:/, category: 'placeholder data' },
+  { name: 'placeholders_file', regex: /placeholders/i, category: 'placeholder data' },
+  { name: 'literal_price', regex: /\$[0-9]+\.[0-9]{2}/, category: 'hard-coded number' },
+  { name: 'map_placeholder', regex: /MapPlaceholder/i, category: 'placeholder data' },
+  { name: 'float_money', regex: /\.toFixed\(|parseFloat\(|\*\s*100|\/\s*100/, category: 'float money math' },
+];
+
+function walk(dir, files = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walk(full, files);
+    } else if (entry.isFile() && /\.(jsx?|tsx?|css|html)$/.test(entry.name)) {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
+const allFiles = walk(SRC_DIR);
+const hits = [];
+
+for (const file of allFiles) {
+  const content = fs.readFileSync(file, 'utf8');
+  const lines = content.split('\n');
+  const relPath = path.relative(process.cwd(), file).replace(/\\/g, '/');
+
+  lines.forEach((line, idx) => {
+    for (const pat of PATTERNS) {
+      if (pat.regex.test(line)) {
+        hits.push({
+          pattern: pat.name,
+          category: pat.category,
+          file: relPath,
+          line: idx + 1,
+          snippet: line.trim().slice(0, 100),
+        });
+      }
+    }
+  });
+}
+
+console.log(`Total files scanned: ${allFiles.length}`);
+console.log(`Total hits found: ${hits.length}`);
+
+// Group by category
+const catCounts = {};
+for (const h of hits) {
+  catCounts[h.category] = (catCounts[h.category] || 0) + 1;
+}
+console.log('Category breakdown:', catCounts);
+
+// Save report to JSON for analysis
+fs.writeFileSync('scripts/inventory_hits.json', JSON.stringify(hits, null, 2));
+console.log('Saved to scripts/inventory_hits.json');

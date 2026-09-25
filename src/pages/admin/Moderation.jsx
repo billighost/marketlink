@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getModerationFlags, resolveModerationFlag } from '../../api/admin';
 import ConfirmStep from '../../components/ui/ConfirmStep';
+import EmptyState from '../../components/ui/EmptyState';
+import ErrorState from '../../components/ui/ErrorState';
 import { useToast } from '../../components/ui/Toast';
 import { formatCurrency, formatDate } from '../../utils/format';
 import { useAdmin } from '../../layouts/AdminLayout';
@@ -99,7 +101,11 @@ export default function Moderation() {
       {loading ? (
         <p>Loading flags...</p>
       ) : flags.length === 0 ? (
-        <p>No moderation flags found in this view.</p>
+        <EmptyState
+          illustration="basket"
+          title="Nothing to review"
+          text="Flagged items will appear here."
+        />
       ) : (
         <div className={styles.flagsList}>
           {flags.map((flag) => {

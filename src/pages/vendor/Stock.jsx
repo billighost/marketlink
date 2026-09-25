@@ -19,6 +19,8 @@ import BottomSheet from '@/components/ui/BottomSheet';
 import ConfirmStep from '@/components/ui/ConfirmStep';
 import Toast from '@/components/ui/Toast';
 import Illustration from '@/components/domain/Illustration';
+import EmptyState from '@/components/ui/EmptyState';
+import ErrorState from '@/components/ui/ErrorState';
 import StockForm from './StockForm';
 import WeeklyTemplate from './WeeklyTemplate';
 import { Search, Plus, Calendar, AlertCircle } from 'lucide-react';
@@ -282,27 +284,15 @@ export function Stock() {
           <Skeleton height="72px" />
         </div>
       ) : error ? (
-        <div className={styles.errorBox}>
-          <p>{error}</p>
-          <Button variant="secondary" size="sm" onClick={() => fetchProducts()}>
-            Try again
-          </Button>
-        </div>
+        <ErrorState title="Couldn't load this" text={error} onRetry={() => fetchProducts()} />
       ) : products.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p>No products found matching your filter.</p>
-          {!isPending && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                setSheetMode('new');
-              }}
-            >
-              Add a product
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          illustration="basket"
+          title="No products yet"
+          text="Add your first product to start taking pre-orders."
+          actionLabel={!isPending ? 'Add a product' : undefined}
+          onAction={!isPending ? () => setSheetMode('new') : undefined}
+        />
       ) : (
         <div className={styles.productList}>
           {products.map((p) => {

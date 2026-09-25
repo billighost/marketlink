@@ -10,6 +10,7 @@ import {
 import { formatRelativeTime } from '@/utils/format';
 import SegmentedControl from '@/components/ui/SegmentedControl';
 import ListRow from '@/components/ui/ListRow';
+import EmptyState from '@/components/ui/EmptyState';
 import styles from './ProfileNotifications.module.css';
 
 /**
@@ -155,7 +156,11 @@ export function ProfileNotifications({ inSheet = true, onClose }) {
                 );
               })
             ) : (
-              <div className={styles.emptyInbox}>No notifications yet</div>
+              <EmptyState
+                illustration="bell"
+                title="You're all caught up"
+                text="We'll tell you when an order changes."
+              />
             )}
           </div>
         </div>
