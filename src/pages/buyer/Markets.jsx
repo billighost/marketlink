@@ -1,15 +1,17 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Navigation } from 'lucide-react';
+import { Navigation, Compass } from 'lucide-react';
 import { getMarkets } from '@/api/catalog';
 import { useQuery } from '@/hooks/useQuery';
 import { useAuth } from '@/context/AuthContext';
+import { setHomeMarket } from '@/api/me';
 import MarketCard from '@/components/domain/MarketCard';
 import { MapView } from '@/components/domain/MapView';
 import SegmentedControl from '@/components/ui/SegmentedControl';
 import Chip from '@/components/ui/Chip';
 import Skeleton from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
+import Button from '@/components/ui/Button';
 import styles from './Markets.module.css';
 
 const DAY_OPTIONS = [
@@ -22,10 +24,10 @@ const DAY_OPTIONS = [
 
 /**
  * Customer Markets directory page.
- * List / Map toggle, day filtering, geolocation distance sorting.
+ * Offers List and Map view toggle, day filtering, geolocation distance sorting, and real MapView.
  */
 export function Markets() {
-  const { user, switchMarket } = useAuth();
+  const { user, refreshUser, switchMarket } = useAuth();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('list');
   const [selectedDay, setSelectedDay] = useState(undefined);
@@ -40,7 +42,7 @@ export function Markets() {
     radiusKm: userCoords ? 50 : undefined,
   };
 
-  const { data: marketsData, loading } = useQuery(
+  const { data: marketsData, loading, refetch } = useQuery(
     ['buyer-markets', selectedDay, userCoords?.lat, userCoords?.lng],
     ({ signal }) => getMarkets(queryParams, signal)
   );
@@ -65,7 +67,7 @@ export function Markets() {
         });
         setGeoLocating(false);
       },
-      () => {
+      (err) => {
         setGeoLocating(false);
         setGeoError('Location permission denied. Showing all regional markets.');
       },
@@ -86,10 +88,6 @@ export function Markets() {
       label: m.name,
     }));
 
-  const resultsLabel = loading
-    ? ' '
-    : `${markets.length} market${markets.length === 1 ? '' : 's'}${userCoords ? ' near you' : ''}`;
-
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -105,43 +103,37 @@ export function Markets() {
             ]}
           />
         </div>
-        <p className={styles.subtitle}>Find a market near you and see who's selling this week.</p>
 
-        <div className={styles.filters}>
-          <div className={styles.daysScroll} role="tablist" aria-label="Market days">
-            <button
-              type="button"
-              className={`${styles.locationBtn} ${userCoords ? styles.locationActive : ''}`}
-              onClick={handleUseMyLocation}
-              disabled={geoLocating}
-              aria-label="Sort markets by current location"
+        {/* Day of Week Chips and Location Button */}
+        <div className={styles.daysScroll} role="tablist" aria-label="Market days">
+          <button
+            type="button"
+            className={`${styles.locationBtn} ${userCoords ? styles.locationActive : ''}`}
+            onClick={handleUseMyLocation}
+            disabled={geoLocating}
+            aria-label="Sort markets by current location"
+          >
+            <Navigation size={14} className={geoLocating ? styles.spin : ''} />
+            <span>{geoLocating ? 'Locating...' : userCoords ? 'Near me' : 'Use my location'}</span>
+          </button>
+
+          {DAY_OPTIONS.map((opt) => (
+            <Chip
+              key={opt.label}
+              selected={selectedDay === opt.val}
+              onClick={() => setSelectedDay(opt.val)}
             >
-              <Navigation size={14} className={geoLocating ? styles.spin : ''} />
-              <span>{geoLocating ? 'Locating…' : userCoords ? 'Near me' : 'Use my location'}</span>
-            </button>
-
-            <span className={styles.filterDivider} aria-hidden="true" />
-
-            {DAY_OPTIONS.map((opt) => (
-              <Chip
-                key={opt.label}
-                selected={selectedDay === opt.val}
-                onClick={() => setSelectedDay(opt.val)}
-              >
-                {opt.label}
-              </Chip>
-            ))}
-          </div>
-
-          {geoError && (
-            <p className={styles.geoNote} role="status">
-              {geoError}
-            </p>
-          )}
+              {opt.label}
+            </Chip>
+          ))}
         </div>
-      </header>
 
-      {!loading && <p className={styles.resultsMeta}>{resultsLabel}</p>}
+        {geoError && (
+          <p className={styles.geoNote} role="status">
+            {geoError}
+          </p>
+        )}
+      </header>
 
       {/* View: Map */}
       {viewMode === 'map' && (
@@ -152,9 +144,13 @@ export function Markets() {
             onSelect={(id) => navigate(`/buyer/markets/${id}`)}
             height="320px"
           />
-          <div className={styles.grid}>
+          <div className={styles.mapCardList}>
             {markets.map((market) => (
-              <MarketCard key={market.id} market={market} onSelect={handleSelectMarket} />
+              <MarketCard
+                key={market.id}
+                market={market}
+                onSelect={handleSelectMarket}
+              />
             ))}
           </div>
         </div>
@@ -164,10 +160,10 @@ export function Markets() {
       {viewMode === 'list' && (
         <div className={styles.listContainer}>
           {loading && (
-            <div className={styles.skeletonStack}>
-              <Skeleton height="112px" borderRadius="var(--radius-lg)" />
-              <Skeleton height="112px" borderRadius="var(--radius-lg)" />
-              <Skeleton height="112px" borderRadius="var(--radius-lg)" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <Skeleton height="100px" borderRadius="var(--radius-md)" />
+              <Skeleton height="100px" borderRadius="var(--radius-md)" />
+              <Skeleton height="100px" borderRadius="var(--radius-md)" />
             </div>
           )}
 
@@ -183,7 +179,11 @@ export function Markets() {
           {!loading && markets.length > 0 && (
             <div className={styles.grid}>
               {markets.map((market) => (
-                <MarketCard key={market.id} market={market} onSelect={handleSelectMarket} />
+                <MarketCard
+                  key={market.id}
+                  market={market}
+                  onSelect={handleSelectMarket}
+                />
               ))}
             </div>
           )}

@@ -1,1 +1,708 @@
-﻿/* =========================================================   MARKETLINK ΓÇö PROFESSIONAL TOP BAR   ========================================================= */.header {  position: sticky;  top: 0;  z-index: var(--z-sticky, 1000);  width: 100%;  height: 70px;  background: rgba(255, 252, 250, 0.96);  border-bottom: 1px solid rgba(46, 43, 38, 0.08);  backdrop-filter: blur(14px);  -webkit-backdrop-filter: blur(14px);}/* =========================================================   INNER CONTAINER   ========================================================= */.barInner {  width: min(100%, 1400px);  max-width: 100%;  box-sizing: border-box;  height: 100%;  margin: 0 auto;  padding: 0 var(--page-pad, 20px);  display: flex;  align-items: center;  justify-content: space-between;  gap: 16px;  overflow: visible;}@media (max-width: 1100px) {  .barInner {    padding: 0 var(--page-pad, 16px);    gap: 12px;  }}/* =========================================================   BRAND   ========================================================= */.logoLink {  display: inline-flex;  align-items: center;  min-width: 0;  flex-shrink: 1;  min-height: 44px;  text-decoration: none;  user-select: none;  outline: none;  transition: opacity 160ms ease, transform 160ms ease;}.logoLink:hover {  opacity: 0.9;  transform: translateY(-0.5px);}/* Legacy helpers kept safe if used elsewhere */.logoBadge {  display: contents;}.logoImg {  display: none;}.logoText {  display: none;}/* =========================================================   DESKTOP NAVIGATION   ========================================================= */.desktopNav {  display: none;  flex: 1;  justify-content: center;}@media (min-width: 768px) {  .desktopNav {    display: flex;  }}.navList {  display: flex;  align-items: center;  justify-content: center;  gap: 8px;  margin: 0;  padding: 0;  list-style: none;}.navLink {  position: relative;  display: inline-flex;  align-items: center;  justify-content: center;  min-height: 40px;  padding: 0 14px;  border-radius: 6px;  color: #5c534d;  background: transparent;  font-family: var(--font-body, "Inter", sans-serif);  font-size: 0.88rem;  font-weight: 500;  line-height: 1;  text-decoration: none;  white-space: nowrap;  transition:    color 160ms ease,    background-color 160ms ease;}.navLink:hover {  color: #2e2b26;  background: rgba(122, 46, 59, 0.05);}.navLink:focus-visible {  outline: 2px solid rgba(122, 46, 59, 0.35);  outline-offset: 2px;}/* Active navigation item with clean bottom indicator line */.navLinkActive {  color: #2e2b26 !important;  background: transparent !important;  font-weight: 600;}.navLinkActive::after {  content: '';  position: absolute;  bottom: 2px;  left: 14px;  right: 14px;  height: 2px;  background-color: #7a2e3b;  border-radius: 2px;}.navLinkActive:hover {  color: #7a2e3b !important;  background: transparent !important;}/* =========================================================   RIGHT ACTIONS   ========================================================= */.actionsGroup {  display: flex;  align-items: center;  gap: 6px;  flex-shrink: 0;  min-width: max-content;}@media (min-width: 900px) {  .actionsGroup {    gap: 7px;  }}/* =========================================================   SEARCH   ========================================================= */.searchWrapper {  position: relative;  display: flex;  align-items: center;}.searchForm {  position: absolute;  right: 0;  top: 50%;  z-index: 5;  transform: translateY(-50%);}.searchInput {  width: 240px;  height: 38px;  padding: 0 40px 0 13px;  border: 1px solid rgba(122, 46, 59, 0.18);  border-radius: 10px;  background: #ffffff;  color: #2e2b26;  font-family: var(--font-body, "Inter", sans-serif);  font-size: 0.82rem;  font-weight: 450;  outline: none;  box-shadow:    0 8px 24px rgba(46, 43, 38, 0.09),    0 2px 5px rgba(46, 43, 38, 0.04);  animation: searchOpen 160ms ease-out;}.searchInput::placeholder {  color: #a49b96;}.searchInput:focus {  border-color: rgba(122, 46, 59, 0.42);  box-shadow:    0 0 0 3px rgba(122, 46, 59, 0.08),    0 8px 24px rgba(46, 43, 38, 0.08);}.searchInput::-webkit-search-cancel-button {  cursor: pointer;}@keyframes searchOpen {  from {    opacity: 0;    width: 160px;    transform: translateY(-50%) translateX(8px);  }  to {    opacity: 1;    width: 240px;    transform: translateY(-50%) translateX(0);  }}/* =========================================================   ICON BUTTONS   ========================================================= */.iconBtn {  position: relative;  width: 44px;  height: 44px;  min-width: 44px;  min-height: 44px;  display: inline-flex;  align-items: center;  justify-content: center;  padding: 0;  border: 1px solid transparent;  border-radius: 10px;  background: transparent;  color: #3e3936;  cursor: pointer;  text-decoration: none;  transition:    color 160ms ease,    background-color 160ms ease,    border-color 160ms ease,    transform 160ms ease;}.iconBtn:hover {  color: #7a2e3b;  background: #f8f1f2;  border-color: rgba(122, 46, 59, 0.08);}.iconBtn:active {  transform: scale(0.96);}.iconBtn:focus-visible {  outline: 2px solid rgba(122, 46, 59, 0.35);  outline-offset: 2px;}/* =========================================================   CART BADGE   ========================================================= */.cartBadge {  position: absolute;  top: 1px;  right: 0;  min-width: 16px;  height: 16px;  padding: 0 4px;  display: flex;  align-items: center;  justify-content: center;  border: 2px solid #fffdfa;  border-radius: 999px;  background: #7a2e3b;  color: #ffffff;  font-family: var(--font-body, "Inter", sans-serif);  font-size: 9px;  font-weight: 750;  line-height: 1;}/* =========================================================   PROFILE BUTTON   ========================================================= */.profileBtn {  width: 44px;  height: 44px;  min-width: 44px;  min-height: 44px;  display: inline-flex;  align-items: center;  justify-content: center;  border: none;  border-radius: 10px;  background: #7a2e3b;  color: #ffffff;  text-decoration: none;  cursor: pointer;  box-shadow:    0 3px 8px rgba(122, 46, 59, 0.16),    inset 0 1px 0 rgba(255, 255, 255, 0.08);  transition:    background-color 160ms ease,    transform 160ms ease,    box-shadow 160ms ease;}.profileBtn:hover {  background: #692632;  transform: translateY(-1px);  box-shadow:    0 5px 12px rgba(122, 46, 59, 0.2),    inset 0 1px 0 rgba(255, 255, 255, 0.08);}.profileBtn:active {  transform: translateY(0) scale(0.97);}.profileBtn:focus-visible {  outline: 2px solid rgba(122, 46, 59, 0.4);  outline-offset: 3px;}/* =========================================================   MOBILE MENU BUTTON   ========================================================= */.menuButton {  width: 44px;  height: 44px;  min-width: 44px;  min-height: 44px;  display: inline-flex;  align-items: center;  justify-content: center;  padding: 0;  border: 1px solid rgba(46, 43, 38, 0.1);  border-radius: 10px;  background: #ffffff;  color: #3e3936;  cursor: pointer;  transition:    background-color 160ms ease,    color 160ms ease,    border-color 160ms ease,    transform 160ms ease;}.menuButton:hover {  color: #7a2e3b;  background: #f8f1f2;  border-color: rgba(122, 46, 59, 0.12);}.menuButton:active {  transform: scale(0.95);}.menuButton:focus-visible {  outline: 2px solid rgba(122, 46, 59, 0.35);  outline-offset: 2px;}@media (min-width: 768px) {  .menuButton {    display: none;  }}/* =========================================================   MOBILE DRAWER   ========================================================= */.drawer {  position: fixed;  top: 68px;  left: 0;  right: 0;  bottom: 0;  z-index: var(--z-dropdown, 1100);  padding: 20px;  overflow-y: auto;  background: rgba(255, 252, 250, 0.98);  border-top: 1px solid rgba(46, 43, 38, 0.07);  box-shadow:    0 16px 40px rgba(46, 43, 38, 0.1);  animation: drawerOpen 180ms ease-out;}@keyframes drawerOpen {  from {    opacity: 0;    transform: translateY(-8px);  }  to {    opacity: 1;    transform: translateY(0);  }}.drawerNav {  width: min(100%, 560px);  display: flex;  flex-direction: column;  margin: 0 auto;}.drawerList {  display: flex;  flex-direction: column;  gap: 5px;  margin: 0;  padding: 0;  list-style: none;}.drawerNavLink {  min-height: 48px;  display: flex;  align-items: center;  padding: 0 15px;  border-radius: 10px;  color: #3e3936;  font-family: var(--font-body, "Inter", sans-serif);  font-size: 0.94rem;  font-weight: 540;  text-decoration: none;  transition:    background-color 160ms ease,    color 160ms ease,    padding-left 160ms ease;}.drawerNavLink:hover {  color: #7a2e3b;  background: #f8f1f2;  padding-left: 18px;}.drawerNavLinkActive {  color: #ffffff !important;  background: #7a2e3b !important;  font-weight: 650;  box-shadow: 0 3px 8px rgba(122, 46, 59, 0.12);}.drawerDivider {  width: 100%;  height: 1px;  margin: 16px 0;  background: rgba(46, 43, 38, 0.09);}.drawerActions {  display: flex;  flex-direction: column;}.drawerProfileLink {  min-height: 48px;  display: flex;  align-items: center;  gap: 11px;  padding: 0 15px;  border-radius: 10px;  background: #7a2e3b;  color: #ffffff;  font-family: var(--font-body, "Inter", sans-serif);  font-size: 0.92rem;  font-weight: 600;  text-decoration: none;  box-shadow:    0 4px 10px rgba(122, 46, 59, 0.14);  transition:    background-color 160ms ease,    transform 160ms ease;}.drawerProfileLink:hover {  background: #692632;}.drawerProfileLink:active {  transform: scale(0.99);}/* =========================================================   TABLET   ========================================================= */@media (min-width: 768px) and (max-width: 950px) {  .logoText {    font-size: 1rem;  }  .navLink {    padding-inline: 9px;    font-size: 0.79rem;  }  .actionsGroup {    gap: 4px;  }}/* =========================================================   SMALL MOBILE   ========================================================= */.bookmarkBtn {  /* inherits iconBtn */}@media (max-width: 540px) {  .bookmarkBtn {    display: none;  }}@media (max-width: 420px) {  .header {    height: 62px;  }  .barInner {    padding: 0 10px;    gap: 6px;  }  .logoBadge {    width: 32px;    height: 32px;  }  .logoImg {    width: 21px;    height: 21px;  }  .logoText {    font-size: 1rem;  }  .actionsGroup {    gap: 4px;  }  .iconBtn,  .profileBtn,  .menuButton {    width: 44px;    height: 44px;    min-width: 44px;    min-height: 44px;  }  .drawer {    top: 62px;    padding: 16px 14px;  }}@media (max-width: 360px) {  .barInner {    padding: 0 8px;    gap: 4px;  }  .actionsGroup {    gap: 2px;  }  .profileBtn {    display: none;  }}/* =========================================================   ACCESSIBILITY   ========================================================= */@media (prefers-reduced-motion: reduce) {  .searchInput,  .drawer,  .navLink,  .iconBtn,  .profileBtn,  .menuButton,  .drawerNavLink,  .drawerProfileLink {    animation: none;    transition: none;  }}/* =========================================================   BODY SCROLL LOCK   ========================================================= */:global(body.noScroll) {  overflow: hidden;}
+﻿
+/* =========================================================
+   MARKETLINK ΓÇö PROFESSIONAL TOP BAR
+   ========================================================= */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky, 1000);
+  width: 100%;
+  height: 70px;
+  background: rgba(255, 252, 250, 0.96);
+  border-bottom: 1px solid rgba(46, 43, 38, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* =========================================================
+   INNER CONTAINER
+   ========================================================= */
+
+.barInner {
+  width: min(100%, 1400px);
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 var(--page-pad, 20px);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  overflow: visible;
+}
+
+@media (max-width: 1100px) {
+  .barInner {
+    padding: 0 var(--page-pad, 16px);
+    gap: 12px;
+  }
+}
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 1;
+  min-height: 44px;
+  text-decoration: none;
+  user-select: none;
+  outline: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.logoLink:hover {
+  opacity: 0.9;
+  transform: translateY(-0.5px);
+}
+
+/* Legacy helpers kept safe if used elsewhere */
+.logoBadge {
+  display: contents;
+}
+
+.logoImg {
+  display: none;
+}
+
+.logoText {
+  display: none;
+}
+
+/* =========================================================
+   DESKTOP NAVIGATION
+   ========================================================= */
+
+.desktopNav {
+  display: none;
+  flex: 1;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .desktopNav {
+    display: flex;
+  }
+}
+
+.navList {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+.navLink {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 40px;
+  padding: 0 14px;
+
+  border-radius: 6px;
+
+  color: #5c534d;
+  background: transparent;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1;
+
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.navLink:hover {
+  color: #2e2b26;
+  background: rgba(122, 46, 59, 0.05);
+}
+
+.navLink:focus-visible {
+  outline: 2px solid rgba(122, 46, 59, 0.35);
+  outline-offset: 2px;
+}
+
+/* Active navigation item with clean bottom indicator line */
+
+.navLinkActive {
+  color: #2e2b26 !important;
+  background: transparent !important;
+  font-weight: 600;
+}
+
+.navLinkActive::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  background-color: #7a2e3b;
+  border-radius: 2px;
+}
+
+.navLinkActive:hover {
+  color: #7a2e3b !important;
+  background: transparent !important;
+}
+
+/* =========================================================
+   RIGHT ACTIONS
+   ========================================================= */
+
+.actionsGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: max-content;
+}
+
+@media (min-width: 900px) {
+  .actionsGroup {
+    gap: 7px;
+  }
+}
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.searchWrapper {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+}
+
+.searchForm {
+  position: absolute;
+  right: 0;
+  top: 50%;
+
+  z-index: 5;
+
+  transform: translateY(-50%);
+}
+
+.searchInput {
+  width: 240px;
+  height: 38px;
+
+  padding: 0 40px 0 13px;
+
+  border: 1px solid rgba(122, 46, 59, 0.18);
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #2e2b26;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.82rem;
+  font-weight: 450;
+
+  outline: none;
+
+  box-shadow:
+    0 8px 24px rgba(46, 43, 38, 0.09),
+    0 2px 5px rgba(46, 43, 38, 0.04);
+
+  animation: searchOpen 160ms ease-out;
+}
+
+.searchInput::placeholder {
+  color: #a49b96;
+}
+
+.searchInput:focus {
+  border-color: rgba(122, 46, 59, 0.42);
+
+  box-shadow:
+    0 0 0 3px rgba(122, 46, 59, 0.08),
+    0 8px 24px rgba(46, 43, 38, 0.08);
+}
+
+.searchInput::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+@keyframes searchOpen {
+  from {
+    opacity: 0;
+    width: 160px;
+    transform: translateY(-50%) translateX(8px);
+  }
+
+  to {
+    opacity: 1;
+    width: 240px;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* =========================================================
+   ICON BUTTONS
+   ========================================================= */
+
+.iconBtn {
+  position: relative;
+
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  background: transparent;
+  color: #3e3936;
+
+  cursor: pointer;
+  text-decoration: none;
+
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.iconBtn:hover {
+  color: #7a2e3b;
+  background: #f8f1f2;
+  border-color: rgba(122, 46, 59, 0.08);
+}
+
+.iconBtn:active {
+  transform: scale(0.96);
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid rgba(122, 46, 59, 0.35);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   CART BADGE
+   ========================================================= */
+
+.cartBadge {
+  position: absolute;
+  top: 1px;
+  right: 0;
+
+  min-width: 16px;
+  height: 16px;
+
+  padding: 0 4px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #fffdfa;
+  border-radius: 999px;
+
+  background: #7a2e3b;
+  color: #ffffff;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1;
+}
+
+/* =========================================================
+   PROFILE BUTTON
+   ========================================================= */
+
+.profileBtn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #7a2e3b;
+  color: #ffffff;
+  text-decoration: none;
+  cursor: pointer;
+
+  box-shadow:
+    0 3px 8px rgba(122, 46, 59, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.profileBtn:hover {
+  background: #692632;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 12px rgba(122, 46, 59, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.profileBtn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.profileBtn:focus-visible {
+  outline: 2px solid rgba(122, 46, 59, 0.4);
+  outline-offset: 3px;
+}
+
+/* =========================================================
+   MOBILE MENU BUTTON
+   ========================================================= */
+
+.menuButton {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(46, 43, 38, 0.1);
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #3e3936;
+
+  cursor: pointer;
+
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.menuButton:hover {
+  color: #7a2e3b;
+  background: #f8f1f2;
+  border-color: rgba(122, 46, 59, 0.12);
+}
+
+.menuButton:active {
+  transform: scale(0.95);
+}
+
+.menuButton:focus-visible {
+  outline: 2px solid rgba(122, 46, 59, 0.35);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .menuButton {
+    display: none;
+  }
+}
+
+/* =========================================================
+   MOBILE DRAWER
+   ========================================================= */
+
+.drawer {
+  position: fixed;
+
+  top: 68px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  z-index: var(--z-dropdown, 1100);
+
+  padding: 20px;
+
+  overflow-y: auto;
+
+  background: rgba(255, 252, 250, 0.98);
+
+  border-top: 1px solid rgba(46, 43, 38, 0.07);
+
+  box-shadow:
+    0 16px 40px rgba(46, 43, 38, 0.1);
+
+  animation: drawerOpen 180ms ease-out;
+}
+
+@keyframes drawerOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.drawerNav {
+  width: min(100%, 560px);
+
+  display: flex;
+  flex-direction: column;
+
+  margin: 0 auto;
+}
+
+.drawerList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+.drawerNavLink {
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 15px;
+
+  border-radius: 10px;
+
+  color: #3e3936;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.94rem;
+  font-weight: 540;
+
+  text-decoration: none;
+
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    padding-left 160ms ease;
+}
+
+.drawerNavLink:hover {
+  color: #7a2e3b;
+  background: #f8f1f2;
+  padding-left: 18px;
+}
+
+.drawerNavLinkActive {
+  color: #ffffff !important;
+  background: #7a2e3b !important;
+  font-weight: 650;
+
+  box-shadow: 0 3px 8px rgba(122, 46, 59, 0.12);
+}
+
+.drawerDivider {
+  width: 100%;
+  height: 1px;
+
+  margin: 16px 0;
+
+  background: rgba(46, 43, 38, 0.09);
+}
+
+.drawerActions {
+  display: flex;
+  flex-direction: column;
+}
+
+.drawerProfileLink {
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding: 0 15px;
+
+  border-radius: 10px;
+
+  background: #7a2e3b;
+  color: #ffffff;
+
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.92rem;
+  font-weight: 600;
+
+  text-decoration: none;
+
+  box-shadow:
+    0 4px 10px rgba(122, 46, 59, 0.14);
+
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.drawerProfileLink:hover {
+  background: #692632;
+}
+
+.drawerProfileLink:active {
+  transform: scale(0.99);
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (min-width: 768px) and (max-width: 950px) {
+  .logoText {
+    font-size: 1rem;
+  }
+
+  .navLink {
+    padding-inline: 9px;
+    font-size: 0.79rem;
+  }
+
+  .actionsGroup {
+    gap: 4px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+.bookmarkBtn {
+  /* inherits iconBtn */
+}
+
+@media (max-width: 540px) {
+  .bookmarkBtn {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .header {
+    height: 62px;
+  }
+
+  .barInner {
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .logoBadge {
+    width: 32px;
+    height: 32px;
+  }
+
+  .logoImg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .logoText {
+    font-size: 1rem;
+  }
+
+  .actionsGroup {
+    gap: 4px;
+  }
+
+  .iconBtn,
+  .profileBtn,
+  .menuButton {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .drawer {
+    top: 62px;
+    padding: 16px 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .barInner {
+    padding: 0 8px;
+    gap: 4px;
+  }
+
+  .actionsGroup {
+    gap: 2px;
+  }
+
+  .profileBtn {
+    display: none;
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .searchInput,
+  .drawer,
+  .navLink,
+  .iconBtn,
+  .profileBtn,
+  .menuButton,
+  .drawerNavLink,
+  .drawerProfileLink {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* =========================================================
+   BODY SCROLL LOCK
+   ========================================================= */
+
+:global(body.noScroll) {
+  overflow: hidden;
+}

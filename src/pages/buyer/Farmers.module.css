@@ -1,1 +1,121 @@
-﻿.page {  display: flex;  flex-direction: column;  width: 100%;  max-width: var(--container-max);  margin: 0 auto;  gap: var(--space-4);  padding: var(--space-4);}.header {  display: flex;  flex-direction: column;  gap: var(--space-3);}.title {  font-family: var(--font-head);  font-size: var(--text-h2);  font-weight: var(--weight-head);  color: var(--color-ink);  letter-spacing: var(--tracking-head);  margin: 0;}.searchWrapper {  position: relative;  width: 100%;  display: flex;  align-items: center;}.searchIcon {  position: absolute;  left: var(--space-3);  color: var(--color-ink-soft);  pointer-events: none;}.searchInput {  width: 100%;  height: var(--control-h);  border: 1px solid var(--color-border);  background-color: var(--color-canvas-soft);  border-radius: var(--radius-full);  padding: 0 var(--space-8) 0 calc(var(--space-3) + 24px);  font-family: var(--font-body);  font-size: var(--text-body);  color: var(--color-ink);  transition: border-color var(--duration-fast) var(--ease-standard),              background-color var(--duration-fast) var(--ease-standard);}.searchInput:focus {  outline: none;  border-color: var(--color-primary);  background-color: var(--color-white);  box-shadow: 0 0 0 2px var(--color-beet-tint);}.searchInput::placeholder {  color: var(--color-ink-faint);}.clearSearch {  position: absolute;  right: var(--space-3);  background: none;  border: none;  color: var(--color-ink-soft);  cursor: pointer;  padding: var(--space-1);}.categoryScroll {  display: flex;  align-items: center;  gap: var(--space-2);  overflow-x: auto;  scrollbar-width: none;  -webkit-overflow-scrolling: touch;  padding-bottom: var(--space-1);}.categoryScroll::-webkit-scrollbar {  display: none;}.countText {  font-size: var(--text-sm);  color: var(--color-ink-soft);}.contentWrap {  width: 100%;}.list {  display: grid;  grid-template-columns: 1fr;  gap: var(--space-4);  width: 100%;}@media (min-width: 600px) {  .list {    grid-template-columns: repeat(2, 1fr);  }}@media (min-width: 960px) {  .list {    grid-template-columns: repeat(3, 1fr);  }}@media (min-width: 1280px) {  .list {    grid-template-columns: repeat(4, 1fr);  }}
+﻿.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.title {
+  font-family: var(--font-head);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  letter-spacing: var(--tracking-head);
+  margin: 0;
+}
+
+.searchWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--color-ink-soft);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: var(--control-h);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-canvas-soft);
+  border-radius: var(--radius-full);
+  padding: 0 var(--space-8) 0 calc(var(--space-3) + 24px);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background-color: var(--color-white);
+  box-shadow: 0 0 0 2px var(--color-beet-tint);
+}
+
+.searchInput::placeholder {
+  color: var(--color-ink-faint);
+}
+
+.clearSearch {
+  position: absolute;
+  right: var(--space-3);
+  background: none;
+  border: none;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  padding: var(--space-1);
+}
+
+.categoryScroll {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--space-1);
+}
+
+.categoryScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.countText {
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.contentWrap {
+  width: 100%;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
