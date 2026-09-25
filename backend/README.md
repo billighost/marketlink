@@ -101,23 +101,89 @@ Health check endpoint: `http://localhost:4000/api/health`.
 
 ---
 
-## 6. Running Tests & Smoke Verification
+## 6. Testing & Quality Assurance Gates
+
+MarketLink implements an 8-gate testing and hardening model:
 
 ```bash
-# Run all automated tests (node:test against marketlink_test database)
+# Gate 1: Route manifest parity & contract freeze (134 endpoints)
+node --test tests/routes-manifest.test.js
+
+# Gate 2: Full security & IDOR test suite (35 tests covering OWASP API Top 10)
+node --test tests/security-full.test.js
+
+# Gate 3: 19-step end-to-end product lifecycle scenario from minimal seed
+node --test tests/e2e-flow.test.js
+
+# Gate 4: Data invariant checker (12 platform invariants, assert 0 drift)
+node scripts/verify-data.js
+# Optionally repair drift automatically:
+node scripts/verify-data.js --fix
+
+# Gate 5: Query performance profiler (0 COLLSCANs across critical queries)
+node scripts/profile-report.js
+
+# Gate 6: Operational smoke test against running server (39 steps)
+npm run smoke                 # Windows PowerShell
+bash scripts/smoke.sh         # Linux / macOS Bash
+
+# Gate 7: Complete automated test regression
 npm test
 
-# Run manual smoke test against a running local server
-# Windows (PowerShell):
-npm run smoke
-
-# Linux / macOS:
-bash scripts/smoke.sh
+# Gate 8: Dependency security vulnerability audit
+npm audit
 ```
+
+For the full test gate specifications, see [docs/TESTING.md](docs/TESTING.md).
 
 ---
 
-## 7. Demo Credentials
+## 7. Performance & High-Throughput Load Testing
+
+MarketLink provides a standalone HTTP load generator with connection keep-alive pooling and automated query explain analysis:
+
+```bash
+# 1. Run all load test scenarios (20 concurrent workers, 10s per scenario)
+npm run loadtest
+
+# 2. Run high-concurrency mixed traffic benchmark (50 workers, 30s)
+node scripts/loadtest.js --concurrency 50 --duration 30 --scenario mixed
+
+# 3. Seed large volume dataset for stress profiling
+npm run seed:large
+
+# 4. Generate query executionStats and index audit report
+npm run profile:report
+```
+
+For detailed latency budgets, query budgets (3-query quote budget), and profiler results, see [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
+
+---
+
+## 8. Backup & Operational Scripts
+
+```bash
+# 1. Export sanitized JSON collections (excluding passwords, tokens, sessions)
+npm run export:json
+
+# 2. Re-create all compound, unique, 2dsphere, and text indexes
+npm run indexes
+
+# 3. Test storage drivers (Cloudinary, local, memory)
+npm run test:storage
+
+# 4. Media upload garbage collection (purges unattached uploads older than 24h)
+npm run jobs:media
+
+# 5. One-way migration from local disk to Cloudinary
+npm run migrate:uploads
+```
+
+For production deployment procedures, health checks, and zero-downtime runbooks, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+---
+
+## 9. Demo Credentials
 
 The database seed provides pre-configured credentials for all roles:
 
@@ -132,78 +198,30 @@ The database seed provides pre-configured credentials for all roles:
 
 ---
 
-## 8. Directory Layout
+## 10. Platform Documentation Index
 
-```
-backend/
-├─ package.json                   # ES module scripts & dependencies
-├─ .env.example                   # Environment variable template
-├─ .env                           # Local environment configuration
-├─ .gitignore
-├─ README.md                      # Developer runbook and operational guide
-├─ docs/
-│  ├─ DATABASE.md                 # Schema specs, indexes, and denormalization notes
-│  └─ API.md                      # Endpoint reference with request/response examples
-├─ scripts/
-│  ├─ smoke.sh                    # Bash curl smoke test script
-│  └─ smoke.ps1                   # Windows PowerShell smoke test script
-├─ src/
-│  ├─ server.js                   # MongoDB connection, listener, graceful shutdown
-│  ├─ app.js                      # Express app pipeline, security middleware, routing
-│  ├─ constants.js                # Single source of truth for enums and roles
-│  ├─ config/
-│  │  └─ env.js                   # Environment validation with fail-fast errors
-│  ├─ db/
-│  │  ├─ client.js                # MongoClient singleton & connection pooling
-│  │  ├─ collections.js           # Collection schemas & $jsonSchema validators
-│  │  ├─ indexes.js               # ensureIndexes() for all 16 collections
-│  │  └─ seed.js                  # Database seed script with aggregate sync
-│  ├─ middleware/
-│  │  ├─ requestLogger.js         # Request logger with Server-Timing & slow warnings
-│  │  ├─ sanitize.js              # NoSQL injection protection (blocks $ and .)
-│  │  ├─ rateLimits.js            # express-rate-limit definitions
-│  │  ├─ auth.js                  # requireAuth, requireRole, optionalAuth
-│  │  ├─ notFound.js              # Standardized 404 JSON response
-│  │  └─ errorHandler.js          # Central error formatter without stack leaks
-│  ├─ modules/
-│  │  ├─ health/                  # /health and /ready routes
-│  │  ├─ auth/                    # Registration, login, refresh rotation, recovery
-│  │  ├─ users/                   # Profile management and session revocation
-│  │  └─ contact/                 # Guest inquiry submission
-│  └─ utils/
-│     ├─ validate.js              # Hand-written input validation helpers
-│     ├─ tokens.js                # JWT signing & SHA-256 hashing
-│     ├─ errors.js                # AppError class and static factories
-│     ├─ ids.js                   # toObjectId and toApi transformation
-│     ├─ mailer.js                # Development console email stub
-│     └─ time.js                  # Dynamic date helpers relative to now
-└─ tests/
-   ├─ helpers.js                  # Test server harness on ephemeral port
-   ├─ health.test.js              # Health, ready, and 404 tests
-   ├─ auth.test.js                # Auth, registration, rotation, and recovery tests
-   ├─ users.test.js               # Profile and password update tests
-   ├─ contact.test.js             # Contact form and rate limit tests
-   ├─ security.test.js            # RBAC guards, NoSQL injection, and header tests
-   ├─ db.test.js                  # Schema, index, and explain() query plan checks
-   └─ perf.test.js                # Latency SLA benchmarks against performance budget
-```
+All architectural specifications and operational reports are located in `docs/`:
+
+- [docs/API.md](docs/API.md): Complete OpenAPI-style reference for all 134 registered endpoints with request/response schemas.
+- [docs/SECURITY.md](docs/SECURITY.md): Threat model, multi-tenancy boundaries, and OWASP API Top 10 automated test evidence.
+- [docs/PERFORMANCE.md](docs/PERFORMANCE.md): Latency profiles, query budgets, profiler findings, and load test analysis.
+- [docs/DATABASE.md](docs/DATABASE.md): Collection schemas, 102 managed indexes, and denormalization synchronization matrix.
+- [docs/TESTING.md](docs/TESTING.md): Testing Gate quality assurance guide and execution instructions.
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): Production deployment runbook, environment variables, health checks, and backup/restore.
 
 ---
 
-## 9. Troubleshooting
+## 11. Troubleshooting
 
 ### Port 4000 already in use
-```bash
-# Check what is listening on port 4000
+```powershell
 # Windows:
 Get-NetTCPConnection -LocalPort 4000
-# Linux / macOS:
-lsof -i :4000
 ```
 Update `PORT` in `.env` to another available port (e.g. `4005`).
 
-### MongoDB connection failure (`ECONNREFUSED`)
-Ensure the MongoDB service is running (see Section 2). If using MongoDB Atlas, check your IP access list in Atlas Network Access.
+### MongoDB connection failure (`ECONNREFUSED` / `ECONNRESET`)
+Ensure the MongoDB service is running locally or that your current IP address is whitelisted in MongoDB Atlas Network Access.
 
 ### Tests fail with rate limiting (`RATE_LIMITED`)
-Ensure `RATE_LIMIT_DISABLED=true` in test executions (already configured by default in `tests/helpers.js`). Dedicated rate limit tests will pass `x-enable-rate-limit: true` explicitly.
+Ensure `RATE_LIMIT_DISABLED=true` in test executions (already configured by default in `tests/helpers.js`). Dedicated rate limit tests enable limits explicitly.

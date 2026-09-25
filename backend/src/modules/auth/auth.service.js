@@ -38,6 +38,8 @@ export async function findUserByEmail(email) {
         createdAt: 1,
         updatedAt: 1,
         lastLoginAt: 1,
+        failedLogins: 1,
+        lockUntil: 1,
       },
     }
   );
@@ -224,7 +226,45 @@ export async function updateLastLogin(userId) {
   const objId = toObjectId(userId);
   await db.collection(COLLECTIONS.USERS).updateOne(
     { _id: objId },
-    { $set: { lastLoginAt: new Date() } }
+    { $set: { lastLoginAt: new Date(), failedLogins: 0, lockUntil: null } }
+  );
+}
+
+/**
+ * Records a failed sign-in attempt and optionally sets lockUntil.
+ *
+ * @param {string|ObjectId} userId
+ * @param {number} currentFailedCount
+ * @returns {Promise<{ failedLogins: number, lockUntil: Date|null }>}
+ */
+export async function recordFailedLogin(userId, currentFailedCount = 0) {
+  const db = getDb();
+  const objId = toObjectId(userId);
+  const nextCount = currentFailedCount + 1;
+  const updateDoc = {
+    failedLogins: nextCount,
+  };
+  if (nextCount >= 5) {
+    updateDoc.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+  }
+  await db.collection(COLLECTIONS.USERS).updateOne(
+    { _id: objId },
+    { $set: updateDoc }
+  );
+  return { failedLogins: nextCount, lockUntil: updateDoc.lockUntil || null };
+}
+
+/**
+ * Resets failed sign-in counters for an account.
+ *
+ * @param {string|ObjectId} userId
+ */
+export async function resetFailedLogins(userId) {
+  const db = getDb();
+  const objId = toObjectId(userId);
+  await db.collection(COLLECTIONS.USERS).updateOne(
+    { _id: objId },
+    { $set: { failedLogins: 0, lockUntil: null } }
   );
 }
 

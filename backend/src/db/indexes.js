@@ -5,6 +5,16 @@
 
 import { COLLECTIONS } from './collections.js';
 
+let indexStatus = 'ready'; // 'building' | 'ready' | 'error'
+
+export function getIndexStatus() {
+  return indexStatus;
+}
+
+export function setIndexStatus(status) {
+  indexStatus = status;
+}
+
 /**
  * Ensures all required indexes exist across all collections in the database.
  * Idempotent: can be safely executed repeatedly at startup and in scripts.
@@ -12,15 +22,17 @@ import { COLLECTIONS } from './collections.js';
  * @param {import('mongodb').Db} db
  */
 export async function ensureIndexes(db) {
-  // ── 1. Users ──
-  await db.collection(COLLECTIONS.USERS).createIndex(
-    { email: 1 },
-    { unique: true, name: 'idx_users_email_unique' }
-  );
-  await db.collection(COLLECTIONS.USERS).createIndex(
-    { role: 1, status: 1, createdAt: -1 },
-    { name: 'idx_users_role_status_created' }
-  );
+  indexStatus = 'building';
+  try {
+    // ── 1. Users ──
+    await db.collection(COLLECTIONS.USERS).createIndex(
+      { email: 1 },
+      { unique: true, name: 'idx_users_email_unique' }
+    );
+    await db.collection(COLLECTIONS.USERS).createIndex(
+      { role: 1, status: 1, createdAt: -1 },
+      { name: 'idx_users_role_status_created' }
+    );
 
   // ── 2. Farmers ──
   await db.collection(COLLECTIONS.FARMERS).createIndex(
@@ -380,4 +392,24 @@ export async function ensureIndexes(db) {
     { generatedAt: -1 },
     { name: 'idx_reports_generatedAt' }
   );
+
+  // ── 18. Media Uploads ──
+  await db.collection(COLLECTIONS.MEDIA_UPLOADS).createIndex(
+    { publicId: 1 },
+    { unique: true, name: 'idx_mediaUploads_publicId_unique' }
+  );
+  await db.collection(COLLECTIONS.MEDIA_UPLOADS).createIndex(
+    { ownerUserId: 1, createdAt: -1 },
+    { name: 'idx_mediaUploads_owner_created' }
+  );
+  await db.collection(COLLECTIONS.MEDIA_UPLOADS).createIndex(
+    { attachedTo: 1, createdAt: 1 },
+    { name: 'idx_mediaUploads_attachedTo_created' }
+  );
+
+  indexStatus = 'ready';
+  } catch (err) {
+    indexStatus = 'error';
+    throw err;
+  }
 }

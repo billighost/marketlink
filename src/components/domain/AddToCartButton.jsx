@@ -13,6 +13,7 @@ import styles from './AddToCartButton.module.css';
  */
 export function AddToCartButton({
   productId,
+  farmerId,
   productName = 'item',
   variant = 'icon',
   disabled = false,
@@ -30,7 +31,7 @@ export function AddToCartButton({
     if (disabled) return;
 
     setAnimating(true);
-    add(productId);
+    add(productId, { farmerId });
 
     if (buttonRef.current) {
       flyToCart(buttonRef.current, () => {
@@ -67,71 +68,61 @@ export function AddToCartButton({
         className={`${styles.iconButton} ${styles.disabled} ${className}`}
         aria-label={`${productName} is sold out`}
       >
-        <Plus size={18} strokeWidth={2} aria-hidden="true" />
+        <Plus size={18} aria-hidden="true" />
       </button>
     );
   }
 
-  // If already in cart, show quantity stepper
+  // Active in cart: render QuantityStepper
   if (quantity > 0) {
     return (
-      <div
-        className={`${styles.stepperWrapper} ${variant === 'wide' ? styles.stepperWide : ''} ${className}`}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
+      <div className={`${styles.stepperWrapper} ${variant === 'wide' ? styles.stepperWide : ''}`}>
         <QuantityStepper
           value={quantity}
           onChange={handleQuantityChange}
           min={0}
           max={99}
-          productName={productName}
-          compact={variant === 'icon'}
+          size={variant === 'wide' ? 'md' : 'sm'}
+          ariaLabel={`Quantity for ${productName}`}
         />
       </div>
     );
   }
 
-  // Wide variant (e.g. for ProductDetail sheet sticky footer)
+  // Not in cart: render Add Button
   if (variant === 'wide') {
     return (
       <button
         ref={buttonRef}
         type="button"
-        className={`${styles.wideButton} ${animating ? styles.added : ''} ${className}`}
         onClick={handleAddFirst}
+        className={`${styles.wideButton} ${animating ? styles.animating : ''} ${className}`}
         aria-label={`Add ${productName} to cart`}
       >
         {animating ? (
           <>
-            <Check size={18} strokeWidth={2} aria-hidden="true" />
+            <Check size={18} aria-hidden="true" />
             <span>Added</span>
           </>
         ) : (
-          <>
-            <Plus size={18} strokeWidth={2} aria-hidden="true" />
-            <span>Add to cart</span>
-          </>
+          <span>Pre-order for pickup</span>
         )}
       </button>
     );
   }
 
-  // Default: round icon button (for product cards)
   return (
     <button
       ref={buttonRef}
       type="button"
-      className={`${styles.iconButton} ${animating ? styles.animating : ''} ${className}`}
       onClick={handleAddFirst}
+      className={`${styles.iconButton} ${animating ? styles.animating : ''} ${className}`}
       aria-label={`Add ${productName} to cart`}
     >
       {animating ? (
-        <Check size={18} strokeWidth={2} className={styles.checkIcon} aria-hidden="true" />
+        <Check size={18} aria-hidden="true" />
       ) : (
-        <Plus size={18} strokeWidth={2} aria-hidden="true" />
+        <Plus size={18} aria-hidden="true" />
       )}
     </button>
   );

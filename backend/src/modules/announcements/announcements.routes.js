@@ -4,22 +4,31 @@
  */
 
 import { Router } from 'express';
-import { optionalAuth } from '../../middleware/auth.js';
 import { listActiveAnnouncements } from './announcements.service.js';
+import { defineRoutes } from '../../utils/defineRoutes.js';
 
 export const announcementsRouter = Router();
 
-/**
- * GET /api/announcements
- * Returns active announcements for the caller's role (or 'all' for guests).
- */
-announcementsRouter.get('/', optionalAuth, async (req, res, next) => {
-  try {
-    const role = req.user?.role || null;
-    const data = await listActiveAnnouncements(role);
-    res.set('Cache-Control', 'public, max-age=30');
-    return res.json({ data });
-  } catch (err) {
-    next(err);
-  }
-});
+defineRoutes(
+  announcementsRouter,
+  'announcements',
+  [
+    {
+      method: 'get',
+      path: '/',
+      auth: 'optional',
+      summary: "List active announcements tailored to caller's role",
+      handler: async (req, res, next) => {
+        try {
+          const role = req.user?.role || null;
+          const data = await listActiveAnnouncements(role);
+          res.set('Cache-Control', 'public, max-age=30');
+          return res.json({ data });
+        } catch (err) {
+          next(err);
+        }
+      },
+    },
+  ],
+  { basePath: '/api/announcements' }
+);

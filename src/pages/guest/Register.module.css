@@ -464,6 +464,16 @@
   min-width: 0;
 }
 
+.textInput:focus,
+.textInput:focus-visible,
+.selectInput:focus,
+.selectInput:focus-visible {
+  border: none !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
 .selectInput {
   cursor: pointer;
 }

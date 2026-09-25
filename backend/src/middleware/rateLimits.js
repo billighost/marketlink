@@ -97,3 +97,17 @@ export const reviewRateLimiter = createLimiter({
   limit: parseInt(process.env.RATE_LIMIT_REVIEW_MAX || '20', 10),
   message: 'Review creation limit reached. Please wait before submitting more reviews.',
 });
+
+// Uploads: 20 uploads per hour
+export const uploadRateLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: parseInt(process.env.RATE_LIMIT_UPLOAD_MAX || '20', 10),
+  message: 'Upload rate limit reached. Please wait before uploading more files.',
+});
+
+// Exports: 10 exports per 10 minutes per IP
+export const exportRateLimiter = createLimiter({
+  windowMs: 10 * 60 * 1000,
+  limit: parseInt(process.env.RATE_LIMIT_EXPORT_MAX || '10', 10),
+  message: 'Export limit reached. Please wait before generating another export.',
+});

@@ -339,3 +339,27 @@ export async function exportCsvReport(adminActor, res, req, query = {}) {
     { reportType: type, range: query.range || '30d' }
   );
 }
+
+/**
+ * Retrieves the recent report generation audit history.
+ *
+ * @param {number} [limit=20]
+ * @returns {Promise<Array<object>>}
+ */
+export async function getReportsHistory(limit = 20) {
+  const db = getDb();
+  const history = await db
+    .collection(COLLECTIONS.REPORTS)
+    .find({})
+    .sort({ generatedAt: -1 })
+    .limit(limit)
+    .toArray();
+
+  return history.map((h) => ({
+    id: h._id.toString(),
+    reportType: h.reportType,
+    params: h.params || {},
+    generatedAt: h.generatedAt instanceof Date ? h.generatedAt.toISOString() : h.generatedAt,
+  }));
+}
+

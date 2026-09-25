@@ -5,11 +5,15 @@ import { PATHS } from './paths';
 
 /**
  * Route guard that checks if the user is authenticated and has the required role.
- * Normalizes 'customer' and 'buyer'.
+ * Waits for silent session refresh before redirecting.
  */
 export function ProtectedRoute({ allowedRoles = ['customer', 'buyer'], children }) {
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role, isCheckingSession } = useAuth();
   const location = useLocation();
+
+  if (isCheckingSession) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to={PATHS.LOGIN} state={{ from: location }} replace />;

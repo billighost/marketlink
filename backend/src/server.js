@@ -10,6 +10,8 @@ import { connectDb, closeDb, getDb } from './db/client.js';
 import { ensureIndexes } from './db/indexes.js';
 import { createCollections } from './db/collections.js';
 import { createApp } from './app.js';
+import { maskUri } from './utils/maskUri.js';
+import { runMediaCleanup } from '../scripts/media-cleanup.js';
 
 let server;
 
@@ -18,7 +20,7 @@ async function bootstrap() {
     console.log(`[BOOT] Initializing MarketLink backend in ${env.NODE_ENV} mode...`);
 
     // 1. Connect to MongoDB
-    console.log(`[DB] Connecting to MongoDB at ${env.MONGODB_URI} (${env.DB_NAME})...`);
+    console.log(`[DB] Connecting to MongoDB at ${maskUri(env.MONGODB_URI)} (${env.DB_NAME})...`);
     const db = await connectDb();
     console.log(`[DB] Connected successfully.`);
 
@@ -32,7 +34,25 @@ async function bootstrap() {
     const app = createApp();
     server = http.createServer(app);
 
-    // 4. Start HTTP listener
+    // Explicit HTTP socket timeouts to defend against slowloris and connection leaks
+    server.requestTimeout = 30000; // 30s max per request
+    server.headersTimeout = 31000; // slightly longer than keepAliveTimeout
+    server.keepAliveTimeout = 30000; // 30s idle keep-alive
+
+    // 4. Non-blocking media cleanup job
+    runMediaCleanup(db).catch((err) => {
+      console.warn('[MEDIA CLEANUP] Background startup cleanup warning:', err.message);
+    });
+
+    if (env.isProduction) {
+      setInterval(() => {
+        runMediaCleanup(db).catch((err) => {
+          console.warn('[MEDIA CLEANUP] Periodic cleanup warning:', err.message);
+        });
+      }, 6 * 60 * 60 * 1000);
+    }
+
+    // 5. Start HTTP listener
     server.listen(env.PORT, () => {
       console.log(`[SERVER] MarketLink API listening on http://localhost:${env.PORT}/api`);
       console.log(`[SERVER] Health check ready at http://localhost:${env.PORT}/api/health`);

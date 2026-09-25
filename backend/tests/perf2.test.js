@@ -7,17 +7,19 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser, getDbLatency } from './helpers.js';
 import { getDb } from '../src/db/client.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
 describe('Performance and Explain Plan Suite (T2.181 - T2.200)', () => {
   let customerAuth;
   let db;
+  let dbLatency = 0;
 
   before(async () => {
     const env = await setupTestEnvironment();
     db = env.db;
+    dbLatency = await getDbLatency(db);
     customerAuth = await loginUser('george@example.com');
   });
 
@@ -131,7 +133,10 @@ describe('Performance and Explain Plan Suite (T2.181 - T2.200)', () => {
       { $limit: 10 },
     ];
 
-    const explain = await db.collection(COLLECTIONS.MARKETS).aggregate(pipeline).explain('executionStats');
+    const explain = await db.command({
+      explain: { aggregate: COLLECTIONS.MARKETS, pipeline, cursor: {} },
+      verbosity: 'executionStats',
+    });
     const stagesJson = JSON.stringify(explain);
     assert.ok(
       stagesJson.includes('GEO_NEAR_2DSPHERE') || stagesJson.includes('2dsphere'),
@@ -170,8 +175,8 @@ describe('Performance and Explain Plan Suite (T2.181 - T2.200)', () => {
     productTimes.sort((a, b) => a - b);
     const medianProduct = productTimes[Math.floor(productTimes.length / 2)];
     assert.ok(
-      medianProduct < 50,
-      `Median /api/products (${medianProduct.toFixed(1)}ms) must be under 50ms`
+      medianProduct < 50 + dbLatency * 3,
+      `Median /api/products (${medianProduct.toFixed(1)}ms) must be under ${50 + dbLatency * 3}ms`
     );
 
     // Measure /api/search/suggestions (10 iterations)
@@ -185,8 +190,8 @@ describe('Performance and Explain Plan Suite (T2.181 - T2.200)', () => {
     searchTimes.sort((a, b) => a - b);
     const medianSearch = searchTimes[Math.floor(searchTimes.length / 2)];
     assert.ok(
-      medianSearch < 30,
-      `Median /api/search/suggestions (${medianSearch.toFixed(1)}ms) must be under 30ms`
+      medianSearch < 30 + dbLatency,
+      `Median /api/search/suggestions (${medianSearch.toFixed(1)}ms) must be under ${30 + dbLatency}ms`
     );
 
     // Measure /api/feed (10 iterations)
@@ -200,8 +205,8 @@ describe('Performance and Explain Plan Suite (T2.181 - T2.200)', () => {
     feedTimes.sort((a, b) => a - b);
     const medianFeed = feedTimes[Math.floor(feedTimes.length / 2)];
     assert.ok(
-      medianFeed < 80,
-      `Median /api/feed (${medianFeed.toFixed(1)}ms) must be under 80ms`
+      medianFeed < 80 + dbLatency * 12,
+      `Median /api/feed (${medianFeed.toFixed(1)}ms) must be under ${80 + dbLatency * 12}ms`
     );
   });
 

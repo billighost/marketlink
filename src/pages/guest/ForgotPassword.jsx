@@ -7,6 +7,7 @@ import FormField from '@/components/ui/FormField';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Illustration from '@/components/domain/Illustration';
+import { forgotPassword } from '@/api/auth';
 import styles from './ForgotPassword.module.css';
 
 /**
@@ -17,10 +18,11 @@ export function ForgotPassword() {
 
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const emailRef = useRef(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim()) {
       setError('Please enter your email address.');
@@ -34,7 +36,15 @@ export function ForgotPassword() {
     }
 
     setError('');
-    setSent(true);
+    setLoading(true);
+    try {
+      await forgotPassword(email.trim().toLowerCase());
+    } catch {
+      // API returns 200 regardless to prevent email enumeration, but handle network error gracefully
+    } finally {
+      setLoading(false);
+      setSent(true);
+    }
   };
 
   return (

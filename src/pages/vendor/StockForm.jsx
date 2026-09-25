@@ -1,0 +1,668 @@
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  createFarmerProduct,
+  updateFarmerProduct,
+  deleteFarmerProduct,
+  getFarmerProduct,
+  uploadFarmerImage,
+} from '@/api/farmer';
+import { getCategories } from '@/api/catalog';
+import { useVendor } from '@/layouts/VendorLayout';
+import { parseDollarsToCents, formatCentsToDollarsInput } from '@/utils/format';
+import Button from '@/components/ui/Button';
+import FormField from '@/components/ui/FormField';
+import Toggle from '@/components/ui/Toggle';
+import QuantityStepper from '@/components/ui/QuantityStepper';
+import ConfirmStep from '@/components/ui/ConfirmStep';
+import Skeleton from '@/components/ui/Skeleton';
+import Illustration from '@/components/domain/Illustration';
+import { Upload, X, Trash2 } from 'lucide-react';
+import styles from './StockForm.module.css';
+
+const PRODUCT_UNITS = [
+  { value: 'lb', label: 'lb (Pound)' },
+  { value: 'bunch', label: 'bunch' },
+  { value: 'loaf', label: 'loaf' },
+  { value: 'jar', label: 'jar' },
+  { value: 'dozen', label: 'dozen' },
+  { value: 'each', label: 'each' },
+  { value: 'pint', label: 'pint' },
+  { value: 'bag', label: 'bag' },
+];
+
+const ART_KEYS = [
+  'basket',
+  'basket-tomatoes',
+  'crate-carrots',
+  'beet-bunch',
+  'beet',
+  'leafy-greens',
+  'sourdough-boule',
+  'loaf',
+  'honey-jar',
+  'honey',
+  'egg-carton',
+  'paper-bag-pears',
+  'radish-bunch',
+  'carrot',
+  'tomato',
+  'potatoes',
+  'corn',
+  'squash',
+  'apples',
+  'pears',
+  'strawberries',
+  'blueberries',
+  'croissant',
+  'cheese',
+];
+
+export function StockForm({ productId, onClose, onSaved, onDeleted }) {
+  const { refreshCounts } = useVendor();
+  const fileInputRef = useRef(null);
+
+  const [loading, setLoading] = useState(Boolean(productId));
+  const [categories, setCategories] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  // Form Fields
+  const [name, setName] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [priceInput, setPriceInput] = useState('');
+  const [unit, setUnit] = useState('bunch');
+  const [quantity, setQuantity] = useState(10);
+  const [lowStockThreshold, setLowStockThreshold] = useState(3);
+  const [description, setDescription] = useState('');
+  const [seasonalTag, setSeasonalTag] = useState(false);
+  const [organicTag, setOrganicTag] = useState(false);
+  const [art, setArt] = useState('basket');
+  const [imageUrl, setImageUrl] = useState('');
+  const [imagePublicId, setImagePublicId] = useState(null);
+
+  // Weekly template config
+  const [templateEnabled, setTemplateEnabled] = useState(false);
+  const [templateDefaultQty, setTemplateDefaultQty] = useState(10);
+
+  // View state: 'form' | 'confirm-delete' | 'confirm-discard'
+  const [viewStep, setViewStep] = useState('form');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [generalError, setGeneralError] = useState('');
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Load Categories & Initial Product if editing
+  useEffect(() => {
+    let isMounted = true;
+    async function init() {
+      try {
+        const catList = await getCategories();
+        if (isMounted) setCategories(catList || []);
+      } catch {
+        // ignore category load error
+      }
+
+      if (productId) {
+        try {
+          const res = await getFarmerProduct(productId);
+          const p = res?.data;
+          if (p && isMounted) {
+            setName(p.name || '');
+            setCategoryId(p.categoryId || '');
+            setPriceInput(formatCentsToDollarsInput(p.priceCents));
+            setUnit(p.unit || 'bunch');
+            setQuantity(p.quantity ?? 10);
+            setLowStockThreshold(p.lowStockThreshold ?? 3);
+            setDescription(p.description || '');
+            setSeasonalTag(Boolean(p.tags?.includes('seasonal')));
+            setOrganicTag(Boolean(p.tags?.includes('organic')));
+            setArt(p.art || 'basket');
+            setImageUrl(p.imageUrl || '');
+            setImagePublicId(p.imagePublicId || null);
+            if (p.weeklyTemplate) {
+              setTemplateEnabled(Boolean(p.weeklyTemplate.enabled));
+              setTemplateDefaultQty(p.weeklyTemplate.defaultQuantity ?? 10);
+            }
+          }
+        } catch (err) {
+          if (isMounted) setGeneralError(err?.message || 'Failed to load product.');
+        } finally {
+          if (isMounted) setLoading(false);
+        }
+      }
+    }
+    init();
+    return () => {
+      isMounted = false;
+    };
+  }, [productId]);
+
+  const handleImageFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1048576) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        imageUrl: 'Photo exceeds 1 MB limit. Please choose a smaller photo.',
+      }));
+      return;
+    }
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        imageUrl: 'Only JPEG, PNG, and WebP images are supported.',
+      }));
+      return;
+    }
+
+    setUploading(true);
+    setFieldErrors((prev) => ({ ...prev, imageUrl: '' }));
+    try {
+      const res = await uploadFarmerImage(file, 'product');
+      setImageUrl(res?.data?.url || '');
+      setImagePublicId(res?.data?.publicId || null);
+      setIsDirty(true);
+    } catch (err) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        imageUrl: err?.message || 'Failed to upload photo.',
+      }));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl('');
+    setImagePublicId(null);
+    setIsDirty(true);
+  };
+
+  const validate = () => {
+    const errors = {};
+    if (!name.trim() || name.trim().length < 2 || name.trim().length > 80) {
+      errors.name = 'Name must be between 2 and 80 characters.';
+    }
+    if (!categoryId) {
+      errors.categoryId = 'Please select a product category.';
+    }
+    const cents = parseDollarsToCents(priceInput);
+    if (cents === null || cents <= 0) {
+      errors.price = 'Enter a valid price in dollars (e.g. 4.50).';
+    }
+    if (quantity < 0 || quantity > 10000) {
+      errors.quantity = 'Quantity must be between 0 and 10,000.';
+    }
+    if (lowStockThreshold < 0 || lowStockThreshold > 1000) {
+      errors.lowStockThreshold = 'Low stock level must be between 0 and 1,000.';
+    }
+    if (description.length > 500) {
+      errors.description = 'Description cannot exceed 500 characters.';
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    if (!validate()) return;
+
+    setSubmitting(true);
+    setGeneralError('');
+
+    const tags = [];
+    if (seasonalTag) tags.push('seasonal');
+    if (organicTag) tags.push('organic');
+
+    const priceCents = parseDollarsToCents(priceInput);
+
+    const payload = {
+      name: name.trim(),
+      categoryId,
+      priceCents,
+      unit,
+      quantity: Number(quantity),
+      lowStockThreshold: Number(lowStockThreshold),
+      description: description.trim(),
+      tags,
+      art: imageUrl ? undefined : art,
+      imageUrl: imageUrl || null,
+      imagePublicId: imagePublicId || null,
+      weeklyTemplate: {
+        enabled: templateEnabled,
+        defaultQuantity: Number(templateDefaultQty),
+      },
+    };
+
+    try {
+      let savedProduct;
+      if (productId) {
+        const res = await updateFarmerProduct(productId, payload);
+        savedProduct = res?.data;
+      } else {
+        const res = await createFarmerProduct(payload);
+        savedProduct = res?.data;
+      }
+      refreshCounts();
+      if (onSaved) onSaved(savedProduct);
+      if (onClose) onClose();
+    } catch (err) {
+      if (err?.details && Array.isArray(err.details)) {
+        const errors = {};
+        err.details.forEach((d) => {
+          if (d.field) errors[d.field] = d.message;
+        });
+        setFieldErrors(errors);
+      }
+      setGeneralError(err?.message || 'Failed to save product.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setSubmitting(true);
+    try {
+      await deleteFarmerProduct(productId);
+      refreshCounts();
+      if (onDeleted) onDeleted(productId);
+      if (onClose) onClose();
+    } catch (err) {
+      setGeneralError(err?.message || 'Could not delete product.');
+      setViewStep('form');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRequestClose = () => {
+    if (isDirty) {
+      setViewStep('confirm-discard');
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.loadingBox}>
+        <Skeleton height="32px" width="50%" />
+        <Skeleton height="44px" />
+        <Skeleton height="44px" />
+        <Skeleton height="100px" />
+      </div>
+    );
+  }
+
+  // Confirm Discard Changes Step
+  if (viewStep === 'confirm-discard') {
+    return (
+      <ConfirmStep
+        title="Discard unsaved changes?"
+        message="You have unsaved edits in this product. If you leave now, your changes will be lost."
+        confirmLabel="Discard changes"
+        confirmVariant="danger"
+        cancelLabel="Keep editing"
+        onConfirm={onClose}
+        onCancel={() => setViewStep('form')}
+      />
+    );
+  }
+
+  // Confirm Delete Product Step
+  if (viewStep === 'confirm-delete') {
+    return (
+      <ConfirmStep
+        title="Delete product"
+        message="Are you sure you want to remove this product? If the product has past orders, it will be safely archived instead of deleted."
+        confirmLabel="Delete product"
+        confirmVariant="danger"
+        cancelLabel="Cancel"
+        onConfirm={handleDelete}
+        onCancel={() => setViewStep('form')}
+        isLoading={submitting}
+        error={generalError}
+      />
+    );
+  }
+
+  return (
+    <form className={styles.form} onSubmit={handleSubmit} noValidate>
+      {generalError && (
+        <div className={styles.generalError} role="alert">
+          {generalError}
+        </div>
+      )}
+
+      {/* Name Field */}
+      <FormField
+        label="Name"
+        required
+        error={fieldErrors.name}
+        hint="What Customers will see."
+      >
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            setIsDirty(true);
+            if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: '' }));
+          }}
+          placeholder="e.g. Rainbow carrots"
+          maxLength={80}
+          disabled={submitting}
+          className={styles.input}
+        />
+      </FormField>
+
+      {/* Category Field */}
+      <div className={styles.selectGroup}>
+        <label htmlFor="product-category-select" className={styles.fieldLabel}>
+          Category <span className={styles.required}>*</span>
+        </label>
+        <select
+          id="product-category-select"
+          value={categoryId}
+          onChange={(e) => {
+            setCategoryId(e.target.value);
+            setIsDirty(true);
+            if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: '' }));
+          }}
+          className={`${styles.select} ${fieldErrors.categoryId ? styles.hasError : ''}`}
+          disabled={submitting}
+        >
+          <option value="">Select a category</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        {fieldErrors.categoryId && (
+          <span className={styles.errorText}>{fieldErrors.categoryId}</span>
+        )}
+      </div>
+
+      {/* Price and Unit Row */}
+      <div className={styles.twoColRow}>
+        <FormField
+          label="Price"
+          required
+          error={fieldErrors.price}
+          hint="Per unit, in dollars."
+        >
+          <div className={styles.priceInputWrapper}>
+            <span className={styles.currencyPrefix}>$</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={priceInput}
+              onChange={(e) => {
+                setPriceInput(e.target.value);
+                setIsDirty(true);
+                if (fieldErrors.price) setFieldErrors((p) => ({ ...p, price: '' }));
+              }}
+              placeholder="4.50"
+              disabled={submitting}
+              className={styles.priceInput}
+            />
+          </div>
+        </FormField>
+
+        <div className={styles.selectGroup}>
+          <label htmlFor="product-unit-select" className={styles.fieldLabel}>
+            Unit <span className={styles.required}>*</span>
+          </label>
+          <select
+            id="product-unit-select"
+            value={unit}
+            onChange={(e) => {
+              setUnit(e.target.value);
+              setIsDirty(true);
+            }}
+            className={styles.select}
+            disabled={submitting}
+          >
+            {PRODUCT_UNITS.map((u) => (
+              <option key={u.value} value={u.value}>
+                {u.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Quantity & Low Stock Level */}
+      <div className={styles.twoColRow}>
+        <div className={styles.stepperField}>
+          <label className={styles.fieldLabel}>Quantity available</label>
+          <QuantityStepper
+            value={quantity}
+            onChange={(q) => {
+              setQuantity(q);
+              setIsDirty(true);
+            }}
+            min={0}
+            max={10000}
+            disabled={submitting}
+          />
+          {fieldErrors.quantity && (
+            <span className={styles.errorText}>{fieldErrors.quantity}</span>
+          )}
+        </div>
+
+        <FormField
+          label="Low-stock level"
+          error={fieldErrors.lowStockThreshold}
+          hint="We warn Customers below this."
+        >
+          <input
+            type="number"
+            value={lowStockThreshold}
+            onChange={(e) => {
+              setLowStockThreshold(parseInt(e.target.value || '0', 10));
+              setIsDirty(true);
+            }}
+            min={0}
+            max={1000}
+            disabled={submitting}
+            className={styles.input}
+          />
+        </FormField>
+      </div>
+
+      {/* Description */}
+      <div className={styles.textareaGroup}>
+        <div className={styles.labelWithCounter}>
+          <label htmlFor="product-description" className={styles.fieldLabel}>
+            Description
+          </label>
+          <span className={styles.counter}>{description.length} / 500</span>
+        </div>
+        <textarea
+          id="product-description"
+          value={description}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            setIsDirty(true);
+          }}
+          maxLength={500}
+          rows={3}
+          placeholder="Tasting notes, harvest date, preparation ideas..."
+          disabled={submitting}
+          className={`${styles.textarea} ${fieldErrors.description ? styles.hasError : ''}`}
+        />
+        {fieldErrors.description && (
+          <span className={styles.errorText}>{fieldErrors.description}</span>
+        )}
+      </div>
+
+      {/* Tags */}
+      <div className={styles.tagsGroup}>
+        <span className={styles.fieldLabel}>Tags</span>
+        <div className={styles.chipsRow}>
+          <button
+            type="button"
+            className={`${styles.tagChip} ${seasonalTag ? styles.tagChipActive : ''}`}
+            onClick={() => {
+              setSeasonalTag(!seasonalTag);
+              setIsDirty(true);
+            }}
+            disabled={submitting}
+          >
+            Seasonal
+          </button>
+          <button
+            type="button"
+            className={`${styles.tagChip} ${organicTag ? styles.tagChipActive : ''}`}
+            onClick={() => {
+              setOrganicTag(!organicTag);
+              setIsDirty(true);
+            }}
+            disabled={submitting}
+          >
+            Organic
+          </button>
+        </div>
+      </div>
+
+      {/* Picture (Photo Upload or Illustration Picker) */}
+      <div className={styles.pictureSection}>
+        <span className={styles.fieldLabel}>Picture</span>
+        <p className={styles.fieldHint}>Upload a photo you own or pick a market illustration.</p>
+
+        {imageUrl ? (
+          <div className={styles.imagePreviewWrapper}>
+            <img src={imageUrl} alt="Product preview" className={styles.imagePreview} />
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className={styles.removeImageBtn}
+              aria-label="Remove uploaded photo"
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
+        ) : (
+          <div className={styles.uploadControls}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleImageFileChange}
+              style={{ display: 'none' }}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || submitting}
+              loading={uploading}
+            >
+              <Upload size={16} aria-hidden="true" />
+              <span>{uploading ? 'Uploading...' : 'Upload photo (≤ 1 MB)'}</span>
+            </Button>
+          </div>
+        )}
+        {fieldErrors.imageUrl && (
+          <span className={styles.errorText}>{fieldErrors.imageUrl}</span>
+        )}
+
+        {/* Illustration Grid */}
+        {!imageUrl && (
+          <div className={styles.illustrationPicker}>
+            <span className={styles.pickerTitle}>Or choose an illustration:</span>
+            <div className={styles.illustrationGrid}>
+              {ART_KEYS.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`${styles.artTile} ${art === key ? styles.artTileActive : ''}`}
+                  onClick={() => {
+                    setArt(key);
+                    setIsDirty(true);
+                  }}
+                  title={key}
+                  aria-label={`Select illustration ${key}`}
+                >
+                  <Illustration name={key} size="sm" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Weekly Inventory Template Section */}
+      <div className={styles.templateSection}>
+        <div className={styles.templateToggleRow}>
+          <div>
+            <strong className={styles.templateTitle}>Weekly template</strong>
+            <p className={styles.fieldHint}>Reset to this amount each week.</p>
+          </div>
+          <Toggle
+            checked={templateEnabled}
+            onChange={(checked) => {
+              setTemplateEnabled(checked);
+              setIsDirty(true);
+            }}
+            disabled={submitting}
+            label="Enable weekly template"
+          />
+        </div>
+
+        {templateEnabled && (
+          <div className={styles.templateQtyRow}>
+            <label htmlFor="template-default-qty" className={styles.fieldLabel}>
+              Default weekly quantity
+            </label>
+            <input
+              id="template-default-qty"
+              type="number"
+              value={templateDefaultQty}
+              onChange={(e) => {
+                setTemplateDefaultQty(parseInt(e.target.value || '0', 10));
+                setIsDirty(true);
+              }}
+              min={0}
+              max={10000}
+              disabled={submitting}
+              className={styles.input}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Form Action Footer */}
+      <div className={styles.footer}>
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          disabled={submitting || uploading}
+          loading={submitting}
+          className={styles.submitBtn}
+        >
+          {productId ? 'Save changes' : 'Add product'}
+        </Button>
+
+        {productId && (
+          <button
+            type="button"
+            onClick={() => setViewStep('confirm-delete')}
+            className={styles.deleteBtn}
+            disabled={submitting}
+          >
+            <Trash2 size={16} aria-hidden="true" />
+            <span>Delete product</span>
+          </button>
+        )}
+      </div>
+    </form>
+  );
+}
+
+export default StockForm;

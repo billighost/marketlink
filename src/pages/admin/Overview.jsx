@@ -1,246 +1,188 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { getAdminOverview } from '@/api/admin';
+import { useAdmin } from '@/layouts/AdminLayout';
+import Skeleton from '@/components/ui/Skeleton';
+import Button from '@/components/ui/Button';
 import {
   Users,
   Store,
-  DollarSign,
+  MapPin,
+  ShoppingBag,
   AlertCircle,
-  TrendingUp,
-  TrendingDown,
-  Eye,
-  MoreVertical,
+  Flag,
+  Mail,
   ChevronRight,
+  Clock,
 } from 'lucide-react';
+import { formatDateShort } from '@/utils/format';
 import styles from './Overview.module.css';
 
-/* ─── Static demo data ─────────────────────────────────────────────────── */
+export function Overview() {
+  const { overview: contextOverview, refreshOverview } = useAdmin();
 
-const STATS = [
-  {
-    id: 'users',
-    label: 'Total Users',
-    value: '8,431',
-    change: '+2.5%',
-    trend: 'up',
-    sub: 'vs. last month',
-    icon: Users,
-  },
-  {
-    id: 'vendors',
-    label: 'Active Vendors',
-    value: '1,156',
-    change: '+1.8%',
-    trend: 'up',
-    sub: 'vs. last month',
-    icon: Store,
-  },
-  {
-    id: 'gmv',
-    label: 'Total GMV',
-    value: '₦12,875,000',
-    change: '+6.1%',
-    trend: 'up',
-    sub: 'current month',
-    icon: DollarSign,
-  },
-  {
-    id: 'tickets',
-    label: 'Open Tickets',
-    value: '43',
-    change: '-12%',
-    trend: 'down',
-    sub: 'vs. last week',
-    icon: AlertCircle,
-  },
-];
+  const [data, setData] = useState(contextOverview);
+  const [loading, setLoading] = useState(!contextOverview);
+  const [error, setError] = useState('');
 
-const ACTIVITY = [
-  {
-    id: '#1004',
-    type: 'Vendor Registration',
-    vendor: 'Green Valley Farms',
-    date: '2026-09-24 10:15',
-    amount: '—',
-    status: 'Approved',
-  },
-  {
-    id: '#1003',
-    type: 'New Order',
-    vendor: 'Emily R.',
-    date: '2026-09-24 09:30',
-    amount: '₦45,075',
-    status: 'Completed',
-  },
-  {
-    id: '#1002',
-    type: 'Support Ticket',
-    vendor: 'Harvest Tech',
-    date: '2026-09-24 08:45',
-    amount: '—',
-    status: 'Open',
-  },
-  {
-    id: '#1001',
-    type: 'Vendor Payout',
-    vendor: 'AgroCorp',
-    date: '2026-09-23 16:12',
-    amount: '₦823,050',
-    status: 'Processed',
-  },
-  {
-    id: '#1000',
-    type: 'New Product Listing',
-    vendor: 'Sunny Fields',
-    date: '2026-09-23 14:20',
-    amount: '—',
-    status: 'Pending',
-  },
-  {
-    id: '#0999',
-    type: 'Vendor Registration',
-    vendor: 'Riverbend Farm',
-    date: '2026-09-23 11:05',
-    amount: '—',
-    status: 'Approved',
-  },
-];
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await getAdminOverview();
+      setData(res?.data || null);
+    } catch (err) {
+      setError(err?.message || 'Could not load platform overview.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-function getStatusClass(status) {
-  switch (status) {
-    case 'Approved':
-    case 'Completed':
-      return styles.statusSuccess;
-    case 'Open':
-    case 'Pending':
-      return styles.statusWarning;
-    case 'Processed':
-      return styles.statusNeutral;
-    default:
-      return styles.statusNeutral;
-  }
-}
+  useEffect(() => {
+    if (!contextOverview) {
+      loadData();
+    } else {
+      setData(contextOverview);
+      setLoading(false);
+    }
+  }, [contextOverview, loadData]);
 
-const Sparkline = ({ trend }) => {
-  const color = trend === 'up' ? 'rgba(92, 112, 72, 0.4)' : 'rgba(224, 122, 44, 0.4)';
-  const stroke = trend === 'up' ? '#5C7048' : '#E07A2C';
-  const points = trend === 'up' 
-    ? "0,20 20,25 40,15 60,18 80,5 100,0 120,5" 
-    : "0,5 20,0 40,15 60,12 80,25 100,20 120,30";
-    
+  const totals = data?.totals || { farmers: 0, customers: 0, markets: 0, orders: 0 };
+  const pendingFarmers = data?.pendingFarmers ?? 0;
+  const openFlags = data?.openFlags ?? 0;
+  const unhandledMessages = data?.unhandledMessages ?? 0;
+  const recentActivity = data?.recentActivity || [];
+
   return (
-    <svg width="100%" height="40" viewBox="0 0 120 40" preserveAspectRatio="none" className={styles.sparkline}>
-      <defs>
-        <linearGradient id={`grad-${trend}`} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polyline
-        fill={`url(#grad-${trend})`}
-        stroke={stroke}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points={points + " 120,40 0,40"}
-      />
-    </svg>
-  );
-};
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Overview</h1>
+        <p className={styles.subtitle}>Platform metrics and real-time operational status.</p>
+      </header>
 
-export default function Overview() {
-  return (
-    <div className={styles.page}>
-      {/* Page Header */}
-      <div className={styles.pageHeader}>
-        <div>
-          <h1 className={styles.greeting}>Dashboard Overview</h1>
-          <p className={styles.greetingSub}>
-            Welcome back. Here's what's happening on the platform today.
-          </p>
+      {loading ? (
+        <div className={styles.skeletonContainer}>
+          <Skeleton height="90px" />
+          <Skeleton height="140px" />
+          <Skeleton height="200px" />
         </div>
-      </div>
-
-      {/* Stat Cards */}
-      <div className={styles.statGrid}>
-        {STATS.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.id} className={styles.statCard}>
-              <div className={styles.statTop}>
-                <span className={styles.statLabel}>{stat.label}</span>
-                <Icon size={18} className={styles.statIcon} />
-              </div>
-              <div className={styles.statValue}>{stat.value}</div>
-              <div className={styles.statBottom}>
-                <span className={`${styles.statChange} ${stat.trend === 'up' ? styles.changeUp : styles.changeDown}`}>
-                  {stat.trend === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                  {stat.change}
-                </span>
-                <span className={styles.statSub}>{stat.sub}</span>
-              </div>
-              <Sparkline trend={stat.trend} />
+      ) : error ? (
+        <div className={styles.errorBox}>
+          <p>{error}</p>
+          <Button variant="secondary" size="sm" onClick={loadData}>
+            Try again
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Four Key Numbers Only */}
+          <section className={styles.fourTotalsRow} aria-label="Platform counts">
+            <div className={styles.totalCol}>
+              <span className={styles.totalLabel}>Farmers</span>
+              <span className={styles.totalValue}>{totals.farmers}</span>
             </div>
-          );
-        })}
-      </div>
+            <div className={styles.totalCol}>
+              <span className={styles.totalLabel}>Customers</span>
+              <span className={styles.totalValue}>{totals.customers}</span>
+            </div>
+            <div className={styles.totalCol}>
+              <span className={styles.totalLabel}>Markets</span>
+              <span className={styles.totalValue}>{totals.markets}</span>
+            </div>
+            <div className={styles.totalCol}>
+              <span className={styles.totalLabel}>Orders</span>
+              <span className={styles.totalValue}>{totals.orders}</span>
+            </div>
+          </section>
 
-      {/* Recent Activity Table */}
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div>
-            <h2 className={styles.cardTitle}>Recent Platform Activity</h2>
-            <p className={styles.cardSub}>Latest actions across the marketplace</p>
-          </div>
-          <button className={styles.viewAllBtn}>
-            View all <ChevronRight size={14} />
-          </button>
-        </div>
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Type</th>
-                <th>User / Vendor</th>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {ACTIVITY.map((item) => (
-                <tr key={item.id}>
-                  <td className={styles.tdMono}>{item.id}</td>
-                  <td>{item.type}</td>
-                  <td className={styles.tdBold}>{item.vendor}</td>
-                  <td className={styles.tdMuted}>{item.date}</td>
-                  <td className={styles.tdBold}>{item.amount}</td>
-                  <td>
-                    <span className={`${styles.statusPill} ${getStatusClass(item.status)}`}>
-                      {item.status}
+          {/* Needs Attention List */}
+          <section className={styles.attentionSection}>
+            <h2 className={styles.sectionTitle}>Needs attention</h2>
+            <div className={styles.attentionCard}>
+              <Link to="/admin/people?role=farmer&status=pending" className={styles.attentionRow}>
+                <div className={styles.attentionLeft}>
+                  <AlertCircle
+                    size={18}
+                    className={pendingFarmers > 0 ? styles.alertCarrot : styles.alertMuted}
+                    aria-hidden="true"
+                  />
+                  <span className={styles.attentionText}>Pending stall applications</span>
+                </div>
+                <div className={styles.attentionRight}>
+                  {pendingFarmers > 0 ? (
+                    <span className={styles.countBadge}>{pendingFarmers}</span>
+                  ) : (
+                    <span className={styles.clearText}>Clear</span>
+                  )}
+                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+                </div>
+              </Link>
+
+              <Link to="/admin/moderation" className={styles.attentionRow}>
+                <div className={styles.attentionLeft}>
+                  <Flag
+                    size={18}
+                    className={openFlags > 0 ? styles.alertCarrot : styles.alertMuted}
+                    aria-hidden="true"
+                  />
+                  <span className={styles.attentionText}>Flagged listings and reviews</span>
+                </div>
+                <div className={styles.attentionRight}>
+                  {openFlags > 0 ? (
+                    <span className={styles.countBadge}>{openFlags}</span>
+                  ) : (
+                    <span className={styles.clearText}>Clear</span>
+                  )}
+                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+                </div>
+              </Link>
+
+              <Link to="/admin/settings?tab=messages" className={styles.attentionRow}>
+                <div className={styles.attentionLeft}>
+                  <Mail
+                    size={18}
+                    className={unhandledMessages > 0 ? styles.alertCarrot : styles.alertMuted}
+                    aria-hidden="true"
+                  />
+                  <span className={styles.attentionText}>Unhandled contact messages</span>
+                </div>
+                <div className={styles.attentionRight}>
+                  {unhandledMessages > 0 ? (
+                    <span className={styles.countBadge}>{unhandledMessages}</span>
+                  ) : (
+                    <span className={styles.clearText}>Clear</span>
+                  )}
+                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+                </div>
+              </Link>
+            </div>
+          </section>
+
+          {/* Recent Activity (Last 10 events) */}
+          <section className={styles.activitySection}>
+            <h2 className={styles.sectionTitle}>Recent activity</h2>
+            {recentActivity.length === 0 ? (
+              <p className={styles.emptyText}>No recent audit activity.</p>
+            ) : (
+              <div className={styles.activityList}>
+                {recentActivity.map((event, idx) => (
+                  <div key={idx} className={styles.activityRow}>
+                    <div className={styles.activityTextRow}>
+                      <span className={styles.activityBullet}>•</span>
+                      <span className={styles.activityText}>{event.text}</span>
+                    </div>
+                    <span className={styles.activityTime}>
+                      {event.at ? formatDateShort(event.at) : ''}
                     </span>
-                  </td>
-                  <td>
-                    <button className={styles.iconBtn}>
-                      <Eye size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className={styles.tableFooter}>
-          <span>Showing 6 of 215 entries</span>
-          <div className={styles.pagination}>
-            <button className={`${styles.pageBtn} ${styles.pageBtnActive}`}>1</button>
-            <button className={styles.pageBtn}>2</button>
-            <button className={styles.pageBtn}>3</button>
-            <span className={styles.pageEllipsis}>…</span>
-            <button className={styles.pageBtn}>22</button>
-          </div>
-        </div>
-      </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }
+
+export default Overview;

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Mail,
   Lock,
@@ -9,21 +9,18 @@ import {
   ArrowRight,
   ArrowLeft,
   CheckCircle2,
-  Store,
-  ShieldCheck,
   Sparkles,
-  User,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
-import { useAuth } from '@/context/AuthContext';
-import { demoUsers } from '@/data/placeholders';
+import { useAuth, homePathFor } from '@/context/AuthContext';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './Login.module.css';
 
 export function Login() {
   useDocumentTitle('Sign In — MarketLink');
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -32,8 +29,8 @@ export function Login() {
     rememberMe: true,
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [loginError, setLoginError] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const emailRef = useRef(null);
@@ -45,74 +42,74 @@ export function Login() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: '' }));
     }
-    if (loginError) {
-      setLoginError(false);
+    if (errorMessage) {
+      setErrorMessage('');
     }
   };
 
   const validate = () => {
-    const newErrors = {};
+    const errs = {};
     if (!formData.email.trim()) {
-      newErrors.email = 'Please enter your email address.';
+      errs.email = 'Please enter your email address.';
     } else if (!formData.email.includes('@') || !formData.email.includes('.')) {
-      newErrors.email = 'Please enter a valid email address.';
+      errs.email = 'Please enter a valid email address.';
     }
     if (!formData.password) {
-      newErrors.password = 'Please enter your password.';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters.';
+      errs.password = 'Please enter your password.';
     }
-    return newErrors;
+    return errs;
   };
 
-  const redirectByRole = (role) => {
-    if (role === 'buyer') navigate(PATHS.BUYER);
-    else if (role === 'vendor') navigate(PATHS.VENDOR);
-    else if (role === 'admin') navigate(PATHS.ADMIN);
-    else navigate(PATHS.BUYER);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      if (validationErrors.email) emailRef.current?.focus();
-      else if (validationErrors.password) passwordRef.current?.focus();
+    setErrorMessage('');
+    setFieldErrors({});
+
+    const clientValidationErrors = validate();
+    if (Object.keys(clientValidationErrors).length > 0) {
+      setFieldErrors(clientValidationErrors);
+      if (clientValidationErrors.email) emailRef.current?.focus();
+      else if (clientValidationErrors.password) passwordRef.current?.focus();
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      const allUsers = Object.values(demoUsers);
-      const matchedUser = allUsers.find(
-        (u) =>
-          u.email.toLowerCase() === formData.email.trim().toLowerCase() &&
-          u.password === formData.password
-      );
+    try {
+      const data = await login(formData.email.trim(), formData.password);
+      const role = data?.user?.role;
+      const targetFrom = location.state?.from?.pathname;
+      const destination = targetFrom && targetFrom !== PATHS.LOGIN && targetFrom !== PATHS.UNAUTHORIZED
+        ? targetFrom
+        : homePathFor(role);
 
-      if (matchedUser) {
-        login(matchedUser);
-        redirectByRole(matchedUser.role);
+      navigate(destination, { replace: true });
+    } catch (err) {
+      if (err.code === 'TOO_MANY_ATTEMPTS') {
+        setErrorMessage('Too many failed sign-in attempts. Your account is temporarily locked for 15 minutes.');
+      } else if (err.code === 'ACCOUNT_INACTIVE') {
+        setErrorMessage('Your Customer account is currently inactive. Please reach out via our contact page to reactivate.');
+      } else if (err.code === 'ACCOUNT_SUSPENDED') {
+        setErrorMessage('Your Farmer account is currently suspended. Please contact market administration.');
+      } else if (err.code === 'INVALID_CREDENTIALS') {
+        setErrorMessage("That email or password doesn't look right. Please check your credentials and try again.");
+        passwordRef.current?.focus();
+      } else if (err.details && Array.isArray(err.details) && err.details.length > 0) {
+        const mapped = {};
+        for (const d of err.details) {
+          if (d.field) mapped[d.field] = d.message;
+        }
+        setFieldErrors(mapped);
+        if (mapped.email) emailRef.current?.focus();
+        else if (mapped.password) passwordRef.current?.focus();
       } else {
-        setLoginError(true);
-        emailRef.current?.focus();
+        setErrorMessage(err.message || 'Unable to sign in. Please verify your connection.');
       }
-    }, 400);
-  };
-
-  const handleQuickDemo = (demoUser) => {
-    setFormData({
-      email: demoUser.email,
-      password: demoUser.password,
-      rememberMe: true,
-    });
-    login(demoUser);
-    redirectByRole(demoUser.role);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -191,12 +188,12 @@ export function Login() {
             </div>
 
             {/* Error Banner */}
-            {loginError && (
+            {errorMessage && (
               <div role="alert" className={styles.alertBanner}>
                 <AlertCircle size={18} className={styles.alertIcon} />
                 <div>
-                  <strong>Invalid credentials</strong>
-                  <p>The email or password didn't match our records. Please try again or use a demo account below.</p>
+                  <strong>Sign in error</strong>
+                  <p>{errorMessage}</p>
                 </div>
               </div>
             )}
@@ -208,7 +205,7 @@ export function Login() {
                 <label htmlFor="login-email" className={styles.fieldLabel}>
                   Email address
                 </label>
-                <div className={`${styles.inputWrapper} ${errors.email ? styles.inputError : ''}`}>
+                <div className={`${styles.inputWrapper} ${fieldErrors.email ? styles.inputError : ''}`}>
                   <Mail size={16} className={styles.fieldIcon} />
                   <input
                     ref={emailRef}
@@ -223,7 +220,7 @@ export function Login() {
                     required
                   />
                 </div>
-                {errors.email && <span className={styles.errorText}>{errors.email}</span>}
+                {fieldErrors.email && <span className={styles.errorText}>{fieldErrors.email}</span>}
               </div>
 
               {/* Password Input */}
@@ -236,7 +233,7 @@ export function Login() {
                     Forgot password?
                   </Link>
                 </div>
-                <div className={`${styles.inputWrapper} ${errors.password ? styles.inputError : ''}`}>
+                <div className={`${styles.inputWrapper} ${fieldErrors.password ? styles.inputError : ''}`}>
                   <Lock size={16} className={styles.fieldIcon} />
                   <input
                     ref={passwordRef}
@@ -259,7 +256,7 @@ export function Login() {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                {errors.password && <span className={styles.errorText}>{errors.password}</span>}
+                {fieldErrors.password && <span className={styles.errorText}>{fieldErrors.password}</span>}
               </div>
 
               {/* Remember Me Checkbox */}
@@ -272,7 +269,7 @@ export function Login() {
                     onChange={handleChange}
                     className={styles.checkboxInput}
                   />
-                  <span>Remember me for 30 days</span>
+                  <span>Remember me on this browser</span>
                 </label>
               </div>
 
@@ -292,45 +289,6 @@ export function Login() {
                 )}
               </button>
             </form>
-
-            {/* Quick Demo Personas (Helpful for test/review) */}
-            <div className={styles.quickDemoSection}>
-              <div className={styles.demoDivider}>
-                <span>or quick sign-in with demo account</span>
-              </div>
-
-              <div className={styles.demoButtonsRow}>
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo(demoUsers.customer)}
-                  className={styles.demoPillBtn}
-                  title="Sign in as customer George Adams"
-                >
-                  <User size={13} />
-                  <span>Buyer: George</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo(demoUsers.farmer)}
-                  className={styles.demoPillBtn}
-                  title="Sign in as producer Anna Kowalski"
-                >
-                  <Store size={13} />
-                  <span>Farmer: Anna</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo(demoUsers.admin)}
-                  className={styles.demoPillBtn}
-                  title="Sign in as admin Sam Torres"
-                >
-                  <ShieldCheck size={13} />
-                  <span>Admin: Sam</span>
-                </button>
-              </div>
-            </div>
 
             {/* Register Link */}
             <div className={styles.registerFooter}>

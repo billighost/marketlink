@@ -172,6 +172,13 @@
   align-self: flex-start;
 }
 
+.mapWrapper {
+  margin-top: var(--space-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
 /* Timeline */
 .timelineSection {
   display: flex;

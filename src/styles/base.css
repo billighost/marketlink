@@ -10,6 +10,52 @@
   padding: 0;
 }
 
+/* ==========================================================================
+   SUPER THIN CUSTOM SCROLLBARS (Site-Wide)
+   ========================================================================== */
+
+/* Modern Standard CSS Scrollbars (Firefox, Chrome 121+, Safari 17.4+, Edge 121+) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(46, 43, 38, 0.22) transparent;
+}
+
+*:hover {
+  scrollbar-color: rgba(122, 46, 59, 0.45) transparent;
+}
+
+/* WebKit & Chromium Custom Scrollbars (Chrome, Edge, Safari, Opera) */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(46, 43, 38, 0.2);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 150ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(122, 46, 59, 0.5);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: rgba(122, 46, 59, 0.8);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 html {
   font-size: 100%;
   scroll-padding-top: var(--header-height);
@@ -100,6 +146,97 @@ select {
   color: inherit;
 }
 
+/* Base resets for text inputs, textareas, and selects: prevent default browser outline */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+input[type="time"],
+input:not([type]),
+textarea,
+select {
+  outline: none;
+}
+
+/* When clicking or focusing to type, inputs must not have an inner outline or focus border */
+input[type="text"]:focus,
+input[type="text"]:focus-visible,
+input[type="search"]:focus,
+input[type="search"]:focus-visible,
+input[type="email"]:focus,
+input[type="email"]:focus-visible,
+input[type="password"]:focus,
+input[type="password"]:focus-visible,
+input[type="tel"]:focus,
+input[type="tel"]:focus-visible,
+input[type="url"]:focus,
+input[type="url"]:focus-visible,
+input[type="number"]:focus,
+input[type="number"]:focus-visible,
+input[type="time"]:focus,
+input[type="time"]:focus-visible,
+input:not([type]):focus,
+input:not([type]):focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+/* Remove default search clear/cancel decoration in WebKit browsers */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/* Any input inside an external styled wrapper (which handles the nice border & focus ring) */
+[class*="Wrapper"] > input,
+[class*="wrapper"] > input,
+[class*="Group"] > input,
+[class*="group"] > input,
+[class*="Wrap"] > input,
+[class*="wrap"] > input,
+[class*="Inner"] > input,
+[class*="inner"] > input,
+[class*="Box"] > input,
+[class*="box"] > input {
+  border: none;
+  background-color: transparent;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+[class*="Wrapper"] > input:focus,
+[class*="Wrapper"] > input:focus-visible,
+[class*="wrapper"] > input:focus,
+[class*="wrapper"] > input:focus-visible,
+[class*="Group"] > input:focus,
+[class*="Group"] > input:focus-visible,
+[class*="group"] > input:focus,
+[class*="group"] > input:focus-visible,
+[class*="Wrap"] > input:focus,
+[class*="Wrap"] > input:focus-visible,
+[class*="wrap"] > input:focus,
+[class*="wrap"] > input:focus-visible,
+[class*="Inner"] > input:focus,
+[class*="Inner"] > input:focus-visible,
+[class*="inner"] > input:focus,
+[class*="inner"] > input:focus-visible,
+[class*="Box"] > input:focus,
+[class*="Box"] > input:focus-visible,
+[class*="box"] > input:focus,
+[class*="box"] > input:focus-visible {
+  border: none !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
 button {
   background: none;
   border: none;
@@ -130,8 +267,8 @@ body.noScroll {
   overscroll-behavior: none;
 }
 
-/* Visible keyboard focus ring */
-:focus-visible {
+/* Visible keyboard focus ring on interactive items, exempting inputs/textareas/selects */
+:focus-visible:not(input):not(textarea):not(select) {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
 }

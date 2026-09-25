@@ -18,6 +18,7 @@ import {
 import { syncFarmerCategorySlugs } from '../../../utils/sync.js';
 import { notifyRestock } from '../../favorites/restock.js';
 import { escapeForPrefix } from '../../../utils/query.js';
+import { validateAndAttachImage, detachAndDeleteImage } from '../../uploads/attachHelper.js';
 
 const ALLOWED_FARMER_TAGS = ['seasonal', 'organic'];
 
@@ -40,6 +41,7 @@ export function toFarmerProductDto(p) {
     availability: p.availability,
     weekly: p.weekly || { enabled: false, defaultQty: 0 },
     imageUrl: p.imageUrl ?? null,
+    imagePublicId: p.imagePublicId ?? null,
     art: p.art,
     tags: Array.isArray(p.tags) ? p.tags : [],
     description: p.description || '',
@@ -104,6 +106,7 @@ async function validateProductInput(body, isPatch = false, dbInstance) {
     'tags',
     'art',
     'imageUrl',
+    'imagePublicId',
     'weekly',
   ]);
 
@@ -237,21 +240,19 @@ async function validateProductInput(body, isPatch = false, dbInstance) {
     cleaned.art = body.art;
   }
 
-  // 10. imageUrl
+  // 10. imageUrl & imagePublicId
   if ('imageUrl' in body) {
     if (body.imageUrl === null || body.imageUrl === '') {
       cleaned.imageUrl = null;
     } else {
-      if (typeof body.imageUrl !== 'string' || !body.imageUrl.startsWith('/uploads/')) {
-        throw AppError.validation('imageUrl must start with /uploads/', { field: 'imageUrl' });
-      }
-      const filename = path.basename(body.imageUrl);
-      const filePath = path.join(env.UPLOAD_DIR, filename);
-      if (!fs.existsSync(filePath)) {
-        throw AppError.validation('Referenced image does not exist on server', { field: 'imageUrl' });
+      if (typeof body.imageUrl !== 'string') {
+        throw AppError.validation('imageUrl must be a string or null', { field: 'imageUrl' });
       }
       cleaned.imageUrl = body.imageUrl;
     }
+  }
+  if ('imagePublicId' in body) {
+    cleaned.imagePublicId = body.imagePublicId ? String(body.imagePublicId) : null;
   }
 
   // 11. weekly
@@ -400,9 +401,24 @@ export async function createFarmerProduct(farmerId, body) {
 
   const listed = Boolean(farmer.listingEnabled && availability !== 'hidden');
   const now = new Date();
+  const newProductId = new ObjectId();
+
+  let finalImageUrl = null;
+  let finalImagePublicId = null;
+  if (cleaned.imageUrl) {
+    const attachRes = await validateAndAttachImage({
+      db,
+      imageUrl: cleaned.imageUrl,
+      imagePublicId: cleaned.imagePublicId,
+      ownerUserId: farmer.userId,
+      attachTo: { type: 'product', id: newProductId },
+    });
+    finalImageUrl = attachRes.imageUrl;
+    finalImagePublicId = attachRes.imagePublicId;
+  }
 
   const productDoc = {
-    _id: new ObjectId(),
+    _id: newProductId,
     farmerId: fId,
     farmerUserId: farmer.userId,
     farmer: {
@@ -423,7 +439,8 @@ export async function createFarmerProduct(farmerId, body) {
     availability,
     tags: cleaned.tags,
     art: cleaned.art,
-    imageUrl: cleaned.imageUrl ?? null,
+    imageUrl: finalImageUrl,
+    imagePublicId: finalImagePublicId,
     weekly: cleaned.weekly,
     ratingAvg: 0,
     ratingCount: 0,
@@ -508,15 +525,21 @@ export async function updateFarmerProduct(farmerId, productId, body) {
   );
   updateFields.listed = isListed;
 
-  // Image replacement cleanup
-  const oldImage = product.imageUrl;
+  // Image replacement / attachment
+  if (cleaned.imageUrl !== undefined) {
+    const attachRes = await validateAndAttachImage({
+      db,
+      imageUrl: cleaned.imageUrl,
+      imagePublicId: cleaned.imagePublicId,
+      ownerUserId: farmer.userId,
+      attachTo: { type: 'product', id: pId },
+      oldPublicId: product.imagePublicId,
+    });
+    updateFields.imageUrl = attachRes.imageUrl;
+    updateFields.imagePublicId = attachRes.imagePublicId;
+  }
 
   await db.collection(COLLECTIONS.PRODUCTS).updateOne({ _id: pId }, { $set: updateFields });
-
-  // Clean orphan image if changed
-  if (cleaned.imageUrl !== undefined && oldImage && oldImage !== cleaned.imageUrl) {
-    cleanOrphanImage(oldImage, db);
-  }
 
   // Restock alert if went from 0 to positive
   const wasOut = product.quantityAvailable === 0 || product.availability === 'out';
@@ -760,7 +783,9 @@ export async function deleteFarmerProduct(farmerId, productId) {
     // Hard delete
     await db.collection(COLLECTIONS.PRODUCTS).deleteOne({ _id: pId });
     await syncFarmerCategorySlugs(fId, db);
-    if (product.imageUrl) {
+    if (product.imagePublicId) {
+      await detachAndDeleteImage(db, product.imagePublicId);
+    } else if (product.imageUrl) {
       cleanOrphanImage(product.imageUrl, db);
     }
     return { deleted: true };

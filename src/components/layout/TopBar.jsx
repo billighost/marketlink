@@ -5,6 +5,7 @@
   import { useAuth } from '@/context/AuthContext';
   import { useCart } from '@/context/CartContext';
   import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
+  import MarketDropdown from '@/components/layout/MarketDropdown';
   import styles from './TopBar.module.css';
 
   /**
@@ -253,10 +254,13 @@
               </button>
             </div> */}
 
+            {/* Market Selector Dropdown */}
+            <MarketDropdown variant="guest" align="right" />
+
             {/* Bookmark / Saved Items */}
             <Link
               to={PATHS.BUYER_FAVORITES || '/buyer/favorites'}
-              className={styles.iconBtn}
+              className={`${styles.iconBtn} ${styles.bookmarkBtn}`}
               aria-label="Saved favorites"
             >
               <Bookmark size={18} strokeWidth={1.8} aria-hidden="true" />

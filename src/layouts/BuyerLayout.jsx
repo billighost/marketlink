@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import BuyerTopBar from '@/components/layout/BuyerTopBar';
+import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import BottomNav from '@/components/layout/BottomNav';
 import CartBar from '@/components/layout/CartBar';
 import styles from './BuyerLayout.module.css';
@@ -59,6 +60,9 @@ export function BuyerLayout() {
       <a href="#main-content" className={styles.skipLink}>
         Skip to main content
       </a>
+
+      {/* Slim site announcements */}
+      {!isSheetOpen && <AnnouncementBar />}
 
       {/* Top Bar Header */}
       <BuyerTopBar />

@@ -59,7 +59,7 @@ describe('Image Uploads Suite (T4.086 - T4.100)', () => {
     await teardownTestEnvironment();
   });
 
-  it('T4.086: Accepts valid JPEG, PNG, and WebP, returning 201 with /uploads/<hex> path', async () => {
+  it('T4.086: Accepts valid JPEG, PNG, and WebP, returning 201 with imageUrl and publicId', async () => {
     // JPEG
     const jpegRes = await request('/api/farmer/uploads/image', {
       method: 'POST',
@@ -71,12 +71,11 @@ describe('Image Uploads Suite (T4.086 - T4.100)', () => {
     });
     assert.equal(jpegRes.status, 201);
     const jpegBody = await jpegRes.json();
-    assert.ok(jpegBody.data.imageUrl.startsWith('/uploads/'));
+    assert.ok(jpegBody.data.imageUrl.includes('marketlink/products/'));
     assert.ok(jpegBody.data.imageUrl.endsWith('.jpg'));
-
-    // Check file exists on disk
-    const jpegFilename = path.basename(jpegBody.data.imageUrl);
-    assert.ok(fs.existsSync(path.join(env.UPLOAD_DIR, jpegFilename)));
+    assert.ok(jpegBody.data.publicId.startsWith('marketlink/products/'));
+    assert.ok(jpegBody.data.width > 0);
+    assert.ok(jpegBody.data.height > 0);
 
     // PNG
     const pngRes = await request('/api/farmer/uploads/image', {
@@ -90,6 +89,7 @@ describe('Image Uploads Suite (T4.086 - T4.100)', () => {
     assert.equal(pngRes.status, 201);
     const pngBody = await pngRes.json();
     assert.ok(pngBody.data.imageUrl.endsWith('.png'));
+    assert.ok(pngBody.data.publicId);
 
     // WebP
     const webpRes = await request('/api/farmer/uploads/image', {
@@ -103,6 +103,7 @@ describe('Image Uploads Suite (T4.086 - T4.100)', () => {
     assert.equal(webpRes.status, 201);
     const webpBody = await webpRes.json();
     assert.ok(webpBody.data.imageUrl.endsWith('.webp'));
+    assert.ok(webpBody.data.publicId);
   });
 
   it('T4.087: Rejects header / magic bytes mismatch with 422', async () => {
@@ -193,22 +194,11 @@ describe('Image Uploads Suite (T4.086 - T4.100)', () => {
     assert.equal(anonRes.status, 401);
   });
 
-  it('T4.092: Static served files include X-Content-Type-Options: nosniff and cache headers', async () => {
-    const uploadRes = await request('/api/farmer/uploads/image', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${farmerToken}`,
-        'Content-Type': 'image/jpeg',
-      },
-      rawBody: validJpeg,
-    });
-    assert.equal(uploadRes.status, 201);
-    const body = await uploadRes.json();
-    const servedRes = await request(body.data.imageUrl);
-
-    assert.equal(servedRes.status, 200);
-    assert.equal(servedRes.headers.get('x-content-type-options'), 'nosniff');
-    assert.ok(servedRes.headers.get('cache-control')?.includes('max-age'));
+  it('T4.092: Helmet CSP includes Cloudinary in img-src directives', async () => {
+    const healthRes = await request('/api/health');
+    assert.equal(healthRes.status, 200);
+    const csp = healthRes.headers.get('content-security-policy') || '';
+    assert.ok(csp.includes('https://res.cloudinary.com'));
   });
 
   it('T4.093: Directory listing on /uploads returns 404 or rejects dotfiles', async () => {

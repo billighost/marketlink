@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
+import { useAuth } from '@/context/AuthContext';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './Register.module.css';
 
@@ -61,10 +62,13 @@ export function Register() {
     }
   }, [roleParam]);
 
+  const { registerCustomer, registerFarmer } = useAuth();
+
   const [customerData, setCustomerData] = useState({
     fullName: '',
     email: '',
     phone: '',
+    address: 'Elm Street Neighborhood',
     market: 'Greenwich Village Farmers Market (Abingdon Square)',
     password: '',
     confirmPassword: '',
@@ -154,7 +158,7 @@ export function Register() {
     setStep(2);
   };
 
-  const handleStep2Submit = (e) => {
+  const handleStep2Submit = async (e) => {
     e.preventDefault();
     const valErrors = validateStep2();
     if (Object.keys(valErrors).length > 0) {
@@ -164,10 +168,47 @@ export function Register() {
     }
 
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    setErrors({});
+    try {
+      if (role === 'customer') {
+        await registerCustomer({
+          name: customerData.fullName.trim(),
+          phone: customerData.phone.trim(),
+          email: customerData.email.trim().toLowerCase(),
+          address: customerData.address?.trim() || 'Elm Street Neighborhood',
+          password: customerData.password,
+        });
+      } else {
+        await registerFarmer({
+          stallName: farmerData.farmName.trim(),
+          contactPerson: farmerData.contactPerson.trim(),
+          phone: farmerData.phone.trim(),
+          email: farmerData.email.trim().toLowerCase(),
+          address: farmerData.farmLocation?.trim() || 'Hudson Valley, NY',
+          password: farmerData.password,
+        });
+      }
       setStep(3);
-    }, 600);
+    } catch (err) {
+      if (err.code === 'EMAIL_TAKEN' || err.status === 409) {
+        setErrors((prev) => ({
+          ...prev,
+          email: 'That email already has an account. Try signing in.',
+        }));
+      } else if (err.details && Array.isArray(err.details)) {
+        const mapped = {};
+        for (const d of err.details) {
+          if (d.field === 'name') mapped.fullName = d.message;
+          else if (d.field === 'stallName') mapped.farmName = d.message;
+          else if (d.field) mapped[d.field] = d.message;
+        }
+        setErrors(mapped);
+      } else {
+        setErrors({ general: err.message || 'Registration failed. Please check your details.' });
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const activeName =
@@ -738,13 +779,27 @@ export function Register() {
                 </p>
 
                 <div className={styles.successActionButtons}>
-                  <Link to={PATHS.MARKETS} className={styles.successPrimaryBtn}>
-                    <span>Explore Farmers Markets</span>
-                    <ArrowRight size={16} />
-                  </Link>
-                  <Link to={PATHS.PRODUCTS} className={styles.successSecondaryBtn}>
-                    <span>Browse Seasonal Harvest</span>
-                  </Link>
+                  {role === 'customer' ? (
+                    <>
+                      <Link to={PATHS.BUYER} className={styles.successPrimaryBtn}>
+                        <span>Enter Customer App</span>
+                        <ArrowRight size={16} />
+                      </Link>
+                      <Link to={PATHS.MARKETS} className={styles.successSecondaryBtn}>
+                        <span>Explore Farmers Markets</span>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link to={PATHS.VENDOR} className={styles.successPrimaryBtn}>
+                        <span>Go to Producer Area</span>
+                        <ArrowRight size={16} />
+                      </Link>
+                      <Link to={PATHS.HOME} className={styles.successSecondaryBtn}>
+                        <span>Back to Home</span>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             )}

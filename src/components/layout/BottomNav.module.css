@@ -118,6 +118,16 @@
   to   { transform: scale(1); }
 }
 
+.unreadDot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-beet);
+}
+
 .label {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.68rem;

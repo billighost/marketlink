@@ -1,13 +1,14 @@
 /**
  * Image upload service.
- * Validates buffer payload, magic bytes, dimensions, and securely saves with randomized hex names.
+ * Validates buffer payload, magic bytes, dimensions, checks quota,
+ * and securely saves using the configured storage driver (Cloudinary / Local / Memory).
  */
 
-import crypto from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
-import { env } from '../../config/env.js';
+import { ObjectId } from 'mongodb';
+import { getDb } from '../../db/client.js';
+import { COLLECTIONS } from '../../db/collections.js';
 import { AppError } from '../../utils/errors.js';
+import * as storage from './storage/index.js';
 
 /**
  * Inspects buffer headers to detect image MIME type and file extension.
@@ -117,13 +118,17 @@ export function parseDimensions(buf, mime) {
 }
 
 /**
- * Validates, writes, and returns the public URL for an uploaded image.
+ * Validates image payload, verifies farmer quota, saves via storage driver,
+ * and records upload in mediaUploads collection.
  *
- * @param {Buffer} buffer
- * @param {string} [declaredContentType]
- * @returns {Promise<string>} - Public path '/uploads/<name>'
+ * @param {object} options
+ * @param {Buffer} options.buffer
+ * @param {string} [options.contentType]
+ * @param {import('mongodb').ObjectId} options.ownerUserId
+ * @param {'product'|'farmer'} [options.kind='product']
+ * @returns {Promise<{ imageUrl: string, publicId: string, width: number, height: number }>}
  */
-export async function saveUploadedImage(buffer, declaredContentType) {
+export async function processAndSaveUpload({ buffer, contentType, ownerUserId, kind = 'product' }) {
   if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
     throw new AppError(422, 'INVALID_IMAGE', 'Upload payload is empty or invalid.');
   }
@@ -137,25 +142,92 @@ export async function saveUploadedImage(buffer, declaredContentType) {
     throw new AppError(422, 'INVALID_IMAGE', 'Only JPEG, PNG, and WebP images are supported.');
   }
 
-  if (declaredContentType) {
-    const cleanHeader = declaredContentType.split(';')[0].trim().toLowerCase();
-    if (cleanHeader !== detected.mime) {
-      throw new AppError(422, 'INVALID_IMAGE', `Image format ${detected.mime} does not match Content-Type header ${cleanHeader}.`);
+  if (contentType) {
+    const cleanHeader = contentType.split(';')[0].trim().toLowerCase();
+    if (cleanHeader && cleanHeader !== '*/*' && cleanHeader !== 'application/octet-stream' && cleanHeader !== detected.mime) {
+      throw new AppError(
+        422,
+        'INVALID_IMAGE',
+        `Image format ${detected.mime} does not match Content-Type header ${cleanHeader}.`
+      );
     }
   }
 
-  // Dimension check (50x50 to 4000x4000)
+  // Dimension check: 50x50 to 4000x4000
   const dims = parseDimensions(buffer, detected.mime);
   if (dims) {
     if (dims.width < 50 || dims.width > 4000 || dims.height < 50 || dims.height > 4000) {
-      throw new AppError(422, 'INVALID_IMAGE', `Image dimensions (${dims.width}x${dims.height}) must be between 50x50 and 4000x4000 pixels.`);
+      throw new AppError(
+        422,
+        'INVALID_IMAGE',
+        `Image dimensions (${dims.width}x${dims.height}) must be between 50x50 and 4000x4000 pixels.`
+      );
     }
   }
 
-  const filename = crypto.randomBytes(16).toString('hex') + detected.ext;
-  const targetPath = path.join(env.UPLOAD_DIR, filename);
+  // Quota check: at most 200 stored uploads per Farmer
+  let db = null;
+  try {
+    db = getDb();
+  } catch {
+    db = null;
+  }
 
-  await fs.promises.writeFile(targetPath, buffer, { flag: 'wx' });
+  const ownerObjId = ownerUserId
+    ? (ownerUserId instanceof ObjectId ? ownerUserId : (ObjectId.isValid(ownerUserId) ? new ObjectId(ownerUserId) : ownerUserId))
+    : null;
 
-  return `/uploads/${filename}`;
+  if (db && ownerObjId) {
+    const count = await db.collection(COLLECTIONS.MEDIA_UPLOADS).countDocuments({
+      ownerUserId: ownerObjId,
+    });
+    if (count >= 200) {
+      throw new AppError(409, 'UPLOAD_LIMIT', 'You have reached the maximum quota of 200 uploaded images.');
+    }
+  }
+
+  const subfolder = kind === 'farmer' ? 'farmers' : 'products';
+  const saved = await storage.saveImage({
+    buffer,
+    mime: detected.mime,
+    folder: subfolder,
+  });
+
+  const width = dims?.width || saved.width || 400;
+  const height = dims?.height || saved.height || 400;
+
+  if (db && ownerObjId) {
+    const mediaDoc = {
+      publicId: saved.publicId,
+      url: saved.url,
+      ownerUserId: ownerObjId,
+      kind: kind === 'farmer' ? 'farmer' : 'product',
+      bytes: saved.bytes || buffer.length,
+      width,
+      height,
+      attachedTo: null,
+      createdAt: new Date(),
+    };
+    await db.collection(COLLECTIONS.MEDIA_UPLOADS).insertOne(mediaDoc);
+  }
+
+  return {
+    imageUrl: saved.url,
+    publicId: saved.publicId,
+    width,
+    height,
+  };
+}
+
+/**
+ * Legacy wrapper for standalone tests.
+ */
+export async function saveUploadedImage(buffer, declaredContentType, ownerUserId = null, kind = 'product') {
+  const result = await processAndSaveUpload({
+    buffer,
+    contentType: declaredContentType,
+    ownerUserId,
+    kind,
+  });
+  return result.imageUrl;
 }

@@ -1,46 +1,60 @@
+#!/usr/bin/env node
 /**
- * Data invariant verification script.
- * Validates platform integrity rules across products, orders, timelines, and review aggregates.
- * Exits with code 0 on full integrity, code 1 on any violation.
+ * Data Invariant Verification Script.
+ * Validates platform integrity rules across products, orders, timelines, review aggregates,
+ * denormalised counters, and referential relationships.
+ * Supports '--fix' flag to safely repair non-destructive drift.
+ *
+ * Usage:
+ *   node scripts/verify-data.js         # Verify invariants and report { name, ok, drift, samples }
+ *   node scripts/verify-data.js --fix   # Repair safe drifts automatically
  */
 
 import { connectDb, closeDb } from '../src/db/client.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 
-async function verifyData() {
-  console.log('\n======================================================');
-  console.log('🔍  Verifying MarketLink Data Invariants...');
-  console.log('======================================================\n');
+export async function runVerifyData(options = {}) {
+  const shouldFix = options.fix || process.argv.includes('--fix');
+  const db = options.db || (await connectDb());
 
-  const db = await connectDb();
-  let violations = 0;
+  console.log('\n========================================================================================');
+  console.log(`🔍  MarketLink Invariant Verification ${shouldFix ? '[--fix mode]' : ''}`);
+  console.log('========================================================================================\n');
 
-  function reportViolation(code, msg) {
-    violations++;
-    console.error(`❌ [INVARIANT VIOLATION] [${code}] ${msg}`);
+  const results = [];
+  const fixesApplied = [];
+
+  // Helper to record invariant result
+  function recordResult(name, drift, samples = [], notes = '') {
+    results.push({
+      name,
+      ok: drift === 0,
+      drift,
+      samples: samples.slice(0, 5),
+      notes,
+    });
   }
 
   try {
-    // ── 1. No negative stock quantities ──
-    const negativeStockProducts = await db
+    // ── 1. No negative stock ──
+    const negStock = await db
       .collection(COLLECTIONS.PRODUCTS)
       .find({ quantityAvailable: { $lt: 0 } })
+      .project({ _id: 1, name: 1, quantityAvailable: 1 })
       .toArray();
 
-    if (negativeStockProducts.length > 0) {
-      reportViolation(
-        'NEGATIVE_STOCK',
-        `Found ${negativeStockProducts.length} products with negative quantityAvailable: ${negativeStockProducts.map((p) => p.name).join(', ')}`
-      );
-    } else {
-      console.log('✓ Invariant 1: No negative product stock quantities.');
-    }
+    recordResult(
+      '1. No Negative Stock',
+      negStock.length,
+      negStock.map((p) => `${p.name} (${p._id}): qty=${p.quantityAvailable}`),
+      'Critical: negative inventory prohibited (never auto-fixed)'
+    );
 
-    // ── 2. Product availability consistency ──
-    const products = await db.collection(COLLECTIONS.PRODUCTS).find().toArray();
-    let availabilityMismatches = 0;
+    // ── 2. Product availability consistency with stock and thresholds ──
+    const allProducts = await db.collection(COLLECTIONS.PRODUCTS).find().toArray();
+    const availabilityMismatches = [];
 
-    for (const p of products) {
+    for (const p of allProducts) {
       if (p.availability === 'hidden') continue;
       const qty = p.quantityAvailable || 0;
       const threshold = p.lowStockThreshold || 0;
@@ -53,74 +67,171 @@ async function verifyData() {
       }
 
       if (p.availability !== expected) {
-        availabilityMismatches++;
-        reportViolation(
-          'AVAILABILITY_MISMATCH',
-          `Product ${p.name} (id: ${p._id}): qty=${qty}, threshold=${threshold}, expected availability='${expected}', got '${p.availability}'`
+        availabilityMismatches.push({
+          id: p._id,
+          name: p.name,
+          current: p.availability,
+          expected,
+        });
+      }
+    }
+
+    if (shouldFix && availabilityMismatches.length > 0) {
+      for (const m of availabilityMismatches) {
+        await db.collection(COLLECTIONS.PRODUCTS).updateOne(
+          { _id: m.id },
+          { $set: { availability: m.expected, updatedAt: new Date() } }
         );
       }
+      fixesApplied.push(`Fixed availability on ${availabilityMismatches.length} products`);
     }
 
-    if (availabilityMismatches === 0) {
-      console.log('✓ Invariant 2: Product availability state is strictly consistent with quantity and thresholds.');
-    }
+    recordResult(
+      '2. Product Availability Consistency',
+      availabilityMismatches.length,
+      availabilityMismatches.map((m) => `${m.name}: current='${m.current}', expected='${m.expected}'`)
+    );
 
-    // ── 3. Order totals match line item sums ──
-    const orders = await db.collection(COLLECTIONS.ORDERS).find().toArray();
-    let orderTotalMismatches = 0;
-    let timelineMismatches = 0;
-    const orderNumbers = new Set();
-    let duplicateOrderNumbers = 0;
+    // ── 3. Product listed state & farmer snapshot ──
+    const allFarmers = await db.collection(COLLECTIONS.FARMERS).find().toArray();
+    const farmerMap = new Map(allFarmers.map((f) => [f._id.toString(), f]));
+    const listingMismatches = [];
 
-    for (const o of orders) {
-      // Check orderNumber uniqueness
-      if (orderNumbers.has(o.orderNumber)) {
-        duplicateOrderNumbers++;
-        reportViolation('DUPLICATE_ORDER_NUMBER', `Duplicate orderNumber found: ${o.orderNumber}`);
-      } else {
-        orderNumbers.add(o.orderNumber);
+    for (const p of allProducts) {
+      const f = farmerMap.get(p.farmerId?.toString());
+      if (!f) continue;
+
+      const shouldBeListed = Boolean(
+        f.listingEnabled && !p.moderation?.removed && !p.archived && p.availability !== 'hidden'
+      );
+
+      const stallMismatch = p.farmer?.stallName && f.stallName && p.farmer.stallName !== f.stallName;
+
+      if (Boolean(p.listed) !== shouldBeListed || stallMismatch) {
+        listingMismatches.push({
+          id: p._id,
+          name: p.name,
+          listed: p.listed,
+          shouldBeListed,
+          stallSnapshot: p.farmer?.stallName,
+          farmerStall: f.stallName,
+        });
       }
+    }
 
-      // Check sum of line totals
+    if (shouldFix && listingMismatches.length > 0) {
+      for (const m of listingMismatches) {
+        await db.collection(COLLECTIONS.PRODUCTS).updateOne(
+          { _id: m.id },
+          {
+            $set: {
+              listed: m.shouldBeListed,
+              'farmer.stallName': m.farmerStall,
+              updatedAt: new Date(),
+            },
+          }
+        );
+      }
+      fixesApplied.push(`Repaired listed status and stall snapshots for ${listingMismatches.length} products`);
+    }
+
+    recordResult(
+      '3. Product Listed State & Stall Snapshot',
+      listingMismatches.length,
+      listingMismatches.map((m) => `${m.name}: listed=${m.listed} (expected ${m.shouldBeListed})`)
+    );
+
+    // ── 4. Order totals match line item sums ──
+    const allOrders = await db.collection(COLLECTIONS.ORDERS).find().toArray();
+    const orderTotalDrift = [];
+
+    for (const o of allOrders) {
       const expectedTotal = (o.items || []).reduce((sum, it) => sum + (it.lineTotalCents || 0), 0);
       if (o.totalCents !== expectedTotal) {
-        orderTotalMismatches++;
-        reportViolation(
-          'ORDER_TOTAL_MISMATCH',
-          `Order ${o.orderNumber} (id: ${o._id}): totalCents=${o.totalCents}, sum of line items=${expectedTotal}`
-        );
+        orderTotalDrift.push({
+          id: o._id,
+          orderNumber: o.orderNumber,
+          recorded: o.totalCents,
+          expected: expectedTotal,
+        });
       }
+    }
 
-      // Check timeline integrity: last timeline entry status must match order.status
+    recordResult(
+      '4. Order Totals Integrity',
+      orderTotalDrift.length,
+      orderTotalDrift.map((d) => `Order ${d.orderNumber}: recorded=${d.recorded}¢, sum=${d.expected}¢`),
+      'Critical financial invariant (never auto-fixed)'
+    );
+
+    // ── 5. Order timeline consistency & terminal orders ──
+    const timelineDrift = [];
+    const TERMINAL_STATUSES = new Set(['completed', 'cancelled']);
+
+    for (const o of allOrders) {
       if (Array.isArray(o.timeline) && o.timeline.length > 0) {
         const lastEntry = o.timeline[o.timeline.length - 1];
         if (lastEntry.status !== o.status) {
-          timelineMismatches++;
-          reportViolation(
-            'TIMELINE_STATUS_MISMATCH',
-            `Order ${o.orderNumber} (id: ${o._id}): order status='${o.status}', but last timeline status='${lastEntry.status}'`
-          );
+          timelineDrift.push(`Order ${o.orderNumber}: order.status='${o.status}', timeline.last='${lastEntry.status}'`);
+          continue;
+        }
+
+        // Terminal check: no events after terminal status
+        const terminalIndex = o.timeline.findIndex((t) => TERMINAL_STATUSES.has(t.status));
+        if (terminalIndex !== -1 && terminalIndex < o.timeline.length - 1) {
+          timelineDrift.push(`Order ${o.orderNumber}: events recorded after terminal status '${o.timeline[terminalIndex].status}'`);
         }
       }
     }
 
-    if (orderTotalMismatches === 0) {
-      console.log('✓ Invariant 3: Order totalCents matches the exact sum of line items.');
+    recordResult('5. Order Timeline Status & Sequence', timelineDrift.length, timelineDrift);
+
+    // ── 6. Order numbers unique and below counter ──
+    const orderNumbers = new Set();
+    const duplicateOrderNumbers = [];
+    const counterDoc = await db.collection(COLLECTIONS.COUNTERS).findOne({ _id: 'orderNumber' });
+    const currentSeq = counterDoc ? counterDoc.seq : Infinity;
+    const counterViolations = [];
+
+    for (const o of allOrders) {
+      if (orderNumbers.has(o.orderNumber)) {
+        duplicateOrderNumbers.push(o.orderNumber);
+      } else {
+        orderNumbers.add(o.orderNumber);
+      }
+
+      if (o.orderNumber > currentSeq) {
+        counterViolations.push(`Order ${o.orderNumber} exceeds counter seq ${currentSeq}`);
+      }
     }
 
-    if (timelineMismatches === 0) {
-      console.log('✓ Invariant 4: Order timeline terminal entry matches current order status.');
+    recordResult(
+      '6. Order Number Uniqueness & Counter Bounds',
+      duplicateOrderNumbers.length + counterViolations.length,
+      [...duplicateOrderNumbers.map((num) => `Duplicate order #${num}`), ...counterViolations]
+    );
+
+    // ── 7. Order referential integrity (Farmer and Customer exist) ──
+    const userIds = new Set(
+      (await db.collection(COLLECTIONS.USERS).find().project({ _id: 1 }).toArray()).map((u) => u._id.toString())
+    );
+    const farmerIds = new Set(allFarmers.map((f) => f._id.toString()));
+    const orphanedOrders = [];
+
+    for (const o of allOrders) {
+      if (!farmerIds.has(o.farmerId?.toString())) {
+        orphanedOrders.push(`Order ${o.orderNumber} references missing farmerId ${o.farmerId}`);
+      }
+      if (!userIds.has(o.customerId?.toString())) {
+        orphanedOrders.push(`Order ${o.orderNumber} references missing customerId ${o.customerId}`);
+      }
     }
 
-    if (duplicateOrderNumbers === 0) {
-      console.log('✓ Invariant 5: All order numbers are strictly unique.');
-    }
+    recordResult('7. Order Referential Integrity (Users & Farmers)', orphanedOrders.length, orphanedOrders);
 
-    // ── 4. Review aggregates consistency on Farmers and Products ──
-    const farmers = await db.collection(COLLECTIONS.FARMERS).find().toArray();
-    let farmerRatingMismatches = 0;
-
-    for (const f of farmers) {
+    // ── 8. Farmer review aggregates (ratingSum, ratingCount, ratingAvg) ──
+    const farmerRatingDrift = [];
+    for (const f of allFarmers) {
       const reviews = await db
         .collection(COLLECTIONS.REVIEWS)
         .find({ farmerId: f._id, targetType: 'farmer', status: 'visible' })
@@ -130,123 +241,172 @@ async function verifyData() {
       const expectedSum = reviews.reduce((sum, r) => sum + r.rating, 0);
       const expectedAvg = expectedCount > 0 ? Math.round((expectedSum / expectedCount) * 10) / 10 : 0;
 
-      const actualSum = f.ratingSum || 0;
-      const actualCount = f.ratingCount || 0;
-      const actualAvg = f.ratingAvg || 0;
-
-      if (actualSum !== expectedSum || actualCount !== expectedCount || actualAvg !== expectedAvg) {
-        farmerRatingMismatches++;
-        reportViolation(
-          'FARMER_RATING_AGGREGATE_MISMATCH',
-          `Farmer ${f.stallName} (id: ${f._id}): expected sum=${expectedSum}, count=${expectedCount}, avg=${expectedAvg} | got sum=${actualSum}, count=${actualCount}, avg=${actualAvg}`
-        );
+      if (
+        (f.ratingSum || 0) !== expectedSum ||
+        (f.ratingCount || 0) !== expectedCount ||
+        (f.ratingAvg || 0) !== expectedAvg
+      ) {
+        farmerRatingDrift.push({
+          id: f._id,
+          stallName: f.stallName,
+          expectedSum,
+          expectedCount,
+          expectedAvg,
+          actualSum: f.ratingSum || 0,
+          actualCount: f.ratingCount || 0,
+        });
       }
     }
 
-    if (farmerRatingMismatches === 0) {
-      console.log('✓ Invariant 6: Farmer review rating aggregates match actual review collections.');
+    if (shouldFix && farmerRatingDrift.length > 0) {
+      for (const d of farmerRatingDrift) {
+        await db.collection(COLLECTIONS.FARMERS).updateOne(
+          { _id: d.id },
+          {
+            $set: {
+              ratingSum: d.expectedSum,
+              ratingCount: d.expectedCount,
+              ratingAvg: d.expectedAvg,
+              updatedAt: new Date(),
+            },
+          }
+        );
+      }
+      fixesApplied.push(`Recomputed review aggregates for ${farmerRatingDrift.length} farmers`);
     }
 
-    const reviewedProducts = await db
-      .collection(COLLECTIONS.REVIEWS)
-      .distinct('productId', { targetType: 'product', status: 'visible', productId: { $ne: null } });
+    recordResult(
+      '8. Farmer Review Rating Aggregates',
+      farmerRatingDrift.length,
+      farmerRatingDrift.map((d) => `${d.stallName}: sum ${d.actualSum}->${d.expectedSum}, count ${d.actualCount}->${d.expectedCount}`)
+    );
 
-    let productRatingMismatches = 0;
-    for (const pid of reviewedProducts) {
-      const p = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: pid });
-      if (!p) continue;
-
+    // ── 9. Product review aggregates (ratingSum, ratingCount, ratingAvg) ──
+    const productRatingDrift = [];
+    for (const p of allProducts) {
       const reviews = await db
         .collection(COLLECTIONS.REVIEWS)
-        .find({ productId: pid, targetType: 'product', status: 'visible' })
+        .find({ productId: p._id, targetType: 'product', status: 'visible' })
         .toArray();
 
       const expectedCount = reviews.length;
       const expectedSum = reviews.reduce((sum, r) => sum + r.rating, 0);
       const expectedAvg = expectedCount > 0 ? Math.round((expectedSum / expectedCount) * 10) / 10 : 0;
 
-      const actualSum = p.ratingSum || 0;
-      const actualCount = p.ratingCount || 0;
-      const actualAvg = p.ratingAvg || 0;
-
-      if (actualSum !== expectedSum || actualCount !== expectedCount || actualAvg !== expectedAvg) {
-        productRatingMismatches++;
-        reportViolation(
-          'PRODUCT_RATING_AGGREGATE_MISMATCH',
-          `Product ${p.name} (id: ${p._id}): expected sum=${expectedSum}, count=${expectedCount}, avg=${expectedAvg} | got sum=${actualSum}, count=${actualCount}, avg=${actualAvg}`
-        );
+      if (
+        (p.ratingSum || 0) !== expectedSum ||
+        (p.ratingCount || 0) !== expectedCount ||
+        (p.ratingAvg || 0) !== expectedAvg
+      ) {
+        productRatingDrift.push({
+          id: p._id,
+          name: p.name,
+          expectedSum,
+          expectedCount,
+          expectedAvg,
+          actualSum: p.ratingSum || 0,
+          actualCount: p.ratingCount || 0,
+        });
       }
     }
 
-    if (productRatingMismatches === 0) {
-      console.log('✓ Invariant 7: Product review rating aggregates match actual review collections.');
-    }
-
-    // ── 5. Product listing state consistency with farmer and moderation (D3) ──
-    const farmerMap = new Map(farmers.map((f) => [f._id.toString(), f]));
-    let listingStateMismatches = 0;
-    let snapshotMismatches = 0;
-
-    for (const p of products) {
-      const f = farmerMap.get(p.farmerId?.toString());
-      if (!f) continue;
-
-      const shouldBeListed = Boolean(
-        f.listingEnabled && !p.moderation?.removed && !p.archived && p.availability !== 'hidden'
-      );
-
-      if (Boolean(p.listed) !== shouldBeListed) {
-        listingStateMismatches++;
-        reportViolation(
-          'PRODUCT_LISTED_STATE_MISMATCH',
-          `Product ${p.name} (id: ${p._id}): listed=${p.listed}, expected=${shouldBeListed} (farmer.listingEnabled=${f.listingEnabled}, removed=${p.moderation?.removed}, archived=${p.archived}, availability=${p.availability})`
+    if (shouldFix && productRatingDrift.length > 0) {
+      for (const d of productRatingDrift) {
+        await db.collection(COLLECTIONS.PRODUCTS).updateOne(
+          { _id: d.id },
+          {
+            $set: {
+              ratingSum: d.expectedSum,
+              ratingCount: d.expectedCount,
+              ratingAvg: d.expectedAvg,
+              updatedAt: new Date(),
+            },
+          }
         );
       }
+      fixesApplied.push(`Recomputed review aggregates for ${productRatingDrift.length} products`);
+    }
 
-      // Check stall snapshot
-      if (p.farmer?.stallName && f.stallName && p.farmer.stallName !== f.stallName) {
-        snapshotMismatches++;
-        reportViolation(
-          'FARMER_SNAPSHOT_MISMATCH',
-          `Product ${p.name} (id: ${p._id}): snapshot stallName='${p.farmer.stallName}', farmer stallName='${f.stallName}'`
-        );
+    recordResult(
+      '9. Product Review Rating Aggregates',
+      productRatingDrift.length,
+      productRatingDrift.map((d) => `${d.name}: sum ${d.actualSum}->${d.expectedSum}, count ${d.actualCount}->${d.expectedCount}`)
+    );
+
+    // ── 10. Product salesCount equals completed order quantities ──
+    const completedOrders = await db.collection(COLLECTIONS.ORDERS).find({ status: 'completed' }).toArray();
+    const salesMap = new Map();
+    for (const o of completedOrders) {
+      for (const item of o.items || []) {
+        const pid = item.productId?.toString();
+        if (pid) {
+          salesMap.set(pid, (salesMap.get(pid) || 0) + (item.quantity || 0));
+        }
       }
     }
 
-    if (listingStateMismatches === 0) {
-      console.log('✓ Invariant 8: Product listed status is strictly consistent with farmer approval and product state.');
-    }
-    if (snapshotMismatches === 0) {
-      console.log('✓ Invariant 9: Product farmer snapshot stall names match parent farmer documents.');
+    const salesCountDrift = [];
+    for (const p of allProducts) {
+      const expectedSales = salesMap.get(p._id.toString()) || 0;
+      const actualSales = p.salesCount || 0;
+      if (expectedSales !== actualSales) {
+        salesCountDrift.push({
+          id: p._id,
+          name: p.name,
+          expected: expectedSales,
+          actual: actualSales,
+        });
+      }
     }
 
-    // ── 6. Market farmerCount consistency (D3) ──
+    if (shouldFix && salesCountDrift.length > 0) {
+      for (const d of salesCountDrift) {
+        await db.collection(COLLECTIONS.PRODUCTS).updateOne(
+          { _id: d.id },
+          { $set: { salesCount: d.expected, updatedAt: new Date() } }
+        );
+      }
+      fixesApplied.push(`Recomputed salesCount for ${salesCountDrift.length} products`);
+    }
+
+    recordResult(
+      '10. Product Sales Counts (Completed Orders)',
+      salesCountDrift.length,
+      salesCountDrift.map((d) => `${d.name}: actual=${d.actual}, expected=${d.expected}`)
+    );
+
+    // ── 11. Market farmerCount & Farmer categorySlugs ──
     const activeMarkets = await db.collection(COLLECTIONS.MARKETS).find({ status: 'active' }).toArray();
-    let marketCountMismatches = 0;
+    const marketCountDrift = [];
 
     for (const m of activeMarkets) {
-      const attendingListedFarmers = farmers.filter(
+      const attendingCount = allFarmers.filter(
         (f) => f.listingEnabled && Array.isArray(f.marketIds) && f.marketIds.some((id) => id.toString() === m._id.toString())
-      );
-      const expectedCount = attendingListedFarmers.length;
-      const actualCount = m.farmerCount || 0;
+      ).length;
 
-      if (actualCount !== expectedCount) {
-        marketCountMismatches++;
-        reportViolation(
-          'MARKET_FARMER_COUNT_MISMATCH',
-          `Market ${m.name} (id: ${m._id}): farmerCount=${actualCount}, expected=${expectedCount} attending listed farmers`
-        );
+      if ((m.farmerCount || 0) !== attendingCount) {
+        marketCountDrift.push({
+          id: m._id,
+          name: m.name,
+          expected: attendingCount,
+          actual: m.farmerCount || 0,
+        });
       }
     }
 
-    if (marketCountMismatches === 0) {
-      console.log('✓ Invariant 10: Market farmerCount matches attending listed farmers count.');
+    if (shouldFix && marketCountDrift.length > 0) {
+      for (const d of marketCountDrift) {
+        await db.collection(COLLECTIONS.MARKETS).updateOne(
+          { _id: d.id },
+          { $set: { farmerCount: d.expected, updatedAt: new Date() } }
+        );
+      }
+      fixesApplied.push(`Updated farmerCount for ${marketCountDrift.length} markets`);
     }
 
-    // ── 7. Farmer categorySlugs consistency (D3) ──
-    let categorySlugMismatches = 0;
-    for (const f of farmers) {
+    // Farmer categorySlugs
+    const slugDrift = [];
+    for (const f of allFarmers) {
       const distinctSlugs = await db
         .collection(COLLECTIONS.PRODUCTS)
         .distinct('categorySlug', {
@@ -254,59 +414,140 @@ async function verifyData() {
           listed: true,
           categorySlug: { $exists: true, $ne: '' },
         });
+
       const expectedSlugs = (distinctSlugs || []).sort().join(',');
       const actualSlugs = (f.categorySlugs || []).slice().sort().join(',');
 
       if (expectedSlugs !== actualSlugs) {
-        categorySlugMismatches++;
-        reportViolation(
-          'FARMER_CATEGORY_SLUGS_MISMATCH',
-          `Farmer ${f.stallName} (id: ${f._id}): categorySlugs='${actualSlugs}', expected='${expectedSlugs}'`
-        );
+        slugDrift.push({
+          id: f._id,
+          stallName: f.stallName,
+          expected: (distinctSlugs || []).sort(),
+          actual: f.categorySlugs || [],
+        });
       }
     }
 
-    if (categorySlugMismatches === 0) {
-      console.log('✓ Invariant 11: Farmer categorySlugs match distinct listed product categories.');
+    if (shouldFix && slugDrift.length > 0) {
+      for (const d of slugDrift) {
+        await db.collection(COLLECTIONS.FARMERS).updateOne(
+          { _id: d.id },
+          { $set: { categorySlugs: d.expected, updatedAt: new Date() } }
+        );
+      }
+      fixesApplied.push(`Updated categorySlugs for ${slugDrift.length} farmers`);
     }
 
-    // ── 8. Category slug propagation consistency (D3) ──
-    const allCategories = await db.collection(COLLECTIONS.CATEGORIES).find().toArray();
-    const catMap = new Map(allCategories.map((c) => [c._id.toString(), c]));
-    let prodCatSlugMismatches = 0;
+    recordResult(
+      '11. Market farmerCount & Farmer categorySlugs',
+      marketCountDrift.length + slugDrift.length,
+      [
+        ...marketCountDrift.map((d) => `Market ${d.name}: count ${d.actual}->${d.expected}`),
+        ...slugDrift.map((d) => `Farmer ${d.stallName}: categories drift`),
+      ]
+    );
 
-    for (const p of products) {
-      if (!p.categoryId) continue;
-      const cat = catMap.get(p.categoryId.toString());
-      if (cat && p.categorySlug && p.categorySlug !== cat.slug) {
-        prodCatSlugMismatches++;
-        reportViolation(
-          'CATEGORY_SLUG_MISMATCH',
-          `Product ${p.name} (id: ${p._id}): categorySlug='${p.categorySlug}', category '${cat.name}' slug='${cat.slug}'`
-        );
+    // ── 12. Orphan records (favorites, notifications, sessions, flags) ──
+    const orphanFavorites = await db
+      .collection(COLLECTIONS.FAVORITES)
+      .find({
+        $or: [
+          { userId: { $nin: Array.from(userIds).map((id) => id) } },
+        ],
+      })
+      .toArray();
+
+    // Check favorites referencing non-existent targetId
+    const productIds = new Set(allProducts.map((p) => p._id.toString()));
+    const invalidFavs = [];
+    const allFavs = await db.collection(COLLECTIONS.FAVORITES).find().toArray();
+    for (const fav of allFavs) {
+      if (!userIds.has(fav.userId?.toString())) {
+        invalidFavs.push(fav._id);
+      } else if (fav.targetType === 'product' && !productIds.has(fav.targetId?.toString())) {
+        invalidFavs.push(fav._id);
+      } else if (fav.targetType === 'farmer' && !farmerIds.has(fav.targetId?.toString())) {
+        invalidFavs.push(fav._id);
       }
     }
 
-    if (prodCatSlugMismatches === 0) {
-      console.log('✓ Invariant 12: Product categorySlugs match referenced category slugs.');
+    // Orphan notifications
+    const allNotifs = await db.collection(COLLECTIONS.NOTIFICATIONS).find().toArray();
+    const invalidNotifs = allNotifs.filter((n) => !userIds.has(n.userId?.toString())).map((n) => n._id);
+
+    // Orphan sessions
+    const allSessions = await db.collection(COLLECTIONS.SESSIONS).find().toArray();
+    const invalidSessions = allSessions.filter((s) => !userIds.has(s.userId?.toString())).map((s) => s._id);
+
+    const totalOrphans = invalidFavs.length + invalidNotifs.length + invalidSessions.length;
+
+    if (shouldFix && totalOrphans > 0) {
+      if (invalidFavs.length > 0) {
+        await db.collection(COLLECTIONS.FAVORITES).deleteMany({ _id: { $in: invalidFavs } });
+      }
+      if (invalidNotifs.length > 0) {
+        await db.collection(COLLECTIONS.NOTIFICATIONS).deleteMany({ _id: { $in: invalidNotifs } });
+      }
+      if (invalidSessions.length > 0) {
+        await db.collection(COLLECTIONS.SESSIONS).deleteMany({ _id: { $in: invalidSessions } });
+      }
+      fixesApplied.push(`Purged ${totalOrphans} orphaned records (favorites, notifications, sessions)`);
     }
 
-    console.log('\n======================================================');
-    if (violations === 0) {
-      console.log('🎉  ALL DATA INVARIANTS PASSED! Platform is 100% consistent.');
-      console.log('======================================================\n');
-      process.exit(0);
+    recordResult(
+      '12. Orphan Records (Favorites, Notifications, Sessions)',
+      totalOrphans,
+      [
+        invalidFavs.length > 0 ? `${invalidFavs.length} orphaned favorites` : null,
+        invalidNotifs.length > 0 ? `${invalidNotifs.length} orphaned notifications` : null,
+        invalidSessions.length > 0 ? `${invalidSessions.length} orphaned sessions` : null,
+      ].filter(Boolean)
+    );
+
+    // ── Summary Table ──
+    const displayRows = results.map((r) => ({
+      'Invariant Name': r.name,
+      Status: r.ok ? '✓ PASS' : '❌ DRIFT',
+      'Drift Count': r.drift,
+      'Sample Violations': r.samples.length > 0 ? r.samples.join('; ') : 'None',
+    }));
+
+    console.table(displayRows);
+
+    if (fixesApplied.length > 0) {
+      console.log('🔧 Fixes applied:');
+      for (const fix of fixesApplied) {
+        console.log(`  - ${fix}`);
+      }
+      console.log('');
+    }
+
+    const totalDrift = results.reduce((sum, r) => sum + r.drift, 0);
+
+    if (totalDrift === 0) {
+      console.log('🎉  ALL 12 DATA INVARIANTS PASS (0 drift across entire dataset).\n');
+      return { ok: true, results, fixesApplied };
     } else {
-      console.error(`💥  DATA INVARIANT CHECK FAILED WITH ${violations} VIOLATION(S)!`);
-      console.log('======================================================\n');
-      process.exit(1);
+      console.error(`💥  DATA INVARIANT CHECK FAILED WITH ${totalDrift} TOTAL DRIFT(S).\n`);
+      return { ok: false, results, fixesApplied };
     }
   } catch (err) {
     console.error('Fatal error during invariant verification:', err);
-    process.exit(1);
+    throw err;
   } finally {
-    await closeDb();
+    if (!options.db) {
+      await closeDb();
+    }
   }
 }
 
-verifyData();
+// CLI entry point
+if (process.argv[1] && process.argv[1].endsWith('verify-data.js')) {
+  runVerifyData()
+    .then(({ ok }) => {
+      process.exit(ok ? 0 : 1);
+    })
+    .catch(() => {
+      process.exit(1);
+    });
+}

@@ -1,86 +1,162 @@
 /**
- * Formatting utilities for currency, dates, and pickup times
+ * Formatting utilities for currency, dates, countdowns, and pickup times.
+ * Note: All monetary amounts are expected to be integer cents.
  */
 
 /**
- * Format a number as USD currency ($4.50)
- * @param {number} amount
+ * Format integer cents as USD currency ($4.50)
+ * @param {number} cents - Amount in integer cents
  * @returns {string}
  */
-export function formatPrice(amount) {
-  if (typeof amount !== 'number' || isNaN(amount)) {
+export function formatPrice(cents) {
+  if (typeof cents !== 'number' || isNaN(cents)) {
     return '$0.00';
   }
+  // Convert integer cents to currency representation
+  const dollars = cents >= 100 || Number.isInteger(cents) ? cents / 100 : cents;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(dollars);
+}
+
+/**
+ * Parses a dollar string ($4.50 or 4.5) to integer cents using integer math.
+ * Split on '.' and pad string - no floating point math allowed.
+ * @param {string} str
+ * @returns {number|null}
+ */
+export function parseDollarsToCents(str) {
+  if (typeof str !== 'string') str = String(str || '');
+  const clean = str.trim().replace(/^\$/, '');
+  if (!/^\d{1,4}(\.\d{1,2})?$/.test(clean)) {
+    return null;
+  }
+  const parts = clean.split('.');
+  const dollars = parseInt(parts[0], 10) || 0;
+  const cents = parts[1] ? parseInt(parts[1].padEnd(2, '0').slice(0, 2), 10) : 0;
+  return dollars * 100 + cents;
+}
+
+/**
+ * Formats integer cents into a raw decimal dollar string for input fields (450 -> "4.50")
+ * @param {number} cents
+ * @returns {string}
+ */
+export function formatCentsToDollarsInput(cents) {
+  if (typeof cents !== 'number' || isNaN(cents)) return '';
+  const dollars = Math.floor(cents / 100);
+  const rem = cents % 100;
+  return `${dollars}.${rem.toString().padStart(2, '0')}`;
 }
 
 /**
  * Format an ISO date string to a readable date (Sep 14, 2026)
- * @param {string} isoDate
+ * @param {string|Date} isoDate
+ * @param {string} [timeZone]
  * @returns {string}
  */
-export function formatDate(isoDate) {
+export function formatDate(isoDate, timeZone) {
   if (!isoDate) return '';
   const date = new Date(isoDate);
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone,
   });
 }
 
 /**
  * Format an ISO date string to a short date (Sep 14)
- * @param {string} isoDate
+ * @param {string|Date} isoDate
+ * @param {string} [timeZone]
  * @returns {string}
  */
-export function formatDateShort(isoDate) {
+export function formatDateShort(isoDate, timeZone) {
   if (!isoDate) return '';
   const date = new Date(isoDate);
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
+    timeZone,
   });
 }
 
 /**
  * Format an ISO date string to time (2:22 pm)
- * @param {string} isoDate
+ * @param {string|Date} isoDate
+ * @param {string} [timeZone]
  * @returns {string}
  */
-export function formatTime(isoDate) {
+export function formatTime(isoDate, timeZone) {
   if (!isoDate) return '';
   const date = new Date(isoDate);
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
+    timeZone,
   }).toLowerCase();
 }
 
 /**
- * Format a pickup slot for display
- * @param {string} slot - e.g. "Sat 8 – 10 am"
- * @param {string} stallName - e.g. "Riverbend Farm"
- * @param {string} stallNumber - e.g. "Stall 4"
+ * Format a pickup slot for display in market timezone
+ * @param {object|string} slot - slot object or label
+ * @param {string} [timeZone] - Market timezone e.g. "America/New_York"
  * @returns {string}
  */
-export function formatPickup(slot, stallName, stallNumber) {
-  const parts = [];
-  if (slot) parts.push(slot);
-  if (stallName) parts.push(stallName);
-  if (stallNumber) parts.push(stallNumber);
-  return parts.join(' · ');
+export function formatPickup(slot, timeZone = 'America/New_York') {
+  if (!slot) return '';
+  if (typeof slot === 'string') return slot;
+
+  if (slot.label) return slot.label;
+
+  if (slot.startTime && slot.endTime) {
+    const start = new Date(slot.startTime);
+    const end = new Date(slot.endTime);
+    const dayStr = start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone });
+    const startTimeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone }).toLowerCase();
+    const endTimeStr = end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone }).toLowerCase();
+    return `${dayStr} • ${startTimeStr} – ${endTimeStr}`;
+  }
+
+  return slot.name || '';
+}
+
+/**
+ * Format a countdown to an order cutoff timestamp
+ * @param {string|Date} cutoffAt - ISO string or Date
+ * @returns {string}
+ */
+export function formatCountdown(cutoffAt) {
+  if (!cutoffAt) return '';
+  const now = Date.now();
+  const target = new Date(cutoffAt).getTime();
+  const diffMs = target - now;
+
+  if (diffMs <= 0) {
+    return 'Cutoff passed';
+  }
+
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays > 0) {
+    return `${diffDays}d ${diffHours % 24}h left to order`;
+  }
+  if (diffHours > 0) {
+    return `${diffHours}h ${diffMins}m left to order`;
+  }
+  return `${Math.max(1, diffMins)}m left to order`;
 }
 
 /**
  * Format a relative time from now (e.g. "2 weeks ago", "3 hours left")
- * @param {string} isoDate
+ * @param {string|Date} isoDate
  * @returns {string}
  */
 export function formatRelativeTime(isoDate) {
@@ -91,7 +167,6 @@ export function formatRelativeTime(isoDate) {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
-    // Future date
     const hoursLeft = Math.floor(-diffMs / (1000 * 60 * 60));
     if (hoursLeft < 1) return 'Less than an hour';
     if (hoursLeft < 24) return `${hoursLeft} hour${hoursLeft === 1 ? '' : 's'} left`;
@@ -108,17 +183,11 @@ export function formatRelativeTime(isoDate) {
   return `${Math.floor(diffDays / 30)} months ago`;
 }
 
-/**
- * Calculate live cutoff countdown from the browser's current real clock
- * @param {string} targetDay - e.g. "Friday" or "Tuesday"
- * @param {number} targetHour - 24-hr format, e.g. 18 for 6pm
- * @returns {string} - e.g. "Order by Friday, 6 pm (14h left)"
- */
 export function getCutoffCountdown(targetDay = 'Friday', targetHour = 18) {
   const now = new Date();
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const targetDayIdx = daysOfWeek.indexOf(targetDay);
-  if (targetDayIdx === -1) return `Order by ${targetDay}, ${targetHour > 12 ? targetHour - 12 + ' pm' : targetHour + ' am'}`;
+  if (targetDayIdx === -1) return `Order by ${targetDay}`;
 
   let daysUntil = (targetDayIdx - now.getDay() + 7) % 7;
   const targetDate = new Date(now);
@@ -129,23 +198,55 @@ export function getCutoffCountdown(targetDay = 'Friday', targetHour = 18) {
     targetDate.setDate(targetDate.getDate() + 7);
   }
 
-  const diffMs = targetDate.getTime() - now.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffHours / 24);
+  return formatCountdown(targetDate);
+}
 
-  const formattedCutoff = `Order by ${targetDay}, ${targetHour > 12 ? targetHour - 12 + ' pm' : targetHour + ' am'}`;
-  if (diffHours < 24) {
-    return `${formattedCutoff} (${diffHours}h left)`;
-  }
-  return `${formattedCutoff} (${diffDays}d left)`;
+export function getLivePickupCountdown(slotLabel = '') {
+  return 'Closes at 1:00 pm, 2 hours left';
 }
 
 /**
- * Live pickup countdown during or approaching market day
- * @param {string} slotLabel - e.g. "Sat 8 – 10 am"
- * @returns {string} - e.g. "Closes at 1:00 pm, 2 hours left"
+ * Format market schedule safely for display (handles strings, objects {day, openMin, closeMin}, and arrays)
+ * @param {object} market - Market object
+ * @returns {string}
  */
-export function getLivePickupCountdown(slotLabel = '') {
-  return 'Closes at 1:00 pm, 2 hours left';
+export function formatMarketSchedule(market) {
+  if (!market) return '';
+  if (typeof market.schedule === 'string') return market.schedule;
+
+  const formatMinToTime = (min) => {
+    if (min == null) return '';
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const displayH = h % 12 || 12;
+    const displayM = m > 0 ? `:${m.toString().padStart(2, '0')}` : '';
+    return `${displayH}${displayM} ${ampm}`;
+  };
+
+  const formatScheduleItem = (s) => {
+    if (!s) return '';
+    if (typeof s === 'string') return s;
+    const dayName = s.day ? (s.day.charAt(0).toUpperCase() + s.day.slice(1)) : '';
+    const openTime = formatMinToTime(s.openMin != null ? s.openMin : 480);
+    const closeTime = formatMinToTime(s.closeMin != null ? s.closeMin : 780);
+    const timeStr = `${openTime} – ${closeTime}`;
+    return dayName ? `${dayName} · ${timeStr}` : timeStr;
+  };
+
+  // If schedule is an array of objects [{ day, openMin, closeMin }]
+  if (Array.isArray(market.schedule) && market.schedule.length > 0) {
+    return market.schedule.map(formatScheduleItem).filter(Boolean).join(', ');
+  }
+
+  // If schedule is a single object { day, openMin, closeMin }
+  if (market.schedule && typeof market.schedule === 'object') {
+    return formatScheduleItem(market.schedule);
+  }
+
+  // Fallback to days/hours or day
+  const daysStr = Array.isArray(market.days) ? market.days.join(', ') : (market.day || 'Saturday');
+  const hoursStr = market.hours || '8 am – 1 pm';
+  return `${daysStr} · ${hoursStr}`;
 }
 

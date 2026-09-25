@@ -3,13 +3,13 @@
  */
 
 import { Router } from 'express';
-import { requireAuth, requireRole } from '../../../middleware/auth.js';
 import { getDb } from '../../../db/client.js';
 import { COLLECTIONS } from '../../../db/collections.js';
 import { toObjectId } from '../../../utils/ids.js';
 import { AppError } from '../../../utils/errors.js';
 import { getFarmerInsights } from './insights.service.js';
 import { getFarmerOverview } from './overview.service.js';
+import { defineRoutes } from '../../../utils/defineRoutes.js';
 
 export const farmerInsightsRouter = Router();
 
@@ -29,35 +29,69 @@ async function resolveFarmer(req, res, next) {
   }
 }
 
-// GET /api/farmer/insights
-farmerInsightsRouter.get(
-  '/insights',
-  requireAuth,
-  requireRole('farmer'),
-  resolveFarmer,
-  async (req, res, next) => {
-    try {
-      const range = req.query.range || '30d';
-      const data = await getFarmerInsights(req.farmer._id, range);
-      res.json({ data });
-    } catch (err) {
-      next(err);
-    }
-  }
-);
+const routes = [
+  // GET /api/farmer/insights
+  {
+    method: 'get',
+    path: '/insights',
+    auth: 'farmer',
+    middlewares: [resolveFarmer],
+    summary: 'Farmer revenue, orders, and sales insights across date ranges',
+    handler: async (req, res, next) => {
+      try {
+        const range = req.query.range || '30d';
+        const data = await getFarmerInsights(req.farmer._id, range);
+        res.json({ data });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
 
-// GET /api/farmer/overview
-farmerInsightsRouter.get(
-  '/overview',
-  requireAuth,
-  requireRole('farmer'),
-  resolveFarmer,
-  async (req, res, next) => {
-    try {
-      const data = await getFarmerOverview(req.farmer._id);
-      res.json({ data });
-    } catch (err) {
-      next(err);
-    }
-  }
-);
+  // GET /api/farmer/overview
+  {
+    method: 'get',
+    path: '/overview',
+    auth: 'farmer',
+    middlewares: [resolveFarmer],
+    summary: 'Farmer daily summary dashboard with action items and earnings',
+    handler: async (req, res, next) => {
+      try {
+        const data = await getFarmerOverview(req.farmer._id);
+        res.json({ data });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+
+  // GET /api/farmer/insights/overview
+  {
+    method: 'get',
+    path: '/insights/overview',
+    auth: 'farmer',
+    middlewares: [resolveFarmer],
+    summary: 'Farmer insights overview with KPIs',
+    handler: async (req, res, next) => {
+      try {
+        const range = req.query.range || '30d';
+        const data = await getFarmerInsights(req.farmer._id, range);
+        res.json({
+          data: {
+            ...data,
+            kpis: {
+              revenueCents: data.revenueCents,
+              totalOrders: data.totalOrders,
+              averageOrderCents: data.averageOrderCents,
+              repeatCustomers: data.repeatCustomers,
+            },
+          },
+        });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+];
+
+defineRoutes(farmerInsightsRouter, 'farmerInsights', routes, { basePath: '/api/farmer' });

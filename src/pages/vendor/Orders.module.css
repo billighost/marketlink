@@ -1,0 +1,203 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 720px;
+  margin: 0 auto;
+  padding-bottom: var(--space-12);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-family: var(--font-head);
+  font-size: var(--text-h1);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.pickListBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Tabs */
+.tabsContainer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--color-wood-line);
+}
+
+.tabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  min-height: var(--tap-min);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.tabBtn:hover {
+  color: var(--color-ink);
+}
+
+.tabBtnActive {
+  color: var(--color-beet);
+  border-bottom-color: var(--color-beet);
+}
+
+.tabBadge {
+  background-color: var(--color-canvas-soft);
+  color: var(--color-ink-soft);
+  font-size: var(--text-xs);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+.tabBtnActive .tabBadge {
+  background-color: var(--color-beet-tint);
+  color: var(--color-beet);
+  font-weight: var(--weight-bold);
+}
+
+/* Loading & Empty */
+.loadingBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.errorBox {
+  padding: var(--space-4);
+  background-color: var(--color-danger-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-danger);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
+  background-color: var(--color-canvas-soft);
+  border-radius: var(--radius-lg);
+  color: var(--color-ink-soft);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--color-wood);
+}
+
+/* Order List */
+.orderList {
+  display: flex;
+  flex-direction: column;
+}
+
+.orderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-wood-line);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.orderRow:hover {
+  background-color: var(--color-canvas-soft);
+}
+
+.orderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.orderIdRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+}
+
+.orderNumber {
+  color: var(--color-ink);
+}
+
+.customerName {
+  color: var(--color-ink-soft);
+}
+
+.summaryText {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
+}
+
+.slotRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  margin-top: 2px;
+}
+
+.orderRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.total {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.chevron {
+  color: var(--color-ink-muted);
+}
+
+.loadMoreWrapper {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4) 0;
+}

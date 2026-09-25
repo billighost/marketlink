@@ -69,7 +69,25 @@ export function errorHandler(err, req, res, next) {
     });
   }
 
-  // 6. Unknown / Uncaught 500 internal server error
+  // 6. Database outage / connectivity loss (503 Service Unavailable)
+  if (
+    err.name === 'MongoServerSelectionError' ||
+    err.name === 'MongoNetworkError' ||
+    err.name === 'MongoTopologyClosedError' ||
+    err.name === 'MongoNotConnectedError' ||
+    err.name === 'MongoTimeoutError' ||
+    (err.message && (err.message.includes('buffering timed out') || err.message.includes('ECONNREFUSED')))
+  ) {
+    console.error(`[DB OUTAGE] [reqId: ${reqId}] Database connection error:`, err.message);
+    return res.status(503).json({
+      error: {
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'Database service is temporarily unavailable. Please retry shortly.',
+      },
+    });
+  }
+
+  // 7. Unknown / Uncaught 500 internal server error
   console.error(`[INTERNAL ERROR] [reqId: ${reqId}] ${req.method} ${req.originalUrl}:`, err);
 
   const errorBody = {

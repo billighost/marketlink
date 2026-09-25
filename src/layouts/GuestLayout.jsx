@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import TopBar from '@/components/layout/TopBar';
+import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import Footer from '@/components/layout/Footer';
 import BackToTop from '@/components/ui/BackToTop';
 import styles from './GuestLayout.module.css';
@@ -23,6 +24,9 @@ export function GuestLayout() {
       <a href="#main" className="skipLink">
         Skip to main content
       </a>
+
+      {/* Slim site announcements */}
+      <AnnouncementBar />
 
       {/* Persistent guest header */}
       <TopBar />

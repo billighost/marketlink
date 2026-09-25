@@ -1,60 +1,203 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useNotificationCount } from '@/hooks/useNotificationCount';
+import {
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  updateProfile,
+} from '@/api/me';
+import { formatRelativeTime } from '@/utils/format';
+import SegmentedControl from '@/components/ui/SegmentedControl';
 import ListRow from '@/components/ui/ListRow';
 import styles from './ProfileNotifications.module.css';
 
 /**
- * Notifications preferences sheet for Customer profile.
+ * Notifications and preferences sheet for Customer profile.
+ * Connected to live backend GET /notifications and PATCH /users/me.
  */
 export function ProfileNotifications({ inSheet = true, onClose }) {
-  const [orderUpdates, setOrderUpdates] = useState(true);
-  const [pickupReminders, setPickupReminders] = useState(true);
-  const [weeklyPreview, setWeeklyPreview] = useState(true);
-  const [farmerAlerts, setFarmerAlerts] = useState(false);
+  const { user, refreshUser } = useAuth();
+  const { unreadCount, refetchCount } = useNotificationCount();
+  const [tab, setTab] = useState('inbox');
+
+  // Inbox state
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifs, setLoadingNotifs] = useState(false);
+
+  // Preferences state
+  const prefs = user?.notificationPrefs || {};
+  const [orderUpdates, setOrderUpdates] = useState(prefs.orderUpdates !== false);
+  const [pickupReminders, setPickupReminders] = useState(prefs.pickupReminders !== false);
+  const [weeklyPreview, setWeeklyPreview] = useState(prefs.weeklyPreview !== false);
+  const [farmerAlerts, setFarmerAlerts] = useState(Boolean(prefs.farmerAlerts));
   const [savedKey, setSavedKey] = useState(null);
 
-  const handleToggle = (key, setter, val) => {
+  const fetchNotifs = async () => {
+    setLoadingNotifs(true);
+    try {
+      const res = await getNotifications({ limit: 20 });
+      setNotifications(res?.data || []);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingNotifs(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifs();
+    refetchCount();
+  }, [refetchCount]);
+
+  const handleMarkAsRead = async (id, isRead) => {
+    if (isRead) return;
+    try {
+      await markNotificationRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id || n.id === id ? { ...n, readAt: new Date().toISOString() } : n))
+      );
+      refetchCount();
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, readAt: new Date().toISOString() })));
+      refetchCount();
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleToggle = async (key, setter, val) => {
     setter(val);
-    setSavedKey(key);
-    setTimeout(() => {
-      setSavedKey((cur) => (cur === key ? null : cur));
-    }, 1800);
+    const newPrefs = {
+      orderUpdates: key === 'orders' ? val : orderUpdates,
+      pickupReminders: key === 'pickup' ? val : pickupReminders,
+      weeklyPreview: key === 'weekly' ? val : weeklyPreview,
+      farmerAlerts: key === 'alerts' ? val : farmerAlerts,
+    };
+
+    try {
+      await updateProfile({ notificationPrefs: newPrefs });
+      await refreshUser();
+      setSavedKey(key);
+      setTimeout(() => {
+        setSavedKey((cur) => (cur === key ? null : cur));
+      }, 1800);
+    } catch {
+      setter(!val);
+    }
   };
 
   return (
     <div className={styles.container}>
-      <p className={styles.intro}>
-        Manage how and when MarketLink contacts you. We only send relevant alerts about your orders and Saturday stall updates.
-      </p>
+      <SegmentedControl
+        name="notif-tab"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: 'inbox', label: unreadCount > 0 ? `Inbox (${unreadCount})` : 'Inbox' },
+          { value: 'preferences', label: 'Preferences' },
+        ]}
+      />
 
-      <section className={styles.panel} aria-label="Order notifications">
-        <ListRow
-          label="Order status updates"
-          value="SMS & Email"
-          indicator={savedKey === 'orders' ? 'Saved' : undefined}
-          toggle={orderUpdates}
-          onToggle={(val) => handleToggle('orders', setOrderUpdates, val)}
-        />
-        <ListRow
-          label="Saturday pickup reminder"
-          value="8:00 am"
-          indicator={savedKey === 'pickup' ? 'Saved' : undefined}
-          toggle={pickupReminders}
-          onToggle={(val) => handleToggle('pickup', setPickupReminders, val)}
-        />
-        <ListRow
-          label="Weekly harvest preview"
-          value="Thursday 6 pm"
-          indicator={savedKey === 'weekly' ? 'Saved' : undefined}
-          toggle={weeklyPreview}
-          onToggle={(val) => handleToggle('weekly', setWeeklyPreview, val)}
-        />
-        <ListRow
-          label="Farmer alerts & specials"
-          indicator={savedKey === 'alerts' ? 'Saved' : undefined}
-          toggle={farmerAlerts}
-          onToggle={(val) => handleToggle('alerts', setFarmerAlerts, val)}
-        />
-      </section>
+      {tab === 'inbox' && (
+        <div className={styles.notificationList}>
+          {notifications.length > 0 && (
+            <div className={styles.headerRow}>
+              <span className={styles.intro}>Recent updates</span>
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  className={styles.markAllBtn}
+                  onClick={handleMarkAllRead}
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className={styles.panel}>
+            {loadingNotifs && notifications.length === 0 ? (
+              <div className={styles.emptyInbox}>Loading notifications...</div>
+            ) : notifications.length > 0 ? (
+              notifications.map((n) => {
+                const id = n._id || n.id;
+                const isUnread = !n.readAt;
+                return (
+                  <div
+                    key={id}
+                    className={`${styles.notificationItem} ${isUnread ? styles.unreadItem : ''}`}
+                    onClick={() => handleMarkAsRead(id, !isUnread)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleMarkAsRead(id, !isUnread);
+                    }}
+                  >
+                    <div className={styles.notifHeader}>
+                      <span className={styles.notifTitle}>
+                        {isUnread && <span className={styles.unreadDot} />}
+                        {n.title}
+                      </span>
+                      <span className={styles.notifTime}>
+                        {formatRelativeTime(n.createdAt)}
+                      </span>
+                    </div>
+                    <p className={styles.notifMessage}>{n.message}</p>
+                  </div>
+                );
+              })
+            ) : (
+              <div className={styles.emptyInbox}>No notifications yet</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === 'preferences' && (
+        <>
+          <p className={styles.intro}>
+            Manage how and when MarketLink contacts you. We only send relevant alerts about your orders and Saturday stall updates.
+          </p>
+
+          <section className={styles.panel} aria-label="Order notifications">
+            <ListRow
+              label="Order status updates"
+              value="SMS & Email"
+              indicator={savedKey === 'orders' ? 'Saved' : undefined}
+              toggle={orderUpdates}
+              onToggle={(val) => handleToggle('orders', setOrderUpdates, val)}
+            />
+            <ListRow
+              label="Saturday pickup reminder"
+              value="8:00 am"
+              indicator={savedKey === 'pickup' ? 'Saved' : undefined}
+              toggle={pickupReminders}
+              onToggle={(val) => handleToggle('pickup', setPickupReminders, val)}
+            />
+            <ListRow
+              label="Weekly harvest preview"
+              value="Thursday 6 pm"
+              indicator={savedKey === 'weekly' ? 'Saved' : undefined}
+              toggle={weeklyPreview}
+              onToggle={(val) => handleToggle('weekly', setWeeklyPreview, val)}
+            />
+            <ListRow
+              label="Farmer alerts & specials"
+              indicator={savedKey === 'alerts' ? 'Saved' : undefined}
+              toggle={farmerAlerts}
+              onToggle={(val) => handleToggle('alerts', setFarmerAlerts, val)}
+            />
+          </section>
+        </>
+      )}
     </div>
   );
 }
