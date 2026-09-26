@@ -1,39 +1,1 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import styles from './PageHeader.module.css';
-
-/**
- * PageHeader landmark containing the single h1 of the page
- */
-export function PageHeader({
-  title,
-  subtitle,
-  backTo,
-  backLabel = 'Back',
-  action,
-  className = '',
-}) {
-  return (
-    <header className={`${styles.header} ${className}`}>
-      {backTo && (
-        <div className={styles.backWrapper}>
-          <Link to={backTo} className={styles.backLink}>
-            <ArrowLeft size={16} strokeWidth={1.5} aria-hidden="true" />
-            <span>{backLabel}</span>
-          </Link>
-        </div>
-      )}
-
-      <div className={styles.contentRow}>
-        <div className={styles.titles}>
-          <h1 className={styles.title}>{title}</h1>
-          {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
-        </div>
-        {action && <div className={styles.action}>{action}</div>}
-      </div>
-    </header>
-  );
-}
-
-export default PageHeader;
+import React from 'react';import { Link } from 'react-router-dom';import { ArrowLeft } from 'lucide-react';import styles from './PageHeader.module.css';export function PageHeader({  title,  subtitle,  backTo,  backLabel = 'Back',  action,  className = '',}) {  return (    <header className={`${styles.header} ${className}`}>      {backTo && (        <div className={styles.backWrapper}>          <Link to={backTo} className={styles.backLink}>            <ArrowLeft size={16} strokeWidth={1.5} aria-hidden="true" />            <span>{backLabel}</span>          </Link>        </div>      )}      <div className={styles.contentRow}>        <div className={styles.titles}>          <h1 className={styles.title}>{title}</h1>          {subtitle && <p className={styles.subtitle}>{subtitle}</p>}        </div>        {action && <div className={styles.action}>{action}</div>}      </div>    </header>  );}export default PageHeader;

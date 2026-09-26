@@ -1,49 +1,1 @@
-/**
- * Admin Contact Messages routes controller.
- */
-
-import { Router } from 'express';
-import {
-  listContactMessages,
-  handleContactMessage,
-} from './messagesAdmin.service.js';
-import { defineRoutes } from '../../../utils/defineRoutes.js';
-
-export const messagesAdminRouter = Router();
-
-const routes = [
-  // GET /api/admin/messages
-  {
-    method: 'get',
-    path: '/',
-    auth: 'admin',
-    summary: 'List customer contact inquiry messages with status filtering',
-    handler: async (req, res, next) => {
-      try {
-        const result = await listContactMessages(req.query);
-        res.json(result);
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-
-  // POST /api/admin/messages/:id/handle
-  {
-    method: 'post',
-    path: '/:id/handle',
-    auth: 'admin',
-    summary: 'Resolve and reply to contact inquiry message',
-    body: 'handleContactMessage',
-    handler: async (req, res, next) => {
-      try {
-        const result = await handleContactMessage(req.user, req.params.id, req.body?.reply);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-];
-
-defineRoutes(messagesAdminRouter, 'messagesAdmin', routes, { basePath: '/api/admin/messages' });
+import { Router } from 'express';import {  listContactMessages,  handleContactMessage,} from './messagesAdmin.service.js';import { defineRoutes } from '../../../utils/defineRoutes.js';export const messagesAdminRouter = Router();const routes = [  {    method: 'get',    path: '/',    auth: 'admin',    summary: 'List customer contact inquiry messages with status filtering',    handler: async (req, res, next) => {      try {        const result = await listContactMessages(req.query);        res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/:id/handle',    auth: 'admin',    summary: 'Resolve and reply to contact inquiry message',    body: 'handleContactMessage',    handler: async (req, res, next) => {      try {        const result = await handleContactMessage(req.user, req.params.id, req.body?.reply);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },];defineRoutes(messagesAdminRouter, 'messagesAdmin', routes, { basePath: '/api/admin/messages' });

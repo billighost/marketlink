@@ -1,144 +1,1 @@
-﻿import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from './AuthContext';
-import { getFavoriteIds, addFavorite, removeFavorite } from '@/api/me';
-import { invalidateQueries } from '@/hooks/useQuery';
-
-const FavoritesContext = createContext(null);
-
-export function FavoritesProvider({ children }) {
-  const { isAuthenticated } = useAuth();
-
-  const [productIds, setProductIds] = useState(new Set());
-  const [farmerIds, setFarmerIds] = useState(new Set());
-  const [loading, setLoading] = useState(false);
-
-  // Fetch favorite IDs once authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setProductIds(new Set());
-      setFarmerIds(new Set());
-      return;
-    }
-
-    let cancelled = false;
-    async function fetchIds() {
-      setLoading(true);
-      try {
-        const data = await getFavoriteIds();
-        if (!cancelled && data) {
-          setProductIds(new Set(data.productIds || []));
-          setFarmerIds(new Set(data.farmerIds || []));
-        }
-      } catch {
-        // ignore
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchIds();
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated]);
-
-  const toggleProduct = useCallback(
-    async (id) => {
-      if (!id) return;
-      const isFav = productIds.has(id);
-
-      // Optimistic update
-      setProductIds((prev) => {
-        const next = new Set(prev);
-        if (isFav) next.delete(id);
-        else next.add(id);
-        return next;
-      });
-
-      try {
-        if (isFav) {
-          await removeFavorite('product', id);
-        } else {
-          await addFavorite('product', id);
-        }
-        invalidateQueries('/favorites');
-      } catch (err) {
-        // Rollback on failure
-        setProductIds((prev) => {
-          const next = new Set(prev);
-          if (isFav) next.add(id);
-          else next.delete(id);
-          return next;
-        });
-        throw err;
-      }
-    },
-    [productIds]
-  );
-
-  const toggleFarmer = useCallback(
-    async (id) => {
-      if (!id) return;
-      const isFav = farmerIds.has(id);
-
-      // Optimistic update
-      setFarmerIds((prev) => {
-        const next = new Set(prev);
-        if (isFav) next.delete(id);
-        else next.add(id);
-        return next;
-      });
-
-      try {
-        if (isFav) {
-          await removeFavorite('farmer', id);
-        } else {
-          await addFavorite('farmer', id);
-        }
-        invalidateQueries('/favorites');
-      } catch (err) {
-        // Rollback on failure
-        setFarmerIds((prev) => {
-          const next = new Set(prev);
-          if (isFav) next.add(id);
-          else next.delete(id);
-          return next;
-        });
-        throw err;
-      }
-    },
-    [farmerIds]
-  );
-
-  const isProductFavorite = useCallback((id) => productIds.has(id), [productIds]);
-  const isFarmerFavorite = useCallback((id) => farmerIds.has(id), [farmerIds]);
-
-  const value = useMemo(
-    () => ({
-      productIds: [...productIds],
-      farmerIds: [...farmerIds],
-      toggleProduct,
-      toggleFarmer,
-      isProductFavorite,
-      isFarmerFavorite,
-      loading,
-    }),
-    [productIds, farmerIds, toggleProduct, toggleFarmer, isProductFavorite, isFarmerFavorite, loading]
-  );
-
-  return (
-    <FavoritesContext.Provider value={value}>
-      {children}
-    </FavoritesContext.Provider>
-  );
-}
-
-export function useFavorites() {
-  const context = useContext(FavoritesContext);
-  if (!context) {
-    throw new Error('useFavorites must be used within a FavoritesProvider');
-  }
-  return context;
-}
-
-export default FavoritesContext;
+﻿import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';import { useAuth } from './AuthContext';import { getFavoriteIds, addFavorite, removeFavorite } from '@/api/me';import { invalidateQueries } from '@/hooks/useQuery';const FavoritesContext = createContext(null);export function FavoritesProvider({ children }) {  const { isAuthenticated } = useAuth();  const [productIds, setProductIds] = useState(new Set());  const [farmerIds, setFarmerIds] = useState(new Set());  const [loading, setLoading] = useState(false);  useEffect(() => {    if (!isAuthenticated) {      setProductIds(new Set());      setFarmerIds(new Set());      return;    }    let cancelled = false;    async function fetchIds() {      setLoading(true);      try {        const data = await getFavoriteIds();        if (!cancelled && data) {          setProductIds(new Set(data.productIds || []));          setFarmerIds(new Set(data.farmerIds || []));        }      } catch {      } finally {        if (!cancelled) setLoading(false);      }    }    fetchIds();    return () => {      cancelled = true;    };  }, [isAuthenticated]);  const toggleProduct = useCallback(    async (id) => {      if (!id) return;      const isFav = productIds.has(id);      setProductIds((prev) => {        const next = new Set(prev);        if (isFav) next.delete(id);        else next.add(id);        return next;      });      try {        if (isFav) {          await removeFavorite('product', id);        } else {          await addFavorite('product', id);        }        invalidateQueries('/favorites');      } catch (err) {        setProductIds((prev) => {          const next = new Set(prev);          if (isFav) next.add(id);          else next.delete(id);          return next;        });        throw err;      }    },    [productIds]  );  const toggleFarmer = useCallback(    async (id) => {      if (!id) return;      const isFav = farmerIds.has(id);      setFarmerIds((prev) => {        const next = new Set(prev);        if (isFav) next.delete(id);        else next.add(id);        return next;      });      try {        if (isFav) {          await removeFavorite('farmer', id);        } else {          await addFavorite('farmer', id);        }        invalidateQueries('/favorites');      } catch (err) {        setFarmerIds((prev) => {          const next = new Set(prev);          if (isFav) next.add(id);          else next.delete(id);          return next;        });        throw err;      }    },    [farmerIds]  );  const isProductFavorite = useCallback((id) => productIds.has(id), [productIds]);  const isFarmerFavorite = useCallback((id) => farmerIds.has(id), [farmerIds]);  const value = useMemo(    () => ({      productIds: [...productIds],      farmerIds: [...farmerIds],      toggleProduct,      toggleFarmer,      isProductFavorite,      isFarmerFavorite,      loading,    }),    [productIds, farmerIds, toggleProduct, toggleFarmer, isProductFavorite, isFarmerFavorite, loading]  );  return (    <FavoritesContext.Provider value={value}>      {children}    </FavoritesContext.Provider>  );}export function useFavorites() {  const context = useContext(FavoritesContext);  if (!context) {    throw new Error('useFavorites must be used within a FavoritesProvider');  }  return context;}export default FavoritesContext;

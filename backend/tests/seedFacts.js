@@ -1,19 +1,1 @@
-/**
- * Seed facts loader for test suites.
- * Reads tests/seedFacts.json populated during seed execution so tests never rely on hard-coded IDs.
- */
-
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const factsPath = path.join(__dirname, 'seedFacts.json');
-
-export function getSeedFacts() {
-  if (!fs.existsSync(factsPath)) {
-    throw new Error('tests/seedFacts.json does not exist. Run npm run seed first.');
-  }
-  return JSON.parse(fs.readFileSync(factsPath, 'utf8'));
-}
+import fs from 'node:fs';import path from 'node:path';import { fileURLToPath } from 'node:url';const __filename = fileURLToPath(import.meta.url);const __dirname = path.dirname(__filename);const factsPath = path.join(__dirname, 'seedFacts.json');export function getSeedFacts() {  if (!fs.existsSync(factsPath)) {    throw new Error('tests/seedFacts.json does not exist. Run npm run seed first.');  }  return JSON.parse(fs.readFileSync(factsPath, 'utf8'));}

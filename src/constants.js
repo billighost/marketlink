@@ -1,157 +1,1 @@
-/**
- * MarketLink application constants and domain enumerations for frontend.
- */
-
-export const ROLES = {
-  CUSTOMER: 'customer',
-  FARMER: 'farmer',
-  ADMIN: 'admin',
-};
-
-export const ALL_ROLES = [ROLES.CUSTOMER, ROLES.FARMER, ROLES.ADMIN];
-
-export const USER_STATUSES = {
-  CUSTOMER: ['active', 'inactive'],
-  FARMER: ['pending', 'active', 'suspended', 'rejected'],
-  ADMIN: ['active'],
-};
-
-export const PRODUCT_UNITS = [
-  'lb',
-  'bunch',
-  'loaf',
-  'jar',
-  'dozen',
-  'each',
-  'pint',
-  'bag',
-];
-
-export const PRODUCT_AVAILABILITY = ['in', 'low', 'out', 'hidden'];
-
-export const PRODUCT_TAGS = ['seasonal', 'organic', 'new', 'bestseller'];
-
-export const ORDER_STATUSES = [
-  'placed',
-  'accepted',
-  'ready',
-  'completed',
-  'cancelled',
-  'declined',
-];
-
-export const OPERATING_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-
-export const CONTACT_TOPICS = ['order', 'farmer-help', 'feedback', 'other'];
-
-export const ANNOUNCEMENT_AUDIENCES = ['all', 'customer', 'farmer'];
-
-export const MODERATION_STATUSES = ['open', 'resolved', 'removed'];
-
-export const MODERATION_TARGET_TYPES = ['listing', 'review'];
-
-export const REVIEW_TARGET_TYPES = ['farmer', 'product'];
-
-export const FAVORITE_TARGET_TYPES = ['product', 'farmer'];
-
-export const MARKET_STATUSES = ['active', 'removed'];
-
-export const NOTIFICATION_TYPES = [
-  'order_placed',
-  'order_accepted',
-  'order_ready',
-  'order_completed',
-  'order_declined',
-  'order_cancelled',
-  'restock',
-  'announcement',
-  'review_reply',
-  'account',
-];
-
-export const CHECKOUT_STATUSES = ['pending', 'done', 'failed'];
-
-export const ALLOWED_ART_KEYS = [
-  'basket',
-  'basket-tomatoes',
-  'crate-carrots',
-  'beet-bunch',
-  'beet',
-  'leafy-greens',
-  'leaves',
-  'sourdough-boule',
-  'loaf',
-  'honey-jar',
-  'honey',
-  'egg-carton',
-  'paper-bag-pears',
-  'radish-bunch',
-  'empty-crate-soldout',
-  'closed-stall',
-  'basket-door',
-  'stall',
-  'crate',
-  'carrot',
-  'tomato',
-  'potatoes',
-  'corn',
-  'squash',
-  'apples',
-  'pears',
-  'strawberries',
-  'blueberries',
-  'croissant',
-  'cheese',
-  'milk-bottle',
-  'herbs',
-  'flowers',
-  'mushrooms',
-  'fish',
-  'sausages',
-  'jam',
-];
-
-export const AUDIT_ACTIONS = [
-  'farmer.approve',
-  'farmer.reject',
-  'farmer.suspend',
-  'farmer.reinstate',
-  'customer.deactivate',
-  'customer.activate',
-  'market.create',
-  'market.update',
-  'market.remove',
-  'product.remove',
-  'review.remove',
-  'moderation.resolve',
-  'category.create',
-  'category.update',
-  'category.delete',
-  'category.reorder',
-  'announcement.create',
-  'announcement.update',
-  'announcement.delete',
-  'announcement.publish',
-  'settings.update',
-  'message.handle',
-  'report.export',
-];
-
-export const REPORT_TYPES = ['orders', 'revenue', 'farmers', 'summary'];
-
-export const SETTINGS_KEYS = ['maxItemsPerOrder', 'defaultCutoffMinutes', 'lowStockDefault'];
-
-export const CONTACT_STATUSES = ['new', 'handled'];
-
-export const MARKET_FACILITIES = [
-  'parking',
-  'step-free',
-  'toilets',
-  'seating',
-  'card-payments',
-  'dog-friendly',
-  'pickup-point',
-  'restrooms',
-  'wheelchair-accessible',
-  'atm',
-];
+export const ROLES = {  CUSTOMER: 'customer',  FARMER: 'farmer',  ADMIN: 'admin',};export const ALL_ROLES = [ROLES.CUSTOMER, ROLES.FARMER, ROLES.ADMIN];export const USER_STATUSES = {  CUSTOMER: ['active', 'inactive'],  FARMER: ['pending', 'active', 'suspended', 'rejected'],  ADMIN: ['active'],};export const PRODUCT_UNITS = [  'lb',  'bunch',  'loaf',  'jar',  'dozen',  'each',  'pint',  'bag',];export const PRODUCT_AVAILABILITY = ['in', 'low', 'out', 'hidden'];export const PRODUCT_TAGS = ['seasonal', 'organic', 'new', 'bestseller'];export const ORDER_STATUSES = [  'placed',  'accepted',  'ready',  'completed',  'cancelled',  'declined',];export const OPERATING_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];export const CONTACT_TOPICS = ['order', 'farmer-help', 'feedback', 'other'];export const ANNOUNCEMENT_AUDIENCES = ['all', 'customer', 'farmer'];export const MODERATION_STATUSES = ['open', 'resolved', 'removed'];export const MODERATION_TARGET_TYPES = ['listing', 'review'];export const REVIEW_TARGET_TYPES = ['farmer', 'product'];export const FAVORITE_TARGET_TYPES = ['product', 'farmer'];export const MARKET_STATUSES = ['active', 'removed'];export const NOTIFICATION_TYPES = [  'order_placed',  'order_accepted',  'order_ready',  'order_completed',  'order_declined',  'order_cancelled',  'restock',  'announcement',  'review_reply',  'account',];export const CHECKOUT_STATUSES = ['pending', 'done', 'failed'];export const ALLOWED_ART_KEYS = [  'basket',  'basket-tomatoes',  'crate-carrots',  'beet-bunch',  'beet',  'leafy-greens',  'leaves',  'sourdough-boule',  'loaf',  'honey-jar',  'honey',  'egg-carton',  'paper-bag-pears',  'radish-bunch',  'empty-crate-soldout',  'closed-stall',  'basket-door',  'stall',  'crate',  'carrot',  'tomato',  'potatoes',  'corn',  'squash',  'apples',  'pears',  'strawberries',  'blueberries',  'croissant',  'cheese',  'milk-bottle',  'herbs',  'flowers',  'mushrooms',  'fish',  'sausages',  'jam',];export const AUDIT_ACTIONS = [  'farmer.approve',  'farmer.reject',  'farmer.suspend',  'farmer.reinstate',  'customer.deactivate',  'customer.activate',  'market.create',  'market.update',  'market.remove',  'product.remove',  'review.remove',  'moderation.resolve',  'category.create',  'category.update',  'category.delete',  'category.reorder',  'announcement.create',  'announcement.update',  'announcement.delete',  'announcement.publish',  'settings.update',  'message.handle',  'report.export',];export const REPORT_TYPES = ['orders', 'revenue', 'farmers', 'summary'];export const SETTINGS_KEYS = ['maxItemsPerOrder', 'defaultCutoffMinutes', 'lowStockDefault'];export const CONTACT_STATUSES = ['new', 'handled'];export const MARKET_FACILITIES = [  'parking',  'step-free',  'toilets',  'seating',  'card-payments',  'dog-friendly',  'pickup-point',  'restrooms',  'wheelchair-accessible',  'atm',];

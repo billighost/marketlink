@@ -1,46 +1,1 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { PATHS } from '@/routes/paths';
-import useDocumentTitle from '@/hooks/useDocumentTitle';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import Illustration from '@/components/domain/Illustration';
-import styles from './Unauthorized.module.css';
-
-/**
- * Friendly market-style 403 page
- */
-export function Unauthorized() {
-  useDocumentTitle('Closed for the Day · MarketLink');
-
-  return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <Card className={styles.card}>
-          <div className={styles.illustrationMoment} aria-hidden="true">
-            <Illustration name="closed-stall" size="xl" />
-          </div>
-          <h1 className={styles.title}>Closed for the day</h1>
-          <p className={styles.text}>
-            You're signed in, but this counter is reserved for a different kind of stall or account.
-          </p>
-          <div className={styles.actions}>
-            <Button
-              as={Link}
-              to={PATHS.LOGIN}
-              variant="primary"
-              size="md"
-            >
-              Sign in with another account
-            </Button>
-            <Link to={PATHS.HOME} className={styles.homeLink}>
-              Back to Elm Street
-            </Link>
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-export default Unauthorized;
+import React from 'react';import { Link } from 'react-router-dom';import { PATHS } from '@/routes/paths';import useDocumentTitle from '@/hooks/useDocumentTitle';import Button from '@/components/ui/Button';import Card from '@/components/ui/Card';import Illustration from '@/components/domain/Illustration';import styles from './Unauthorized.module.css';export function Unauthorized() {  useDocumentTitle('Closed for the Day · MarketLink');  return (    <div className={styles.page}>      <div className={styles.container}>        <Card className={styles.card}>          <div className={styles.illustrationMoment} aria-hidden="true">            <Illustration name="closed-stall" size="xl" />          </div>          <h1 className={styles.title}>Closed for the day</h1>          <p className={styles.text}>            You're signed in, but this counter is reserved for a different kind of stall or account.          </p>          <div className={styles.actions}>            <Button              as={Link}              to={PATHS.LOGIN}              variant="primary"              size="md"            >              Sign in with another account            </Button>            <Link to={PATHS.HOME} className={styles.homeLink}>              Back to Elm Street            </Link>          </div>        </Card>      </div>    </div>  );}export default Unauthorized;

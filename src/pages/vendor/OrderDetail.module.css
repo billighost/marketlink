@@ -1,247 +1,1 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-2) 0;
-}
-
-.loadingContainer,
-.errorContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-8) var(--space-4);
-  text-align: center;
-}
-
-.errorText {
-  color: var(--color-danger);
-  font-size: var(--text-body);
-}
-
-.header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-wood-line);
-}
-
-.orderNumberRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.orderNumber {
-  font-family: var(--font-head);
-  font-size: var(--text-h2);
-  font-weight: var(--weight-normal);
-  color: var(--color-ink);
-  margin: 0;
-}
-
-.statusBadge {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-}
-
-.customerMeta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-}
-
-.customerName {
-  font-weight: var(--weight-medium);
-  color: var(--color-ink);
-}
-
-.phoneLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--color-beet);
-  text-decoration: none;
-  font-size: var(--text-sm);
-}
-
-.phoneLink:hover {
-  text-decoration: underline;
-}
-
-.pickupRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-}
-
-.pickupIcon {
-  color: var(--color-ink-muted);
-}
-
-.actionError {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  background-color: var(--color-warning-subtle);
-  border: 1px solid var(--color-carrot);
-  border-radius: var(--radius-md);
-  color: var(--color-carrot-text);
-  font-size: var(--text-sm);
-}
-
-.noteBox {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  background-color: var(--color-canvas-soft);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-wood-line);
-}
-
-.noteIcon {
-  color: var(--color-wood);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.noteContent {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink);
-}
-
-.noteContent p {
-  margin: 4px 0 0 0;
-  color: var(--color-ink-soft);
-}
-
-.cancellationBox {
-  padding: var(--space-3);
-  background-color: var(--color-danger-subtle);
-  border: 1px solid var(--color-danger);
-  border-radius: var(--radius-md);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-danger);
-}
-
-.itemsSection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.itemsTitle {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  margin: 0;
-}
-
-.itemsList {
-  display: flex;
-  flex-direction: column;
-}
-
-.itemRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-wood-line);
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-}
-
-.itemInfo {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.itemName {
-  color: var(--color-ink);
-}
-
-.itemQty {
-  color: var(--color-ink-soft);
-}
-
-.itemPrice {
-  font-weight: var(--weight-medium);
-  color: var(--color-ink);
-}
-
-.totalSection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding-top: var(--space-2);
-}
-
-.totalRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: var(--font-body);
-  font-size: var(--text-h3);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink);
-}
-
-.totalAmount {
-  font-weight: var(--weight-bold);
-  color: var(--color-beet);
-}
-
-.paymentNote {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: var(--color-ink-muted);
-}
-
-.footerActions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-wood-line);
-}
-
-.primaryAction {
-  width: 100%;
-}
-
-.dangerTextBtn {
-  background: transparent;
-  border: none;
-  color: var(--color-danger);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  padding: var(--space-2);
-}
-
-.dangerTextBtn:hover {
-  text-decoration: underline;
-}
+.container {  display: flex;  flex-direction: column;  gap: var(--space-4);  padding: var(--space-2) 0;}.loadingContainer,.errorContainer {  display: flex;  flex-direction: column;  align-items: center;  gap: var(--space-3);  padding: var(--space-8) var(--space-4);  text-align: center;}.errorText {  color: var(--color-danger);  font-size: var(--text-body);}.header {  display: flex;  flex-direction: column;  gap: var(--space-2);  padding-bottom: var(--space-3);  border-bottom: 1px solid var(--color-wood-line);}.orderNumberRow {  display: flex;  align-items: center;  justify-content: space-between;  gap: var(--space-2);}.orderNumber {  font-family: var(--font-head);  font-size: var(--text-h2);  font-weight: var(--weight-normal);  color: var(--color-ink);  margin: 0;}.statusBadge {  display: flex;  align-items: center;  gap: var(--space-2);  font-family: var(--font-body);  font-size: var(--text-sm);  color: var(--color-ink-soft);}.customerMeta {  display: flex;  align-items: center;  flex-wrap: wrap;  gap: var(--space-3);  font-family: var(--font-body);  font-size: var(--text-body);}.customerName {  font-weight: var(--weight-medium);  color: var(--color-ink);}.phoneLink {  display: inline-flex;  align-items: center;  gap: var(--space-1);  color: var(--color-beet);  text-decoration: none;  font-size: var(--text-sm);}.phoneLink:hover {  text-decoration: underline;}.pickupRow {  display: flex;  align-items: center;  gap: var(--space-2);  font-family: var(--font-body);  font-size: var(--text-sm);  color: var(--color-ink-soft);}.pickupIcon {  color: var(--color-ink-muted);}.actionError {  display: flex;  align-items: center;  gap: var(--space-2);  padding: var(--space-3);  background-color: var(--color-warning-subtle);  border: 1px solid var(--color-carrot);  border-radius: var(--radius-md);  color: var(--color-carrot-text);  font-size: var(--text-sm);}.noteBox {  display: flex;  align-items: flex-start;  gap: var(--space-2);  padding: var(--space-3);  background-color: var(--color-canvas-soft);  border-radius: var(--radius-md);  border: 1px solid var(--color-wood-line);}.noteIcon {  color: var(--color-wood);  flex-shrink: 0;  margin-top: 2px;}.noteContent {  font-family: var(--font-body);  font-size: var(--text-sm);  color: var(--color-ink);}.noteContent p {  margin: 4px 0 0 0;  color: var(--color-ink-soft);}.cancellationBox {  padding: var(--space-3);  background-color: var(--color-danger-subtle);  border: 1px solid var(--color-danger);  border-radius: var(--radius-md);  font-family: var(--font-body);  font-size: var(--text-sm);  color: var(--color-danger);}.itemsSection {  display: flex;  flex-direction: column;  gap: var(--space-2);}.itemsTitle {  font-family: var(--font-body);  font-size: var(--text-sm);  font-weight: var(--weight-medium);  color: var(--color-ink-soft);  margin: 0;}.itemsList {  display: flex;  flex-direction: column;}.itemRow {  display: flex;  align-items: center;  justify-content: space-between;  padding: var(--space-2) 0;  border-bottom: 1px solid var(--color-wood-line);  font-family: var(--font-body);  font-size: var(--text-body);}.itemInfo {  display: flex;  align-items: center;  gap: var(--space-2);}.itemName {  color: var(--color-ink);}.itemQty {  color: var(--color-ink-soft);}.itemPrice {  font-weight: var(--weight-medium);  color: var(--color-ink);}.totalSection {  display: flex;  flex-direction: column;  gap: var(--space-1);  padding-top: var(--space-2);}.totalRow {  display: flex;  align-items: center;  justify-content: space-between;  font-family: var(--font-body);  font-size: var(--text-h3);  font-weight: var(--weight-medium);  color: var(--color-ink);}.totalAmount {  font-weight: var(--weight-bold);  color: var(--color-beet);}.paymentNote {  font-family: var(--font-body);  font-size: var(--text-xs);  color: var(--color-ink-muted);}.footerActions {  display: flex;  flex-direction: column;  align-items: center;  gap: var(--space-3);  margin-top: var(--space-4);  padding-top: var(--space-3);  border-top: 1px solid var(--color-wood-line);}.primaryAction {  width: 100%;}.dangerTextBtn {  background: transparent;  border: none;  color: var(--color-danger);  font-family: var(--font-body);  font-size: var(--text-sm);  font-weight: var(--weight-medium);  cursor: pointer;  padding: var(--space-2);}.dangerTextBtn:hover {  text-decoration: underline;}

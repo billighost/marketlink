@@ -1,64 +1,1 @@
-/**
- * Database export utility script.
- * Exports all database collections into JSON files in backend/db-export/<collection>.json
- * for review, archival, and inspection.
- * Automatically sanitizes sensitive data (omits sessions, passwordResets, and passwordHash fields).
- */
-
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { connectDb, closeDb } from '../src/db/client.js';
-import { COLLECTIONS } from '../src/db/collections.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const EXPORT_DIR = path.resolve(__dirname, '..', 'db-export');
-
-// Collections excluded completely from review exports
-const EXCLUDED_COLLECTIONS = new Set([
-  COLLECTIONS.SESSIONS,
-  COLLECTIONS.PASSWORD_RESETS,
-]);
-
-// Fields redacted or excluded from exported documents
-const PROJECTIONS = {
-  [COLLECTIONS.USERS]: {
-    passwordHash: 0,
-  },
-};
-
-async function exportCollections() {
-  console.log('--- Starting MarketLink Database JSON Export ---');
-  await fs.mkdir(EXPORT_DIR, { recursive: true });
-
-  const db = await connectDb();
-
-  try {
-    const collectionsToExport = Object.values(COLLECTIONS).filter(
-      (c) => !EXCLUDED_COLLECTIONS.has(c)
-    );
-
-    for (const collName of collectionsToExport) {
-      const projection = PROJECTIONS[collName] || {};
-      const cursor = db.collection(collName).find({}, { projection });
-      const docs = await cursor.toArray();
-
-      const outPath = path.join(EXPORT_DIR, `${collName}.json`);
-      await fs.writeFile(outPath, JSON.stringify(docs, null, 2), 'utf-8');
-      console.log(`[EXPORT] ${collName.padEnd(20)} -> ${docs.length.toString().padStart(6)} documents exported to ${path.basename(outPath)}`);
-    }
-
-    console.log(`\nExport complete! Files saved to: ${EXPORT_DIR}`);
-    console.log('\nStandard MongoDB CLI backup & restore reference:');
-    console.log('  mongodump --uri="<MONGODB_URI>" --out=./db-dump');
-    console.log('  mongorestore --uri="<MONGODB_URI>" --drop ./db-dump');
-  } finally {
-    await closeDb();
-  }
-}
-
-exportCollections().catch((err) => {
-  console.error('[FATAL] Export failed:', err);
-  process.exit(1);
-});
+import fs from 'node:fs/promises';import path from 'node:path';import { fileURLToPath } from 'node:url';import { connectDb, closeDb } from '../src/db/client.js';import { COLLECTIONS } from '../src/db/collections.js';const __filename = fileURLToPath(import.meta.url);const __dirname = path.dirname(__filename);const EXPORT_DIR = path.resolve(__dirname, '..', 'db-export');const EXCLUDED_COLLECTIONS = new Set([  COLLECTIONS.SESSIONS,  COLLECTIONS.PASSWORD_RESETS,]);const PROJECTIONS = {  [COLLECTIONS.USERS]: {    passwordHash: 0,  },};async function exportCollections() {  console.log('--- Starting MarketLink Database JSON Export ---');  await fs.mkdir(EXPORT_DIR, { recursive: true });  const db = await connectDb();  try {    const collectionsToExport = Object.values(COLLECTIONS).filter(      (c) => !EXCLUDED_COLLECTIONS.has(c)    );    for (const collName of collectionsToExport) {      const projection = PROJECTIONS[collName] || {};      const cursor = db.collection(collName).find({}, { projection });      const docs = await cursor.toArray();      const outPath = path.join(EXPORT_DIR, `${collName}.json`);      await fs.writeFile(outPath, JSON.stringify(docs, null, 2), 'utf-8');      console.log(`[EXPORT] ${collName.padEnd(20)} -> ${docs.length.toString().padStart(6)} documents exported to ${path.basename(outPath)}`);    }    console.log(`\nExport complete! Files saved to: ${EXPORT_DIR}`);    console.log('\nStandard MongoDB CLI backup & restore reference:');    console.log('  mongodump --uri="<MONGODB_URI>" --out=./db-dump');    console.log('  mongorestore --uri="<MONGODB_URI>" --drop ./db-dump');  } finally {    await closeDb();  }}exportCollections().catch((err) => {  console.error('[FATAL] Export failed:', err);  process.exit(1);});

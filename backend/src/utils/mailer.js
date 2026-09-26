@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+export const mailer = {  async sendPasswordReset(email, resetLink) {    console.log('\n================== [EMAIL STUB: PASSWORD RESET] ==================');    console.log(`To: ${email}`);    console.log(`Subject: Reset your MarketLink password`);    console.log(`Reset link: ${resetLink}`);    console.log('This link expires in 30 minutes.');    console.log('==================================================================\n');  },  async sendOrderConfirmation(email, details = {}) {    mailer.history.push({ type: 'order_confirmation', email, details, at: new Date() });    console.log('\n================== [EMAIL STUB: ORDER CONFIRMATION] ==================');    console.log(`To: ${email}`);    console.log(`Subject: Pre-order placed: ${details.orderNumber || ''}`);    console.log(`Pickup: ${details.pickupLabel || ''}`);    console.log('======================================================================\n');  },  async sendOrderReady(email, details = {}) {    mailer.history.push({ type: 'order_ready', email, details, at: new Date() });    console.log('\n================== [EMAIL STUB: ORDER READY] ==================');    console.log(`To: ${email}`);    console.log(`Subject: Your order ${details.orderNumber || ''} is ready for pickup!`);    console.log(`Stall: ${details.stallNumber || ''}`);    console.log('===============================================================\n');  },  history: [],};
+=======
 /**
  * Production-ready Gmail SMTP Mailer.
  * Backed by nodemailer with connection pooling, rate limiting, retry semantics,
@@ -439,3 +442,4 @@ export const mailer = {
 mailer.sendEmail = sendMail;
 export { sendMail as sendEmail };
 
+>>>>>>> bc73418815cde522512fe21a2af884eee3163165

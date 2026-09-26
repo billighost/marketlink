@@ -1,34 +1,1 @@
-/**
- * Announcements module routing.
- * Exposes GET /api/announcements with optional authentication.
- */
-
-import { Router } from 'express';
-import { listActiveAnnouncements } from './announcements.service.js';
-import { defineRoutes } from '../../utils/defineRoutes.js';
-
-export const announcementsRouter = Router();
-
-defineRoutes(
-  announcementsRouter,
-  'announcements',
-  [
-    {
-      method: 'get',
-      path: '/',
-      auth: 'optional',
-      summary: "List active announcements tailored to caller's role",
-      handler: async (req, res, next) => {
-        try {
-          const role = req.user?.role || null;
-          const data = await listActiveAnnouncements(role);
-          res.set('Cache-Control', 'public, max-age=30');
-          return res.json({ data });
-        } catch (err) {
-          next(err);
-        }
-      },
-    },
-  ],
-  { basePath: '/api/announcements' }
-);
+import { Router } from 'express';import { listActiveAnnouncements } from './announcements.service.js';import { defineRoutes } from '../../utils/defineRoutes.js';export const announcementsRouter = Router();defineRoutes(  announcementsRouter,  'announcements',  [    {      method: 'get',      path: '/',      auth: 'optional',      summary: "List active announcements tailored to caller's role",      handler: async (req, res, next) => {        try {          const role = req.user?.role || null;          const data = await listActiveAnnouncements(role);          res.set('Cache-Control', 'public, max-age=30');          return res.json({ data });        } catch (err) {          next(err);        }      },    },  ],  { basePath: '/api/announcements' });

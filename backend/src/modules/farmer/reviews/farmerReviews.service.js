@@ -1,200 +1,1 @@
-/**
- * Farmer Reviews service layer.
- * Lists reviews received by a farmer with ratings breakdown, and handles replies.
- */
-
-import { ObjectId } from 'mongodb';
-import { getDb } from '../../../db/client.js';
-import { COLLECTIONS } from '../../../db/collections.js';
-import { toObjectId } from '../../../utils/ids.js';
-import { AppError } from '../../../utils/errors.js';
-import { toReviewItem } from '../../../utils/shapes.js';
-import { createNotification } from '../../notifications/notify.js';
-
-/**
- * Lists reviews for a farmer with rating filter, reply status, and summary stats.
- *
- * @param {string|ObjectId} farmerId
- * @param {object} [query={}]
- * @returns {Promise<{ data: Array<object>, meta: object }>}
- */
-export async function listFarmerReviews(farmerId, query = {}) {
-  const db = getDb();
-  const fId = toObjectId(farmerId);
-
-  const filter = {
-    farmerId: fId,
-    status: 'visible',
-  };
-
-  if (query.rating) {
-    const r = parseInt(query.rating, 10);
-    if (!Number.isNaN(r) && r >= 1 && r <= 5) {
-      filter.rating = r;
-    }
-  }
-
-  if (query.hasReply === 'true') {
-    filter['reply.at'] = { $exists: true, $ne: null };
-  } else if (query.hasReply === 'false') {
-    filter.$or = [
-      { reply: null },
-      { 'reply.at': { $exists: false } },
-    ];
-  }
-
-  const limit = Math.min(100, Math.max(1, parseInt(query.limit || 20, 10)));
-
-  const [reviews, summaryAgg] = await Promise.all([
-    db
-      .collection(COLLECTIONS.REVIEWS)
-      .find(filter)
-      .sort({ createdAt: -1, _id: -1 })
-      .limit(limit)
-      .toArray(),
-    db
-      .collection(COLLECTIONS.REVIEWS)
-      .aggregate([
-        { $match: { farmerId: fId, status: 'visible' } },
-        {
-          $group: {
-            _id: '$rating',
-            count: { $sum: 1 },
-          },
-        },
-      ])
-      .toArray(),
-  ]);
-
-  const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  let totalCount = 0;
-  let totalSum = 0;
-
-  for (const item of summaryAgg) {
-    if (item._id in breakdown) {
-      breakdown[item._id] = item.count;
-      totalCount += item.count;
-      totalSum += item._id * item.count;
-    }
-  }
-
-  const ratingAvg = totalCount > 0 ? Math.round((totalSum / totalCount) * 10) / 10 : 0;
-
-  return {
-    data: reviews.map((r) => toReviewItem(r)),
-    meta: {
-      nextCursor: null,
-      summary: {
-        ratingAvg,
-        ratingCount: totalCount,
-        breakdown,
-      },
-    },
-  };
-}
-
-/**
- * Creates or updates a farmer reply to a customer review.
- *
- * @param {string|ObjectId} farmerId
- * @param {string|ObjectId} reviewId
- * @param {string} bodyText
- * @returns {Promise<object>}
- */
-export async function replyToReview(farmerId, reviewId, bodyText) {
-  if (!reviewId || !ObjectId.isValid(reviewId)) {
-    throw AppError.notFound('Review not found');
-  }
-
-  if (
-    !bodyText ||
-    typeof bodyText !== 'string' ||
-    bodyText.trim().length < 3 ||
-    bodyText.trim().length > 600
-  ) {
-    throw AppError.validation('Reply body must be between 3 and 600 characters', { field: 'body' });
-  }
-
-  const db = getDb();
-  const fId = toObjectId(farmerId);
-  const rId = toObjectId(reviewId);
-
-  const review = await db.collection(COLLECTIONS.REVIEWS).findOne({
-    _id: rId,
-    farmerId: fId,
-    status: 'visible',
-  });
-
-  if (!review) {
-    throw AppError.notFound('Review not found');
-  }
-
-  const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: fId });
-  const stallName = farmer?.stallName || 'The farmer';
-
-  const replyObj = {
-    body: bodyText.trim(),
-    text: bodyText.trim(),
-    at: new Date(),
-    updatedAt: new Date(),
-  };
-
-  await db.collection(COLLECTIONS.REVIEWS).updateOne(
-    { _id: rId },
-    { $set: { reply: replyObj } }
-  );
-
-  // Send notification to customer
-  if (review.customerId) {
-    await createNotification(
-      {
-        userId: review.customerId,
-        type: 'review_reply',
-        title: `${stallName} replied to your review`,
-        body: bodyText.trim().slice(0, 100),
-        data: {
-          reviewId: rId.toString(),
-          orderId: review.orderId ? review.orderId.toString() : '',
-        },
-      },
-      db
-    );
-  }
-
-  const updatedReview = await db.collection(COLLECTIONS.REVIEWS).findOne({ _id: rId });
-  return toReviewItem(updatedReview);
-}
-
-/**
- * Deletes a reply on a review.
- *
- * @param {string|ObjectId} farmerId
- * @param {string|ObjectId} reviewId
- * @returns {Promise<{ deleted: boolean }>}
- */
-export async function deleteReviewReply(farmerId, reviewId) {
-  if (!reviewId || !ObjectId.isValid(reviewId)) {
-    throw AppError.notFound('Review not found');
-  }
-
-  const db = getDb();
-  const fId = toObjectId(farmerId);
-  const rId = toObjectId(reviewId);
-
-  const review = await db.collection(COLLECTIONS.REVIEWS).findOne({
-    _id: rId,
-    farmerId: fId,
-    status: 'visible',
-  });
-
-  if (!review) {
-    throw AppError.notFound('Review not found');
-  }
-
-  await db.collection(COLLECTIONS.REVIEWS).updateOne(
-    { _id: rId },
-    { $set: { reply: null } }
-  );
-
-  return { deleted: true };
-}
+import { ObjectId } from 'mongodb';import { getDb } from '../../../db/client.js';import { COLLECTIONS } from '../../../db/collections.js';import { toObjectId } from '../../../utils/ids.js';import { AppError } from '../../../utils/errors.js';import { toReviewItem } from '../../../utils/shapes.js';import { createNotification } from '../../notifications/notify.js';export async function listFarmerReviews(farmerId, query = {}) {  const db = getDb();  const fId = toObjectId(farmerId);  const filter = {    farmerId: fId,    status: 'visible',  };  if (query.rating) {    const r = parseInt(query.rating, 10);    if (!Number.isNaN(r) && r >= 1 && r <= 5) {      filter.rating = r;    }  }  if (query.hasReply === 'true') {    filter['reply.at'] = { $exists: true, $ne: null };  } else if (query.hasReply === 'false') {    filter.$or = [      { reply: null },      { 'reply.at': { $exists: false } },    ];  }  const limit = Math.min(100, Math.max(1, parseInt(query.limit || 20, 10)));  const [reviews, summaryAgg] = await Promise.all([    db      .collection(COLLECTIONS.REVIEWS)      .find(filter)      .sort({ createdAt: -1, _id: -1 })      .limit(limit)      .toArray(),    db      .collection(COLLECTIONS.REVIEWS)      .aggregate([        { $match: { farmerId: fId, status: 'visible' } },        {          $group: {            _id: '$rating',            count: { $sum: 1 },          },        },      ])      .toArray(),  ]);  const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };  let totalCount = 0;  let totalSum = 0;  for (const item of summaryAgg) {    if (item._id in breakdown) {      breakdown[item._id] = item.count;      totalCount += item.count;      totalSum += item._id * item.count;    }  }  const ratingAvg = totalCount > 0 ? Math.round((totalSum / totalCount) * 10) / 10 : 0;  return {    data: reviews.map((r) => toReviewItem(r)),    meta: {      nextCursor: null,      summary: {        ratingAvg,        ratingCount: totalCount,        breakdown,      },    },  };}export async function replyToReview(farmerId, reviewId, bodyText) {  if (!reviewId || !ObjectId.isValid(reviewId)) {    throw AppError.notFound('Review not found');  }  if (    !bodyText ||    typeof bodyText !== 'string' ||    bodyText.trim().length < 3 ||    bodyText.trim().length > 600  ) {    throw AppError.validation('Reply body must be between 3 and 600 characters', { field: 'body' });  }  const db = getDb();  const fId = toObjectId(farmerId);  const rId = toObjectId(reviewId);  const review = await db.collection(COLLECTIONS.REVIEWS).findOne({    _id: rId,    farmerId: fId,    status: 'visible',  });  if (!review) {    throw AppError.notFound('Review not found');  }  const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: fId });  const stallName = farmer?.stallName || 'The farmer';  const replyObj = {    body: bodyText.trim(),    text: bodyText.trim(),    at: new Date(),    updatedAt: new Date(),  };  await db.collection(COLLECTIONS.REVIEWS).updateOne(    { _id: rId },    { $set: { reply: replyObj } }  );  if (review.customerId) {    await createNotification(      {        userId: review.customerId,        type: 'review_reply',        title: `${stallName} replied to your review`,        body: bodyText.trim().slice(0, 100),        data: {          reviewId: rId.toString(),          orderId: review.orderId ? review.orderId.toString() : '',        },      },      db    );  }  const updatedReview = await db.collection(COLLECTIONS.REVIEWS).findOne({ _id: rId });  return toReviewItem(updatedReview);}export async function deleteReviewReply(farmerId, reviewId) {  if (!reviewId || !ObjectId.isValid(reviewId)) {    throw AppError.notFound('Review not found');  }  const db = getDb();  const fId = toObjectId(farmerId);  const rId = toObjectId(reviewId);  const review = await db.collection(COLLECTIONS.REVIEWS).findOne({    _id: rId,    farmerId: fId,    status: 'visible',  });  if (!review) {    throw AppError.notFound('Review not found');  }  await db.collection(COLLECTIONS.REVIEWS).updateOne(    { _id: rId },    { $set: { reply: null } }  );  return { deleted: true };}

@@ -1,164 +1,1 @@
-/**
- * Admin People routes controller.
- * Gated endpoints for farmer verification, lifecycle transitions, and customer management.
- */
-
-import { Router } from 'express';
-import {
-  listFarmers,
-  listCustomers,
-  approveFarmer,
-  rejectFarmer,
-  suspendFarmer,
-  reinstateFarmer,
-  deactivateCustomer,
-  activateCustomer,
-} from './people.service.js';
-import { defineRoutes } from '../../../utils/defineRoutes.js';
-
-export const adminPeopleRouter = Router();
-
-const routes = [
-  // ── Combined People Management ──────────────────────────────
-  {
-    method: 'get',
-    path: '/people',
-    auth: 'admin',
-    summary: 'List all people (farmers and customers)',
-    handler: async (req, res, next) => {
-      try {
-        const [farmers, customers] = await Promise.all([
-          listFarmers(req.query),
-          listCustomers(req.query),
-        ]);
-        const combined = [...(farmers.data || []), ...(customers.data || [])];
-        res.json({
-          data: combined,
-          meta: { count: combined.length },
-        });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-
-  // ── Farmers Management ──────────────────────────────────────
-  {
-    method: 'get',
-    path: '/farmers',
-    auth: 'admin',
-    summary: 'List all farmers with approval status filter',
-    handler: async (req, res, next) => {
-      try {
-        const result = await listFarmers(req.query);
-        res.json(result);
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/farmers/:id/approve',
-    auth: 'admin',
-    summary: 'Approve pending farmer stall',
-    handler: async (req, res, next) => {
-      try {
-        const result = await approveFarmer(req.user, req.params.id);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/farmers/:id/reject',
-    auth: 'admin',
-    summary: 'Reject pending farmer stall with reason',
-    body: 'rejectFarmer',
-    handler: async (req, res, next) => {
-      try {
-        const result = await rejectFarmer(req.user, req.params.id, req.body?.reason);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/farmers/:id/suspend',
-    auth: 'admin',
-    summary: 'Suspend farmer stall and delist products',
-    body: 'suspendFarmer',
-    handler: async (req, res, next) => {
-      try {
-        const result = await suspendFarmer(req.user, req.params.id, req.body?.reason);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/farmers/:id/reinstate',
-    auth: 'admin',
-    summary: 'Reinstate suspended farmer stall',
-    handler: async (req, res, next) => {
-      try {
-        const result = await reinstateFarmer(req.user, req.params.id);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-
-  // ── Customers Management ─────────────────────────────────────
-  {
-    method: 'get',
-    path: '/customers',
-    auth: 'admin',
-    summary: 'List all customer accounts with status filter',
-    handler: async (req, res, next) => {
-      try {
-        const result = await listCustomers(req.query);
-        res.json(result);
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/customers/:id/deactivate',
-    auth: 'admin',
-    summary: 'Deactivate customer account',
-    handler: async (req, res, next) => {
-      try {
-        const result = await deactivateCustomer(req.user, req.params.id);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/customers/:id/activate',
-    auth: 'admin',
-    summary: 'Reactivate customer account',
-    handler: async (req, res, next) => {
-      try {
-        const result = await activateCustomer(req.user, req.params.id);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-];
-
-defineRoutes(adminPeopleRouter, 'adminPeople', routes, { basePath: '/api/admin' });
+import { Router } from 'express';import {  listFarmers,  listCustomers,  approveFarmer,  rejectFarmer,  suspendFarmer,  reinstateFarmer,  deactivateCustomer,  activateCustomer,} from './people.service.js';import { defineRoutes } from '../../../utils/defineRoutes.js';export const adminPeopleRouter = Router();const routes = [  {    method: 'get',    path: '/people',    auth: 'admin',    summary: 'List all people (farmers and customers)',    handler: async (req, res, next) => {      try {        const [farmers, customers] = await Promise.all([          listFarmers(req.query),          listCustomers(req.query),        ]);        const combined = [...(farmers.data || []), ...(customers.data || [])];        res.json({          data: combined,          meta: { count: combined.length },        });      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/farmers',    auth: 'admin',    summary: 'List all farmers with approval status filter',    handler: async (req, res, next) => {      try {        const result = await listFarmers(req.query);        res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/farmers/:id/approve',    auth: 'admin',    summary: 'Approve pending farmer stall',    handler: async (req, res, next) => {      try {        const result = await approveFarmer(req.user, req.params.id);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/farmers/:id/reject',    auth: 'admin',    summary: 'Reject pending farmer stall with reason',    body: 'rejectFarmer',    handler: async (req, res, next) => {      try {        const result = await rejectFarmer(req.user, req.params.id, req.body?.reason);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/farmers/:id/suspend',    auth: 'admin',    summary: 'Suspend farmer stall and delist products',    body: 'suspendFarmer',    handler: async (req, res, next) => {      try {        const result = await suspendFarmer(req.user, req.params.id, req.body?.reason);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/farmers/:id/reinstate',    auth: 'admin',    summary: 'Reinstate suspended farmer stall',    handler: async (req, res, next) => {      try {        const result = await reinstateFarmer(req.user, req.params.id);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/customers',    auth: 'admin',    summary: 'List all customer accounts with status filter',    handler: async (req, res, next) => {      try {        const result = await listCustomers(req.query);        res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/customers/:id/deactivate',    auth: 'admin',    summary: 'Deactivate customer account',    handler: async (req, res, next) => {      try {        const result = await deactivateCustomer(req.user, req.params.id);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/customers/:id/activate',    auth: 'admin',    summary: 'Reactivate customer account',    handler: async (req, res, next) => {      try {        const result = await activateCustomer(req.user, req.params.id);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },];defineRoutes(adminPeopleRouter, 'adminPeople', routes, { basePath: '/api/admin' });

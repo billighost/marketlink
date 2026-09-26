@@ -1,131 +1,1 @@
-import React, { useRef, useState } from 'react';
-import { Plus, Check } from 'lucide-react';
-import { useCart } from '@/context/CartContext';
-import { flyToCart, bumpCartIcon, popBadge } from '@/utils/flyToCart';
-import QuantityStepper from '@/components/ui/QuantityStepper';
-import styles from './AddToCartButton.module.css';
-
-/**
- * Add-to-cart button with micro-animation and stepper transition.
- * Variants:
- *  - 'icon': Compact round button for product cards (transforms into compact stepper once in cart)
- *  - 'wide': Full-width button for product detail sheet / modal
- */
-export function AddToCartButton({
-  productId,
-  farmerId,
-  productName = 'item',
-  variant = 'icon',
-  disabled = false,
-  className = '',
-}) {
-  const { getQuantity, add, setQuantity } = useCart();
-  const quantity = getQuantity(productId);
-  const buttonRef = useRef(null);
-  const [animating, setAnimating] = useState(false);
-
-  const handleAddFirst = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (disabled) return;
-
-    setAnimating(true);
-    add(productId, { farmerId });
-
-    if (buttonRef.current) {
-      flyToCart(buttonRef.current, () => {
-        bumpCartIcon();
-        popBadge();
-      });
-    }
-
-    setTimeout(() => {
-      setAnimating(false);
-    }, 450);
-  };
-
-  const handleQuantityChange = (newQty) => {
-    setQuantity(productId, newQty);
-  };
-
-  if (disabled) {
-    if (variant === 'wide') {
-      return (
-        <button
-          type="button"
-          disabled
-          className={`${styles.wideButton} ${styles.disabled} ${className}`}
-        >
-          Sold out
-        </button>
-      );
-    }
-    return (
-      <button
-        type="button"
-        disabled
-        className={`${styles.iconButton} ${styles.disabled} ${className}`}
-        aria-label={`${productName} is sold out`}
-      >
-        <Plus size={18} aria-hidden="true" />
-      </button>
-    );
-  }
-
-  // Active in cart: render QuantityStepper
-  if (quantity > 0) {
-    return (
-      <div className={`${styles.stepperWrapper} ${variant === 'wide' ? styles.stepperWide : ''}`}>
-        <QuantityStepper
-          value={quantity}
-          onChange={handleQuantityChange}
-          min={0}
-          max={99}
-          size={variant === 'wide' ? 'md' : 'sm'}
-          ariaLabel={`Quantity for ${productName}`}
-        />
-      </div>
-    );
-  }
-
-  // Not in cart: render Add Button
-  if (variant === 'wide') {
-    return (
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={handleAddFirst}
-        className={`${styles.wideButton} ${animating ? styles.animating : ''} ${className}`}
-        aria-label={`Add ${productName} to cart`}
-      >
-        {animating ? (
-          <>
-            <Check size={18} aria-hidden="true" />
-            <span>Added</span>
-          </>
-        ) : (
-          <span>Pre-order for pickup</span>
-        )}
-      </button>
-    );
-  }
-
-  return (
-    <button
-      ref={buttonRef}
-      type="button"
-      onClick={handleAddFirst}
-      className={`${styles.iconButton} ${animating ? styles.animating : ''} ${className}`}
-      aria-label={`Add ${productName} to cart`}
-    >
-      {animating ? (
-        <Check size={18} aria-hidden="true" />
-      ) : (
-        <Plus size={18} aria-hidden="true" />
-      )}
-    </button>
-  );
-}
-
-export default AddToCartButton;
+import React, { useRef, useState } from 'react';import { Plus, Check } from 'lucide-react';import { useCart } from '@/context/CartContext';import { flyToCart, bumpCartIcon, popBadge } from '@/utils/flyToCart';import QuantityStepper from '@/components/ui/QuantityStepper';import styles from './AddToCartButton.module.css';export function AddToCartButton({  productId,  farmerId,  productName = 'item',  variant = 'icon',  disabled = false,  className = '',}) {  const { getQuantity, add, setQuantity } = useCart();  const quantity = getQuantity(productId);  const buttonRef = useRef(null);  const [animating, setAnimating] = useState(false);  const handleAddFirst = (e) => {    e.preventDefault();    e.stopPropagation();    if (disabled) return;    setAnimating(true);    add(productId, { farmerId });    if (buttonRef.current) {      flyToCart(buttonRef.current, () => {        bumpCartIcon();        popBadge();      });    }    setTimeout(() => {      setAnimating(false);    }, 450);  };  const handleQuantityChange = (newQty) => {    setQuantity(productId, newQty);  };  if (disabled) {    if (variant === 'wide') {      return (        <button          type="button"          disabled          className={`${styles.wideButton} ${styles.disabled} ${className}`}        >          Sold out        </button>      );    }    return (      <button        type="button"        disabled        className={`${styles.iconButton} ${styles.disabled} ${className}`}        aria-label={`${productName} is sold out`}      >        <Plus size={18} aria-hidden="true" />      </button>    );  }  if (quantity > 0) {    return (      <div className={`${styles.stepperWrapper} ${variant === 'wide' ? styles.stepperWide : ''}`}>        <QuantityStepper          value={quantity}          onChange={handleQuantityChange}          min={0}          max={99}          size={variant === 'wide' ? 'md' : 'sm'}          ariaLabel={`Quantity for ${productName}`}        />      </div>    );  }  if (variant === 'wide') {    return (      <button        ref={buttonRef}        type="button"        onClick={handleAddFirst}        className={`${styles.wideButton} ${animating ? styles.animating : ''} ${className}`}        aria-label={`Add ${productName} to cart`}      >        {animating ? (          <>            <Check size={18} aria-hidden="true" />            <span>Added</span>          </>        ) : (          <span>Pre-order for pickup</span>        )}      </button>    );  }  return (    <button      ref={buttonRef}      type="button"      onClick={handleAddFirst}      className={`${styles.iconButton} ${animating ? styles.animating : ''} ${className}`}      aria-label={`Add ${productName} to cart`}    >      {animating ? (        <Check size={18} aria-hidden="true" />      ) : (        <Plus size={18} aria-hidden="true" />      )}    </button>  );}export default AddToCartButton;

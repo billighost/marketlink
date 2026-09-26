@@ -1,125 +1,1 @@
-﻿import React, { useState } from 'react';
-import { Search, X } from 'lucide-react';
-import { getFarmers, getCategories } from '@/api/catalog';
-import { useQuery } from '@/hooks/useQuery';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import FarmerCard from '@/components/domain/FarmerCard';
-import Chip from '@/components/ui/Chip';
-import EmptyState from '@/components/ui/EmptyState';
-import Skeleton from '@/components/ui/Skeleton';
-import styles from './Farmers.module.css';
-
-/**
- * Customer Farmers directory page.
- * Displays all local producers with real API search and category filtering.
- */
-export function Farmers() {
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const debouncedSearch = useDebouncedValue(search, 250);
-
-  const { data: categoriesData } = useQuery(['categories'], ({ signal }) => getCategories(signal));
-  const categoriesList = categoriesData || [];
-
-  const { data: farmersData, loading } = useQuery(
-    ['buyer-farmers', debouncedSearch, selectedCategory],
-    ({ signal }) =>
-      getFarmers(
-        {
-          q: debouncedSearch || undefined,
-          category: selectedCategory !== 'All' ? selectedCategory.toLowerCase() : undefined,
-        },
-        signal
-      )
-  );
-
-  const farmersList = farmersData?.data || [];
-
-  const handleClear = () => {
-    setSearch('');
-    setSelectedCategory('All');
-  };
-
-  return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Farmers & Producers</h1>
-
-        {/* Search Bar */}
-        <div className={styles.searchWrapper}>
-          <Search size={18} className={styles.searchIcon} aria-hidden="true" />
-          <input
-            type="search"
-            className={styles.searchInput}
-            placeholder="Search farm stalls, bakers, beekeepers..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Search farmers and producers"
-          />
-          {search && (
-            <button
-              type="button"
-              className={styles.clearSearch}
-              onClick={() => setSearch('')}
-              aria-label="Clear search"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
-
-        {/* Category Chips */}
-        <div className={styles.categoriesScroll} role="tablist" aria-label="Farmer categories">
-          <Chip
-            selected={selectedCategory === 'All'}
-            onClick={() => setSelectedCategory('All')}
-          >
-            All
-          </Chip>
-          {categoriesList.map((cat) => {
-            const catName = cat.name || cat;
-            return (
-              <Chip
-                key={cat.id || cat.slug || catName}
-                selected={selectedCategory.toLowerCase() === catName.toLowerCase()}
-                onClick={() => setSelectedCategory(catName)}
-              >
-                {catName}
-              </Chip>
-            );
-          })}
-        </div>
-      </header>
-
-      {/* Farmers Grid */}
-      <div className={styles.contentWrap}>
-        {loading && (
-          <div className={styles.list}>
-            <Skeleton height="88px" borderRadius="var(--radius-md)" />
-            <Skeleton height="88px" borderRadius="var(--radius-md)" />
-            <Skeleton height="88px" borderRadius="var(--radius-md)" />
-          </div>
-        )}
-
-        {!loading && farmersList.length === 0 && (
-          <EmptyState
-            title="No farmers found"
-            description="No producers match your current search criteria. Try clearing your filters."
-            actionLabel="Reset search"
-            onAction={handleClear}
-          />
-        )}
-
-        {!loading && farmersList.length > 0 && (
-          <div className={styles.list}>
-            {farmersList.map((farmer) => (
-              <FarmerCard key={farmer.id} farmer={farmer} variant="grid" />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default Farmers;
+﻿import React, { useState } from 'react';import { Search, X } from 'lucide-react';import { getFarmers, getCategories } from '@/api/catalog';import { useQuery } from '@/hooks/useQuery';import { useDebouncedValue } from '@/hooks/useDebouncedValue';import FarmerCard from '@/components/domain/FarmerCard';import Chip from '@/components/ui/Chip';import EmptyState from '@/components/ui/EmptyState';import Skeleton from '@/components/ui/Skeleton';import styles from './Farmers.module.css';export function Farmers() {  const [search, setSearch] = useState('');  const [selectedCategory, setSelectedCategory] = useState('All');  const debouncedSearch = useDebouncedValue(search, 250);  const { data: categoriesData } = useQuery(['categories'], ({ signal }) => getCategories(signal));  const categoriesList = categoriesData || [];  const { data: farmersData, loading } = useQuery(    ['buyer-farmers', debouncedSearch, selectedCategory],    ({ signal }) =>      getFarmers(        {          q: debouncedSearch || undefined,          category: selectedCategory !== 'All' ? selectedCategory.toLowerCase() : undefined,        },        signal      )  );  const farmersList = farmersData?.data || [];  const handleClear = () => {    setSearch('');    setSelectedCategory('All');  };  return (    <div className={styles.page}>      <header className={styles.header}>        <h1 className={styles.title}>Farmers & Producers</h1>        {}        <div className={styles.searchWrapper}>          <Search size={18} className={styles.searchIcon} aria-hidden="true" />          <input            type="search"            className={styles.searchInput}            placeholder="Search farm stalls, bakers, beekeepers..."            value={search}            onChange={(e) => setSearch(e.target.value)}            aria-label="Search farmers and producers"          />          {search && (            <button              type="button"              className={styles.clearSearch}              onClick={() => setSearch('')}              aria-label="Clear search"            >              <X size={16} />            </button>          )}        </div>        {}        <div className={styles.categoriesScroll} role="tablist" aria-label="Farmer categories">          <Chip            selected={selectedCategory === 'All'}            onClick={() => setSelectedCategory('All')}          >            All          </Chip>          {categoriesList.map((cat) => {            const catName = cat.name || cat;            return (              <Chip                key={cat.id || cat.slug || catName}                selected={selectedCategory.toLowerCase() === catName.toLowerCase()}                onClick={() => setSelectedCategory(catName)}              >                {catName}              </Chip>            );          })}        </div>      </header>      {}      <div className={styles.contentWrap}>        {loading && (          <div className={styles.list}>            <Skeleton height="88px" borderRadius="var(--radius-md)" />            <Skeleton height="88px" borderRadius="var(--radius-md)" />            <Skeleton height="88px" borderRadius="var(--radius-md)" />          </div>        )}        {!loading && farmersList.length === 0 && (          <EmptyState            title="No farmers found"            description="No producers match your current search criteria. Try clearing your filters."            actionLabel="Reset search"            onAction={handleClear}          />        )}        {!loading && farmersList.length > 0 && (          <div className={styles.list}>            {farmersList.map((farmer) => (              <FarmerCard key={farmer.id} farmer={farmer} variant="grid" />            ))}          </div>        )}      </div>    </div>  );}export default Farmers;

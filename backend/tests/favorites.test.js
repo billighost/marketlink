@@ -1,232 +1,1 @@
-/**
- * Favorites and Restock alerts integration test suite (T3.171 - T3.190).
- * Tests idempotent add/remove for products and farmers, lightweight heart IDs,
- * paginated card lists, and restock notifications with preference gating & 24h deduplication.
- */
-
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
-import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
-import { COLLECTIONS } from '../src/db/collections.js';
-import { notifyRestock } from '../src/modules/favorites/restock.js';
-
-describe('Favorites and Restock Suite (T3.171 - T3.190)', () => {
-  let db;
-  let customerGeorgeAuth;
-  let customerMiaAuth;
-  let farmerRiverbendAuth;
-
-  let riverbendFarmer;
-  let carrotsProduct;
-  let honeyProduct;
-
-  before(async () => {
-    const env = await setupTestEnvironment();
-    db = env.db;
-
-    customerGeorgeAuth = await loginUser('george@example.com', 'market123');
-    customerMiaAuth = await loginUser('mia@example.com', 'market123');
-    farmerRiverbendAuth = await loginUser('riverbend@example.com', 'market123');
-
-    riverbendFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Riverbend Farm' });
-    carrotsProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Rainbow carrots' });
-    honeyProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Wildflower honey' });
-
-    // Clean up favorites for George and Mia before testing
-    await db.collection(COLLECTIONS.FAVORITES).deleteMany({
-      userId: { $in: [new ObjectId(customerGeorgeAuth.user.id), new ObjectId(customerMiaAuth.user.id)] },
-    });
-  });
-
-  after(async () => {
-    await teardownTestEnvironment();
-  });
-
-  it('T3.171: PUT /api/favorites/product/:id adds product to favorites (idempotent)', async () => {
-    const res1 = await request(`/api/favorites/product/${carrotsProduct._id.toString()}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res1.status, 200);
-
-    // Call again (idempotent check)
-    const res2 = await request(`/api/favorites/product/${carrotsProduct._id.toString()}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res2.status, 200);
-
-    const count = await db.collection(COLLECTIONS.FAVORITES).countDocuments({
-      userId: new ObjectId(customerGeorgeAuth.user.id),
-      targetType: 'product',
-      targetId: carrotsProduct._id,
-    });
-    assert.equal(count, 1);
-  });
-
-  it('T3.172: PUT /api/favorites/farmer/:id adds farmer to favorites (idempotent)', async () => {
-    const res = await request(`/api/favorites/farmer/${riverbendFarmer._id.toString()}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 200);
-
-    const count = await db.collection(COLLECTIONS.FAVORITES).countDocuments({
-      userId: new ObjectId(customerGeorgeAuth.user.id),
-      targetType: 'farmer',
-      targetId: riverbendFarmer._id,
-    });
-    assert.equal(count, 1);
-  });
-
-  it('T3.173: PUT /api/favorites returns 404 if target does not exist or is unlisted', async () => {
-    const nonexistentId = new ObjectId().toString();
-
-    const res = await request(`/api/favorites/product/${nonexistentId}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 404);
-  });
-
-  it('T3.174: PUT /api/favorites returns 422 if type is invalid', async () => {
-    const res = await request(`/api/favorites/market/${riverbendFarmer._id.toString()}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 422);
-  });
-
-  it('T3.175: GET /api/favorites/ids returns favorited productIds and farmerIds', async () => {
-    const res = await request('/api/favorites/ids', {
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 200);
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data.productIds));
-    assert.ok(Array.isArray(body.data.farmerIds));
-    assert.ok(body.data.productIds.includes(carrotsProduct._id.toString()));
-    assert.ok(body.data.farmerIds.includes(riverbendFarmer._id.toString()));
-  });
-
-  it('T3.176: GET /api/favorites?type=product returns list of product cards', async () => {
-    const res = await request('/api/favorites?type=product', {
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 200);
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.equal(body.data.length, 1);
-    assert.equal(body.data[0].id, carrotsProduct._id.toString());
-    assert.equal(body.data[0].name, carrotsProduct.name);
-    assert.ok(body.data[0].farmer.stallName);
-  });
-
-  it('T3.177: GET /api/favorites?type=farmer returns list of farmer cards', async () => {
-    const res = await request('/api/favorites?type=farmer', {
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 200);
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.equal(body.data.length, 1);
-    assert.equal(body.data[0].id, riverbendFarmer._id.toString());
-    assert.equal(body.data[0].stallName, riverbendFarmer.stallName);
-  });
-
-  it('T3.178: DELETE /api/favorites/:type/:id removes target from favorites (idempotent)', async () => {
-    const res1 = await request(`/api/favorites/product/${carrotsProduct._id.toString()}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res1.status, 200);
-
-    // Call again (idempotent delete)
-    const res2 = await request(`/api/favorites/product/${carrotsProduct._id.toString()}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res2.status, 200);
-
-    const count = await db.collection(COLLECTIONS.FAVORITES).countDocuments({
-      userId: new ObjectId(customerGeorgeAuth.user.id),
-      targetType: 'product',
-      targetId: carrotsProduct._id,
-    });
-    assert.equal(count, 0);
-  });
-
-  it('T3.179: Restock notifications: notifyRestock dispatches notifications to favoriters', async () => {
-    // Both George and Mia favorite honey
-    await request(`/api/favorites/product/${honeyProduct._id.toString()}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-    await request(`/api/favorites/product/${honeyProduct._id.toString()}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
-    });
-
-    // Make sure George has restockAlerts: true and Mia has restockAlerts: false
-    await db.collection(COLLECTIONS.USERS).updateOne(
-      { _id: new ObjectId(customerGeorgeAuth.user.id) },
-      { $set: { 'notificationPrefs.restockAlerts': true } }
-    );
-    await db.collection(COLLECTIONS.USERS).updateOne(
-      { _id: new ObjectId(customerMiaAuth.user.id) },
-      { $set: { 'notificationPrefs.restockAlerts': false } }
-    );
-
-    // Clean up any existing restock notifications for honey
-    await db.collection(COLLECTIONS.NOTIFICATIONS).deleteMany({
-      type: 'restock',
-      'data.productId': honeyProduct._id.toString(),
-    });
-
-    // Trigger notifyRestock
-    const count = await notifyRestock(honeyProduct._id, db);
-
-    // George should receive, Mia should be gated out by preference
-    assert.equal(count, 1);
-
-    const georgeNotif = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({
-      userId: new ObjectId(customerGeorgeAuth.user.id),
-      type: 'restock',
-      'data.productId': honeyProduct._id.toString(),
-    });
-    assert.ok(georgeNotif);
-    assert.ok(georgeNotif.title.includes(honeyProduct.name));
-
-    const miaNotif = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({
-      userId: new ObjectId(customerMiaAuth.user.id),
-      type: 'restock',
-      'data.productId': honeyProduct._id.toString(),
-    });
-    assert.equal(miaNotif, null);
-  });
-
-  it('T3.180: Restock notifications 24-hour deduplication: second restock trigger within 24h does not duplicate', async () => {
-    // Calling notifyRestock again immediately for honey
-    const count = await notifyRestock(honeyProduct._id, db);
-    assert.equal(count, 0);
-  });
-
-  it('T3.181: Authorization: non-customer cannot access favorites routes (403)', async () => {
-    const res = await request('/api/favorites/ids', {
-      headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 403);
-  });
-});
+import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { ObjectId } from 'mongodb';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { COLLECTIONS } from '../src/db/collections.js';import { notifyRestock } from '../src/modules/favorites/restock.js';describe('Favorites and Restock Suite (T3.171 - T3.190)', () => {  let db;  let customerGeorgeAuth;  let customerMiaAuth;  let farmerRiverbendAuth;  let riverbendFarmer;  let carrotsProduct;  let honeyProduct;  before(async () => {    const env = await setupTestEnvironment();    db = env.db;    customerGeorgeAuth = await loginUser('george@example.com', 'market123');    customerMiaAuth = await loginUser('mia@example.com', 'market123');    farmerRiverbendAuth = await loginUser('riverbend@example.com', 'market123');    riverbendFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Riverbend Farm' });    carrotsProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Rainbow carrots' });    honeyProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Wildflower honey' });    await db.collection(COLLECTIONS.FAVORITES).deleteMany({      userId: { $in: [new ObjectId(customerGeorgeAuth.user.id), new ObjectId(customerMiaAuth.user.id)] },    });  });  after(async () => {    await teardownTestEnvironment();  });  it('T3.171: PUT /api/favorites/product/:id adds product to favorites (idempotent)', async () => {    const res1 = await request(`/api/favorites/product/${carrotsProduct._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res1.status, 200);    const res2 = await request(`/api/favorites/product/${carrotsProduct._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res2.status, 200);    const count = await db.collection(COLLECTIONS.FAVORITES).countDocuments({      userId: new ObjectId(customerGeorgeAuth.user.id),      targetType: 'product',      targetId: carrotsProduct._id,    });    assert.equal(count, 1);  });  it('T3.172: PUT /api/favorites/farmer/:id adds farmer to favorites (idempotent)', async () => {    const res = await request(`/api/favorites/farmer/${riverbendFarmer._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const count = await db.collection(COLLECTIONS.FAVORITES).countDocuments({      userId: new ObjectId(customerGeorgeAuth.user.id),      targetType: 'farmer',      targetId: riverbendFarmer._id,    });    assert.equal(count, 1);  });  it('T3.173: PUT /api/favorites returns 404 if target does not exist or is unlisted', async () => {    const nonexistentId = new ObjectId().toString();    const res = await request(`/api/favorites/product/${nonexistentId}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 404);  });  it('T3.174: PUT /api/favorites returns 422 if type is invalid', async () => {    const res = await request(`/api/favorites/market/${riverbendFarmer._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 422);  });  it('T3.175: GET /api/favorites/ids returns favorited productIds and farmerIds', async () => {    const res = await request('/api/favorites/ids', {      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data.productIds));    assert.ok(Array.isArray(body.data.farmerIds));    assert.ok(body.data.productIds.includes(carrotsProduct._id.toString()));    assert.ok(body.data.farmerIds.includes(riverbendFarmer._id.toString()));  });  it('T3.176: GET /api/favorites?type=product returns list of product cards', async () => {    const res = await request('/api/favorites?type=product', {      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.equal(body.data.length, 1);    assert.equal(body.data[0].id, carrotsProduct._id.toString());    assert.equal(body.data[0].name, carrotsProduct.name);    assert.ok(body.data[0].farmer.stallName);  });  it('T3.177: GET /api/favorites?type=farmer returns list of farmer cards', async () => {    const res = await request('/api/favorites?type=farmer', {      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.equal(body.data.length, 1);    assert.equal(body.data[0].id, riverbendFarmer._id.toString());    assert.equal(body.data[0].stallName, riverbendFarmer.stallName);  });  it('T3.178: DELETE /api/favorites/:type/:id removes target from favorites (idempotent)', async () => {    const res1 = await request(`/api/favorites/product/${carrotsProduct._id.toString()}`, {      method: 'DELETE',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res1.status, 200);    const res2 = await request(`/api/favorites/product/${carrotsProduct._id.toString()}`, {      method: 'DELETE',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res2.status, 200);    const count = await db.collection(COLLECTIONS.FAVORITES).countDocuments({      userId: new ObjectId(customerGeorgeAuth.user.id),      targetType: 'product',      targetId: carrotsProduct._id,    });    assert.equal(count, 0);  });  it('T3.179: Restock notifications: notifyRestock dispatches notifications to favoriters', async () => {    await request(`/api/favorites/product/${honeyProduct._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    await request(`/api/favorites/product/${honeyProduct._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },    });    await db.collection(COLLECTIONS.USERS).updateOne(      { _id: new ObjectId(customerGeorgeAuth.user.id) },      { $set: { 'notificationPrefs.restockAlerts': true } }    );    await db.collection(COLLECTIONS.USERS).updateOne(      { _id: new ObjectId(customerMiaAuth.user.id) },      { $set: { 'notificationPrefs.restockAlerts': false } }    );    await db.collection(COLLECTIONS.NOTIFICATIONS).deleteMany({      type: 'restock',      'data.productId': honeyProduct._id.toString(),    });    const count = await notifyRestock(honeyProduct._id, db);    assert.equal(count, 1);    const georgeNotif = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({      userId: new ObjectId(customerGeorgeAuth.user.id),      type: 'restock',      'data.productId': honeyProduct._id.toString(),    });    assert.ok(georgeNotif);    assert.ok(georgeNotif.title.includes(honeyProduct.name));    const miaNotif = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({      userId: new ObjectId(customerMiaAuth.user.id),      type: 'restock',      'data.productId': honeyProduct._id.toString(),    });    assert.equal(miaNotif, null);  });  it('T3.180: Restock notifications 24-hour deduplication: second restock trigger within 24h does not duplicate', async () => {    const count = await notifyRestock(honeyProduct._id, db);    assert.equal(count, 0);  });  it('T3.181: Authorization: non-customer cannot access favorites routes (403)', async () => {    const res = await request('/api/favorites/ids', {      headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },    });    assert.equal(res.status, 403);  });});

@@ -6,29 +6,13 @@
   margin: 0 auto;
   gap: var(--space-6);
   padding: var(--space-4);
-  box-sizing: border-box;
 }
-
-@media (max-width: 480px) {
-  .page {
-    gap: var(--space-4);
-    padding: var(--space-3) var(--space-3) var(--space-8);
-  }
-}
-
 .header {
   display: flex;
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-2) 0;
 }
-
-@media (max-width: 480px) {
-  .header {
-    gap: var(--space-3);
-  }
-}
-
 .avatar {
   width: 64px;
   height: 64px;
@@ -40,7 +24,6 @@
   justify-content: center;
   flex-shrink: 0;
 }
-
 .avatarText {
   font-family: var(--font-body);
   font-size: var(--text-h3);
@@ -48,13 +31,11 @@
   color: var(--color-ink);
   letter-spacing: 0.05em;
 }
-
 .userInfo {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .userName {
   font-family: var(--font-head);
   font-size: var(--text-h2);
@@ -64,18 +45,15 @@
   margin: 0;
   line-height: var(--lh-h2);
 }
-
 .userEmail {
   font-size: var(--text-sm);
   color: var(--color-ink-soft);
 }
-
 .group {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
-
 .groupHeading {
   font-family: var(--font-body);
   font-size: var(--text-xs);
@@ -86,15 +64,12 @@
   margin: 0;
   padding: 0 var(--space-2);
 }
-
 .panel {
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
-
-/* Sign out modal */
 .signOutModal {
   display: flex;
   flex-direction: column;
@@ -103,24 +78,20 @@
   padding: var(--space-4);
   gap: var(--space-4);
 }
-
 .signOutText {
   font-size: var(--text-body);
   color: var(--color-ink);
   margin: 0;
 }
-
 .signOutActions {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   width: 100%;
 }
-
 .fullWidth {
   width: 100%;
 }
-
 .cancelButton {
   background: none;
   border: none;
@@ -130,7 +101,6 @@
   cursor: pointer;
   padding: var(--space-2);
 }
-
 .cancelButton:hover {
   color: var(--color-ink);
 }

@@ -1,3 +1,4 @@
+
 .page {
   display: flex;
   flex-direction: column;
@@ -94,3 +95,71 @@
   flex-direction: column;
   gap: 16px;
 }
+=======
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--container-max, 1400px);
+  margin: 0 auto;
+  gap: var(--space-4, 16px);
+  padding: 24px var(--page-pad, 20px) 48px;
+}
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.titleRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.title {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.2rem);
+  font-weight: 700;
+  color: #4a1521;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.subtitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.88rem;
+  color: #6a6155;
+  margin: 0;
+  line-height: 1.5;
+}
+.content {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+}
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  .productGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+@media (min-width: 1100px) {
+  .productGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+}
+.farmersList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.marketsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+

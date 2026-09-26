@@ -1,50 +1,1 @@
-/**
- * Unified storage layer interface.
- * Delegates to the appropriate driver according to env.STORAGE_DRIVER.
- */
-
-import { env } from '../../../config/env.js';
-import * as cloudinaryDriver from './cloudinary.js';
-import * as localDriver from './local.js';
-import * as memoryDriver from './memory.js';
-
-function getDriver() {
-  const isTest = process.env.NODE_ENV === 'test' || env.isTest;
-  const driverName = isTest
-    ? (process.env.TEST_STORAGE_DRIVER || 'memory')
-    : (process.env.STORAGE_DRIVER || env.STORAGE_DRIVER || 'cloudinary');
-
-  switch (driverName) {
-    case 'memory':
-      return memoryDriver;
-    case 'cloudinary':
-      return cloudinaryDriver;
-    case 'local':
-      return localDriver;
-    default:
-      if (isTest) return memoryDriver;
-      if (env.isProduction) {
-        throw new Error(`[STORAGE] Invalid storage driver ${driverName} in production.`);
-      }
-      return localDriver;
-  }
-}
-
-export async function saveImage(options) {
-  const driver = getDriver();
-  return driver.saveImage(options);
-}
-
-export async function deleteImage(publicId) {
-  const driver = getDriver();
-  return driver.deleteImage(publicId);
-}
-
-export function isOwnUrl(url) {
-  const driver = getDriver();
-  return driver.isOwnUrl(url);
-}
-
-export function currentDriver() {
-  return env.STORAGE_DRIVER;
-}
+import { env } from '../../../config/env.js';import * as cloudinaryDriver from './cloudinary.js';import * as localDriver from './local.js';import * as memoryDriver from './memory.js';function getDriver() {  const isTest = process.env.NODE_ENV === 'test' || env.isTest;  const driverName = isTest    ? (process.env.TEST_STORAGE_DRIVER || 'memory')    : (process.env.STORAGE_DRIVER || env.STORAGE_DRIVER || 'cloudinary');  switch (driverName) {    case 'memory':      return memoryDriver;    case 'cloudinary':      return cloudinaryDriver;    case 'local':      return localDriver;    default:      if (isTest) return memoryDriver;      if (env.isProduction) {        throw new Error(`[STORAGE] Invalid storage driver ${driverName} in production.`);      }      return localDriver;  }}export async function saveImage(options) {  const driver = getDriver();  return driver.saveImage(options);}export async function deleteImage(publicId) {  const driver = getDriver();  return driver.deleteImage(publicId);}export function isOwnUrl(url) {  const driver = getDriver();  return driver.isOwnUrl(url);}export function currentDriver() {  return env.STORAGE_DRIVER;}

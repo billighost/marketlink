@@ -1,193 +1,1 @@
-import React, { useState } from 'react';
-import { Camera, User, Mail, Phone, Shield, Save } from 'lucide-react';
-import styles from './ProfileTab.module.css';
-
-export default function ProfileTab() {
-  const [profileData, setProfileData] = useState({
-    firstName: 'Farmer',
-    lastName: 'Ayomide',
-    email: 'ayomide@farm.com',
-    phone: '+234 801 234 5678',
-  });
-
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-
-  const handleProfileChange = (e) => {
-    setProfileData({ ...profileData, [e.target.name]: e.target.value });
-  };
-
-  const handlePasswordChange = (e) => {
-    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
-  };
-
-  const handleSaveProfile = (e) => {
-    e.preventDefault();
-    console.log('Profile saved:', profileData);
-  };
-
-  const handleSavePassword = (e) => {
-    e.preventDefault();
-    console.log('Password updated:', passwordData);
-  };
-
-  return (
-    <div className={styles.contentArea}>
-      <div className={styles.pageHeader}>
-        <div>
-          <h2 className={styles.mainTitle}>My Profile</h2>
-          <p className={styles.subtitle}>Manage your personal information and security settings.</p>
-        </div>
-      </div>
-
-      <div className={styles.settingsLayout}>
-        <div className={styles.formSection}>
-          {/* Personal Information Card */}
-          <div className={styles.cardPanel}>
-            <div className={styles.cardHeader}>
-              <div className={styles.iconBox}>
-                <User size={24} className={styles.iconGreen} />
-              </div>
-              <div>
-                <h3 className={styles.cardTitle}>Personal Information</h3>
-                <p className={styles.cardSubtitle}>Update your photo and personal details.</p>
-              </div>
-            </div>
-
-            <div className={styles.avatarSection}>
-              <div className={styles.avatarPreview}>
-                <span className={styles.avatarInitials}>
-                  {profileData.firstName[0]}{profileData.lastName[0]}
-                </span>
-                <button className={styles.btnCamera}>
-                  <Camera size={16} />
-                </button>
-              </div>
-              <div className={styles.avatarActions}>
-                <button className={styles.btnOutline}>Upload New Photo</button>
-                <button className={styles.btnText}>Remove</button>
-              </div>
-            </div>
-
-            <form onSubmit={handleSaveProfile} className={styles.formGrid}>
-              <div className={styles.row2}>
-                <div className={styles.formGroup}>
-                  <label>First Name <span className={styles.required}>*</span></label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={profileData.firstName}
-                    onChange={handleProfileChange}
-                    className={styles.input}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Last Name <span className={styles.required}>*</span></label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={profileData.lastName}
-                    onChange={handleProfileChange}
-                    className={styles.input}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className={styles.row2}>
-                <div className={styles.formGroup}>
-                  <label>Email Address <span className={styles.required}>*</span></label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={profileData.email}
-                    onChange={handleProfileChange}
-                    className={styles.input}
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={profileData.phone}
-                    onChange={handleProfileChange}
-                    className={styles.input}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.bottomSaveBar}>
-                <button type="submit" className={styles.btnPrimary}>
-                  <Save size={18} /> Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Security Card */}
-          <div className={styles.cardPanel}>
-            <div className={styles.cardHeader}>
-              <div className={styles.iconBox}>
-                <Shield size={24} className={styles.iconGreen} />
-              </div>
-              <div>
-                <h3 className={styles.cardTitle}>Security</h3>
-                <p className={styles.cardSubtitle}>Change your password to keep your account secure.</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleSavePassword} className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label>Current Password</label>
-                <input
-                  type="password"
-                  name="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                  className={styles.input}
-                  placeholder="Enter current password"
-                />
-              </div>
-              <div className={styles.row2}>
-                <div className={styles.formGroup}>
-                  <label>New Password</label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                    className={styles.input}
-                    placeholder="Enter new password"
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Confirm Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={passwordData.confirmPassword}
-                    onChange={handlePasswordChange}
-                    className={styles.input}
-                    placeholder="Confirm new password"
-                  />
-                </div>
-              </div>
-
-              <div className={styles.bottomSaveBar}>
-                <button type="submit" className={styles.btnPrimary}>
-                  <Save size={18} /> Update Password
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+import React, { useState } from 'react';import { Camera, User, Mail, Phone, Shield, Save } from 'lucide-react';import styles from './ProfileTab.module.css';export default function ProfileTab() {  const [profileData, setProfileData] = useState({    firstName: 'Farmer',    lastName: 'Ayomide',    email: 'ayomide@farm.com',    phone: '+234 801 234 5678',  });  const [passwordData, setPasswordData] = useState({    currentPassword: '',    newPassword: '',    confirmPassword: '',  });  const handleProfileChange = (e) => {    setProfileData({ ...profileData, [e.target.name]: e.target.value });  };  const handlePasswordChange = (e) => {    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });  };  const handleSaveProfile = (e) => {    e.preventDefault();    console.log('Profile saved:', profileData);  };  const handleSavePassword = (e) => {    e.preventDefault();    console.log('Password updated:', passwordData);  };  return (    <div className={styles.contentArea}>      <div className={styles.pageHeader}>        <div>          <h2 className={styles.mainTitle}>My Profile</h2>          <p className={styles.subtitle}>Manage your personal information and security settings.</p>        </div>      </div>      <div className={styles.settingsLayout}>        <div className={styles.formSection}>          {}          <div className={styles.cardPanel}>            <div className={styles.cardHeader}>              <div className={styles.iconBox}>                <User size={24} className={styles.iconGreen} />              </div>              <div>                <h3 className={styles.cardTitle}>Personal Information</h3>                <p className={styles.cardSubtitle}>Update your photo and personal details.</p>              </div>            </div>            <div className={styles.avatarSection}>              <div className={styles.avatarPreview}>                <span className={styles.avatarInitials}>                  {profileData.firstName[0]}{profileData.lastName[0]}                </span>                <button className={styles.btnCamera}>                  <Camera size={16} />                </button>              </div>              <div className={styles.avatarActions}>                <button className={styles.btnOutline}>Upload New Photo</button>                <button className={styles.btnText}>Remove</button>              </div>            </div>            <form onSubmit={handleSaveProfile} className={styles.formGrid}>              <div className={styles.row2}>                <div className={styles.formGroup}>                  <label>First Name <span className={styles.required}>*</span></label>                  <input                    type="text"                    name="firstName"                    value={profileData.firstName}                    onChange={handleProfileChange}                    className={styles.input}                    required                  />                </div>                <div className={styles.formGroup}>                  <label>Last Name <span className={styles.required}>*</span></label>                  <input                    type="text"                    name="lastName"                    value={profileData.lastName}                    onChange={handleProfileChange}                    className={styles.input}                    required                  />                </div>              </div>              <div className={styles.row2}>                <div className={styles.formGroup}>                  <label>Email Address <span className={styles.required}>*</span></label>                  <input                    type="email"                    name="email"                    value={profileData.email}                    onChange={handleProfileChange}                    className={styles.input}                    required                  />                </div>                <div className={styles.formGroup}>                  <label>Phone Number</label>                  <input                    type="tel"                    name="phone"                    value={profileData.phone}                    onChange={handleProfileChange}                    className={styles.input}                  />                </div>              </div>              <div className={styles.bottomSaveBar}>                <button type="submit" className={styles.btnPrimary}>                  <Save size={18} /> Save Changes                </button>              </div>            </form>          </div>          {}          <div className={styles.cardPanel}>            <div className={styles.cardHeader}>              <div className={styles.iconBox}>                <Shield size={24} className={styles.iconGreen} />              </div>              <div>                <h3 className={styles.cardTitle}>Security</h3>                <p className={styles.cardSubtitle}>Change your password to keep your account secure.</p>              </div>            </div>            <form onSubmit={handleSavePassword} className={styles.formGrid}>              <div className={styles.formGroup}>                <label>Current Password</label>                <input                  type="password"                  name="currentPassword"                  value={passwordData.currentPassword}                  onChange={handlePasswordChange}                  className={styles.input}                  placeholder="Enter current password"                />              </div>              <div className={styles.row2}>                <div className={styles.formGroup}>                  <label>New Password</label>                  <input                    type="password"                    name="newPassword"                    value={passwordData.newPassword}                    onChange={handlePasswordChange}                    className={styles.input}                    placeholder="Enter new password"                  />                </div>                <div className={styles.formGroup}>                  <label>Confirm Password</label>                  <input                    type="password"                    name="confirmPassword"                    value={passwordData.confirmPassword}                    onChange={handlePasswordChange}                    className={styles.input}                    placeholder="Confirm new password"                  />                </div>              </div>              <div className={styles.bottomSaveBar}>                <button type="submit" className={styles.btnPrimary}>                  <Save size={18} /> Update Password                </button>              </div>            </form>          </div>        </div>      </div>    </div>  );}

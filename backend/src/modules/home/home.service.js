@@ -1,3 +1,4 @@
+
 /**
  * Home summary module service layer.
  * Provides consolidated customer home overview with ready orders, next pickup,
@@ -167,3 +168,4 @@ export async function getHomeSummary(customerId, { now = new Date() } = {}) {
     cartHint: null,
   };
 }
+ 
