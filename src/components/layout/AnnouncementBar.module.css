@@ -1,54 +1,44 @@
-/* AnnouncementBar — Site announcement bar */
-
 .announcementBar {
   background-color: var(--color-white);
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--space-1) var(--page-pad);
+  border-bottom: var(--border);
+  padding: var(--space-2) var(--space-4);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   color: var(--color-ink-soft);
-  min-height: var(--tap-min);
+  min-height: 36px;
   z-index: 10;
 }
 
 .content {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: var(--space-2);
   text-align: center;
-  max-width: var(--container-buyer-detail);
-  padding-inline: var(--tap-min);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: var(--container-narrow);
+  padding: 0 var(--space-8);
 }
 
 .title {
   font-weight: var(--weight-medium);
   color: var(--color-ink);
-  flex-shrink: 0;
 }
 
 .message {
   color: var(--color-ink-soft);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .closeButton {
   position: absolute;
-  right: var(--space-2);
+  right: var(--space-3);
   top: 50%;
   transform: translateY(-50%);
-  background: transparent;
+  background: none;
   border: none;
-  color: var(--color-ink-soft);
+  color: var(--color-ink-faint);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,13 +46,11 @@
   height: var(--tap-min);
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: color var(--duration-fast) var(--ease-standard),
-              background-color var(--duration-fast) var(--ease-standard);
+  transition: color var(--duration-fast) var(--ease-standard);
 }
 
 .closeButton:hover {
   color: var(--color-ink);
-  background-color: var(--color-canvas-soft);
 }
 
 .closeButton:focus-visible {

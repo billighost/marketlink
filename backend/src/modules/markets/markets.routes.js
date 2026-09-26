@@ -1,1 +1,92 @@
-import { Router } from 'express';import { parseLimit, parseFloatParam, parseEnum, escapeForPrefix } from '../../utils/query.js';import {  listMarkets,  getMarketDetail,  listFarmersAtMarket,  listProductsAtMarket,} from './markets.service.js';import { defineRoutes } from '../../utils/defineRoutes.js';export const marketsRouter = Router();const routes = [  {    method: 'get',    path: '/',    auth: 'any',    summary: 'List physical markets with geo or schedule filtering',    handler: async (req, res, next) => {      try {        const day = parseEnum(req.query.day, 'day', ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);        const q = req.query.q ? escapeForPrefix(req.query.q) : undefined;        const lat = parseFloatParam(req.query.lat, 'lat', { min: -90, max: 90 });        const lng = parseFloatParam(req.query.lng, 'lng', { min: -180, max: 180 });        const radiusKm = parseFloatParam(req.query.radiusKm, 'radiusKm', { min: 1, max: 500 }) || 25;        const limit = parseLimit(req.query.limit, 20, 50);        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;        const result = await listMarkets({ day, q, lat, lng, radiusKm, cursor, limit });        return res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/:id',    auth: 'any',    summary: 'Get details for a specific market',    handler: async (req, res, next) => {      try {        const market = await getMarketDetail(req.params.id);        return res.json({ data: market });      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/:id/farmers',    auth: 'any',    summary: 'List farmers attending this market',    handler: async (req, res, next) => {      try {        const sort = parseEnum(req.query.sort, 'sort', ['rating', 'top', 'new', 'name']) || 'rating';        const limit = parseLimit(req.query.limit, 20, 50);        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;        const result = await listFarmersAtMarket(req.params.id, { sort, cursor, limit });        return res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/:id/products',    auth: 'any',    summary: 'List products available at this market',    handler: async (req, res, next) => {      try {        const limit = parseLimit(req.query.limit, 20, 50);        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;        const result = await listProductsAtMarket(req.params.id, { cursor, limit });        return res.json(result);      } catch (err) {        next(err);      }    },  },];defineRoutes(marketsRouter, 'markets', routes, { basePath: '/api/markets' });
+/**
+ * Markets module routing.
+ * Endpoints for physical farmers markets, location discovery, attending farmers, and fresh products.
+ */
+
+import { Router } from 'express';
+import { parseLimit, parseFloatParam, parseEnum, escapeForPrefix } from '../../utils/query.js';
+import {
+  listMarkets,
+  getMarketDetail,
+  listFarmersAtMarket,
+  listProductsAtMarket,
+} from './markets.service.js';
+import { defineRoutes } from '../../utils/defineRoutes.js';
+
+export const marketsRouter = Router();
+
+const routes = [
+  {
+    method: 'get',
+    path: '/',
+    auth: 'any',
+    summary: 'List physical markets with geo or schedule filtering',
+    handler: async (req, res, next) => {
+      try {
+        const day = parseEnum(req.query.day, 'day', ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
+        const q = req.query.q ? escapeForPrefix(req.query.q) : undefined;
+        const lat = parseFloatParam(req.query.lat, 'lat', { min: -90, max: 90 });
+        const lng = parseFloatParam(req.query.lng, 'lng', { min: -180, max: 180 });
+        const radiusKm = parseFloatParam(req.query.radiusKm, 'radiusKm', { min: 1, max: 500 }) || 25;
+        const limit = parseLimit(req.query.limit, 20, 50);
+        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;
+
+        const result = await listMarkets({ day, q, lat, lng, radiusKm, cursor, limit });
+        return res.json(result);
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/:id',
+    auth: 'any',
+    summary: 'Get details for a specific market',
+    handler: async (req, res, next) => {
+      try {
+        const market = await getMarketDetail(req.params.id);
+        return res.json({ data: market });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/:id/farmers',
+    auth: 'any',
+    summary: 'List farmers attending this market',
+    handler: async (req, res, next) => {
+      try {
+        const sort = parseEnum(req.query.sort, 'sort', ['rating', 'top', 'new', 'name']) || 'rating';
+        const limit = parseLimit(req.query.limit, 20, 50);
+        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;
+
+        const result = await listFarmersAtMarket(req.params.id, { sort, cursor, limit });
+        return res.json(result);
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/:id/products',
+    auth: 'any',
+    summary: 'List products available at this market',
+    handler: async (req, res, next) => {
+      try {
+        const limit = parseLimit(req.query.limit, 20, 50);
+        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;
+
+        const result = await listProductsAtMarket(req.params.id, { cursor, limit });
+        return res.json(result);
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+];
+
+defineRoutes(marketsRouter, 'markets', routes, { basePath: '/api/markets' });

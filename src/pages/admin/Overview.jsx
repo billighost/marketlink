@@ -1,1 +1,188 @@
-import React, { useState, useEffect, useCallback } from 'react';import { Link } from 'react-router-dom';import { getAdminOverview } from '@/api/admin';import { useAdmin } from '@/layouts/AdminLayout';import Skeleton from '@/components/ui/Skeleton';import Button from '@/components/ui/Button';import {  Users,  Store,  MapPin,  ShoppingBag,  AlertCircle,  Flag,  Mail,  ChevronRight,  Clock,} from 'lucide-react';import { formatDateShort } from '@/utils/format';import styles from './Overview.module.css';export function Overview() {  const { overview: contextOverview, refreshOverview } = useAdmin();  const [data, setData] = useState(contextOverview);  const [loading, setLoading] = useState(!contextOverview);  const [error, setError] = useState('');  const loadData = useCallback(async () => {    setLoading(true);    setError('');    try {      const res = await getAdminOverview();      setData(res?.data || null);    } catch (err) {      setError(err?.message || 'Could not load platform overview.');    } finally {      setLoading(false);    }  }, []);  useEffect(() => {    if (!contextOverview) {      loadData();    } else {      setData(contextOverview);      setLoading(false);    }  }, [contextOverview, loadData]);  const totals = data?.totals || { farmers: 0, customers: 0, markets: 0, orders: 0 };  const pendingFarmers = data?.pendingFarmers ?? 0;  const openFlags = data?.openFlags ?? 0;  const unhandledMessages = data?.unhandledMessages ?? 0;  const recentActivity = data?.recentActivity || [];  return (    <div className={styles.container}>      <header className={styles.header}>        <h1 className={styles.title}>Overview</h1>        <p className={styles.subtitle}>Platform metrics and real-time operational status.</p>      </header>      {loading ? (        <div className={styles.skeletonContainer}>          <Skeleton height="90px" />          <Skeleton height="140px" />          <Skeleton height="200px" />        </div>      ) : error ? (        <div className={styles.errorBox}>          <p>{error}</p>          <Button variant="secondary" size="sm" onClick={loadData}>            Try again          </Button>        </div>      ) : (        <>          {}          <section className={styles.fourTotalsRow} aria-label="Platform counts">            <div className={styles.totalCol}>              <span className={styles.totalLabel}>Farmers</span>              <span className={styles.totalValue}>{totals.farmers}</span>            </div>            <div className={styles.totalCol}>              <span className={styles.totalLabel}>Customers</span>              <span className={styles.totalValue}>{totals.customers}</span>            </div>            <div className={styles.totalCol}>              <span className={styles.totalLabel}>Markets</span>              <span className={styles.totalValue}>{totals.markets}</span>            </div>            <div className={styles.totalCol}>              <span className={styles.totalLabel}>Orders</span>              <span className={styles.totalValue}>{totals.orders}</span>            </div>          </section>          {}          <section className={styles.attentionSection}>            <h2 className={styles.sectionTitle}>Needs attention</h2>            <div className={styles.attentionCard}>              <Link to="/admin/people?role=farmer&status=pending" className={styles.attentionRow}>                <div className={styles.attentionLeft}>                  <AlertCircle                    size={18}                    className={pendingFarmers > 0 ? styles.alertCarrot : styles.alertMuted}                    aria-hidden="true"                  />                  <span className={styles.attentionText}>Pending stall applications</span>                </div>                <div className={styles.attentionRight}>                  {pendingFarmers > 0 ? (                    <span className={styles.countBadge}>{pendingFarmers}</span>                  ) : (                    <span className={styles.clearText}>Clear</span>                  )}                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />                </div>              </Link>              <Link to="/admin/moderation" className={styles.attentionRow}>                <div className={styles.attentionLeft}>                  <Flag                    size={18}                    className={openFlags > 0 ? styles.alertCarrot : styles.alertMuted}                    aria-hidden="true"                  />                  <span className={styles.attentionText}>Flagged listings and reviews</span>                </div>                <div className={styles.attentionRight}>                  {openFlags > 0 ? (                    <span className={styles.countBadge}>{openFlags}</span>                  ) : (                    <span className={styles.clearText}>Clear</span>                  )}                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />                </div>              </Link>              <Link to="/admin/settings?tab=messages" className={styles.attentionRow}>                <div className={styles.attentionLeft}>                  <Mail                    size={18}                    className={unhandledMessages > 0 ? styles.alertCarrot : styles.alertMuted}                    aria-hidden="true"                  />                  <span className={styles.attentionText}>Unhandled contact messages</span>                </div>                <div className={styles.attentionRight}>                  {unhandledMessages > 0 ? (                    <span className={styles.countBadge}>{unhandledMessages}</span>                  ) : (                    <span className={styles.clearText}>Clear</span>                  )}                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />                </div>              </Link>            </div>          </section>          {}          <section className={styles.activitySection}>            <h2 className={styles.sectionTitle}>Recent activity</h2>            {recentActivity.length === 0 ? (              <p className={styles.emptyText}>No recent audit activity.</p>            ) : (              <div className={styles.activityList}>                {recentActivity.map((event, idx) => (                  <div key={idx} className={styles.activityRow}>                    <div className={styles.activityTextRow}>                      <span className={styles.activityBullet}>•</span>                      <span className={styles.activityText}>{event.text}</span>                    </div>                    <span className={styles.activityTime}>                      {event.at ? formatDateShort(event.at) : ''}                    </span>                  </div>                ))}              </div>            )}          </section>        </>      )}    </div>  );}export default Overview;
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { getAdminOverview } from '@/api/admin';
+import { useAdmin } from '@/layouts/AdminLayout';
+import Skeleton from '@/components/ui/Skeleton';
+import Button from '@/components/ui/Button';
+import {
+  Users,
+  Store,
+  MapPin,
+  ShoppingBag,
+  AlertCircle,
+  Flag,
+  Mail,
+  ChevronRight,
+  Clock,
+} from 'lucide-react';
+import { formatDateShort } from '@/utils/format';
+import styles from './Overview.module.css';
+
+export function Overview() {
+  const { overview: contextOverview, refreshOverview } = useAdmin();
+
+  const [data, setData] = useState(contextOverview);
+  const [loading, setLoading] = useState(!contextOverview);
+  const [error, setError] = useState('');
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await getAdminOverview();
+      setData(res?.data || null);
+    } catch (err) {
+      setError(err?.message || 'Could not load platform overview.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!contextOverview) {
+      loadData();
+    } else {
+      setData(contextOverview);
+      setLoading(false);
+    }
+  }, [contextOverview, loadData]);
+
+  const totals = data?.totals || { farmers: 0, customers: 0, markets: 0, orders: 0 };
+  const pendingFarmers = data?.pendingFarmers ?? 0;
+  const openFlags = data?.openFlags ?? 0;
+  const unhandledMessages = data?.unhandledMessages ?? 0;
+  const recentActivity = data?.recentActivity || [];
+
+  return (
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Overview</h1>
+        <p className={styles.subtitle}>Platform metrics and real-time operational status.</p>
+      </header>
+
+      {loading ? (
+        <div className={styles.skeletonContainer}>
+          <Skeleton height="90px" />
+          <Skeleton height="140px" />
+          <Skeleton height="200px" />
+        </div>
+      ) : error ? (
+        <div className={styles.errorBox}>
+          <p>{error}</p>
+          <Button variant="secondary" size="sm" onClick={loadData}>
+            Try again
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Four Key Numbers Only */}
+          <section className={styles.fourTotalsRow} aria-label="Platform counts">
+            <div className={styles.totalCol}>
+              <span className={styles.totalLabel}>Farmers</span>
+              <span className={styles.totalValue}>{totals.farmers}</span>
+            </div>
+            <div className={styles.totalCol}>
+              <span className={styles.totalLabel}>Customers</span>
+              <span className={styles.totalValue}>{totals.customers}</span>
+            </div>
+            <div className={styles.totalCol}>
+              <span className={styles.totalLabel}>Markets</span>
+              <span className={styles.totalValue}>{totals.markets}</span>
+            </div>
+            <div className={styles.totalCol}>
+              <span className={styles.totalLabel}>Orders</span>
+              <span className={styles.totalValue}>{totals.orders}</span>
+            </div>
+          </section>
+
+          {/* Needs Attention List */}
+          <section className={styles.attentionSection}>
+            <h2 className={styles.sectionTitle}>Needs attention</h2>
+            <div className={styles.attentionCard}>
+              <Link to="/admin/people?role=farmer&status=pending" className={styles.attentionRow}>
+                <div className={styles.attentionLeft}>
+                  <AlertCircle
+                    size={18}
+                    className={pendingFarmers > 0 ? styles.alertCarrot : styles.alertMuted}
+                    aria-hidden="true"
+                  />
+                  <span className={styles.attentionText}>Pending stall applications</span>
+                </div>
+                <div className={styles.attentionRight}>
+                  {pendingFarmers > 0 ? (
+                    <span className={styles.countBadge}>{pendingFarmers}</span>
+                  ) : (
+                    <span className={styles.clearText}>Clear</span>
+                  )}
+                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+                </div>
+              </Link>
+
+              <Link to="/admin/moderation" className={styles.attentionRow}>
+                <div className={styles.attentionLeft}>
+                  <Flag
+                    size={18}
+                    className={openFlags > 0 ? styles.alertCarrot : styles.alertMuted}
+                    aria-hidden="true"
+                  />
+                  <span className={styles.attentionText}>Flagged listings and reviews</span>
+                </div>
+                <div className={styles.attentionRight}>
+                  {openFlags > 0 ? (
+                    <span className={styles.countBadge}>{openFlags}</span>
+                  ) : (
+                    <span className={styles.clearText}>Clear</span>
+                  )}
+                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+                </div>
+              </Link>
+
+              <Link to="/admin/settings?tab=messages" className={styles.attentionRow}>
+                <div className={styles.attentionLeft}>
+                  <Mail
+                    size={18}
+                    className={unhandledMessages > 0 ? styles.alertCarrot : styles.alertMuted}
+                    aria-hidden="true"
+                  />
+                  <span className={styles.attentionText}>Unhandled contact messages</span>
+                </div>
+                <div className={styles.attentionRight}>
+                  {unhandledMessages > 0 ? (
+                    <span className={styles.countBadge}>{unhandledMessages}</span>
+                  ) : (
+                    <span className={styles.clearText}>Clear</span>
+                  )}
+                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
+                </div>
+              </Link>
+            </div>
+          </section>
+
+          {/* Recent Activity (Last 10 events) */}
+          <section className={styles.activitySection}>
+            <h2 className={styles.sectionTitle}>Recent activity</h2>
+            {recentActivity.length === 0 ? (
+              <p className={styles.emptyText}>No recent audit activity.</p>
+            ) : (
+              <div className={styles.activityList}>
+                {recentActivity.map((event, idx) => (
+                  <div key={idx} className={styles.activityRow}>
+                    <div className={styles.activityTextRow}>
+                      <span className={styles.activityBullet}>•</span>
+                      <span className={styles.activityText}>{event.text}</span>
+                    </div>
+                    <span className={styles.activityTime}>
+                      {event.at ? formatDateShort(event.at) : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default Overview;

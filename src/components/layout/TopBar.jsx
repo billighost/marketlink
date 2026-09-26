@@ -70,8 +70,7 @@
         return (
           pathname === '/farmers' ||
           pathname.startsWith('/farmers/') ||
-          pathname.startsWith('/buyer/farmers') ||
-          pathname.startsWith('/buyer/stalls')
+          pathname.startsWith('/buyer/farmers')
         );
       }
 
@@ -260,16 +259,16 @@
 
             {/* Bookmark / Saved Items */}
             <Link
-              to={PATHS.BUYER_SAVED || '/buyer/saved'}
+              to={PATHS.BUYER_FAVORITES || '/buyer/favorites'}
               className={`${styles.iconBtn} ${styles.bookmarkBtn}`}
               aria-label="Saved favorites"
             >
               <Bookmark size={18} strokeWidth={1.8} aria-hidden="true" />
             </Link>
 
-            {/* Shopping Bag / Basket */}
+            {/* Shopping Bag / Cart */}
             <Link
-              to={PATHS.BUYER_BASKET || '/buyer/basket'}
+              to={PATHS.BUYER_CART || '/buyer/cart'}
               className={styles.iconBtn}
               aria-label={`Shopping bag${count > 0 ? ` with ${count} items` : ''}`}
             >

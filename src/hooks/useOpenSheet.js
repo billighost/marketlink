@@ -1,20 +1,29 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useCallback } from 'react';
 
 /**
- * Navigate to a buyer destination.
- *
- * Kept under its original name so the ~16 existing call sites need no edit, but every
- * destination is now a real page: no background location, no overlay, no history games.
- * New code should call useNavigate() directly. This hook is a compatibility shim and
- * the later stages remove its call sites one page at a time.
+ * Hook to open modal bottom sheets over the current page.
+ * Uses React Router background location pattern.
+ * If already in a sheet, replaces the current sheet instead of stacking.
  */
 export function useOpenSheet() {
+  const location = useLocation();
   const navigate = useNavigate();
 
   const openSheet = useCallback((path, options = {}) => {
-    navigate(path, { replace: Boolean(options.replace) });
-  }, [navigate]);
+    // If we are already viewing a sheet (background exists in state), preserve original background and replace
+    const hasBackground = Boolean(location.state?.background);
+    const background = location.state?.background || location;
+
+    navigate(path, {
+      replace: hasBackground || options.replace,
+      state: {
+        background,
+        from: location.pathname,
+        ...options.state,
+      },
+    });
+  }, [location, navigate]);
 
   const closeSheet = useCallback(() => {
     navigate(-1);

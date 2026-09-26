@@ -1,50 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getOrderDetail, cancelOrder, getReorderPreview } from '@/api/orders';
-import { formatDate } from '@/utils/format';
+import { Calendar, MapPin, AlertCircle, ArrowLeft, RotateCcw, Star, Check, Clock } from 'lucide-react';
+import { getOrderDetail, cancelOrder, createOrderReview, getReorderPreview } from '@/api/orders';
+import { formatPrice, formatDate, formatTime, formatCountdown } from '@/utils/format';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
-import Page from '@/components/layout/Page';
-import PageTitle from '@/components/layout/PageTitle';
-import PickupCode from '@/components/domain/PickupCode';
-import OrderTimeline from '@/components/domain/OrderTimeline';
-import OrderSummary from '@/components/domain/OrderSummary';
-import ReviewForm from '@/components/domain/ReviewForm';
-import ConfirmStep from '@/components/ui/ConfirmStep';
+import StatusDot from '@/components/ui/StatusDot';
+import Illustration from '@/components/domain/Illustration';
+import Stars from '@/components/ui/Stars';
 import Button from '@/components/ui/Button';
 import { MapView } from '@/components/domain/MapView';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './OrderDetail.module.css';
 
 /**
- * Normalizes backend order status to SRS vocabulary
+ * Order detail view inside a modal bottom sheet (or full-page fallback).
+ * Connected to real backend GET /orders/:id, cancellation, and reviews.
  */
-function toStatusLabel(status) {
-  if (!status) return 'Placed';
-  const s = String(status).toLowerCase();
-  switch (s) {
-    case 'placed':
-      return 'Placed';
-    case 'accepted':
-      return 'Accepted';
-    case 'ready':
-      return 'Ready for pickup';
-    case 'completed':
-      return 'Completed';
-    case 'cancelled':
-      return 'Cancelled';
-    case 'declined':
-      return 'Declined';
-    default:
-      return status;
-  }
-}
-
-/**
- * Order page (/buyer/orders/:id)
- * Shows collection code, status timeline, pickup point map, reserved produce, and actions.
- */
-export function OrderDetail() {
+export function OrderDetail({ inSheet = true, onClose }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { add } = useCart();
@@ -54,119 +26,114 @@ export function OrderDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [inSheetStep, setInSheetStep] = useState('detail'); // 'detail' | 'cancel_confirm' | 'review' | 'review_success'
+  const [cancelReason, setCancelReason] = useState('');
   const [cancelling, setCancelling] = useState(false);
-  const [reordering, setReordering] = useState(false);
 
-  useDocumentTitle(`Order ${order?.orderNumber || ''} · MarketLink`);
-
-  const fetchOrder = useCallback(async () => {
-    try {
-      const data = await getOrderDetail(id);
-      setOrder(data);
-      setError(null);
-    } catch (err) {
-      setError(err.message || 'Order not found.');
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
-    fetchOrder();
-  }, [fetchOrder]);
+    let active = true;
+    setLoading(true);
+    getOrderDetail(id)
+      .then((data) => {
+        if (active) {
+          setOrder(data);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          setError(err.message || 'Order not found');
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   if (loading) {
     return (
-      <Page width="detail" className={styles.page}>
-        <div className={styles.skeletonContainer}>
-          <div className={styles.skeletonHeading} />
-          <div className={styles.skeletonCard} />
-          <div className={styles.skeletonCard} />
+      <div className={styles.container}>
+        <div style={{ padding: 'var(--space-8) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <div style={{ height: 28, width: '40%', background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-sm)' }} />
+          <div style={{ height: 140, background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-md)' }} />
+          <div style={{ height: 120, background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-md)' }} />
         </div>
-      </Page>
+      </div>
     );
   }
 
   if (error || !order) {
     return (
-      <Page width="detail" className={styles.page}>
-        <PageTitle
-          title="Order not found"
-          backTo="/buyer/orders"
-          backLabel="Back to orders"
-        />
-        <div className={styles.errorCard}>
-          <p className={styles.errorText}>
-            {error || 'This order does not exist or may have been removed.'}
-          </p>
-          <Link to="/buyer/orders" className={styles.backLink}>
-            Return to your orders
-          </Link>
-        </div>
-      </Page>
+      <div className={styles.notFound}>
+        <h2>Order not found</h2>
+        <p>{error || 'This order may have been removed or does not exist.'}</p>
+        <button type="button" className={styles.backLink} onClick={onClose || (() => navigate('/buyer/orders'))}>
+          Close
+        </button>
+      </div>
     );
   }
 
-  const statusLabel = toStatusLabel(order.status);
+  const isCancellable = order.canCancel && order.status !== 'cancelled' && order.status !== 'declined';
   const isCompleted = order.status === 'completed';
-  const isCancelled = order.status === 'cancelled' || order.status === 'declined';
-  const isActive = !isCompleted && !isCancelled;
 
-  // Cutoff checks
-  const cutoffTime = order.cutoffAt ? new Date(order.cutoffAt).getTime() : null;
-  const isBeforeCutoff = order.canCancel && (cutoffTime == null || cutoffTime > Date.now());
-  const cutoffFormatted = order.cutoffAt
-    ? formatDate(new Date(order.cutoffAt), { weekday: 'long', hour: '2-digit', minute: '2-digit' })
-    : 'Friday 18:00';
+  const handleBuyAgain = async () => {
+    try {
+      const preview = await getReorderPreview(order.id);
+      const previewItems = preview?.items || order.items || [];
+      let addedCount = 0;
 
-  // Format reserved date for header context
-  const createdDate = order.createdAt ? new Date(order.createdAt) : null;
-  const reservedDateLabel = createdDate
-    ? formatDate(createdDate, { weekday: 'short', day: 'numeric', month: 'short' })
-    : 'recently';
-  const statusContext = `${statusLabel} · reserved ${reservedDateLabel}`;
+      previewItems.forEach((item) => {
+        if (item.available !== false) {
+          for (let i = 0; i < (item.quantity || 1); i++) {
+            add(item.productId, { farmerId: order.farmer?.id });
+          }
+          addedCount += item.quantity || 1;
+        }
+      });
 
-  // Stall info
-  const farmer = order.farmer || {};
-  const stallName = farmer.stallName || farmer.name || 'Local Stall';
-  const stallNumber = farmer.stallNumber ? `Stall ${farmer.stallNumber}` : '';
-  const stallLocationText = [stallName, stallNumber].filter(Boolean).join(' · ');
-  const pickupLabel = order.pickup?.label || 'Pickup window';
+      if (addedCount > 0) {
+        showToast({
+          message: `Added ${addedCount} items to your basket`,
+          type: 'success',
+        });
+      } else {
+        showToast({
+          message: 'Items from this order are currently out of season',
+          type: 'warning',
+        });
+      }
+    } catch {
+      // Fallback: direct items add
+      if (order.items) {
+        order.items.forEach((item) => {
+          for (let i = 0; i < (item.quantity || 1); i++) {
+            add(item.productId, { farmerId: order.farmer?.id });
+          }
+        });
+      }
+    }
+    onClose?.();
+    navigate('/buyer/cart');
+  };
 
-  // Map markers
-  const market = order.market || {};
-  let mapMarkers = [];
-  if (market.location?.coordinates && market.location.coordinates.length === 2) {
-    mapMarkers = [
-      {
-        id: market.id || 'market',
-        lat: market.location.coordinates[1],
-        lng: market.location.coordinates[0],
-        title: market.name || stallName,
-        subtitle: market.address || stallLocationText,
-      },
-    ];
-  } else if (typeof market.lat === 'number' && typeof market.lng === 'number') {
-    mapMarkers = [
-      {
-        id: market.id || 'market',
-        lat: market.lat,
-        lng: market.lng,
-        title: market.name || stallName,
-        subtitle: market.address || stallLocationText,
-      },
-    ];
-  }
-
-  // Handle Cancel
-  const handleConfirmCancel = async (reason) => {
+  const handleConfirmCancel = async () => {
     setCancelling(true);
     try {
-      await cancelOrder(order.id, reason);
-      showToast({ message: 'Cancelled. Nothing was charged.' });
-      setShowCancelConfirm(false);
-      await fetchOrder();
+      const updated = await cancelOrder(order.id, cancelReason);
+      setOrder(updated);
+      setInSheetStep('detail');
+      showToast({
+        message: `Order ${order.orderNumber} cancelled successfully.`,
+        type: 'neutral',
+      });
     } catch (err) {
       showToast({
         message: err.message || 'Unable to cancel order.',
@@ -177,185 +144,360 @@ export function OrderDetail() {
     }
   };
 
-  // Handle Reorder
-  const handleReorder = async () => {
-    if (reordering) return;
-    setReordering(true);
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    setSubmittingReview(true);
     try {
-      const preview = await getReorderPreview(order.id);
-      const previewItems = preview?.items || order.items || [];
-      let added = 0;
-      let soldOut = 0;
-
-      for (const item of previewItems) {
-        if (item.availability === 'out' || item.quantityAvailable <= 0) {
-          soldOut++;
-        } else {
-          const qty = item.quantity || 1;
-          for (let q = 0; q < qty; q++) {
-            add(item.productId || item.id, { farmerId: farmer.id });
-          }
-          added++;
-        }
-      }
-
-      let toastText = `${added} ${added === 1 ? 'item' : 'items'} added.`;
-      if (soldOut > 0) {
-        toastText += ` ${soldOut} ${soldOut === 1 ? 'is' : 'are'} sold out.`;
-      }
-      showToast({ message: toastText });
-      navigate('/buyer/basket');
+      await createOrderReview(order.id, {
+        farmer: {
+          rating: reviewRating,
+          comment: reviewText.trim() || undefined,
+        },
+      });
+      setOrder((prev) => ({ ...prev, reviewed: true }));
+      setInSheetStep('review_success');
     } catch (err) {
       showToast({
-        message: err.message || 'Unable to reorder items.',
+        message: err.message || 'Unable to submit review.',
         type: 'danger',
       });
     } finally {
-      setReordering(false);
+      setSubmittingReview(false);
     }
   };
 
-  return (
-    <Page width="detail" className={styles.page}>
-      <PageTitle
-        title={`Order ${order.orderNumber}`}
-        context={statusContext}
-        backTo="/buyer/orders"
-        backLabel="Back to orders"
-      />
+  // Step: Cancel confirmation
+  if (inSheetStep === 'cancel_confirm') {
+    return (
+      <div className={styles.stepContainer}>
+        <div className={styles.warningCircle}>
+          <AlertCircle size={32} aria-hidden="true" />
+        </div>
+        <h2 className={styles.stepTitle}>Cancel this pre-order?</h2>
+        <p className={styles.stepDesc}>
+          Are you sure you want to cancel order {order.orderNumber}? The farmers will be notified not to harvest or pack your items.
+        </p>
 
-      <div className={styles.layout}>
-        {/* Left Column: Timeline, What you reserved, Review form */}
-        <div className={styles.leftCol}>
-          {/* Collection Code shown here on mobile if below fold */}
-          <div className={styles.mobileCodeBlock}>
-            <PickupCode code={order.pickupCode} size="lg" />
-          </div>
-
-          {/* Timeline */}
-          <section className={styles.section} aria-labelledby="heading-timeline">
-            <h2 id="heading-timeline" className={styles.sectionHeading}>
-              Status
-            </h2>
-            <OrderTimeline
-              status={order.status}
-              timeline={order.timeline || []}
-              cancelReason={order.cancelReason}
-            />
-          </section>
-
-          {/* What you reserved */}
-          <section className={styles.section} aria-labelledby="heading-reserved">
-            <h2 id="heading-reserved" className={styles.sectionHeading}>
-              What you reserved
-            </h2>
-            <OrderSummary
-              items={order.items || []}
-              totalCents={order.totalCents != null ? order.totalCents : order.total}
-              showNotice={true}
-            />
-          </section>
-
-          {/* Review form (renders only when completed) */}
-          {isCompleted && (
-            <section className={styles.section} aria-labelledby="heading-review">
-              <h2 id="heading-review" className={styles.sectionHeading}>
-                How was it?
-              </h2>
-              <ReviewForm
-                orderId={order.id}
-                farmer={farmer}
-                items={order.items || []}
-                alreadyReviewed={order.reviewed}
-                onSuccess={fetchOrder}
-              />
-            </section>
-          )}
+        <div className={styles.reviewInputGroup} style={{ width: '100%' }}>
+          <label htmlFor="cancel-reason" className={styles.reviewLabel}>
+            Reason for cancellation (optional)
+          </label>
+          <input
+            id="cancel-reason"
+            type="text"
+            className={styles.reviewTextarea}
+            style={{ height: 'var(--control-h)', minHeight: 'unset' }}
+            maxLength={200}
+            placeholder="E.g., Plans changed, unable to attend..."
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+          />
         </div>
 
-        {/* Right Sticky Column: Code, Collect-from with map, Actions */}
-        <aside className={styles.rightCol}>
-          {/* Physical handoff artifact: Collection code */}
-          <div className={styles.desktopCodeBlock}>
-            <PickupCode code={order.pickupCode} size="lg" />
-          </div>
-
-          {/* Collect from block */}
-          <div className={styles.collectFromCard}>
-            <h3 className={styles.collectHeading}>Collect from</h3>
-            <p className={styles.stallLine}>{stallLocationText}</p>
-            <p className={styles.pickupTimeLine}>{pickupLabel}</p>
-
-            {mapMarkers.length > 0 && (
-              <div className={styles.mapWrap}>
-                <MapView
-                  markers={mapMarkers}
-                  height="200px"
-                  zoom={15}
-                  interactive={false}
-                  showDirectionsLink={true}
-                  ariaLabel={`Map of pickup location for ${stallName}`}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Order Actions */}
-          <div className={styles.actionsCard}>
-            {/* Active order: Cancel before cutoff */}
-            {isActive && (
-              <div className={styles.cancelBlock}>
-                {isBeforeCutoff ? (
-                  <>
-                    <p className={styles.cutoffGuidance}>
-                      You can change or cancel until {cutoffFormatted}.
-                    </p>
-
-                    {!showCancelConfirm ? (
-                      <button
-                        type="button"
-                        className={styles.cancelTextBtn}
-                        onClick={() => setShowCancelConfirm(true)}
-                      >
-                        Cancel order
-                      </button>
-                    ) : (
-                      <ConfirmStep
-                        title="Cancel this order?"
-                        message="Nothing will be charged. The farmer will be notified to return items to stock."
-                        confirmLabel="Yes, cancel order"
-                        confirmVariant="danger"
-                        cancelLabel="Keep order"
-                        onConfirm={handleConfirmCancel}
-                        onCancel={() => setShowCancelConfirm(false)}
-                        isLoading={cancelling}
-                      />
-                    )}
-                  </>
-                ) : (
-                  <p className={styles.cutoffPassed}>
-                    The cutoff has passed. Speak to the stall on market day.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Completed or Cancelled: Reorder these items is the ONE beet element */}
-            {(isCompleted || isCancelled) && (
-              <Button
-                variant="primary"
-                size="lg"
-                className={styles.reorderBtn}
-                onClick={handleReorder}
-                disabled={reordering}
-              >
-                {reordering ? 'Adding…' : 'Reorder these items'}
-              </Button>
-            )}
-          </div>
-        </aside>
+        <div className={styles.stepActions}>
+          <Button
+            variant="danger"
+            size="lg"
+            className={styles.fullWidthButton}
+            onClick={handleConfirmCancel}
+            disabled={cancelling}
+          >
+            {cancelling ? 'Cancelling...' : 'Yes, cancel order'}
+          </Button>
+          <button
+            type="button"
+            className={styles.cancelLink}
+            onClick={() => setInSheetStep('detail')}
+            disabled={cancelling}
+          >
+            Keep my order
+          </button>
+        </div>
       </div>
-    </Page>
+    );
+  }
+
+  // Step: Review form
+  if (inSheetStep === 'review') {
+    return (
+      <form className={styles.stepContainer} onSubmit={handleSubmitReview}>
+        <h2 className={styles.stepTitle}>Review your harvest</h2>
+        <p className={styles.stepDesc}>
+          How was the produce from {order.farmer?.stallName || 'the farmer'}?
+        </p>
+
+        <div className={styles.starsWrapper}>
+          <Stars rating={reviewRating} interactive onChange={setReviewRating} />
+        </div>
+
+        <div className={styles.reviewInputGroup}>
+          <label htmlFor="review-text" className={styles.reviewLabel}>
+            Your review (optional)
+          </label>
+          <textarea
+            id="review-text"
+            className={styles.reviewTextarea}
+            rows={4}
+            maxLength={1000}
+            placeholder="Tell other market customers about the freshness, taste, and stall experience..."
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+          />
+        </div>
+
+        <div className={styles.stepActions}>
+          <Button
+            variant="primary"
+            size="lg"
+            type="submit"
+            className={styles.fullWidthButton}
+            disabled={submittingReview}
+          >
+            {submittingReview ? 'Submitting...' : 'Submit review'}
+          </Button>
+          <button
+            type="button"
+            className={styles.cancelLink}
+            onClick={() => setInSheetStep('detail')}
+            disabled={submittingReview}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  // Step: Review success
+  if (inSheetStep === 'review_success') {
+    return (
+      <div className={styles.stepContainer}>
+        <div className={styles.successCircle}>
+          <Check size={32} aria-hidden="true" />
+        </div>
+        <h2 className={styles.stepTitle}>Review submitted.</h2>
+        <p className={styles.stepDesc}>
+          Your feedback helps local growers and helps neighbours discover great harvests.
+        </p>
+        <Button
+          variant="secondary"
+          size="lg"
+          className={styles.fullWidthButton}
+          onClick={() => setInSheetStep('detail')}
+        >
+          Back to order details
+        </Button>
+      </div>
+    );
+  }
+
+  const market = order.market;
+  const coords = market?.location || market?.coordinates;
+  const hasCoordinates = Boolean(coords?.lat && coords?.lng);
+  const displayTotal = order.totalCents != null ? order.totalCents : order.total;
+
+  return (
+    <div className={`${styles.container} ${!inSheet ? styles.standalone : ''}`}>
+      {/* Fallback top bar for standalone view */}
+      {!inSheet && (
+        <div className={styles.fallbackHeader}>
+          <Link to="/buyer/orders" className={styles.backButton}>
+            <ArrowLeft size={20} aria-hidden="true" />
+            <span>Back to orders</span>
+          </Link>
+        </div>
+      )}
+
+      {/* Header Info */}
+      <header className={styles.orderHeader}>
+        <div className={styles.titleRow}>
+          <h1 className={styles.orderTitle}>Order {order.orderNumber}</h1>
+          <StatusDot label={order.status} />
+        </div>
+        {order.timeline?.[0] && (
+          <span className={styles.placedDate}>
+            Placed on {formatDate(order.timeline[0].at)} at {formatTime(order.timeline[0].at)}
+          </span>
+        )}
+      </header>
+
+      {/* Pickup Window Card */}
+      <section className={styles.pickupCard} aria-label="Pickup window and stalls">
+        <div className={styles.pickupRow}>
+          <Calendar size={18} className={styles.cardIcon} aria-hidden="true" />
+          <div className={styles.cardText}>
+            <span className={styles.cardLabel}>Pickup window</span>
+            <span className={styles.cardValue}>{order.pickup?.label || 'Pickup window'}</span>
+            {order.cutoffAt && (
+              <div className={styles.pickupCountdown}>
+                <Clock size={12} aria-hidden="true" />
+                <span>{formatCountdown(order.cutoffAt)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className={styles.pickupRow}>
+          <MapPin size={18} className={styles.cardIcon} aria-hidden="true" />
+          <div className={styles.cardText}>
+            <span className={styles.cardLabel}>{market?.name || 'Local Farmers Market'}</span>
+            {market?.address && <span className={styles.cardSubValue}>{market.address}</span>}
+            <div className={styles.stallsList}>
+              <span className={styles.stallPill}>
+                {order.farmer?.stallName || 'Farm Stall'}
+                {order.farmer?.stallNumber && (
+                  <> ┬╖ <strong className={styles.stallNumberHighlight}>{order.farmer.stallNumber}</strong></>
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Real Leaflet MapView */}
+        {hasCoordinates && (
+          <div className={styles.mapWrapper}>
+            <MapView
+              markers={[
+                {
+                  id: market.id || 'order-pickup-market',
+                  lat: coords.lat,
+                  lng: coords.lng,
+                  title: market.name,
+                  subtitle: market.address,
+                },
+              ]}
+              height="140px"
+              zoom={15}
+              interactive={false}
+              showDirectionsLink={true}
+              ariaLabel={`Map of ${market.name}`}
+            />
+          </div>
+        )}
+      </section>
+
+      {/* Status Timeline */}
+      {order.timeline && order.timeline.length > 0 && (
+        <section className={styles.timelineSection} aria-label="Order progress timeline">
+          <h3 className={styles.sectionHeading}>Order progress</h3>
+          <div className={styles.timeline}>
+            {order.timeline.map((step, idx) => {
+              const isCurrent = idx === order.timeline.length - 1;
+              return (
+                <div key={idx} className={styles.timelineItem}>
+                  <div
+                    className={`${styles.timelinePoint} ${isCurrent ? styles.timelinePointActive : ''}`}
+                    aria-hidden="true"
+                  />
+                  <div className={styles.timelineDetails}>
+                    <div className={styles.statusRow}>
+                      <span className={styles.timelineStatus}>{step.status}</span>
+                      {isCurrent && <span className={styles.nowBadge}>Now</span>}
+                    </div>
+                    <span className={styles.timelineTime}>
+                      {formatDate(step.at)} ┬╖ {formatTime(step.at)}
+                    </span>
+                    {step.note && <span className={styles.timelineNote}>{step.note}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Cancelled Notice */}
+      {order.status === 'cancelled' && (
+        <div className={styles.cancelNotice}>
+          <AlertCircle size={18} className={styles.cancelIcon} aria-hidden="true" />
+          <p className={styles.cancelText}>
+            {order.cancelReason || 'This order was cancelled. You will not be charged.'}
+          </p>
+        </div>
+      )}
+
+      {/* Items Ordered List */}
+      <section className={styles.itemsSection} aria-label="Items ordered">
+        <h3 className={styles.sectionHeading}>Items</h3>
+        <div className={styles.itemsList}>
+          {order.items?.map((item, idx) => (
+            <div key={item.productId || idx} className={styles.itemRow}>
+              <div className={styles.itemVisual}>
+                <Illustration name={item.art || 'basket'} size="sm" />
+              </div>
+              <div className={styles.itemInfo}>
+                <span className={styles.itemName}>{item.name}</span>
+                <span className={styles.itemCalc}>
+                  {item.quantity} ├ù {formatPrice(item.priceCents || item.price)} / {item.unit}
+                </span>
+              </div>
+              <span className={styles.itemTotal}>
+                {formatPrice(item.lineTotalCents || (item.priceCents || item.price) * item.quantity)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Customer note if any */}
+      {order.note && (
+        <section className={styles.summarySection} aria-label="Note for farmer">
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-soft)', fontWeight: 'var(--weight-semibold)' }}>
+            Note for farmer:
+          </span>
+          <p style={{ margin: 0, fontSize: 'var(--text-body)', color: 'var(--color-ink)' }}>{order.note}</p>
+        </section>
+      )}
+
+      {/* Total Summary */}
+      <section className={styles.summarySection} aria-label="Payment summary">
+        <div className={styles.summaryRow}>
+          <span>Subtotal</span>
+          <span>{formatPrice(displayTotal)}</span>
+        </div>
+        <div className={styles.summaryRow}>
+          <span>Market fee</span>
+          <span className={styles.freeBadge}>Free</span>
+        </div>
+        <div className={`${styles.summaryRow} ${styles.totalRow}`}>
+          <span>Total to pay at pickup</span>
+          <span>{formatPrice(displayTotal)}</span>
+        </div>
+      </section>
+
+      {/* In-Sheet Order Action Buttons */}
+      <footer className={styles.orderActions}>
+        {isCompleted && !order.reviewed && (
+          <button
+            type="button"
+            className={styles.reviewButton}
+            onClick={() => setInSheetStep('review')}
+          >
+            <Star size={16} aria-hidden="true" />
+            <span>Write a review</span>
+          </button>
+        )}
+
+        <button
+          type="button"
+          className={styles.buyAgainButton}
+          onClick={handleBuyAgain}
+        >
+          <RotateCcw size={16} aria-hidden="true" />
+          <span>Buy these items again</span>
+        </button>
+
+        {isCancellable && (
+          <button
+            type="button"
+            className={styles.cancelButton}
+            onClick={() => setInSheetStep('cancel_confirm')}
+          >
+            Cancel this order
+          </button>
+        )}
+      </footer>
+    </div>
   );
 }
 

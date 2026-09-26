@@ -1,1 +1,226 @@
-#!/usr/bin/env nodeimport fs from 'node:fs';import path from 'node:path';import { fileURLToPath } from 'node:url';import { createApp } from '../src/app.js';import { getRouteManifest } from '../src/utils/defineRoutes.js';const __filename = fileURLToPath(import.meta.url);const __dirname = path.dirname(__filename);const apiDocPath = path.resolve(__dirname, '../docs/API.md');createApp();const manifest = getRouteManifest();const modules = {  health: { title: '1. System & Health Probes', routes: [] },  auth: { title: '2. Authentication & Session Management', routes: [] },  users: { title: '3. Customer Profile & Account Settings', routes: [] },  contact: { title: '4. Public Contact & Inquiries', routes: [] },  categories: { title: '5. Categories Taxonomy', routes: [] },  home: { title: '6. Guest & Home Discovery', routes: [] },  announcements: { title: '7. Platform Announcements', routes: [] },  markets: { title: '8. Markets Directory & Schedules', routes: [] },  farmers: { title: '9. Farmers Directory & Public Profiles', routes: [] },  products: { title: '10. Products Catalog & Details', routes: [] },  search: { title: '11. Search Suggestions & Query History', routes: [] },  feed: { title: '12. Personalized Customer Feed', routes: [] },  cart: { title: '13. Cart Quotes & Pricing Validation', routes: [] },  orders: { title: '14. Customer Checkout & Orders', routes: [] },  reviews: { title: '15. Reviews, Ratings & Moderation Flags', routes: [] },  favorites: { title: '16. Customer Favorites & Restock Alerts', routes: [] },  notifications: { title: '17. Customer Notifications & Alerts', routes: [] },  assistant: { title: '18. Rule-Based Instant Assistant', routes: [] },  farmerProfile: { title: '19. Farmer Stall Profile & Settings', routes: [] },  farmerSlots: { title: '20. Farmer Pickup Slots & Closures', routes: [] },  farmerProducts: { title: '21. Farmer Inventory & Product Management', routes: [] },  weeklyTemplate: { title: '22. Farmer Weekly Restock Templates', routes: [] },  farmerOrders: { title: '23. Farmer Order Fulfillment & Pick Lists', routes: [] },  farmerReviews: { title: '24. Farmer Review Management & Replies', routes: [] },  farmerInsights: { title: '25. Farmer Analytics & Business Insights', routes: [] },  uploads: { title: '26. Image Uploads & Static Media', routes: [] },  adminOverview: { title: '27. Admin Dashboard Overview', routes: [] },  adminPeople: { title: '28. Admin People & Account Moderation', routes: [] },  adminMarkets: { title: '29. Admin Market Venue Management', routes: [] },  adminModeration: { title: '30. Admin Content Moderation Queue', routes: [] },  adminReports: { title: '31. Admin Reports & CSV Data Export', routes: [] },  categoriesAdmin: { title: '32. Admin Taxonomy & Categories', routes: [] },  announcementsAdmin: { title: '33. Admin Announcement Management', routes: [] },  messagesAdmin: { title: '34. Admin Support Message Handling', routes: [] },  adminSettings: { title: '35. Admin Platform Settings & Config', routes: [] },};function getModuleKey(r) {  if (r.module && modules[r.module]) return r.module;  const path = r.fullPath;  if (path.startsWith('/api/health') || path.startsWith('/api/ready') || path.startsWith('/api/version')) return 'health';  if (path.startsWith('/api/auth')) return 'auth';  if (path.startsWith('/api/users')) return 'users';  if (path.startsWith('/api/contact')) return 'contact';  if (path.startsWith('/api/categories')) return 'categories';  if (path.startsWith('/api/public/home') || path.startsWith('/api/home')) return 'home';  if (path.startsWith('/api/announcements')) return 'announcements';  if (path.startsWith('/api/markets')) return 'markets';  if (path.startsWith('/api/farmers')) return 'farmers';  if (path.startsWith('/api/products')) return 'products';  if (path.startsWith('/api/search')) return 'search';  if (path.startsWith('/api/feed')) return 'feed';  if (path.startsWith('/api/cart')) return 'cart';  if (path.startsWith('/api/orders')) return 'orders';  if (path.startsWith('/api/reviews')) return 'reviews';  if (path.startsWith('/api/favorites')) return 'favorites';  if (path.startsWith('/api/notifications')) return 'notifications';  if (path.startsWith('/api/assistant')) return 'assistant';  if (path.startsWith('/api/farmer/profile')) return 'farmerProfile';  if (path.startsWith('/api/farmer/slots')) return 'farmerSlots';  if (path.startsWith('/api/farmer/products')) return 'farmerProducts';  if (path.startsWith('/api/farmer/weekly-template')) return 'weeklyTemplate';  if (path.startsWith('/api/farmer/orders')) return 'farmerOrders';  if (path.startsWith('/api/farmer/reviews')) return 'farmerReviews';  if (path.startsWith('/api/farmer/insights') || path.startsWith('/api/farmer/overview')) return 'farmerInsights';  if (path.startsWith('/api/farmer/uploads')) return 'uploads';  if (path.startsWith('/api/admin/overview')) return 'adminOverview';  if (path.startsWith('/api/admin/farmers') || path.startsWith('/api/admin/customers')) return 'adminPeople';  if (path.startsWith('/api/admin/markets')) return 'adminMarkets';  if (path.startsWith('/api/admin/moderation') || path.startsWith('/api/admin/products') || path.startsWith('/api/admin/reviews')) return 'adminModeration';  if (path.startsWith('/api/admin/reports')) return 'adminReports';  if (path.startsWith('/api/admin/categories')) return 'categoriesAdmin';  if (path.startsWith('/api/admin/announcements')) return 'announcementsAdmin';  if (path.startsWith('/api/admin/messages')) return 'messagesAdmin';  if (path.startsWith('/api/admin/settings')) return 'adminSettings';  return 'health';}for (const r of manifest) {  const modKey = getModuleKey(r);  modules[modKey].routes.push(r);}let doc = `# MarketLink API Specification (Stage 5 Contract Freeze)> **Base URL**: \`/api\`  > **Protocol**: HTTP 1.1 / JSON (RESTful)  > **Success Payload**: \`{ "data": <payload>, "meta": { ... } }\`  > **Error Payload**: \`{ "error": { "code": "<CODE>", "message": "<MSG>", "details": [ { "field": "<f>", "message": "<m>" } ] } }\`  > **Total Registered Endpoints**: ${manifest.length}---## Architecture Conventions & Data Types1. **Identifiers**: Internal MongoDB \`_id\` is always projected out and exposed as string \`id\` (24-hex string). Never expose \`_id\`.2. **Monetary Values**: All prices, fees, totals, and line totals are represented strictly as **positive integer cents** (e.g. \`$4.50\` is \`450\`). Never use floating-point numbers for currency.3. **Dates & Timestamps**: Stored as BSON Dates and serialized to ISO 8601 UTC strings (e.g. \`2026-09-24T08:00:00.000Z\`).4. **Tenant Isolation & IDOR Protection**: A Customer can never inspect another Customer's orders or favorites. A Farmer can never view or modify another Farmer's inventory, orders, or reviews. Accessing another user's private resource ID returns \`404 NOT_FOUND\` to prevent resource enumeration.5. **Strict Input Validation**: All write endpoints strictly reject unknown/unregistered fields with \`422 VALIDATION_FAILED\`. Operators prefixed with \`$\` are neutralized by injection sanitization middleware.---## Global Pagination SpecificationAll collection endpoints support keyset (cursor-based) pagination to guarantee stable ordering, prevent duplicate records across page boundaries, and eliminate unbounded offsets.- **Parameters**:  - \`limit\` (optional integer): Number of records per page. Default is \`20\`, maximum allowed is \`50\`.  - \`cursor\` (optional string): An opaque, tamper-proof base64url token encoding \`{ v: 1, s: sortKey, k: [sortValues...], id: docId }\` signed with HMAC-SHA256.- **Response Metadata**:  \`\`\`json  {    "meta": {      "limit": 20,      "hasMore": true,      "nextCursor": "eyJ2IjoxLCJzIjoicmVjZW50IiwiayI6WyIyMDI2LTA5LTI0Il0sImlkIjoiNmFiNGQ...\""    }  }  \`\`\`- **Boundary Conditions**:  - When \`hasMore\` is \`false\`, \`nextCursor\` is \`null\`.  - Passing an invalid, malformed, or tampered cursor yields \`400 INVALID_CURSOR\`.---## Global Error Codes ReferenceThe following table documents all machine-readable error codes emitted by MarketLink:| HTTP Status | Error Code | Trigger Condition / Description ||:---|:---|:---|| **400** | \`BAD_JSON\` | Malformed JSON in request body or invalid syntax. || **400** | \`INVALID_CURSOR\` | Cursor payload tampered, expired, or HMAC signature mismatch. || **401** | \`UNAUTHENTICATED\` | Missing, invalid, or malformed Authorization Bearer header. || **401** | \`TOKEN_EXPIRED\` | Access JWT has expired (15-minute validity window). || **401** | \`INVALID_CREDENTIALS\` | Email not found or password incorrect (constant-time response). || **401** | \`REFRESH_REUSE_DETECTED\` | Revoked refresh token presented; causes immediate eviction of all sessions. || **403** | \`FORBIDDEN\` | Authenticated user lacks required role (e.g. Customer accessing Farmer API). || **403** | \`ACCOUNT_INACTIVE\` | Customer account status is deactivated or inactive. || **403** | \`ACCOUNT_SUSPENDED\` | Farmer stall is suspended or rejected by an administrator. || **403** | \`FARMER_NOT_APPROVED\` | Farmer account is in pending state and cannot publish catalog items. || **403** | \`CANNOT_MODERATE_ADMIN\` | Administrator attempted to suspend or deactivate another Admin. || **404** | \`NOT_FOUND\` | Resource does not exist, or tenant isolation (IDOR) masked as 404. || **409** | \`EMAIL_TAKEN\` | User registration attempted with an already registered email. || **409** | \`CONFLICT\` | General state conflict or duplicate unique field. || **409** | \`CATEGORY_EXISTS\` | Category with the same name or slug already exists. || **409** | \`CATEGORY_IN_USE\` | Attempted to delete a category that still contains products. || **409** | \`ALREADY_REVIEWED\` | Customer already submitted a review for this order/target. || **409** | \`ALREADY_FLAGGED\` | User already reported this review for moderation. || **409** | \`ORDER_NOT_COMPLETED\` | Attempted to review an order that has not been marked completed. || **409** | \`EDIT_WINDOW_EXPIRED\` | Review update attempted after the 14-day edit window elapsed. || **409** | \`CANNOT_CANCEL\` | Order cannot be cancelled once in \`ready\` or \`completed\` status. || **409** | \`SLOT_FULL\` | Pickup window capacity has been filled by competing checkout. || **409** | \`STOCK_DEPLETED\` | Product inventory is insufficient to satisfy requested quantity. || **409** | \`PRICE_CHANGED\` | Catalog price changed between cart quote creation and checkout. || **409** | \`UPLOAD_LIMIT\` | Farmer reached the maximum quota of 200 stored images. || **409** | \`INVALID_STATE\` | State machine transition is disallowed for the current status. || **413** | \`PAYLOAD_TOO_LARGE\` | Request body exceeds limit (100KB for JSON, 1MB for media uploads). || **422** | \`VALIDATION_FAILED\` | Schema constraint violated, missing required fields, or unknown fields present. || **422** | \`INVALID_IMAGE\` | Uploaded file failed magic-byte verification (only JPEG, PNG, WebP supported). || **422** | \`INVALID_RESET_TOKEN\` | Password reset token is invalid, expired, or already used. || **422** | \`RANGE_TOO_LARGE\` | Date range parameter exceeds the 366-day administrative threshold. || **429** | \`RATE_LIMITED\` | Request threshold exceeded for route class (standard rate limiter). || **429** | \`TOO_MANY_ATTEMPTS\` | Account lockout: 5 failed login attempts for this email within 15 minutes. || **500** | \`INTERNAL\` | Internal server error. Details suppressed in production environments. || **503** | \`SERVICE_UNAVAILABLE\` | MongoDB connection is offline or unavailable during operational ping. |---`;for (const [key, group] of Object.entries(modules)) {  if (group.routes.length === 0) continue;  doc += `\n## ${group.title}\n\n`;  for (const r of group.routes) {    const roleStr = r.roles.length > 0 ? r.roles.join(', ') : (r.auth === 'public' ? 'Public' : r.auth);    doc += `### ${r.method} ${r.fullPath}\n`;    doc += `${r.summary || 'Endpoint functionality for ' + r.fullPath}.\n\n`;    doc += `- **Auth**: \`${r.auth}\` (Roles: \`${roleStr}\`)\n`;    doc += `- **Rate Limiter**: \`${r.limiter}\`\n`;    if (r.body) {      doc += `- **Request Schema**: \`${r.body}\` (Strict unknown field rejection)\n`;    }    doc += `- **Responses**:\n`;    doc += `  - \`200 OK\` / \`201 Created\` / \`204 No Content\` on success: \`{ "data": ... }\`\n`;    doc += `  - \`401 UNAUTHENTICATED\` if token missing or invalid.\n`;    doc += `  - \`403 FORBIDDEN\` if caller lacks required permissions.\n`;    if (r.fullPath.includes('/:')) {      doc += `  - \`404 NOT_FOUND\` if resource id is not found or owned by another tenant.\n`;    }    if (r.method === 'POST' || r.method === 'PUT' || r.method === 'PATCH') {      doc += `  - \`422 VALIDATION_FAILED\` if request body contains invalid or unknown fields.\n`;    }    doc += `\n`;  }}fs.writeFileSync(apiDocPath, doc, 'utf8');console.log(`✓ Synchronized docs/API.md with all ${manifest.length} routes.`);
+#!/usr/bin/env node
+/**
+ * Fully regenerates and harmonizes docs/API.md with the 130 declarative routes
+ * registered in defineRoutes manifest.
+ * Adds the complete Error Codes catalog and Pagination Rules specification.
+ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createApp } from '../src/app.js';
+import { getRouteManifest } from '../src/utils/defineRoutes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const apiDocPath = path.resolve(__dirname, '../docs/API.md');
+
+createApp();
+const manifest = getRouteManifest();
+
+// Group routes by module/domain
+const modules = {
+  health: { title: '1. System & Health Probes', routes: [] },
+  auth: { title: '2. Authentication & Session Management', routes: [] },
+  users: { title: '3. Customer Profile & Account Settings', routes: [] },
+  contact: { title: '4. Public Contact & Inquiries', routes: [] },
+  categories: { title: '5. Categories Taxonomy', routes: [] },
+  home: { title: '6. Guest & Home Discovery', routes: [] },
+  announcements: { title: '7. Platform Announcements', routes: [] },
+  markets: { title: '8. Markets Directory & Schedules', routes: [] },
+  farmers: { title: '9. Farmers Directory & Public Profiles', routes: [] },
+  products: { title: '10. Products Catalog & Details', routes: [] },
+  search: { title: '11. Search Suggestions & Query History', routes: [] },
+  feed: { title: '12. Personalized Customer Feed', routes: [] },
+  cart: { title: '13. Cart Quotes & Pricing Validation', routes: [] },
+  orders: { title: '14. Customer Checkout & Orders', routes: [] },
+  reviews: { title: '15. Reviews, Ratings & Moderation Flags', routes: [] },
+  favorites: { title: '16. Customer Favorites & Restock Alerts', routes: [] },
+  notifications: { title: '17. Customer Notifications & Alerts', routes: [] },
+  assistant: { title: '18. Rule-Based Instant Assistant', routes: [] },
+  farmerProfile: { title: '19. Farmer Stall Profile & Settings', routes: [] },
+  farmerSlots: { title: '20. Farmer Pickup Slots & Closures', routes: [] },
+  farmerProducts: { title: '21. Farmer Inventory & Product Management', routes: [] },
+  weeklyTemplate: { title: '22. Farmer Weekly Restock Templates', routes: [] },
+  farmerOrders: { title: '23. Farmer Order Fulfillment & Pick Lists', routes: [] },
+  farmerReviews: { title: '24. Farmer Review Management & Replies', routes: [] },
+  farmerInsights: { title: '25. Farmer Analytics & Business Insights', routes: [] },
+  uploads: { title: '26. Image Uploads & Static Media', routes: [] },
+  adminOverview: { title: '27. Admin Dashboard Overview', routes: [] },
+  adminPeople: { title: '28. Admin People & Account Moderation', routes: [] },
+  adminMarkets: { title: '29. Admin Market Venue Management', routes: [] },
+  adminModeration: { title: '30. Admin Content Moderation Queue', routes: [] },
+  adminReports: { title: '31. Admin Reports & CSV Data Export', routes: [] },
+  categoriesAdmin: { title: '32. Admin Taxonomy & Categories', routes: [] },
+  announcementsAdmin: { title: '33. Admin Announcement Management', routes: [] },
+  messagesAdmin: { title: '34. Admin Support Message Handling', routes: [] },
+  adminSettings: { title: '35. Admin Platform Settings & Config', routes: [] },
+};
+
+// Route mapping heuristics to module groups
+function getModuleKey(r) {
+  if (r.module && modules[r.module]) return r.module;
+  const path = r.fullPath;
+  if (path.startsWith('/api/health') || path.startsWith('/api/ready') || path.startsWith('/api/version')) return 'health';
+  if (path.startsWith('/api/auth')) return 'auth';
+  if (path.startsWith('/api/users')) return 'users';
+  if (path.startsWith('/api/contact')) return 'contact';
+  if (path.startsWith('/api/categories')) return 'categories';
+  if (path.startsWith('/api/public/home') || path.startsWith('/api/home')) return 'home';
+  if (path.startsWith('/api/announcements')) return 'announcements';
+  if (path.startsWith('/api/markets')) return 'markets';
+  if (path.startsWith('/api/farmers')) return 'farmers';
+  if (path.startsWith('/api/products')) return 'products';
+  if (path.startsWith('/api/search')) return 'search';
+  if (path.startsWith('/api/feed')) return 'feed';
+  if (path.startsWith('/api/cart')) return 'cart';
+  if (path.startsWith('/api/orders')) return 'orders';
+  if (path.startsWith('/api/reviews')) return 'reviews';
+  if (path.startsWith('/api/favorites')) return 'favorites';
+  if (path.startsWith('/api/notifications')) return 'notifications';
+  if (path.startsWith('/api/assistant')) return 'assistant';
+  if (path.startsWith('/api/farmer/profile')) return 'farmerProfile';
+  if (path.startsWith('/api/farmer/slots')) return 'farmerSlots';
+  if (path.startsWith('/api/farmer/products')) return 'farmerProducts';
+  if (path.startsWith('/api/farmer/weekly-template')) return 'weeklyTemplate';
+  if (path.startsWith('/api/farmer/orders')) return 'farmerOrders';
+  if (path.startsWith('/api/farmer/reviews')) return 'farmerReviews';
+  if (path.startsWith('/api/farmer/insights') || path.startsWith('/api/farmer/overview')) return 'farmerInsights';
+  if (path.startsWith('/api/farmer/uploads')) return 'uploads';
+  if (path.startsWith('/api/admin/overview')) return 'adminOverview';
+  if (path.startsWith('/api/admin/farmers') || path.startsWith('/api/admin/customers')) return 'adminPeople';
+  if (path.startsWith('/api/admin/markets')) return 'adminMarkets';
+  if (path.startsWith('/api/admin/moderation') || path.startsWith('/api/admin/products') || path.startsWith('/api/admin/reviews')) return 'adminModeration';
+  if (path.startsWith('/api/admin/reports')) return 'adminReports';
+  if (path.startsWith('/api/admin/categories')) return 'categoriesAdmin';
+  if (path.startsWith('/api/admin/announcements')) return 'announcementsAdmin';
+  if (path.startsWith('/api/admin/messages')) return 'messagesAdmin';
+  if (path.startsWith('/api/admin/settings')) return 'adminSettings';
+  return 'health';
+}
+
+for (const r of manifest) {
+  const modKey = getModuleKey(r);
+  modules[modKey].routes.push(r);
+}
+
+// Generate the synchronized markdown document
+let doc = `# MarketLink API Specification (Stage 5 Contract Freeze)
+
+> **Base URL**: \`/api\`  
+> **Protocol**: HTTP 1.1 / JSON (RESTful)  
+> **Success Payload**: \`{ "data": <payload>, "meta": { ... } }\`  
+> **Error Payload**: \`{ "error": { "code": "<CODE>", "message": "<MSG>", "details": [ { "field": "<f>", "message": "<m>" } ] } }\`  
+> **Total Registered Endpoints**: ${manifest.length}
+
+---
+
+## Architecture Conventions & Data Types
+
+1. **Identifiers**: Internal MongoDB \`_id\` is always projected out and exposed as string \`id\` (24-hex string). Never expose \`_id\`.
+2. **Monetary Values**: All prices, fees, totals, and line totals are represented strictly as **positive integer cents** (e.g. \`$4.50\` is \`450\`). Never use floating-point numbers for currency.
+3. **Dates & Timestamps**: Stored as BSON Dates and serialized to ISO 8601 UTC strings (e.g. \`2026-09-24T08:00:00.000Z\`).
+4. **Tenant Isolation & IDOR Protection**: A Customer can never inspect another Customer's orders or favorites. A Farmer can never view or modify another Farmer's inventory, orders, or reviews. Accessing another user's private resource ID returns \`404 NOT_FOUND\` to prevent resource enumeration.
+5. **Strict Input Validation**: All write endpoints strictly reject unknown/unregistered fields with \`422 VALIDATION_FAILED\`. Operators prefixed with \`$\` are neutralized by injection sanitization middleware.
+
+---
+
+## Global Pagination Specification
+
+All collection endpoints support keyset (cursor-based) pagination to guarantee stable ordering, prevent duplicate records across page boundaries, and eliminate unbounded offsets.
+
+- **Parameters**:
+  - \`limit\` (optional integer): Number of records per page. Default is \`20\`, maximum allowed is \`50\`.
+  - \`cursor\` (optional string): An opaque, tamper-proof base64url token encoding \`{ v: 1, s: sortKey, k: [sortValues...], id: docId }\` signed with HMAC-SHA256.
+- **Response Metadata**:
+  \`\`\`json
+  {
+    "meta": {
+      "limit": 20,
+      "hasMore": true,
+      "nextCursor": "eyJ2IjoxLCJzIjoicmVjZW50IiwiayI6WyIyMDI2LTA5LTI0Il0sImlkIjoiNmFiNGQ...\""
+    }
+  }
+  \`\`\`
+- **Boundary Conditions**:
+  - When \`hasMore\` is \`false\`, \`nextCursor\` is \`null\`.
+  - Passing an invalid, malformed, or tampered cursor yields \`400 INVALID_CURSOR\`.
+
+---
+
+## Global Error Codes Reference
+
+The following table documents all machine-readable error codes emitted by MarketLink:
+
+| HTTP Status | Error Code | Trigger Condition / Description |
+|:---|:---|:---|
+| **400** | \`BAD_JSON\` | Malformed JSON in request body or invalid syntax. |
+| **400** | \`INVALID_CURSOR\` | Cursor payload tampered, expired, or HMAC signature mismatch. |
+| **401** | \`UNAUTHENTICATED\` | Missing, invalid, or malformed Authorization Bearer header. |
+| **401** | \`TOKEN_EXPIRED\` | Access JWT has expired (15-minute validity window). |
+| **401** | \`INVALID_CREDENTIALS\` | Email not found or password incorrect (constant-time response). |
+| **401** | \`REFRESH_REUSE_DETECTED\` | Revoked refresh token presented; causes immediate eviction of all sessions. |
+| **403** | \`FORBIDDEN\` | Authenticated user lacks required role (e.g. Customer accessing Farmer API). |
+| **403** | \`ACCOUNT_INACTIVE\` | Customer account status is deactivated or inactive. |
+| **403** | \`ACCOUNT_SUSPENDED\` | Farmer stall is suspended or rejected by an administrator. |
+| **403** | \`FARMER_NOT_APPROVED\` | Farmer account is in pending state and cannot publish catalog items. |
+| **403** | \`CANNOT_MODERATE_ADMIN\` | Administrator attempted to suspend or deactivate another Admin. |
+| **404** | \`NOT_FOUND\` | Resource does not exist, or tenant isolation (IDOR) masked as 404. |
+| **409** | \`EMAIL_TAKEN\` | User registration attempted with an already registered email. |
+| **409** | \`CONFLICT\` | General state conflict or duplicate unique field. |
+| **409** | \`CATEGORY_EXISTS\` | Category with the same name or slug already exists. |
+| **409** | \`CATEGORY_IN_USE\` | Attempted to delete a category that still contains products. |
+| **409** | \`ALREADY_REVIEWED\` | Customer already submitted a review for this order/target. |
+| **409** | \`ALREADY_FLAGGED\` | User already reported this review for moderation. |
+| **409** | \`ORDER_NOT_COMPLETED\` | Attempted to review an order that has not been marked completed. |
+| **409** | \`EDIT_WINDOW_EXPIRED\` | Review update attempted after the 14-day edit window elapsed. |
+| **409** | \`CANNOT_CANCEL\` | Order cannot be cancelled once in \`ready\` or \`completed\` status. |
+| **409** | \`SLOT_FULL\` | Pickup window capacity has been filled by competing checkout. |
+| **409** | \`STOCK_DEPLETED\` | Product inventory is insufficient to satisfy requested quantity. |
+| **409** | \`PRICE_CHANGED\` | Catalog price changed between cart quote creation and checkout. |
+| **409** | \`UPLOAD_LIMIT\` | Farmer reached the maximum quota of 200 stored images. |
+| **409** | \`INVALID_STATE\` | State machine transition is disallowed for the current status. |
+| **413** | \`PAYLOAD_TOO_LARGE\` | Request body exceeds limit (100KB for JSON, 1MB for media uploads). |
+| **422** | \`VALIDATION_FAILED\` | Schema constraint violated, missing required fields, or unknown fields present. |
+| **422** | \`INVALID_IMAGE\` | Uploaded file failed magic-byte verification (only JPEG, PNG, WebP supported). |
+| **422** | \`INVALID_RESET_TOKEN\` | Password reset token is invalid, expired, or already used. |
+| **422** | \`RANGE_TOO_LARGE\` | Date range parameter exceeds the 366-day administrative threshold. |
+| **429** | \`RATE_LIMITED\` | Request threshold exceeded for route class (standard rate limiter). |
+| **429** | \`TOO_MANY_ATTEMPTS\` | Account lockout: 5 failed login attempts for this email within 15 minutes. |
+| **500** | \`INTERNAL\` | Internal server error. Details suppressed in production environments. |
+| **503** | \`SERVICE_UNAVAILABLE\` | MongoDB connection is offline or unavailable during operational ping. |
+
+---
+`;
+
+// Helper to document individual routes
+for (const [key, group] of Object.entries(modules)) {
+  if (group.routes.length === 0) continue;
+
+  doc += `\n## ${group.title}\n\n`;
+
+  for (const r of group.routes) {
+    const roleStr = r.roles.length > 0 ? r.roles.join(', ') : (r.auth === 'public' ? 'Public' : r.auth);
+    doc += `### ${r.method} ${r.fullPath}\n`;
+    doc += `${r.summary || 'Endpoint functionality for ' + r.fullPath}.\n\n`;
+    doc += `- **Auth**: \`${r.auth}\` (Roles: \`${roleStr}\`)\n`;
+    doc += `- **Rate Limiter**: \`${r.limiter}\`\n`;
+    if (r.body) {
+      doc += `- **Request Schema**: \`${r.body}\` (Strict unknown field rejection)\n`;
+    }
+    doc += `- **Responses**:\n`;
+    doc += `  - \`200 OK\` / \`201 Created\` / \`204 No Content\` on success: \`{ "data": ... }\`\n`;
+    doc += `  - \`401 UNAUTHENTICATED\` if token missing or invalid.\n`;
+    doc += `  - \`403 FORBIDDEN\` if caller lacks required permissions.\n`;
+    if (r.fullPath.includes('/:')) {
+      doc += `  - \`404 NOT_FOUND\` if resource id is not found or owned by another tenant.\n`;
+    }
+    if (r.method === 'POST' || r.method === 'PUT' || r.method === 'PATCH') {
+      doc += `  - \`422 VALIDATION_FAILED\` if request body contains invalid or unknown fields.\n`;
+    }
+    doc += `\n`;
+  }
+}
+
+fs.writeFileSync(apiDocPath, doc, 'utf8');
+console.log(`✓ Synchronized docs/API.md with all ${manifest.length} routes.`);

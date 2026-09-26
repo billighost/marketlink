@@ -1,1 +1,35 @@
-const { chromium } = require('playwright');const VIEWPORTS = [  { name: '320px', width: 320, height: 568 },  { name: '360px', width: 360, height: 800 },  { name: '390px', width: 390, height: 844 },  { name: '430px', width: 430, height: 932 },  { name: '600px', width: 600, height: 960 },  { name: '768px', width: 768, height: 1024 },  { name: '820px', width: 820, height: 1180 },  { name: '1024px', width: 1024, height: 768 },  { name: '1440px', width: 1440, height: 900 },  { name: '1920px', width: 1920, height: 1080 },  { name: '844x390', width: 844, height: 390 },];(async () => {  const browser = await chromium.launch();  for (const vp of VIEWPORTS) {    const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });    await page.addInitScript(() => {      localStorage.setItem('marketlink_role', 'buyer');      localStorage.setItem('marketlink_user', JSON.stringify({ id: 'user-george', firstName: 'George', role: 'buyer' }));    });    await page.goto('http://localhost:3000/buyer/products/p-01');    await page.waitForTimeout(500);    const issues = await page.evaluate(() => window.layoutCheck ? window.layoutCheck() : []);    console.log(`Product Sheet @ ${vp.name}: ${issues.length} issues`);    if (issues.length > 0) {      issues.forEach(i => console.log('  ->', i.type, i.selector, i.message));    }    await page.close();  }  await browser.close();})();
+const { chromium } = require('playwright');
+
+const VIEWPORTS = [
+  { name: '320px', width: 320, height: 568 },
+  { name: '360px', width: 360, height: 800 },
+  { name: '390px', width: 390, height: 844 },
+  { name: '430px', width: 430, height: 932 },
+  { name: '600px', width: 600, height: 960 },
+  { name: '768px', width: 768, height: 1024 },
+  { name: '820px', width: 820, height: 1180 },
+  { name: '1024px', width: 1024, height: 768 },
+  { name: '1440px', width: 1440, height: 900 },
+  { name: '1920px', width: 1920, height: 1080 },
+  { name: '844x390', width: 844, height: 390 },
+];
+
+(async () => {
+  const browser = await chromium.launch();
+  for (const vp of VIEWPORTS) {
+    const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+    await page.addInitScript(() => {
+      localStorage.setItem('marketlink_role', 'buyer');
+      localStorage.setItem('marketlink_user', JSON.stringify({ id: 'user-george', firstName: 'George', role: 'buyer' }));
+    });
+    await page.goto('http://localhost:3000/buyer/products/p-01');
+    await page.waitForTimeout(500);
+    const issues = await page.evaluate(() => window.layoutCheck ? window.layoutCheck() : []);
+    console.log(`Product Sheet @ ${vp.name}: ${issues.length} issues`);
+    if (issues.length > 0) {
+      issues.forEach(i => console.log('  ->', i.type, i.selector, i.message));
+    }
+    await page.close();
+  }
+  await browser.close();
+})();

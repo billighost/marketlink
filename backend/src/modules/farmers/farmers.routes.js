@@ -1,1 +1,117 @@
-import { Router } from 'express';import { parseLimit, parseIntParam, parseEnum, escapeForPrefix } from '../../utils/query.js';import {  listFarmers,  getFarmerDetail,  listFarmerProducts,  listFarmerReviews,  getFarmerPickupSlots,} from './farmers.service.js';import { defineRoutes } from '../../utils/defineRoutes.js';export const farmersRouter = Router();const routes = [  {    method: 'get',    path: '/',    auth: 'any',    summary: 'List listed farmers with search and category filters',    handler: async (req, res, next) => {      try {        const q = req.query.q ? escapeForPrefix(req.query.q) : undefined;        const category = req.query.category ? String(req.query.category).trim() : undefined;        const market = req.query.market ? String(req.query.market).trim() : undefined;        const day = parseEnum(req.query.day, 'day', ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);        const sort = parseEnum(req.query.sort, 'sort', ['rating', 'top', 'new', 'name']) || 'rating';        const limit = parseLimit(req.query.limit, 20, 50);        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;        const result = await listFarmers({ q, category, market, day, sort, cursor, limit });        return res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/:id',    auth: 'any',    summary: 'Get farmer profile details',    handler: async (req, res, next) => {      try {        const farmer = await getFarmerDetail(req.params.id);        return res.json({ data: farmer });      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/:id/products',    auth: 'any',    summary: "List a farmer's catalog products",    handler: async (req, res, next) => {      try {        const availability = parseEnum(req.query.availability, 'availability', ['in', 'low', 'out']);        const category = req.query.category ? String(req.query.category).trim() : undefined;        const includeSoldOut = req.query.includeSoldOut === 'true';        const limit = parseLimit(req.query.limit, 20, 50);        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;        const result = await listFarmerProducts(req.params.id, {          availability,          category,          includeSoldOut,          cursor,          limit,        });        return res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/:id/reviews',    auth: 'any',    summary: "List farmer's received customer reviews",    handler: async (req, res, next) => {      try {        const sort = parseEnum(req.query.sort, 'sort', ['newest', 'highest', 'lowest']) || 'newest';        const limit = parseLimit(req.query.limit, 20, 50);        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;        const result = await listFarmerReviews(req.params.id, { sort, cursor, limit });        return res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/:id/pickup-slots',    auth: 'any',    summary: 'Get upcoming pickup slots for a farmer',    handler: async (req, res, next) => {      try {        const days = parseIntParam(req.query.days, 'days', { min: 1, max: 60 }) || 14;        const slots = await getFarmerPickupSlots(req.params.id, { days });        return res.json({ data: slots });      } catch (err) {        next(err);      }    },  },];defineRoutes(farmersRouter, 'farmers', routes, { basePath: '/api/farmers' });
+/**
+ * Farmers module routing.
+ * Endpoints for browsing listed farmers, profiles, reviews, products, and pickup schedules.
+ */
+
+import { Router } from 'express';
+import { parseLimit, parseIntParam, parseEnum, escapeForPrefix } from '../../utils/query.js';
+import {
+  listFarmers,
+  getFarmerDetail,
+  listFarmerProducts,
+  listFarmerReviews,
+  getFarmerPickupSlots,
+} from './farmers.service.js';
+import { defineRoutes } from '../../utils/defineRoutes.js';
+
+export const farmersRouter = Router();
+
+const routes = [
+  {
+    method: 'get',
+    path: '/',
+    auth: 'any',
+    summary: 'List listed farmers with search and category filters',
+    handler: async (req, res, next) => {
+      try {
+        const q = req.query.q ? escapeForPrefix(req.query.q) : undefined;
+        const category = req.query.category ? String(req.query.category).trim() : undefined;
+        const market = req.query.market ? String(req.query.market).trim() : undefined;
+        const day = parseEnum(req.query.day, 'day', ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
+        const sort = parseEnum(req.query.sort, 'sort', ['rating', 'top', 'new', 'name']) || 'rating';
+        const limit = parseLimit(req.query.limit, 20, 50);
+        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;
+
+        const result = await listFarmers({ q, category, market, day, sort, cursor, limit });
+        return res.json(result);
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/:id',
+    auth: 'any',
+    summary: 'Get farmer profile details',
+    handler: async (req, res, next) => {
+      try {
+        const farmer = await getFarmerDetail(req.params.id);
+        return res.json({ data: farmer });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/:id/products',
+    auth: 'any',
+    summary: "List a farmer's catalog products",
+    handler: async (req, res, next) => {
+      try {
+        const availability = parseEnum(req.query.availability, 'availability', ['in', 'low', 'out']);
+        const category = req.query.category ? String(req.query.category).trim() : undefined;
+        const includeSoldOut = req.query.includeSoldOut === 'true';
+        const limit = parseLimit(req.query.limit, 20, 50);
+        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;
+
+        const result = await listFarmerProducts(req.params.id, {
+          availability,
+          category,
+          includeSoldOut,
+          cursor,
+          limit,
+        });
+        return res.json(result);
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/:id/reviews',
+    auth: 'any',
+    summary: "List farmer's received customer reviews",
+    handler: async (req, res, next) => {
+      try {
+        const sort = parseEnum(req.query.sort, 'sort', ['newest', 'highest', 'lowest']) || 'newest';
+        const limit = parseLimit(req.query.limit, 20, 50);
+        const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;
+
+        const result = await listFarmerReviews(req.params.id, { sort, cursor, limit });
+        return res.json(result);
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'get',
+    path: '/:id/pickup-slots',
+    auth: 'any',
+    summary: 'Get upcoming pickup slots for a farmer',
+    handler: async (req, res, next) => {
+      try {
+        const days = parseIntParam(req.query.days, 'days', { min: 1, max: 60 }) || 14;
+        const slots = await getFarmerPickupSlots(req.params.id, { days });
+        return res.json({ data: slots });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+];
+
+defineRoutes(farmersRouter, 'farmers', routes, { basePath: '/api/farmers' });

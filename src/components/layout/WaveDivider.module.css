@@ -1,1 +1,16 @@
-.wave {  display: block;  width: 100%;  height: var(--wave-height);  margin-bottom: -1px;}.wave[data-flip="true"] {  transform: rotate(180deg);  margin-top: -1px;  margin-bottom: 0;}.path {  fill: var(--color-canvas);}
+.wave {
+  display: block;
+  width: 100%;
+  height: var(--wave-height);
+  margin-bottom: -1px;
+}
+
+.wave[data-flip="true"] {
+  transform: rotate(180deg);
+  margin-top: -1px;
+  margin-bottom: 0;
+}
+
+.path {
+  fill: var(--color-canvas);
+}

@@ -1,79 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Star, ChevronRight } from 'lucide-react';
-import { getOrders } from '@/api/orders';
-import { updateReview, deleteReview } from '@/api/reviews';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Star,
+  MessageSquare,
+  CheckCircle,
+  Clock,
+  Sparkles,
+  Search,
+  Filter,
+  ArrowRight,
+  Store,
+  Leaf,
+  Plus,
+  X,
+  ShoppingBag,
+  ShieldCheck,
+} from 'lucide-react';
+import { getOrders, createOrderReview } from '@/api/orders';
+import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import Stars from '@/components/ui/Stars';
+import SegmentedControl from '@/components/ui/SegmentedControl';
 import EmptyState from '@/components/ui/EmptyState';
-import ConfirmStep from '@/components/ui/ConfirmStep';
-import Page from '@/components/layout/Page';
-import PageTitle from '@/components/layout/PageTitle';
-import { formatDate } from '@/utils/format';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import Button from '@/components/ui/Button';
 import styles from './Reviews.module.css';
 
 export function Reviews() {
-  useDocumentTitle('Your reviews · MarketLink');
+  const { user } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
-  const [awaitingOrders, setAwaitingOrders] = useState([]);
-  const [myReviews, setMyReviews] = useState([]);
+  const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'mine'
+  const [completedOrders, setCompletedOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
-  // Edit review state
-  const [editingId, setEditingId] = useState(null);
-  const [editRating, setEditRating] = useState(5);
-  const [editComment, setEditComment] = useState('');
-  const [savingEdit, setSavingEdit] = useState(false);
+  // Review Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [targetOrder, setTargetOrder] = useState(null);
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  // Delete review state
-  const [deletingId, setDeletingId] = useState(null);
-  const [deletingLoading, setDeletingLoading] = useState(false);
-
-  // Load reviews and orders
   useEffect(() => {
     let active = true;
-    setLoading(true);
-
-    getOrders({ tab: 'past', limit: 20 })
+    setLoadingOrders(true);
+    getOrders({ status: 'completed' })
       .then((res) => {
         if (!active) return;
-        const pastOrders = res?.data || (Array.isArray(res) ? res : []);
-        // Completed orders that have not been reviewed yet
-        const awaiting = pastOrders.filter((o) => o.status === 'completed' && !o.reviewed);
-        setAwaitingOrders(awaiting);
-
-        // Gather existing reviews attached to past orders or localStorage cache
-        const extractedReviews = [];
-        pastOrders.forEach((o) => {
-          if (o.reviews && Array.isArray(o.reviews)) {
-            extractedReviews.push(...o.reviews);
-          }
-        });
-
-        try {
-          const cached = JSON.parse(localStorage.getItem('marketlink_my_reviews') || '[]');
-          if (Array.isArray(cached)) {
-            cached.forEach((cr) => {
-              if (!extractedReviews.some((r) => r.id === cr.id)) {
-                extractedReviews.push(cr);
-              }
-            });
-          }
-        } catch {
-          // ignore
-        }
-
-        setMyReviews(extractedReviews);
+        setCompletedOrders(res?.data || []);
       })
       .catch(() => {
-        if (!active) return;
-        setAwaitingOrders([]);
-        setMyReviews([]);
+        if (active) setCompletedOrders([]);
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) setLoadingOrders(false);
       });
 
     return () => {
@@ -81,262 +62,197 @@ export function Reviews() {
     };
   }, []);
 
-  const handleStartEdit = (review) => {
-    setEditingId(review.id);
-    setEditRating(review.rating || 5);
-    setEditComment(review.comment || review.text || '');
+  const handleOpenReviewModal = (order) => {
+    setTargetOrder(order);
+    setRating(5);
+    setComment('');
+    setIsModalOpen(true);
   };
 
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditRating(5);
-    setEditComment('');
-  };
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!targetOrder) return;
 
-  const handleSaveEdit = async (reviewId) => {
-    setSavingEdit(true);
+    setSubmitting(true);
     try {
-      await updateReview(reviewId, {
-        rating: editRating,
-        comment: editComment.trim() || undefined,
+      await createOrderReview(targetOrder.id, {
+        rating,
+        comment: comment.trim(),
       });
-
-      setMyReviews((prev) =>
-        prev.map((r) =>
-          r.id === reviewId ? { ...r, rating: editRating, comment: editComment.trim() } : r
-        )
-      );
-
-      // Update localStorage cache
-      try {
-        const cached = JSON.parse(localStorage.getItem('marketlink_my_reviews') || '[]');
-        const updated = cached.map((r) =>
-          r.id === reviewId ? { ...r, rating: editRating, comment: editComment.trim() } : r
-        );
-        localStorage.setItem('marketlink_my_reviews', JSON.stringify(updated));
-      } catch {
-        // ignore
-      }
-
-      showToast({ message: 'Review updated.' });
-      handleCancelEdit();
+      showToast('Thank you for sharing your feedback with the farmer!', 'success');
+      setIsModalOpen(false);
+      // Remove from pending reviews or mark reviewed
+      setCompletedOrders((prev) => prev.filter((o) => o.id !== targetOrder.id));
     } catch (err) {
-      showToast({ message: err?.message || 'Could not update review.' });
+      showToast(err?.message || 'Failed to submit review. Please try again.', 'error');
     } finally {
-      setSavingEdit(false);
+      setSubmitting(false);
     }
   };
-
-  const handleDeleteReview = async () => {
-    if (!deletingId) return;
-    setDeletingLoading(true);
-
-    try {
-      await deleteReview(deletingId);
-      setMyReviews((prev) => prev.filter((r) => r.id !== deletingId));
-
-      try {
-        const cached = JSON.parse(localStorage.getItem('marketlink_my_reviews') || '[]');
-        const updated = cached.filter((r) => r.id !== deletingId);
-        localStorage.setItem('marketlink_my_reviews', JSON.stringify(updated));
-      } catch {
-        // ignore
-      }
-
-      showToast({ message: 'Review deleted.' });
-      setDeletingId(null);
-    } catch (err) {
-      showToast({ message: err?.message || 'Could not delete review.' });
-    } finally {
-      setDeletingLoading(false);
-    }
-  };
-
-  const hasContent = awaitingOrders.length > 0 || myReviews.length > 0;
 
   return (
-    <Page width="read">
-      <PageTitle
-        title="Your reviews"
-        context="Feedback on collected harvest orders and market stalls."
-        backTo="/buyer/profile"
-        backLabel="Back to you"
-      />
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div className={styles.headerBadge}>
+          <Sparkles size={14} className={styles.headerBadgeIcon} aria-hidden="true" />
+          <span>Community Feedback</span>
+        </div>
+        <h1 className={styles.title}>Stall & Harvest Reviews</h1>
+        <p className={styles.subtitle}>
+          Help your neighborhood community and growers by sharing feedback on your collected harvest orders.
+        </p>
+      </header>
 
-      <div className={styles.container}>
-        {loading ? (
-          <div className={styles.panel}>
-            <div style={{ height: 80, background: 'var(--color-canvas-soft)' }} />
-          </div>
-        ) : !hasContent ? (
-          <EmptyState
-            scene="first-review"
-            title="No reviews yet"
-            text="Reviews appear after you collect an order."
-            actionLabel="Browse produce"
-            actionTo="/buyer/products"
-          />
-        ) : (
-          <>
-            {/* Awaiting your review section */}
-            {awaitingOrders.length > 0 && (
-              <section className={styles.section} aria-label="Awaiting your review">
-                <h2 className={styles.sectionTitle}>Awaiting your review</h2>
-                <div className={styles.panel}>
-                  {awaitingOrders.map((order) => (
-                    <Link
-                      key={order.id}
-                      to={`/buyer/orders/${order.id}`}
-                      className={styles.awaitingRow}
-                    >
-                      <div className={styles.awaitingMain}>
-                        <span className={styles.awaitingStall}>
-                          {order.farmerName || order.farmer?.stallName || 'Market Stall'}
-                        </span>
-                        <span className={styles.awaitingMeta}>
-                          Order #{order.orderNumber} · Collected {formatDate(order.pickup?.slotEnd || order.updatedAt)}
-                        </span>
-                      </div>
-                      <div className={styles.awaitingAction}>
-                        <span>Leave review</span>
-                        <ChevronRight size={16} aria-hidden="true" />
-                      </div>
-                    </Link>
+      {/* Main Tab Controls */}
+      <div className={styles.tabsWrapper}>
+        <SegmentedControl
+          name="reviews-tab"
+          value={activeTab}
+          onChange={setActiveTab}
+          options={[
+            {
+              value: 'pending',
+              label: completedOrders.length > 0 ? `To Review (${completedOrders.length})` : 'To Review',
+            },
+            { value: 'mine', label: 'Past Orders' },
+          ]}
+        />
+      </div>
+
+      {/* Content Area */}
+      {loadingOrders ? (
+        <div className={styles.loadingArea}>
+          <p className={styles.loadingText}>Checking completed pickups...</p>
+        </div>
+      ) : activeTab === 'pending' ? (
+        completedOrders.length > 0 ? (
+          <div className={styles.pendingGrid}>
+            {completedOrders.map((order) => (
+              <div key={order.id} className={styles.orderCard}>
+                <div className={styles.orderHeader}>
+                  <div className={styles.orderIconWrap}>
+                    <ShoppingBag size={20} />
+                  </div>
+                  <div>
+                    <h3 className={styles.orderStallName}>{order.farmer?.stallName || 'Market Stall'}</h3>
+                    <span className={styles.orderNumber}>Order #{order.orderNumber}</span>
+                  </div>
+                </div>
+                <div className={styles.orderItemsPreview}>
+                  {(order.items || []).map((item, idx) => (
+                    <span key={idx} className={styles.orderItemPill}>
+                      {item.quantity}× {item.productName || item.name}
+                    </span>
                   ))}
                 </div>
-              </section>
-            )}
-
-            {/* Completed reviews section */}
-            {myReviews.length > 0 && (
-              <section className={styles.section} aria-label="Your past reviews">
-                <h2 className={styles.sectionTitle}>Reviews you left</h2>
-                <div className={styles.panel}>
-                  {myReviews.map((review) => {
-                    const isEditing = editingId === review.id;
-                    const isDeleting = deletingId === review.id;
-
-                    return (
-                      <article key={review.id} className={styles.reviewItem}>
-                        <div className={styles.reviewHeader}>
-                          <div>
-                            <div className={styles.targetName}>
-                              {review.targetName || review.productName || review.farmerName || 'Stall item'}
-                            </div>
-                            <span className={styles.reviewDate}>
-                              {formatDate(review.createdAt || review.date)}
-                            </span>
-                          </div>
-
-                          {!isEditing && (
-                            <div className={styles.ratingAndActions}>
-                              <Stars rating={review.rating} size="sm" />
-                              <div className={styles.itemActions}>
-                                <button
-                                  type="button"
-                                  className={styles.textBtn}
-                                  onClick={() => handleStartEdit(review)}
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`${styles.textBtn} ${styles.textBtnDanger}`}
-                                  onClick={() => setDeletingId(review.id)}
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Inline editing mode */}
-                        {isEditing ? (
-                          <div className={styles.editForm}>
-                            <div className={styles.starPicker} role="group" aria-label="Rating">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                  key={star}
-                                  type="button"
-                                  className={styles.starBtn}
-                                  onClick={() => setEditRating(star)}
-                                  aria-label={`${star} stars`}
-                                >
-                                  <Star
-                                    size={20}
-                                    fill={editRating >= star ? 'var(--color-ink)' : 'none'}
-                                    strokeWidth={1.5}
-                                  />
-                                </button>
-                              ))}
-                            </div>
-
-                            <textarea
-                              className={styles.textarea}
-                              rows={3}
-                              value={editComment}
-                              onChange={(e) => setEditComment(e.target.value)}
-                              placeholder="Update your review..."
-                            />
-
-                            <div className={styles.editActions}>
-                              <button
-                                type="button"
-                                className={styles.cancelBtn}
-                                onClick={handleCancelEdit}
-                                disabled={savingEdit}
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="button"
-                                className={styles.saveEditBtn}
-                                onClick={() => handleSaveEdit(review.id)}
-                                disabled={savingEdit}
-                              >
-                                {savingEdit ? 'Saving...' : 'Save review'}
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            {review.comment && (
-                              <p className={styles.comment}>{review.comment}</p>
-                            )}
-
-                            {review.reply && (
-                              <div className={styles.replyBox}>
-                                <span className={styles.replyAuthor}>
-                                  Response from {review.reply.farmerName || 'Farmer'}
-                                </span>
-                                <p className={styles.replyText}>{review.reply.comment || review.reply.text}</p>
-                              </div>
-                            )}
-
-                            {isDeleting && (
-                              <ConfirmStep
-                                title="Delete this review?"
-                                message="This cannot be undone. You will not be able to re-review this past order."
-                                confirmLabel="Delete review"
-                                confirmVariant="danger"
-                                onConfirm={handleDeleteReview}
-                                onCancel={() => setDeletingId(null)}
-                                isLoading={deletingLoading}
-                              />
-                            )}
-                          </>
-                        )}
-                      </article>
-                    );
-                  })}
+                <div className={styles.orderFooter}>
+                  <Button variant="primary" size="sm" onClick={() => handleOpenReviewModal(order)}>
+                    Write Review
+                  </Button>
                 </div>
-              </section>
-            )}
-          </>
-        )}
-      </div>
-    </Page>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No reviews yet"
+            text="They appear after Customers collect orders."
+            actionLabel="Browse the market"
+            onAction={() => navigate('/buyer/products')}
+          />
+        )
+      ) : (
+        <div className={styles.mineList}>
+          {completedOrders.length > 0 ? (
+            <p className={styles.emptyPrompt}>You have {completedOrders.length} completed order(s) eligible for review.</p>
+          ) : (
+            <EmptyState
+              title="No past orders yet"
+              text="Collected orders will appear here."
+              actionLabel="Browse the market"
+              onAction={() => navigate('/buyer/products')}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Review Modal Dialog */}
+      {isModalOpen && targetOrder && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => !submitting && setIsModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Review {targetOrder.farmer?.stallName || 'Stall'}</h2>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setIsModalOpen(false)}
+                disabled={submitting}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitReview} className={styles.reviewForm}>
+              <div className={styles.ratingSection}>
+                <label className={styles.label}>Your Rating</label>
+                <div className={styles.starPicker}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={styles.starBtn}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => setRating(star)}
+                    >
+                      <Star
+                        size={28}
+                        fill={(hoverRating || rating) >= star ? 'var(--color-beet)' : 'none'}
+                        color={(hoverRating || rating) >= star ? 'var(--color-beet)' : 'var(--color-border)'}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.commentSection}>
+                <label htmlFor="review-comment" className={styles.label}>
+                  Your Feedback
+                </label>
+                <textarea
+                  id="review-comment"
+                  className={styles.textarea}
+                  rows={4}
+                  placeholder="How was the harvest quality, freshness, and pickup experience?"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.formActions}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={submitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" size="md" disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Submit Review'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

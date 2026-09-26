@@ -1,30 +1,30 @@
-/* CartBar — floating basket pill */
+/* CartBar — floating cart bar */
 
 .bar {
   position: fixed;
-  left: var(--space-4);
-  right: var(--space-4);
-  bottom: calc(var(--bottom-nav-height) + var(--stack-gap) + env(safe-area-inset-bottom, 0px));
-  max-width: 22rem;
+  bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + var(--stack-gap));
+  left: var(--page-pad);
+  right: var(--page-pad);
+  max-width: var(--container-tablet);
   margin-inline: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: var(--cart-bar-height);
-  padding-inline: var(--space-5);
-  background-color: var(--color-primary);
+  min-height: var(--control-h);
+  padding: var(--space-3) var(--space-5);
+  background-color: var(--color-beet);
   color: var(--color-on-primary);
   border-radius: var(--radius-full);
-  border: none;
-  box-shadow: var(--shadow-menu);
-  z-index: calc(var(--z-sticky) + 1);
+  border: 1px solid var(--color-beet-dark);
+  z-index: var(--z-sticky);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
 .bar:hover {
-  background-color: var(--color-primary-hover);
+  background-color: var(--color-beet-dark);
 }
 
 .bar:focus-visible {
@@ -38,11 +38,27 @@
   font-weight: var(--weight-medium);
   line-height: var(--lh-ui);
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+@media (max-width: 380px) {
+  .bar {
+    padding: var(--space-2) var(--space-3);
+    min-height: 40px;
+  }
+  .text {
+    font-size: var(--text-xs);
+  }
 }
 
 @media (min-width: 1024px) {
   .bar {
-    display: none;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--stack-gap));
+    max-width: 320px;
+    left: auto;
+    right: var(--page-pad);
+    margin-inline: 0;
   }
 }

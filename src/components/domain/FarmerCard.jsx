@@ -1,24 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Illustration from '@/components/domain/Illustration';
 import styles from './FarmerCard.module.css';
-
-function getStallInitials(name) {
-  if (!name) return 'S';
-  const words = name.trim().split(/\s+/).filter((w) => /^[a-zA-Z0-9]/.test(w));
-  if (words.length >= 2) {
-    return `${words[0][0]}${words[1][0]}`.toUpperCase();
-  }
-  return (words[0]?.slice(0, 2) || 'S').toUpperCase();
-}
 
 /**
  * Farmer card component.
  * Minimal design system specifications:
- *  - Tile aspect ratio 4/3 with centered illustration (row/list/grid)
- *  - Variant 'stall': 40px avatar with initials, 2-line reserved stall name,
- *    contact/specialty line, open/closed status, and optional low-stock warning.
- *  - Reserved heights prevent ragged cards in rows
+ *  - Tile aspect ratio 4/3 with centered illustration
+ *  - Reserved 2-line stall name height prevents ragged cards in rows
+ *  - Single muted line (specialty / stall)
+ *  - Heart removed from card (lives in Farmer sheet and Favourites)
  *  - Stretched link covers card cleanly with zero overlapping buttons
  */
 export function FarmerCard({
@@ -26,55 +17,12 @@ export function FarmerCard({
   variant = 'row',
   className = '',
 }) {
+  const location = useLocation();
+
   if (!farmer) return null;
 
-  if (variant === 'stall') {
-    const initials = getStallInitials(farmer.stallName);
-    const farmerSub = farmer.contactPerson || farmer.specialty || '';
-    const hasLowStock = Boolean(farmer.lowStockCount && farmer.lowStockCount > 0);
-
-    return (
-      <article
-        className={`${styles.card} ${styles.stall} ${className}`}
-        aria-label={`${farmer.stallName}, ${farmerSub}`}
-      >
-        <Link
-          to={`/buyer/stalls/${farmer.id}`}
-          className={styles.stretchedLink}
-          tabIndex={0}
-          aria-label={`View stall ${farmer.stallName}`}
-        />
-
-        {/* 40px round avatar: initials on --color-beet-tint */}
-        <div className={styles.stallAvatar} aria-hidden="true">
-          <span className={styles.stallInitials}>{initials}</span>
-        </div>
-
-        {/* Details Content */}
-        <div className={styles.stallContent}>
-          <h3 className={styles.stallHeading}>{farmer.stallName}</h3>
-          <p className={styles.stallSub}>{farmerSub || '\u00A0'}</p>
-          <div className={styles.stallStatus}>
-            {farmer.openToday ? (
-              <>
-                <span className={styles.herbDot} aria-hidden="true" />
-                <span className={styles.openText}>Open today</span>
-              </>
-            ) : (
-              <span className={styles.notOpenText}>Not here today</span>
-            )}
-          </div>
-          <div className={styles.lowStockRow}>
-            {hasLowStock ? (
-              <span className={styles.lowStockText}>
-                {farmer.lowStockCount} {farmer.lowStockCount === 1 ? 'item low' : 'items low'}
-              </span>
-            ) : null}
-          </div>
-        </div>
-      </article>
-    );
-  }
+  const farmerSheetPath = `/buyer/farmers/${farmer.id}`;
+  const linkState = { background: location.state?.background || location };
 
   return (
     <article
@@ -82,7 +30,8 @@ export function FarmerCard({
       aria-label={`${farmer.stallName}, ${farmer.specialty}`}
     >
       <Link
-        to={`/buyer/stalls/${farmer.id}`}
+        to={farmerSheetPath}
+        state={linkState}
         className={styles.stretchedLink}
         tabIndex={0}
         aria-label={`View stall ${farmer.stallName}`}

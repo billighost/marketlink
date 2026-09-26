@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import BuyerTopBar from '@/components/layout/BuyerTopBar';
@@ -6,7 +6,6 @@ import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import VerifyEmailBanner from '@/components/layout/VerifyEmailBanner';
 import BottomNav from '@/components/layout/BottomNav';
 import CartBar from '@/components/layout/CartBar';
-import CommandPalette from '@/components/layout/CommandPalette';
 import styles from './BuyerLayout.module.css';
 
 /**
@@ -23,42 +22,26 @@ export function BuyerLayout() {
   const location = useLocation();
   const scrollPositionsRef = useRef({});
   const prevPathRef = useRef(location.pathname);
-  const [reducedMotion, setReducedMotion] = useState(() => {
-    try {
-      return localStorage.getItem('marketlink_reduced_motion') === 'true';
-    } catch {
-      return false;
-    }
-  });
 
-  // Listen for reduced motion changes from Profile settings
-  useEffect(() => {
-    const handleMotionChange = (e) => {
-      const val = e.detail !== undefined ? Boolean(e.detail) : localStorage.getItem('marketlink_reduced_motion') === 'true';
-      setReducedMotion(val);
-    };
+  const isSheetPath =
+    location.pathname.startsWith('/buyer/products/') ||
+    location.pathname.startsWith('/buyer/farmers/') ||
+    location.pathname.startsWith('/buyer/markets/') ||
+    location.pathname.startsWith('/buyer/orders/') ||
+    location.pathname.startsWith('/buyer/profile/') ||
+    location.pathname === '/buyer/cart' ||
+    location.pathname === '/buyer/order-confirmed' ||
+    location.pathname === '/buyer/assistant';
 
-    window.addEventListener('marketlink_reduced_motion_change', handleMotionChange);
-    window.addEventListener('storage', handleMotionChange);
-    return () => {
-      window.removeEventListener('marketlink_reduced_motion_change', handleMotionChange);
-      window.removeEventListener('storage', handleMotionChange);
-    };
-  }, []);
-
-  // Sync data-reduced-motion on document element
-  useEffect(() => {
-    if (reducedMotion) {
-      document.documentElement.setAttribute('data-reduced-motion', 'true');
-    } else {
-      document.documentElement.removeAttribute('data-reduced-motion');
-    }
-  }, [reducedMotion]);
-
-  const isCartVisible = count > 0 && location.pathname !== '/buyer/basket';
+  const isSheetOpen = Boolean(location.state?.background) || isSheetPath;
+  const isCartRoute = location.pathname === '/buyer/cart';
+  const isCartVisible = count > 0 && !isSheetOpen && !isCartRoute;
 
   // Preserve scroll positions per tab across tab switches
   useEffect(() => {
+    // If a background location exists, this is a sheet opening over the page; do not touch underlying page scroll
+    if (location.state?.background) return;
+
     // Save previous tab scroll position
     const prevPath = prevPathRef.current;
     if (prevPath && prevPath !== location.pathname) {
@@ -70,25 +53,21 @@ export function BuyerLayout() {
     // Restore saved scroll position for current tab (or 0 for fresh navigation)
     const savedY = scrollPositionsRef.current[location.pathname] || 0;
     window.scrollTo({ top: savedY, left: 0, behavior: 'instant' });
-  }, [location.pathname]);
+  }, [location.pathname, location.state?.background]);
 
   return (
-    <div
-      className={styles.appShell}
-      data-cart-visible={isCartVisible ? 'true' : 'false'}
-      data-reduced-motion={reducedMotion ? 'true' : 'false'}
-    >
+    <div className={styles.appShell} data-cart-visible={isCartVisible ? 'true' : 'false'}>
       {/* Skip Link */}
       <a href="#main-content" className={styles.skipLink}>
         Skip to main content
       </a>
 
+      {/* Slim site announcements */}
+      {!isSheetOpen && <AnnouncementBar />}
+      {!isSheetOpen && <VerifyEmailBanner />}
+
       {/* Top Bar Header */}
       <BuyerTopBar />
-
-      {/* Slim site announcements */}
-      <AnnouncementBar />
-      <VerifyEmailBanner />
 
       {/* Main Page Area */}
       <main id="main-content" className={styles.main}>
@@ -96,13 +75,10 @@ export function BuyerLayout() {
       </main>
 
       {/* Floating Cart Pill */}
-      <CartBar />
+      {!isSheetOpen && <CartBar />}
 
       {/* Mobile Bottom Navigation */}
-      <BottomNav />
-
-      {/* Command Palette */}
-      <CommandPalette />
+      {!isSheetOpen && <BottomNav />}
     </div>
   );
 }

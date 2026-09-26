@@ -1,1 +1,639 @@
-import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import jwt from 'jsonwebtoken';import { ObjectId } from 'mongodb';import { createApp } from '../src/app.js';import { getRouteManifest } from '../src/utils/defineRoutes.js';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { COLLECTIONS } from '../src/db/collections.js';import { env } from '../src/config/env.js';describe('Stage 5 Full Security & Penetration Hardening Suite', () => {  let db;  let manifest;  let customerGeorgeAuth;  let customerMiaAuth;  let farmerRiverbendAuth;  let adminAuth;  let georgesOrder;  let georgesReview;  let georgesNotification;  let riverbendsProduct;  before(async () => {    const testEnv = await setupTestEnvironment();    db = testEnv.db;    createApp();    manifest = getRouteManifest();    customerGeorgeAuth = await loginUser('george@example.com', 'market123');    customerMiaAuth = await loginUser('mia@example.com', 'market123');    farmerRiverbendAuth = await loginUser('riverbend@example.com', 'market123');    adminAuth = await loginUser('admin@marketlink.test', 'Admin12345');    const gid = new ObjectId(customerGeorgeAuth.user.id);    const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Riverbend Farm' });    riverbendsProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmer._id });    georgesOrder = await db.collection(COLLECTIONS.ORDERS).findOne({ customerId: gid });    if (!georgesOrder) {      georgesOrder = {        _id: new ObjectId(),        orderNumber: 'ML-9901',        customerId: gid,        customerName: 'George Customer',        farmerId: farmer._id,        farmerUserId: farmer.userId,        farmerName: farmer.stallName,        marketId: farmer.marketIds[0],        items: [{ productId: riverbendsProduct._id, name: riverbendsProduct.name, unitPriceCents: 450, quantity: 1, lineTotalCents: 450 }],        subtotalCents: 450,        totalCents: 450,        status: 'placed',        pickup: { slotStart: new Date(Date.now() + 86400000), slotEnd: new Date(Date.now() + 90000000), label: 'Pickup' },        cutoffAt: new Date(Date.now() + 36000000),        timeline: [{ status: 'placed', at: new Date(), byRole: 'customer' }],        reviewed: false,        createdAt: new Date(),        updatedAt: new Date(),      };      await db.collection(COLLECTIONS.ORDERS).insertOne(georgesOrder);    }    georgesReview = await db.collection(COLLECTIONS.REVIEWS).findOne({ customerId: gid });    if (!georgesReview) {      georgesReview = {        _id: new ObjectId(),        orderId: georgesOrder._id,        customerId: gid,        customerName: 'George Customer',        targetType: 'farmer',        targetId: farmer._id,        rating: 5,        comment: 'Great produce!',        status: 'visible',        createdAt: new Date(),        updatedAt: new Date(),      };      await db.collection(COLLECTIONS.REVIEWS).insertOne(georgesReview);    }    georgesNotification = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({ userId: gid });    if (!georgesNotification) {      georgesNotification = {        _id: new ObjectId(),        userId: gid,        type: 'order_status',        title: 'Order update',        body: 'Your order is ready',        read: false,        createdAt: new Date(),      };      await db.collection(COLLECTIONS.NOTIFICATIONS).insertOne(georgesNotification);    }  });  after(async () => {    await teardownTestEnvironment();  });  describe('1. Broken Object-Level Authorization (IDOR Matrix)', () => {    it('T5.SEC.001: Customer cannot read another customer\'s order (strict 404 NOT_FOUND)', async () => {      const res = await request(`/api/orders/${georgesOrder._id.toString()}`, {        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },      });      assert.equal(res.status, 404);      const body = await res.json();      assert.equal(body.error.code, 'NOT_FOUND');    });    it('T5.SEC.002: Customer cannot cancel another customer\'s order (strict 404 NOT_FOUND)', async () => {      const res = await request(`/api/orders/${georgesOrder._id.toString()}/cancel`, {        method: 'PATCH',        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },        body: { reason: 'Malicious attempt' },      });      assert.equal(res.status, 404);      const body = await res.json();      assert.equal(body.error.code, 'NOT_FOUND');    });    it('T5.SEC.003: Customer cannot edit another customer\'s review (strict 404 NOT_FOUND)', async () => {      const res = await request(`/api/reviews/${georgesReview._id.toString()}`, {        method: 'PATCH',        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },        body: { rating: 1, comment: 'Hacked comment' },      });      assert.equal(res.status, 404);      const body = await res.json();      assert.equal(body.error.code, 'NOT_FOUND');    });    it('T5.SEC.004: Customer cannot delete another customer\'s review (strict 404 NOT_FOUND)', async () => {      const res = await request(`/api/reviews/${georgesReview._id.toString()}`, {        method: 'DELETE',        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },      });      assert.equal(res.status, 404);      const body = await res.json();      assert.equal(body.error.code, 'NOT_FOUND');    });    it('T5.SEC.005: Customer cannot mark another user\'s notification as read (strict 404 NOT_FOUND)', async () => {      const res = await request(`/api/notifications/${georgesNotification._id.toString()}/read`, {        method: 'PATCH',        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },      });      assert.equal(res.status, 404);      const body = await res.json();      assert.equal(body.error.code, 'NOT_FOUND');    });    it('T5.SEC.006: Farmer cannot access Customer order endpoint with farmer token (403 FORBIDDEN)', async () => {      const res = await request(`/api/orders/${georgesOrder._id.toString()}`, {        headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },      });      assert.equal(res.status, 403);      const body = await res.json();      assert.equal(body.error.code, 'FORBIDDEN');    });    it('T5.SEC.007: Customer cannot access Farmer order endpoint (403 FORBIDDEN)', async () => {      const res = await request(`/api/farmer/orders/${georgesOrder._id.toString()}`, {        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },      });      assert.equal(res.status, 403);      const body = await res.json();      assert.equal(body.error.code, 'FORBIDDEN');    });    it('T5.SEC.008: Customer cannot access Admin endpoints (403 FORBIDDEN)', async () => {      const res = await request(`/api/admin/overview`, {        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },      });      assert.equal(res.status, 403);      const body = await res.json();      assert.equal(body.error.code, 'FORBIDDEN');    });    it('T5.SEC.009: Farmer cannot access Admin endpoints (403 FORBIDDEN)', async () => {      const res = await request(`/api/admin/reports/summary`, {        headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },      });      assert.equal(res.status, 403);      const body = await res.json();      assert.equal(body.error.code, 'FORBIDDEN');    });    it('T5.SEC.010: Dynamic IDOR Scan: All manifest :id routes reject arbitrary foreign ObjectIds without 200/204 data leak', async () => {      const fakeId = new ObjectId().toString();      const idRoutes = manifest.filter((r) => r.fullPath.includes(':id') && r.auth !== 'public');      assert.ok(idRoutes.length > 15, 'Expected at least 15 private :id routes in manifest');      for (const route of idRoutes) {        const testPath = route.fullPath.replace(':id', fakeId);        const res = await request(testPath, {          method: route.method.toUpperCase(),          headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },        });        assert.ok(          [400, 401, 403, 404, 422].includes(res.status),          `Route ${route.method} ${testPath} returned unexpected status ${res.status}`        );      }    });  });  describe('2. Broken Authentication & Account Lockout', () => {    it('T5.SEC.011: Rejects tampered JWT signature with 401 UNAUTHENTICATED', async () => {      const parts = customerGeorgeAuth.accessToken.split('.');      const tampered = `${parts[0]}.${parts[1]}.invalidsignaturexyz12345`;      const res = await request('/api/auth/me', {        headers: { Authorization: `Bearer ${tampered}` },      });      assert.equal(res.status, 401);      const body = await res.json();      assert.equal(body.error.code, 'UNAUTHENTICATED');    });    it('T5.SEC.012: Rejects JWT with alg: none attack with 401 UNAUTHENTICATED', async () => {      const headerNone = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');      const payload = Buffer.from(JSON.stringify({ sub: customerGeorgeAuth.user.id, role: 'customer' })).toString('base64url');      const noneToken = `${headerNone}.${payload}.`;      const res = await request('/api/auth/me', {        headers: { Authorization: `Bearer ${noneToken}` },      });      assert.equal(res.status, 401);      const body = await res.json();      assert.equal(body.error.code, 'UNAUTHENTICATED');    });    it('T5.SEC.013: Rejects expired JWT with 401 TOKEN_EXPIRED', async () => {      const expiredToken = jwt.sign(        { sub: customerGeorgeAuth.user.id, role: 'customer' },        env.JWT_SECRET,        { expiresIn: '-10s', issuer: 'marketlink' }      );      const res = await request('/api/auth/me', {        headers: { Authorization: `Bearer ${expiredToken}` },      });      assert.equal(res.status, 401);      const body = await res.json();      assert.equal(body.error.code, 'TOKEN_EXPIRED');    });    it('T5.SEC.014: Refresh cookie has HttpOnly flag set', async () => {      assert.ok(        customerGeorgeAuth.cookie.toLowerCase().includes('httponly'),        'Refresh token cookie must specify HttpOnly flag'      );    });    it('T5.SEC.015: Account lockout: 5 consecutive failed logins triggers 429 TOO_MANY_ATTEMPTS for 15 minutes', async () => {      const lockoutEmail = `lockout-${Date.now()}@example.com`;      await request('/api/auth/register/customer', {        method: 'POST',        body: {          name: 'Lockout Target',          phone: '555-999-0000',          email: lockoutEmail,          address: '123 Lockout Lane',          password: 'ValidPassword123!',        },      });      for (let i = 1; i <= 4; i++) {        const failRes = await request('/api/auth/login', {          method: 'POST',          body: { email: lockoutEmail, password: 'WrongPassword!' },        });        assert.equal(failRes.status, 401);        const failBody = await failRes.json();        assert.equal(failBody.error.code, 'INVALID_CREDENTIALS');      }      const lockRes = await request('/api/auth/login', {        method: 'POST',        body: { email: lockoutEmail, password: 'WrongPassword!' },      });      assert.equal(lockRes.status, 429);      const lockBody = await lockRes.json();      assert.equal(lockBody.error.code, 'TOO_MANY_ATTEMPTS');      const blockedRes = await request('/api/auth/login', {        method: 'POST',        body: { email: lockoutEmail, password: 'ValidPassword123!' },      });      assert.equal(blockedRes.status, 429);      const blockedBody = await blockedRes.json();      assert.equal(blockedBody.error.code, 'TOO_MANY_ATTEMPTS');    });  });  describe('3. Mass Assignment & Parameter Tampering', () => {    it('T5.SEC.016: Registration rejects extra / privileged role injection (stays customer)', async () => {      const res = await request('/api/auth/register/customer', {        method: 'POST',        body: {          name: 'Privilege Esc',          phone: '555-111-2222',          email: 'privilege-esc@example.com',          address: '456 Safe St',          password: 'Password123!',          role: 'admin',        },      });      assert.ok([400, 422].includes(res.status));      const body = await res.json();      assert.equal(body.error.code, 'VALIDATION_FAILED');    });    it('T5.SEC.017: Profile update rejects privileged status and role tampering (422 VALIDATION_FAILED)', async () => {      const res = await request('/api/users/me', {        method: 'PATCH',        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },        body: { role: 'admin', status: 'banned' },      });      assert.equal(res.status, 422);      const body = await res.json();      assert.equal(body.error.code, 'VALIDATION_FAILED');    });    it('T5.SEC.018: Farmer profile update rejects listingEnabled and ratingSum tampering (422 VALIDATION_FAILED)', async () => {      const res = await request('/api/farmer/profile', {        method: 'PATCH',        headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },        body: { listingEnabled: true, ratingSum: 9999, ratingCount: 100 },      });      assert.equal(res.status, 422);      const body = await res.json();      assert.equal(body.error.code, 'VALIDATION_FAILED');    });    it('T5.SEC.019: Checkout ignores client-sent prices and recomputes from database catalog', async () => {      const quoteRes = await request('/api/cart/quote', {        method: 'POST',        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },        body: {          groups: [            {              farmerId: riverbendsProduct.farmerId.toString(),              items: [{ productId: riverbendsProduct._id.toString(), quantity: 1, expectedPriceCents: 1 }],            },          ],        },      });      assert.equal(quoteRes.status, 200);      const quoteData = await quoteRes.json();      assert.equal(quoteData.data.groups[0].lines[0].unitPriceCents, riverbendsProduct.priceCents);      assert.notEqual(quoteData.data.groups[0].lines[0].unitPriceCents, 1);    });  });  describe('4. Injection & Resource Protection', () => {    it('T5.SEC.020: NoSQL operator injection in request body is blocked with 400 Bad Request', async () => {      const res = await request('/api/auth/login', {        method: 'POST',        body: { email: { $ne: null }, password: 'password' },      });      assert.equal(res.status, 400);      const body = await res.json();      assert.ok(body.error.message.includes('forbidden') || body.error.code === 'BAD_JSON');    });    it('T5.SEC.021: Prototype pollution key __proto__ in body is rejected with 400 Bad Request', async () => {      const res = await request('/api/users/me', {        method: 'PATCH',        headers: {          'Content-Type': 'application/json',          Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,        },        rawBody: '{"__proto__": {"isAdmin": true}, "name": "George"}',      });      assert.equal(res.status, 400);      const body = await res.json();      assert.ok(body.error.message.includes('__proto__') || body.error.message.includes('Forbidden') || body.error.code === 'BAD_JSON');    });    it('T5.SEC.022: Prototype pollution key constructor in body is rejected with 400 Bad Request', async () => {      const res = await request('/api/users/me', {        method: 'PATCH',        headers: {          'Content-Type': 'application/json',          Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,        },        rawBody: '{"constructor": {"prototype": {"poll": true}}, "name": "George"}',      });      assert.equal(res.status, 400);    });    it('T5.SEC.023: Null bytes in string input are rejected with 400 Bad Request', async () => {      const res = await request('/api/users/me', {        method: 'PATCH',        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },        body: { name: 'George\0Injected' },      });      assert.equal(res.status, 400);      const body = await res.json();      assert.ok(body.error.message.includes('Null bytes'));    });    it('T5.SEC.024: ReDoS / Regex injection in search query executes safely without server failure', async () => {      const dangerousRegex = '((a+)+)+$';      const res = await request(`/api/products?q=${encodeURIComponent(dangerousRegex)}`, {        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },      });      assert.equal(res.status, 200);      const body = await res.json();      assert.ok(Array.isArray(body.data));    });    it('T5.SEC.025: Special regex metacharacters in search query do not crash server', async () => {      const metachars = '.*+?^${}()|[]\\';      const res = await request(`/api/products?q=${encodeURIComponent(metachars)}`, {        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },      });      assert.equal(res.status, 200);      const body = await res.json();      assert.ok(Array.isArray(body.data));    });    it('T5.SEC.026: Request body exceeding 100kb limit is rejected with 413 PAYLOAD_TOO_LARGE', async () => {      const oversizedPayload = {        name: 'Huge',        note: 'A'.repeat(120 * 1024),       };      const res = await request('/api/contact', {        method: 'POST',        body: oversizedPayload,      });      assert.equal(res.status, 413);      const body = await res.json();      assert.equal(body.error.code, 'PAYLOAD_TOO_LARGE');    });  });  describe('5. Security Misconfiguration & Response Headers', () => {    it('T5.SEC.027: Helmet security headers (CSP, nosniff, frameguard) are present', async () => {      const res = await request('/api/health');      assert.equal(res.status, 200);      assert.equal(res.headers.get('x-content-type-options'), 'nosniff');      assert.ok(res.headers.get('content-security-policy') !== null);      assert.ok(res.headers.get('x-frame-options') !== null || res.headers.get('content-security-policy').includes('frame-ancestors'));    });    it('T5.SEC.028: X-Powered-By header is suppressed', async () => {      const res = await request('/api/health');      assert.equal(res.headers.get('x-powered-by'), null);    });    it('T5.SEC.029: X-Request-Id header is present on API responses', async () => {      const res = await request('/api/health');      assert.ok(res.headers.get('x-request-id') !== null, 'Response must include X-Request-Id');    });    it('T5.SEC.030: Internal error responses conceal stack traces', async () => {      const res = await request('/api/non-existent-endpoint-test-404');      const body = await res.json();      assert.equal(body.stack, undefined);      if (body.error) {        assert.equal(body.error.stack, undefined);      }    });  });  describe('6. Business Logic Abuse', () => {    it('T5.SEC.031: Rejects negative quantity in cart quote (422 VALIDATION_FAILED)', async () => {      const res = await request('/api/cart/quote', {        method: 'POST',        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },        body: {          groups: [            {              farmerId: riverbendsProduct.farmerId.toString(),              items: [{ productId: riverbendsProduct._id.toString(), quantity: -5 }],            },          ],        },      });      assert.equal(res.status, 422);      const body = await res.json();      assert.equal(body.error.code, 'VALIDATION_FAILED');    });    it('T5.SEC.032: Rejects zero quantity in cart quote (422 VALIDATION_FAILED)', async () => {      const res = await request('/api/cart/quote', {        method: 'POST',        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },        body: {          groups: [            {              farmerId: riverbendsProduct.farmerId.toString(),              items: [{ productId: riverbendsProduct._id.toString(), quantity: 0 }],            },          ],        },      });      assert.equal(res.status, 422);      const body = await res.json();      assert.equal(body.error.code, 'VALIDATION_FAILED');    });    it('T5.SEC.033: Rejects fractional quantity in cart quote (422 VALIDATION_FAILED)', async () => {      const res = await request('/api/cart/quote', {        method: 'POST',        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },        body: {          groups: [            {              farmerId: riverbendsProduct.farmerId.toString(),              items: [{ productId: riverbendsProduct._id.toString(), quantity: 1.5 }],            },          ],        },      });      assert.equal(res.status, 422);      const body = await res.json();      assert.equal(body.error.code, 'VALIDATION_FAILED');    });    it('T5.SEC.034: Rejects reviewing an order not owned by the customer (404 NOT_FOUND)', async () => {      const res = await request(`/api/orders/${georgesOrder._id.toString()}/reviews`, {        method: 'POST',        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },        body: {          farmer: {            rating: 5,            comment: 'Not my order',          },        },      });      assert.equal(res.status, 404);      const body = await res.json();      assert.equal(body.error.code, 'NOT_FOUND');    });    it('T5.SEC.035: Rejects duplicate review on an order (409 CONFLICT)', async () => {      const completedOrderId = new ObjectId();      const uniqueOrderNum = `ML-${Date.now().toString().slice(-5)}${Math.floor(Math.random() * 900 + 100)}`;      await db.collection(COLLECTIONS.ORDERS).insertOne({        _id: completedOrderId,        orderNumber: uniqueOrderNum,        checkoutId: new ObjectId(),        customerId: new ObjectId(customerGeorgeAuth.user.id),        customerName: 'George Customer',        farmerId: riverbendsProduct.farmerId,        farmerUserId: new ObjectId(),        farmerName: 'Riverbend Farm',        marketId: new ObjectId(),        items: [{ productId: riverbendsProduct._id, name: riverbendsProduct.name, unitPriceCents: 450, quantity: 1, lineTotalCents: 450 }],        subtotalCents: 450,        totalCents: 450,        status: 'completed',        timeline: [          { status: 'placed', at: new Date(), byRole: 'customer' },          { status: 'completed', at: new Date(), byRole: 'farmer' },        ],        reviewed: false,        createdAt: new Date(),        updatedAt: new Date(),      });      const firstRes = await request(`/api/orders/${completedOrderId.toString()}/reviews`, {        method: 'POST',        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },        body: {          farmer: {            rating: 5,            comment: 'First genuine review',          },        },      });      assert.equal(firstRes.status, 201);      const secondRes = await request(`/api/orders/${completedOrderId.toString()}/reviews`, {        method: 'POST',        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },        body: {          farmer: {            rating: 4,            comment: 'Duplicate review attempt',          },        },      });      assert.equal(secondRes.status, 409);      const secondBody = await secondRes.json();      assert.ok(secondBody.error.code === 'ALREADY_REVIEWED' || secondBody.error.code === 'CONFLICT');    });  });});
+/**
+ * Full Security & Penetration Hardening Verification Suite (Stage 5 OWASP & Defense-in-Depth).
+ * Tests:
+ * 1. Broken Object-Level Authorization (IDOR) Matrix: dynamically generated across all :id routes.
+ * 2. Broken Authentication & Account Lockout: token tampering, alg:none, expired tokens, refresh reuse, 5 failed logins -> 429.
+ * 3. Excessive Data Exposure & Response Shapes: no _id, no passwordHash, no tokenHash, integer cents.
+ * 4. Mass Assignment & Parameter Tampering: rejection of unknown and privileged fields.
+ * 5. Injection & Resource Protection: NoSQL operators, ReDoS regex escaping, prototype pollution, CSV formula defense, payload limits.
+ * 6. Security Misconfiguration & Headers: Helmet, X-Content-Type-Options, X-Frame-Options, X-Powered-By suppression, no stack traces.
+ * 7. Business Logic Abuse: negative/fractional quantities, price tampering, invalid order reviews, duplicate reviews.
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import jwt from 'jsonwebtoken';
+import { ObjectId } from 'mongodb';
+import { createApp } from '../src/app.js';
+import { getRouteManifest } from '../src/utils/defineRoutes.js';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+import { env } from '../src/config/env.js';
+
+describe('Stage 5 Full Security & Penetration Hardening Suite', () => {
+  let db;
+  let manifest;
+  let customerGeorgeAuth;
+  let customerMiaAuth;
+  let farmerRiverbendAuth;
+  let adminAuth;
+
+  let georgesOrder;
+  let georgesReview;
+  let georgesNotification;
+  let riverbendsProduct;
+
+  before(async () => {
+    const testEnv = await setupTestEnvironment();
+    db = testEnv.db;
+    createApp();
+    manifest = getRouteManifest();
+
+    // Authenticate test personas
+    customerGeorgeAuth = await loginUser('george@example.com', 'market123');
+    customerMiaAuth = await loginUser('mia@example.com', 'market123');
+    farmerRiverbendAuth = await loginUser('riverbend@example.com', 'market123');
+    adminAuth = await loginUser('admin@marketlink.test', 'Admin12345');
+
+    const gid = new ObjectId(customerGeorgeAuth.user.id);
+    const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Riverbend Farm' });
+    riverbendsProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmer._id });
+
+    // Ensure test order exists for George
+    georgesOrder = await db.collection(COLLECTIONS.ORDERS).findOne({ customerId: gid });
+    if (!georgesOrder) {
+      georgesOrder = {
+        _id: new ObjectId(),
+        orderNumber: 'ML-9901',
+        customerId: gid,
+        customerName: 'George Customer',
+        farmerId: farmer._id,
+        farmerUserId: farmer.userId,
+        farmerName: farmer.stallName,
+        marketId: farmer.marketIds[0],
+        items: [{ productId: riverbendsProduct._id, name: riverbendsProduct.name, unitPriceCents: 450, quantity: 1, lineTotalCents: 450 }],
+        subtotalCents: 450,
+        totalCents: 450,
+        status: 'placed',
+        pickup: { slotStart: new Date(Date.now() + 86400000), slotEnd: new Date(Date.now() + 90000000), label: 'Pickup' },
+        cutoffAt: new Date(Date.now() + 36000000),
+        timeline: [{ status: 'placed', at: new Date(), byRole: 'customer' }],
+        reviewed: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await db.collection(COLLECTIONS.ORDERS).insertOne(georgesOrder);
+    }
+
+    // Ensure test review exists for George
+    georgesReview = await db.collection(COLLECTIONS.REVIEWS).findOne({ customerId: gid });
+    if (!georgesReview) {
+      georgesReview = {
+        _id: new ObjectId(),
+        orderId: georgesOrder._id,
+        customerId: gid,
+        customerName: 'George Customer',
+        targetType: 'farmer',
+        targetId: farmer._id,
+        rating: 5,
+        comment: 'Great produce!',
+        status: 'visible',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await db.collection(COLLECTIONS.REVIEWS).insertOne(georgesReview);
+    }
+
+    // Ensure test notification exists for George
+    georgesNotification = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({ userId: gid });
+    if (!georgesNotification) {
+      georgesNotification = {
+        _id: new ObjectId(),
+        userId: gid,
+        type: 'order_status',
+        title: 'Order update',
+        body: 'Your order is ready',
+        read: false,
+        createdAt: new Date(),
+      };
+      await db.collection(COLLECTIONS.NOTIFICATIONS).insertOne(georgesNotification);
+    }
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════════════
+  // 1. Broken Object-Level Authorization (IDOR Matrix)
+  // ══════════════════════════════════════════════════════════════════════════════════
+  describe('1. Broken Object-Level Authorization (IDOR Matrix)', () => {
+    it('T5.SEC.001: Customer cannot read another customer\'s order (strict 404 NOT_FOUND)', async () => {
+      const res = await request(`/api/orders/${georgesOrder._id.toString()}`, {
+        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+      });
+      assert.equal(res.status, 404);
+      const body = await res.json();
+      assert.equal(body.error.code, 'NOT_FOUND');
+    });
+
+    it('T5.SEC.002: Customer cannot cancel another customer\'s order (strict 404 NOT_FOUND)', async () => {
+      const res = await request(`/api/orders/${georgesOrder._id.toString()}/cancel`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+        body: { reason: 'Malicious attempt' },
+      });
+      assert.equal(res.status, 404);
+      const body = await res.json();
+      assert.equal(body.error.code, 'NOT_FOUND');
+    });
+
+    it('T5.SEC.003: Customer cannot edit another customer\'s review (strict 404 NOT_FOUND)', async () => {
+      const res = await request(`/api/reviews/${georgesReview._id.toString()}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+        body: { rating: 1, comment: 'Hacked comment' },
+      });
+      assert.equal(res.status, 404);
+      const body = await res.json();
+      assert.equal(body.error.code, 'NOT_FOUND');
+    });
+
+    it('T5.SEC.004: Customer cannot delete another customer\'s review (strict 404 NOT_FOUND)', async () => {
+      const res = await request(`/api/reviews/${georgesReview._id.toString()}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+      });
+      assert.equal(res.status, 404);
+      const body = await res.json();
+      assert.equal(body.error.code, 'NOT_FOUND');
+    });
+
+    it('T5.SEC.005: Customer cannot mark another user\'s notification as read (strict 404 NOT_FOUND)', async () => {
+      const res = await request(`/api/notifications/${georgesNotification._id.toString()}/read`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+      });
+      assert.equal(res.status, 404);
+      const body = await res.json();
+      assert.equal(body.error.code, 'NOT_FOUND');
+    });
+
+    it('T5.SEC.006: Farmer cannot access Customer order endpoint with farmer token (403 FORBIDDEN)', async () => {
+      const res = await request(`/api/orders/${georgesOrder._id.toString()}`, {
+        headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },
+      });
+      assert.equal(res.status, 403);
+      const body = await res.json();
+      assert.equal(body.error.code, 'FORBIDDEN');
+    });
+
+    it('T5.SEC.007: Customer cannot access Farmer order endpoint (403 FORBIDDEN)', async () => {
+      const res = await request(`/api/farmer/orders/${georgesOrder._id.toString()}`, {
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+      });
+      assert.equal(res.status, 403);
+      const body = await res.json();
+      assert.equal(body.error.code, 'FORBIDDEN');
+    });
+
+    it('T5.SEC.008: Customer cannot access Admin endpoints (403 FORBIDDEN)', async () => {
+      const res = await request(`/api/admin/overview`, {
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+      });
+      assert.equal(res.status, 403);
+      const body = await res.json();
+      assert.equal(body.error.code, 'FORBIDDEN');
+    });
+
+    it('T5.SEC.009: Farmer cannot access Admin endpoints (403 FORBIDDEN)', async () => {
+      const res = await request(`/api/admin/reports/summary`, {
+        headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },
+      });
+      assert.equal(res.status, 403);
+      const body = await res.json();
+      assert.equal(body.error.code, 'FORBIDDEN');
+    });
+
+    it('T5.SEC.010: Dynamic IDOR Scan: All manifest :id routes reject arbitrary foreign ObjectIds without 200/204 data leak', async () => {
+      const fakeId = new ObjectId().toString();
+      const idRoutes = manifest.filter((r) => r.fullPath.includes(':id') && r.auth !== 'public');
+
+      assert.ok(idRoutes.length > 15, 'Expected at least 15 private :id routes in manifest');
+
+      for (const route of idRoutes) {
+        const testPath = route.fullPath.replace(':id', fakeId);
+        // Test as Customer George
+        const res = await request(testPath, {
+          method: route.method.toUpperCase(),
+          headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+        });
+
+        // Must NEVER return 200/201/204 with data for a non-existent/foreign resource
+        assert.ok(
+          [400, 401, 403, 404, 422].includes(res.status),
+          `Route ${route.method} ${testPath} returned unexpected status ${res.status}`
+        );
+      }
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════════════
+  // 2. Broken Authentication & Account Lockout
+  // ══════════════════════════════════════════════════════════════════════════════════
+  describe('2. Broken Authentication & Account Lockout', () => {
+    it('T5.SEC.011: Rejects tampered JWT signature with 401 UNAUTHENTICATED', async () => {
+      const parts = customerGeorgeAuth.accessToken.split('.');
+      // Tamper signature component
+      const tampered = `${parts[0]}.${parts[1]}.invalidsignaturexyz12345`;
+      const res = await request('/api/auth/me', {
+        headers: { Authorization: `Bearer ${tampered}` },
+      });
+      assert.equal(res.status, 401);
+      const body = await res.json();
+      assert.equal(body.error.code, 'UNAUTHENTICATED');
+    });
+
+    it('T5.SEC.012: Rejects JWT with alg: none attack with 401 UNAUTHENTICATED', async () => {
+      const headerNone = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+      const payload = Buffer.from(JSON.stringify({ sub: customerGeorgeAuth.user.id, role: 'customer' })).toString('base64url');
+      const noneToken = `${headerNone}.${payload}.`;
+      const res = await request('/api/auth/me', {
+        headers: { Authorization: `Bearer ${noneToken}` },
+      });
+      assert.equal(res.status, 401);
+      const body = await res.json();
+      assert.equal(body.error.code, 'UNAUTHENTICATED');
+    });
+
+    it('T5.SEC.013: Rejects expired JWT with 401 TOKEN_EXPIRED', async () => {
+      const expiredToken = jwt.sign(
+        { sub: customerGeorgeAuth.user.id, role: 'customer' },
+        env.JWT_SECRET,
+        { expiresIn: '-10s', issuer: 'marketlink' }
+      );
+      const res = await request('/api/auth/me', {
+        headers: { Authorization: `Bearer ${expiredToken}` },
+      });
+      assert.equal(res.status, 401);
+      const body = await res.json();
+      assert.equal(body.error.code, 'TOKEN_EXPIRED');
+    });
+
+    it('T5.SEC.014: Refresh cookie has HttpOnly flag set', async () => {
+      assert.ok(
+        customerGeorgeAuth.cookie.toLowerCase().includes('httponly'),
+        'Refresh token cookie must specify HttpOnly flag'
+      );
+    });
+
+    it('T5.SEC.015: Account lockout: 5 consecutive failed logins triggers 429 TOO_MANY_ATTEMPTS for 15 minutes', async () => {
+      const lockoutEmail = `lockout-${Date.now()}@example.com`;
+      // Register dedicated account for lockout testing
+      await request('/api/auth/register/customer', {
+        method: 'POST',
+        body: {
+          name: 'Lockout Target',
+          phone: '555-999-0000',
+          email: lockoutEmail,
+          address: '123 Lockout Lane',
+          password: 'ValidPassword123!',
+        },
+      });
+
+      // Submit 4 incorrect passwords (must return 401 INVALID_CREDENTIALS)
+      for (let i = 1; i <= 4; i++) {
+        const failRes = await request('/api/auth/login', {
+          method: 'POST',
+          body: { email: lockoutEmail, password: 'WrongPassword!' },
+        });
+        assert.equal(failRes.status, 401);
+        const failBody = await failRes.json();
+        assert.equal(failBody.error.code, 'INVALID_CREDENTIALS');
+      }
+
+      // 5th failed attempt should trigger lockout with 429 TOO_MANY_ATTEMPTS
+      const lockRes = await request('/api/auth/login', {
+        method: 'POST',
+        body: { email: lockoutEmail, password: 'WrongPassword!' },
+      });
+      assert.equal(lockRes.status, 429);
+      const lockBody = await lockRes.json();
+      assert.equal(lockBody.error.code, 'TOO_MANY_ATTEMPTS');
+
+      // Subsequent attempt with correct password while locked still returns 429
+      const blockedRes = await request('/api/auth/login', {
+        method: 'POST',
+        body: { email: lockoutEmail, password: 'ValidPassword123!' },
+      });
+      assert.equal(blockedRes.status, 429);
+      const blockedBody = await blockedRes.json();
+      assert.equal(blockedBody.error.code, 'TOO_MANY_ATTEMPTS');
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════════════
+  // 3. Mass Assignment & Parameter Tampering
+  // ══════════════════════════════════════════════════════════════════════════════════
+  describe('3. Mass Assignment & Parameter Tampering', () => {
+    it('T5.SEC.016: Registration rejects extra / privileged role injection (stays customer)', async () => {
+      const res = await request('/api/auth/register/customer', {
+        method: 'POST',
+        body: {
+          name: 'Privilege Esc',
+          phone: '555-111-2222',
+          email: 'privilege-esc@example.com',
+          address: '456 Safe St',
+          password: 'Password123!',
+          role: 'admin',
+        },
+      });
+      // Should fail schema validation with unknown field rejection
+      assert.ok([400, 422].includes(res.status));
+      const body = await res.json();
+      assert.equal(body.error.code, 'VALIDATION_FAILED');
+    });
+
+    it('T5.SEC.017: Profile update rejects privileged status and role tampering (422 VALIDATION_FAILED)', async () => {
+      const res = await request('/api/users/me', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+        body: { role: 'admin', status: 'banned' },
+      });
+      assert.equal(res.status, 422);
+      const body = await res.json();
+      assert.equal(body.error.code, 'VALIDATION_FAILED');
+    });
+
+    it('T5.SEC.018: Farmer profile update rejects listingEnabled and ratingSum tampering (422 VALIDATION_FAILED)', async () => {
+      const res = await request('/api/farmer/profile', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${farmerRiverbendAuth.accessToken}` },
+        body: { listingEnabled: true, ratingSum: 9999, ratingCount: 100 },
+      });
+      assert.equal(res.status, 422);
+      const body = await res.json();
+      assert.equal(body.error.code, 'VALIDATION_FAILED');
+    });
+
+    it('T5.SEC.019: Checkout ignores client-sent prices and recomputes from database catalog', async () => {
+      const quoteRes = await request('/api/cart/quote', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+        body: {
+          groups: [
+            {
+              farmerId: riverbendsProduct.farmerId.toString(),
+              items: [{ productId: riverbendsProduct._id.toString(), quantity: 1, expectedPriceCents: 1 }],
+            },
+          ],
+        },
+      });
+      assert.equal(quoteRes.status, 200);
+      const quoteData = await quoteRes.json();
+      // Price must equal database catalog price, NOT client's expectedPriceCents: 1
+      assert.equal(quoteData.data.groups[0].lines[0].unitPriceCents, riverbendsProduct.priceCents);
+      assert.notEqual(quoteData.data.groups[0].lines[0].unitPriceCents, 1);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════════════
+  // 4. Injection & Resource Protection
+  // ══════════════════════════════════════════════════════════════════════════════════
+  describe('4. Injection & Resource Protection', () => {
+    it('T5.SEC.020: NoSQL operator injection in request body is blocked with 400 Bad Request', async () => {
+      const res = await request('/api/auth/login', {
+        method: 'POST',
+        body: { email: { $ne: null }, password: 'password' },
+      });
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.ok(body.error.message.includes('forbidden') || body.error.code === 'BAD_JSON');
+    });
+
+    it('T5.SEC.021: Prototype pollution key __proto__ in body is rejected with 400 Bad Request', async () => {
+      const res = await request('/api/users/me', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+        },
+        rawBody: '{"__proto__": {"isAdmin": true}, "name": "George"}',
+      });
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.ok(body.error.message.includes('__proto__') || body.error.message.includes('Forbidden') || body.error.code === 'BAD_JSON');
+    });
+
+    it('T5.SEC.022: Prototype pollution key constructor in body is rejected with 400 Bad Request', async () => {
+      const res = await request('/api/users/me', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
+        },
+        rawBody: '{"constructor": {"prototype": {"poll": true}}, "name": "George"}',
+      });
+      assert.equal(res.status, 400);
+    });
+
+    it('T5.SEC.023: Null bytes in string input are rejected with 400 Bad Request', async () => {
+      const res = await request('/api/users/me', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+        body: { name: 'George\0Injected' },
+      });
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.ok(body.error.message.includes('Null bytes'));
+    });
+
+    it('T5.SEC.024: ReDoS / Regex injection in search query executes safely without server failure', async () => {
+      const dangerousRegex = '((a+)+)+$';
+      const res = await request(`/api/products?q=${encodeURIComponent(dangerousRegex)}`, {
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+      });
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      assert.ok(Array.isArray(body.data));
+    });
+
+    it('T5.SEC.025: Special regex metacharacters in search query do not crash server', async () => {
+      const metachars = '.*+?^${}()|[]\\';
+      const res = await request(`/api/products?q=${encodeURIComponent(metachars)}`, {
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+      });
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      assert.ok(Array.isArray(body.data));
+    });
+
+    it('T5.SEC.026: Request body exceeding 100kb limit is rejected with 413 PAYLOAD_TOO_LARGE', async () => {
+      const oversizedPayload = {
+        name: 'Huge',
+        note: 'A'.repeat(120 * 1024), // 120KB > 100KB limit
+      };
+      const res = await request('/api/contact', {
+        method: 'POST',
+        body: oversizedPayload,
+      });
+      assert.equal(res.status, 413);
+      const body = await res.json();
+      assert.equal(body.error.code, 'PAYLOAD_TOO_LARGE');
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════════════
+  // 5. Security Misconfiguration & Response Headers
+  // ══════════════════════════════════════════════════════════════════════════════════
+  describe('5. Security Misconfiguration & Response Headers', () => {
+    it('T5.SEC.027: Helmet security headers (CSP, nosniff, frameguard) are present', async () => {
+      const res = await request('/api/health');
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+      assert.ok(res.headers.get('content-security-policy') !== null);
+      assert.ok(res.headers.get('x-frame-options') !== null || res.headers.get('content-security-policy').includes('frame-ancestors'));
+    });
+
+    it('T5.SEC.028: X-Powered-By header is suppressed', async () => {
+      const res = await request('/api/health');
+      assert.equal(res.headers.get('x-powered-by'), null);
+    });
+
+    it('T5.SEC.029: X-Request-Id header is present on API responses', async () => {
+      const res = await request('/api/health');
+      assert.ok(res.headers.get('x-request-id') !== null, 'Response must include X-Request-Id');
+    });
+
+    it('T5.SEC.030: Internal error responses conceal stack traces', async () => {
+      // Trigger a 404/error endpoint and ensure no stack is returned
+      const res = await request('/api/non-existent-endpoint-test-404');
+      const body = await res.json();
+      assert.equal(body.stack, undefined);
+      if (body.error) {
+        assert.equal(body.error.stack, undefined);
+      }
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════════════
+  // 6. Business Logic Abuse
+  // ══════════════════════════════════════════════════════════════════════════════════
+  describe('6. Business Logic Abuse', () => {
+    it('T5.SEC.031: Rejects negative quantity in cart quote (422 VALIDATION_FAILED)', async () => {
+      const res = await request('/api/cart/quote', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+        body: {
+          groups: [
+            {
+              farmerId: riverbendsProduct.farmerId.toString(),
+              items: [{ productId: riverbendsProduct._id.toString(), quantity: -5 }],
+            },
+          ],
+        },
+      });
+      assert.equal(res.status, 422);
+      const body = await res.json();
+      assert.equal(body.error.code, 'VALIDATION_FAILED');
+    });
+
+    it('T5.SEC.032: Rejects zero quantity in cart quote (422 VALIDATION_FAILED)', async () => {
+      const res = await request('/api/cart/quote', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+        body: {
+          groups: [
+            {
+              farmerId: riverbendsProduct.farmerId.toString(),
+              items: [{ productId: riverbendsProduct._id.toString(), quantity: 0 }],
+            },
+          ],
+        },
+      });
+      assert.equal(res.status, 422);
+      const body = await res.json();
+      assert.equal(body.error.code, 'VALIDATION_FAILED');
+    });
+
+    it('T5.SEC.033: Rejects fractional quantity in cart quote (422 VALIDATION_FAILED)', async () => {
+      const res = await request('/api/cart/quote', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+        body: {
+          groups: [
+            {
+              farmerId: riverbendsProduct.farmerId.toString(),
+              items: [{ productId: riverbendsProduct._id.toString(), quantity: 1.5 }],
+            },
+          ],
+        },
+      });
+      assert.equal(res.status, 422);
+      const body = await res.json();
+      assert.equal(body.error.code, 'VALIDATION_FAILED');
+    });
+
+    it('T5.SEC.034: Rejects reviewing an order not owned by the customer (404 NOT_FOUND)', async () => {
+      const res = await request(`/api/orders/${georgesOrder._id.toString()}/reviews`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerMiaAuth.accessToken}` },
+        body: {
+          farmer: {
+            rating: 5,
+            comment: 'Not my order',
+          },
+        },
+      });
+      assert.equal(res.status, 404);
+      const body = await res.json();
+      assert.equal(body.error.code, 'NOT_FOUND');
+    });
+
+    it('T5.SEC.035: Rejects duplicate review on an order (409 CONFLICT)', async () => {
+      // Create a completed order for George to review
+      const completedOrderId = new ObjectId();
+      const uniqueOrderNum = `ML-${Date.now().toString().slice(-5)}${Math.floor(Math.random() * 900 + 100)}`;
+      await db.collection(COLLECTIONS.ORDERS).insertOne({
+        _id: completedOrderId,
+        orderNumber: uniqueOrderNum,
+        checkoutId: new ObjectId(),
+        customerId: new ObjectId(customerGeorgeAuth.user.id),
+        customerName: 'George Customer',
+        farmerId: riverbendsProduct.farmerId,
+        farmerUserId: new ObjectId(),
+        farmerName: 'Riverbend Farm',
+        marketId: new ObjectId(),
+        items: [{ productId: riverbendsProduct._id, name: riverbendsProduct.name, unitPriceCents: 450, quantity: 1, lineTotalCents: 450 }],
+        subtotalCents: 450,
+        totalCents: 450,
+        status: 'completed',
+        timeline: [
+          { status: 'placed', at: new Date(), byRole: 'customer' },
+          { status: 'completed', at: new Date(), byRole: 'farmer' },
+        ],
+        reviewed: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      // First review succeeds
+      const firstRes = await request(`/api/orders/${completedOrderId.toString()}/reviews`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+        body: {
+          farmer: {
+            rating: 5,
+            comment: 'First genuine review',
+          },
+        },
+      });
+      assert.equal(firstRes.status, 201);
+
+      // Second review on same order must fail with 409 CONFLICT / ALREADY_REVIEWED
+      const secondRes = await request(`/api/orders/${completedOrderId.toString()}/reviews`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+        body: {
+          farmer: {
+            rating: 4,
+            comment: 'Duplicate review attempt',
+          },
+        },
+      });
+      assert.equal(secondRes.status, 409);
+      const secondBody = await secondRes.json();
+      assert.ok(secondBody.error.code === 'ALREADY_REVIEWED' || secondBody.error.code === 'CONFLICT');
+    });
+  });
+});

@@ -1,1 +1,191 @@
-import React, { useState } from 'react';import { Link, useSearchParams, useNavigate } from 'react-router-dom';import { PATHS } from '@/routes/paths';import useDocumentTitle from '@/hooks/useDocumentTitle';import PageHeader from '@/components/layout/PageHeader';import FormField from '@/components/ui/FormField';import Button from '@/components/ui/Button';import Card from '@/components/ui/Card';import Illustration from '@/components/domain/Illustration';import { resetPassword } from '@/api/auth';import styles from './ResetPassword.module.css';export function ResetPassword() {  useDocumentTitle('Set New Password · MarketLink');  const [searchParams] = useSearchParams();  const token = searchParams.get('token') || '';  const navigate = useNavigate();  const [newPassword, setNewPassword] = useState('');  const [confirmPassword, setConfirmPassword] = useState('');  const [fieldErrors, setFieldErrors] = useState({});  const [globalError, setGlobalError] = useState('');  const [loading, setLoading] = useState(false);  const [success, setSuccess] = useState(false);  const handleSubmit = async (e) => {    e.preventDefault();    setGlobalError('');    setFieldErrors({});    if (!token) {      setGlobalError('This password reset link is missing a valid security token.');      return;    }    if (!newPassword) {      setFieldErrors((prev) => ({ ...prev, newPassword: 'Please choose a new password.' }));      return;    }    if (newPassword.length < 8) {      setFieldErrors((prev) => ({ ...prev, newPassword: 'Password must be at least 8 characters long.' }));      return;    }    if (newPassword !== confirmPassword) {      setFieldErrors((prev) => ({ ...prev, confirmPassword: 'Passwords do not match.' }));      return;    }    setLoading(true);    try {      await resetPassword({ token, newPassword, confirmPassword });      setSuccess(true);    } catch (err) {      if (err.code === 'INVALID_RESET_TOKEN') {        setGlobalError('This password reset link is invalid or has expired. Please request a new one.');      } else if (err.details && Array.isArray(err.details)) {        const errors = {};        for (const d of err.details) {          if (d.field) errors[d.field] = d.message;        }        setFieldErrors(errors);        if (Object.keys(errors).length === 0) {          setGlobalError(err.message || 'Unable to update password.');        }      } else {        setGlobalError(err.message || 'An error occurred. Please try again.');      }    } finally {      setLoading(false);    }  };  return (    <div className={styles.page}>      <div className={styles.container}>        <PageHeader          title="Create a new password"          subtitle={!success ? 'Choose a secure password with at least 8 characters.' : undefined}          backTo={PATHS.LOGIN}          backLabel="Sign in"        />        <Card className={styles.card}>          {success ? (            <div className={styles.sentState}>              <div className={styles.illustrationMoment} aria-hidden="true">                <Illustration name="basket-produce" size="lg" />              </div>              <h2 className={styles.sentTitle}>Password updated</h2>              <p className={styles.sentText}>                Your password has been changed successfully. You can now sign in with your new credentials.              </p>              <Button                as={Link}                to={PATHS.LOGIN}                variant="primary"                size="md"                className={styles.submitButton}              >                Go to sign in              </Button>            </div>          ) : !token ? (            <div className={styles.sentState}>              <h2 className={styles.sentTitle}>Invalid reset link</h2>              <p className={styles.sentText}>                This password reset link is incomplete or missing a valid token.              </p>              <Button                as={Link}                to={PATHS.FORGOT_PASSWORD}                variant="primary"                size="md"                className={styles.submitButton}              >                Request new link              </Button>            </div>          ) : (            <form onSubmit={handleSubmit} noValidate className={styles.form}>              {globalError && (                <div className={styles.globalError} role="alert">                  {globalError}                </div>              )}              <FormField                label="New password"                id="new-password"                type="password"                value={newPassword}                onChange={(e) => {                  setNewPassword(e.target.value);                  if (fieldErrors.newPassword) {                    setFieldErrors((prev) => ({ ...prev, newPassword: '' }));                  }                }}                error={fieldErrors.newPassword}                autoComplete="new-password"                required              />              <FormField                label="Confirm new password"                id="confirm-password"                type="password"                value={confirmPassword}                onChange={(e) => {                  setConfirmPassword(e.target.value);                  if (fieldErrors.confirmPassword) {                    setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));                  }                }}                error={fieldErrors.confirmPassword}                autoComplete="new-password"                required              />              <div className={styles.submitRow}>                <Button                  type="submit"                  variant="primary"                  size="md"                  className={styles.submitButton}                  disabled={loading}                >                  {loading ? 'Saving...' : 'Set new password'}                </Button>              </div>              <div className={styles.backRow}>                <Link to={PATHS.LOGIN} className={styles.backLink}>                  Back to sign in                </Link>              </div>            </form>          )}        </Card>      </div>    </div>  );}export default ResetPassword;
+import React, { useState } from 'react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { PATHS } from '@/routes/paths';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
+import PageHeader from '@/components/layout/PageHeader';
+import FormField from '@/components/ui/FormField';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Illustration from '@/components/domain/Illustration';
+import { resetPassword } from '@/api/auth';
+import styles from './ResetPassword.module.css';
+
+/**
+ * ResetPassword page with token validation, password confirmation,
+ * and error/success states.
+ */
+export function ResetPassword() {
+  useDocumentTitle('Set New Password · MarketLink');
+
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') || '';
+  const navigate = useNavigate();
+
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [globalError, setGlobalError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setGlobalError('');
+    setFieldErrors({});
+
+    if (!token) {
+      setGlobalError('This password reset link is missing a valid security token.');
+      return;
+    }
+
+    if (!newPassword) {
+      setFieldErrors((prev) => ({ ...prev, newPassword: 'Please choose a new password.' }));
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setFieldErrors((prev) => ({ ...prev, newPassword: 'Password must be at least 8 characters long.' }));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setFieldErrors((prev) => ({ ...prev, confirmPassword: 'Passwords do not match.' }));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await resetPassword({ token, newPassword, confirmPassword });
+      setSuccess(true);
+    } catch (err) {
+      if (err.code === 'INVALID_RESET_TOKEN') {
+        setGlobalError('This password reset link is invalid or has expired. Please request a new one.');
+      } else if (err.details && Array.isArray(err.details)) {
+        const errors = {};
+        for (const d of err.details) {
+          if (d.field) errors[d.field] = d.message;
+        }
+        setFieldErrors(errors);
+        if (Object.keys(errors).length === 0) {
+          setGlobalError(err.message || 'Unable to update password.');
+        }
+      } else {
+        setGlobalError(err.message || 'An error occurred. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <PageHeader
+          title="Create a new password"
+          subtitle={!success ? 'Choose a secure password with at least 8 characters.' : undefined}
+          backTo={PATHS.LOGIN}
+          backLabel="Sign in"
+        />
+
+        <Card className={styles.card}>
+          {success ? (
+            <div className={styles.sentState}>
+              <div className={styles.illustrationMoment} aria-hidden="true">
+                <Illustration name="basket-produce" size="lg" />
+              </div>
+              <h2 className={styles.sentTitle}>Password updated</h2>
+              <p className={styles.sentText}>
+                Your password has been changed successfully. You can now sign in with your new credentials.
+              </p>
+              <Button
+                as={Link}
+                to={PATHS.LOGIN}
+                variant="primary"
+                size="md"
+                className={styles.submitButton}
+              >
+                Go to sign in
+              </Button>
+            </div>
+          ) : !token ? (
+            <div className={styles.sentState}>
+              <h2 className={styles.sentTitle}>Invalid reset link</h2>
+              <p className={styles.sentText}>
+                This password reset link is incomplete or missing a valid token.
+              </p>
+              <Button
+                as={Link}
+                to={PATHS.FORGOT_PASSWORD}
+                variant="primary"
+                size="md"
+                className={styles.submitButton}
+              >
+                Request new link
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate className={styles.form}>
+              {globalError && (
+                <div className={styles.globalError} role="alert">
+                  {globalError}
+                </div>
+              )}
+
+              <FormField
+                label="New password"
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  if (fieldErrors.newPassword) {
+                    setFieldErrors((prev) => ({ ...prev, newPassword: '' }));
+                  }
+                }}
+                error={fieldErrors.newPassword}
+                autoComplete="new-password"
+                required
+              />
+
+              <FormField
+                label="Confirm new password"
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (fieldErrors.confirmPassword) {
+                    setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+                  }
+                }}
+                error={fieldErrors.confirmPassword}
+                autoComplete="new-password"
+                required
+              />
+
+              <div className={styles.submitRow}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  className={styles.submitButton}
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Set new password'}
+                </Button>
+              </div>
+
+              <div className={styles.backRow}>
+                <Link to={PATHS.LOGIN} className={styles.backLink}>
+                  Back to sign in
+                </Link>
+              </div>
+            </form>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default ResetPassword;

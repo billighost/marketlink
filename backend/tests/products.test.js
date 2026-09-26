@@ -1,1 +1,219 @@
-import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { getSeedFacts } from './seedFacts.js';describe('Products Module Suite (T2.031 - T2.075)', () => {  let customerAuth;  let facts;  let db;  before(async () => {    const env = await setupTestEnvironment();    db = env.db;    customerAuth = await loginUser('george@example.com');    facts = getSeedFacts();  });  after(async () => {    await teardownTestEnvironment();  });  function authHeaders() {    return { Authorization: `Bearer ${customerAuth.accessToken}` };  }  it('T2.031: GET /api/products requires authentication', async () => {    const res = await request('/api/products');    assert.equal(res.status, 401);  });  it('T2.032: default list excludes sold out products, includeSoldOut=true includes them', async () => {    const defaultRes = await request('/api/products?limit=50', { headers: authHeaders() });    assert.equal(defaultRes.status, 200);    const defaultBody = await defaultRes.json();    for (const p of defaultBody.data) {      assert.notEqual(p.availability, 'out');    }    const soldOutRes = await request('/api/products?includeSoldOut=true&limit=50', { headers: authHeaders() });    assert.equal(soldOutRes.status, 200);    const soldOutBody = await soldOutRes.json();    const hasOut = soldOutBody.data.some((p) => p.availability === 'out');    assert.ok(hasOut, 'Sold-out products must appear when includeSoldOut=true');  });  it('T2.033: rejects minPrice > maxPrice with 422 VALIDATION_FAILED', async () => {    const res = await request('/api/products?minPrice=800&maxPrice=400', { headers: authHeaders() });    assert.equal(res.status, 422);    const body = await res.json();    assert.equal(body.error.code, 'VALIDATION_FAILED');  });  it('T2.034: rejects unknown sort with 422 VALIDATION_FAILED', async () => {    const res = await request('/api/products?sort=invalid_sort', { headers: authHeaders() });    assert.equal(res.status, 422);  });  it('T2.035: limit=0 throws 422 and limit=100 clamps to 50', async () => {    const zeroRes = await request('/api/products?limit=0', { headers: authHeaders() });    assert.equal(zeroRes.status, 422);    const clampRes = await request('/api/products?limit=100', { headers: authHeaders() });    assert.equal(clampRes.status, 200);    const clampBody = await clampRes.json();    assert.equal(clampBody.meta.limit, 50);  });  it('T2.036: filters combine correctly: category + price range + market', async () => {    const res = await request(      `/api/products?category=vegetables&minPrice=300&maxPrice=600&market=${facts.elmMarketId}`,      { headers: authHeaders() }    );    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(body.data.length >= 1);    for (const p of body.data) {      assert.equal(p.category.slug, 'vegetables');      assert.ok(p.priceCents >= 300 && p.priceCents <= 600);    }  });  it('T2.037: day=sat filter returns products from farmers selling on Saturday', async () => {    const res = await request('/api/products?day=sat&limit=10', { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(body.data.length >= 1);  });  it('T2.038: tags filter returns products matching all tags', async () => {    const res = await request('/api/products?tags=seasonal', { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(body.data.length >= 1);    for (const p of body.data) {      assert.ok(p.tags.includes('seasonal'));    }  });  const sorts = ['price_asc', 'price_desc', 'newest', 'popular', 'featured'];  for (const sort of sorts) {    it(`T2.039_${sort}: full keyset pagination through all items with limit=7 produces no duplicates and no gaps`, async () => {      const fullRes = await request(`/api/products?sort=${sort}&limit=50&includeSoldOut=true`, {        headers: authHeaders(),      });      assert.equal(fullRes.status, 200);      const fullBody = await fullRes.json();      const expectedIds = fullBody.data.map((p) => p.id);      let nextCursor = null;      const paginatedIds = [];      do {        const url = nextCursor          ? `/api/products?sort=${sort}&limit=7&includeSoldOut=true&cursor=${encodeURIComponent(nextCursor)}`          : `/api/products?sort=${sort}&limit=7&includeSoldOut=true`;        const res = await request(url, { headers: authHeaders() });        assert.equal(res.status, 200);        const body = await res.json();        paginatedIds.push(...body.data.map((p) => p.id));        nextCursor = body.meta.nextCursor;      } while (nextCursor);      assert.deepEqual(paginatedIds, expectedIds);    });  }  it('T2.044: text search "tomato" returns exactly 3 seeded matches from 3 different farmers', async () => {    const res = await request('/api/products?q=tomato&includeSoldOut=true', { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.equal(body.data.length, 3, 'Must return exactly 3 products containing tomato');    const farmerIds = new Set(body.data.map((p) => p.farmer.id));    assert.equal(farmerIds.size, 3, 'Must be from 3 distinct farmers');  });  it('T2.045: search handles special characters without regex crash', async () => {    const res = await request('/api/products?q=(*\\', { headers: authHeaders() });    assert.equal(res.status, 200);  });  it('T2.046: 2-character query uses anchored prefix fallback', async () => {    const res = await request('/api/products?q=he', { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(body.data.length >= 1, 'Should find products starting with he (e.g. Heirloom tomatoes)');    for (const p of body.data) {      assert.ok(p.name.toLowerCase().startsWith('he'));    }  });  it('T2.047: GET /api/products/:id returns productDetail with pickupSlots and farmerCutoff', async () => {    const res = await request(`/api/products/${facts.cheapestProduct.id}`, { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    const p = body.data;    assert.equal(p.id, facts.cheapestProduct.id);    assert.ok(p.name);    assert.ok(p.description);    assert.equal(typeof p.quantityLeft, 'number');    assert.ok(Array.isArray(p.marketIds));    assert.ok(p.farmerCutoff);    assert.ok(Array.isArray(p.nextPickupSlots));  });  it('T2.048: productCard quantityLeft present ONLY when availability is "low"', async () => {    const res = await request('/api/products?limit=50', { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    for (const p of body.data) {      if (p.availability === 'low') {        assert.equal(typeof p.quantityLeft, 'number');      } else {        assert.equal(p.quantityLeft, undefined, 'quantityLeft must only appear when availability is low on productCard');      }    }  });  it('T2.049: unlisted products from pending/suspended farmers return 404', async () => {    const pendingFarmer = await db.collection('farmers').findOne({ email: 'pending.farmer@example.com' });    const pendingProduct = await db.collection('products').findOne({ farmerId: pendingFarmer._id });    if (pendingProduct) {      const res = await request(`/api/products/${pendingProduct._id.toString()}`, { headers: authHeaders() });      assert.equal(res.status, 404);    }  });  it('T2.050: GET /api/products/:id/related returns moreFromFarmer and youMightLike without duplicates', async () => {    const res = await request(`/api/products/${facts.cheapestProduct.id}/related`, { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(body.data);    const { moreFromFarmer, youMightLike } = body.data;    assert.ok(Array.isArray(moreFromFarmer));    assert.ok(Array.isArray(youMightLike));    const targetId = facts.cheapestProduct.id;    assert.equal(moreFromFarmer.some((p) => p.id === targetId), false);    assert.equal(youMightLike.some((p) => p.id === targetId), false);  });});
+/**
+ * T2.031 - T2.075: Products browse, keyset pagination, filters, text search, and details test suite.
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { getSeedFacts } from './seedFacts.js';
+
+describe('Products Module Suite (T2.031 - T2.075)', () => {
+  let customerAuth;
+  let facts;
+  let db;
+
+  before(async () => {
+    const env = await setupTestEnvironment();
+    db = env.db;
+    customerAuth = await loginUser('george@example.com');
+    facts = getSeedFacts();
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
+  });
+
+  function authHeaders() {
+    return { Authorization: `Bearer ${customerAuth.accessToken}` };
+  }
+
+  it('T2.031: GET /api/products requires authentication', async () => {
+    const res = await request('/api/products');
+    assert.equal(res.status, 401);
+  });
+
+  it('T2.032: default list excludes sold out products, includeSoldOut=true includes them', async () => {
+    const defaultRes = await request('/api/products?limit=50', { headers: authHeaders() });
+    assert.equal(defaultRes.status, 200);
+    const defaultBody = await defaultRes.json();
+    for (const p of defaultBody.data) {
+      assert.notEqual(p.availability, 'out');
+    }
+
+    const soldOutRes = await request('/api/products?includeSoldOut=true&limit=50', { headers: authHeaders() });
+    assert.equal(soldOutRes.status, 200);
+    const soldOutBody = await soldOutRes.json();
+    const hasOut = soldOutBody.data.some((p) => p.availability === 'out');
+    assert.ok(hasOut, 'Sold-out products must appear when includeSoldOut=true');
+  });
+
+  it('T2.033: rejects minPrice > maxPrice with 422 VALIDATION_FAILED', async () => {
+    const res = await request('/api/products?minPrice=800&maxPrice=400', { headers: authHeaders() });
+    assert.equal(res.status, 422);
+    const body = await res.json();
+    assert.equal(body.error.code, 'VALIDATION_FAILED');
+  });
+
+  it('T2.034: rejects unknown sort with 422 VALIDATION_FAILED', async () => {
+    const res = await request('/api/products?sort=invalid_sort', { headers: authHeaders() });
+    assert.equal(res.status, 422);
+  });
+
+  it('T2.035: limit=0 throws 422 and limit=100 clamps to 50', async () => {
+    const zeroRes = await request('/api/products?limit=0', { headers: authHeaders() });
+    assert.equal(zeroRes.status, 422);
+
+    const clampRes = await request('/api/products?limit=100', { headers: authHeaders() });
+    assert.equal(clampRes.status, 200);
+    const clampBody = await clampRes.json();
+    assert.equal(clampBody.meta.limit, 50);
+  });
+
+  it('T2.036: filters combine correctly: category + price range + market', async () => {
+    const res = await request(
+      `/api/products?category=vegetables&minPrice=300&maxPrice=600&market=${facts.elmMarketId}`,
+      { headers: authHeaders() }
+    );
+    assert.equal(res.status, 200);
+    const body = await res.json();
+
+    assert.ok(body.data.length >= 1);
+    for (const p of body.data) {
+      assert.equal(p.category.slug, 'vegetables');
+      assert.ok(p.priceCents >= 300 && p.priceCents <= 600);
+    }
+  });
+
+  it('T2.037: day=sat filter returns products from farmers selling on Saturday', async () => {
+    const res = await request('/api/products?day=sat&limit=10', { headers: authHeaders() });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.ok(body.data.length >= 1);
+  });
+
+  it('T2.038: tags filter returns products matching all tags', async () => {
+    const res = await request('/api/products?tags=seasonal', { headers: authHeaders() });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.ok(body.data.length >= 1);
+    for (const p of body.data) {
+      assert.ok(p.tags.includes('seasonal'));
+    }
+  });
+
+  // T2.039 - T2.043: Full keyset pagination verification across all five sorts with limit=7
+  const sorts = ['price_asc', 'price_desc', 'newest', 'popular', 'featured'];
+
+  for (const sort of sorts) {
+    it(`T2.039_${sort}: full keyset pagination through all items with limit=7 produces no duplicates and no gaps`, async () => {
+      // 1. Fetch full expected result with limit=50
+      const fullRes = await request(`/api/products?sort=${sort}&limit=50&includeSoldOut=true`, {
+        headers: authHeaders(),
+      });
+      assert.equal(fullRes.status, 200);
+      const fullBody = await fullRes.json();
+      const expectedIds = fullBody.data.map((p) => p.id);
+
+      // 2. Page through with limit=7
+      let nextCursor = null;
+      const paginatedIds = [];
+
+      do {
+        const url = nextCursor
+          ? `/api/products?sort=${sort}&limit=7&includeSoldOut=true&cursor=${encodeURIComponent(nextCursor)}`
+          : `/api/products?sort=${sort}&limit=7&includeSoldOut=true`;
+
+        const res = await request(url, { headers: authHeaders() });
+        assert.equal(res.status, 200);
+        const body = await res.json();
+
+        paginatedIds.push(...body.data.map((p) => p.id));
+        nextCursor = body.meta.nextCursor;
+      } while (nextCursor);
+
+      // 3. Assert exact sequence match (no gaps, no duplicates, exact order preserved)
+      assert.deepEqual(paginatedIds, expectedIds);
+    });
+  }
+
+  it('T2.044: text search "tomato" returns exactly 3 seeded matches from 3 different farmers', async () => {
+    const res = await request('/api/products?q=tomato&includeSoldOut=true', { headers: authHeaders() });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+
+    assert.equal(body.data.length, 3, 'Must return exactly 3 products containing tomato');
+    const farmerIds = new Set(body.data.map((p) => p.farmer.id));
+    assert.equal(farmerIds.size, 3, 'Must be from 3 distinct farmers');
+  });
+
+  it('T2.045: search handles special characters without regex crash', async () => {
+    const res = await request('/api/products?q=(*\\', { headers: authHeaders() });
+    assert.equal(res.status, 200);
+  });
+
+  it('T2.046: 2-character query uses anchored prefix fallback', async () => {
+    const res = await request('/api/products?q=he', { headers: authHeaders() });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.ok(body.data.length >= 1, 'Should find products starting with he (e.g. Heirloom tomatoes)');
+    for (const p of body.data) {
+      assert.ok(p.name.toLowerCase().startsWith('he'));
+    }
+  });
+
+  it('T2.047: GET /api/products/:id returns productDetail with pickupSlots and farmerCutoff', async () => {
+    const res = await request(`/api/products/${facts.cheapestProduct.id}`, { headers: authHeaders() });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    const p = body.data;
+
+    assert.equal(p.id, facts.cheapestProduct.id);
+    assert.ok(p.name);
+    assert.ok(p.description);
+    assert.equal(typeof p.quantityLeft, 'number');
+    assert.ok(Array.isArray(p.marketIds));
+    assert.ok(p.farmerCutoff);
+    assert.ok(Array.isArray(p.nextPickupSlots));
+  });
+
+  it('T2.048: productCard quantityLeft present ONLY when availability is "low"', async () => {
+    const res = await request('/api/products?limit=50', { headers: authHeaders() });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+
+    for (const p of body.data) {
+      if (p.availability === 'low') {
+        assert.equal(typeof p.quantityLeft, 'number');
+      } else {
+        assert.equal(p.quantityLeft, undefined, 'quantityLeft must only appear when availability is low on productCard');
+      }
+    }
+  });
+
+  it('T2.049: unlisted products from pending/suspended farmers return 404', async () => {
+    // Find a product belonging to pending farmer
+    const pendingFarmer = await db.collection('farmers').findOne({ email: 'pending.farmer@example.com' });
+    const pendingProduct = await db.collection('products').findOne({ farmerId: pendingFarmer._id });
+
+    if (pendingProduct) {
+      const res = await request(`/api/products/${pendingProduct._id.toString()}`, { headers: authHeaders() });
+      assert.equal(res.status, 404);
+    }
+  });
+
+  it('T2.050: GET /api/products/:id/related returns moreFromFarmer and youMightLike without duplicates', async () => {
+    const res = await request(`/api/products/${facts.cheapestProduct.id}/related`, { headers: authHeaders() });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+
+    assert.ok(body.data);
+    const { moreFromFarmer, youMightLike } = body.data;
+    assert.ok(Array.isArray(moreFromFarmer));
+    assert.ok(Array.isArray(youMightLike));
+
+    // Neither list should contain the product itself
+    const targetId = facts.cheapestProduct.id;
+    assert.equal(moreFromFarmer.some((p) => p.id === targetId), false);
+    assert.equal(youMightLike.some((p) => p.id === targetId), false);
+  });
+});

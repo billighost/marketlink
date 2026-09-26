@@ -1,1 +1,290 @@
-#!/usr/bin/env nodeimport { ObjectId } from 'mongodb';import { env } from '../src/config/env.js';import { connectDb, closeDb } from '../src/db/client.js';import { COLLECTIONS } from '../src/db/collections.js';const args = process.argv.slice(2);function getArg(flag, defaultVal) {  const idx = args.indexOf(flag);  if (idx !== -1 && args[idx + 1]) {    return args[idx + 1];  }  return defaultVal;}const targetDbName = getArg('--db', process.env.DB_NAME || env.DB_NAME);const IS_JSON = args.includes('--json');function inspectPlan(plan) {  const stages = [];  const indexes = [];  function walk(node) {    if (!node) return;    if (node.stage) stages.push(node.stage);    if (node.indexName) indexes.push(node.indexName);    if (node.inputStage) walk(node.inputStage);    if (Array.isArray(node.inputStages)) {      for (const s of node.inputStages) walk(s);    }  }  walk(plan);  return { stages, indexes };}async function runProfilerReport() {  const startTime = Date.now();  if (!IS_JSON) {    console.log(`\n========================================================================================`);    console.log(`⚡  MarketLink Query Performance Profiler & Index Auditor`);    console.log(`    Target Database: "${targetDbName}"`);    console.log(`========================================================================================\n`);  }  const db = await connectDb(env.MONGODB_URI, targetDbName);  const collections = await db.listCollections().toArray();  let totalIndexesCount = 0;  const indexBreakdown = {};  for (const coll of collections) {    try {      const idxs = await db.collection(coll.name).indexes();      indexBreakdown[coll.name] = idxs.length;      totalIndexesCount += idxs.length;    } catch {    }  }  const sampleProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({}, { projection: { _id: 1, farmerId: 1, categorySlug: 1 } });  const sampleUser = await db.collection(COLLECTIONS.USERS).findOne({}, { projection: { _id: 1 } });  const sampleFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({}, { projection: { _id: 1 } });  const dummyId = new ObjectId();  const prodId = sampleProduct?._id || dummyId;  const farmerId = sampleProduct?.farmerId || sampleFarmer?._id || dummyId;  const userId = sampleUser?._id || dummyId;  const categorySlug = sampleProduct?.categorySlug || 'vegetables';  const queryAudits = [    {      name: '1. Catalog Browse (Filter + Sort)',      collection: COLLECTIONS.PRODUCTS,      run: (c) =>        c          .find({ listed: true, availability: { $in: ['in', 'low'] } })          .sort({ createdAt: -1 })          .limit(20)          .explain('executionStats'),    },    {      name: '2. Category Filtered Catalog',      collection: COLLECTIONS.PRODUCTS,      run: (c) =>        c          .find({ listed: true, categorySlug, availability: { $in: ['in', 'low'] } })          .limit(20)          .explain('executionStats'),    },    {      name: '3. Full-Text Search (Products)',      collection: COLLECTIONS.PRODUCTS,      run: (c) =>        c          .find({ $text: { $search: 'organic' }, listed: true })          .project({ score: { $meta: 'textScore' } })          .sort({ score: { $meta: 'textScore' } })          .limit(20)          .explain('executionStats'),    },    {      name: '4. Batch Products Lookup (Quote/Cart)',      collection: COLLECTIONS.PRODUCTS,      run: (c) =>        c          .find({ _id: { $in: [prodId, dummyId] } })          .explain('executionStats'),    },    {      name: '5. Farmer Profile By User ID',      collection: COLLECTIONS.FARMERS,      run: (c) =>        c          .find({ userId })          .explain('executionStats'),    },    {      name: '6. Customer Order History',      collection: COLLECTIONS.ORDERS,      run: (c) =>        c          .find({ customerId: userId })          .sort({ createdAt: -1 })          .limit(20)          .explain('executionStats'),    },    {      name: '7. Farmer Queue (By Status)',      collection: COLLECTIONS.ORDERS,      run: (c) =>        c          .find({ farmerId, status: 'placed' })          .sort({ createdAt: -1 })          .limit(20)          .explain('executionStats'),    },    {      name: '8. Active Session Validation (TTL)',      collection: COLLECTIONS.SESSIONS,      run: (c) =>        c          .find({ tokenHash: 'sample-hash-value', expiresAt: { $gt: new Date() } })          .explain('executionStats'),    },  ];  const results = [];  let collscanCount = 0;  for (const q of queryAudits) {    try {      const coll = db.collection(q.collection);      const explanation = await q.run(coll);      const stats = explanation.executionStats || {};      const plan = explanation.queryPlanner?.winningPlan || {};      const { stages, indexes } = inspectPlan(plan);      const hasCollscan = stages.includes('COLLSCAN');      if (hasCollscan) {        collscanCount++;      }      const primaryStage = stages[0] || 'UNKNOWN';      const indexUsed = indexes.length > 0 ? indexes.join(', ') : (hasCollscan ? 'NONE (COLLSCAN)' : 'PRIMARY KEY');      results.push({        query: q.name,        collection: q.collection,        stage: primaryStage,        indexUsed,        nReturned: stats.nReturned ?? 0,        docsExamined: stats.totalDocsExamined ?? 0,        keysExamined: stats.totalKeysExamined ?? 0,        timeMs: stats.executionTimeMillis ?? 0,        status: hasCollscan ? '❌ COLLSCAN' : '✓ INDEXED',      });    } catch (err) {      results.push({        query: q.name,        collection: q.collection,        stage: 'ERROR',        indexUsed: 'N/A',        nReturned: 0,        docsExamined: 0,        keysExamined: 0,        timeMs: 0,        status: `⚠️ ${err.message.slice(0, 30)}`,      });    }  }  let slowQueriesCount = 0;  let profilerEnabled = false;  try {    const profileCollection = db.collection('system.profile');    const slowQueries = await profileCollection      .find({ millis: { $gt: 100 } })      .sort({ ts: -1 })      .limit(10)      .toArray();    slowQueriesCount = slowQueries.length;    profilerEnabled = true;  } catch {    profilerEnabled = false;  }  const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);  if (IS_JSON) {    console.log(      JSON.stringify(        {          targetDb: targetDbName,          totalIndexesCount,          indexBreakdown,          collscanCount,          allIndexed: collscanCount === 0,          results,          profilerEnabled,          slowQueriesCount,          durationSec,        },        null,        2      )    );  } else {    console.table(      results.map((r) => ({        'Query Path': r.query,        Collection: r.collection,        Status: r.status,        'Index Applied': r.indexUsed,        'Docs Examined': r.docsExamined,        'Keys Examined': r.keysExamined,        'Time (ms)': r.timeMs,      }))    );    console.log(`\n----------------------------------------------------------------------------------------`);    console.log(`📊  Audited Index Coverage:`);    console.log(`    Total Indexed Collections: ${Object.keys(indexBreakdown).length}`);    console.log(`    Total Managed Indexes:     ${totalIndexesCount}`);    console.log(`    Critical Queries Audited:  ${results.length}`);    console.log(`    Full Table Scans Found:    ${collscanCount}`);    console.log(`    Profiler Status:           ${profilerEnabled ? 'Active' : 'Unprivileged/Standby'}`);    console.log(`----------------------------------------------------------------------------------------`);    if (collscanCount === 0) {      console.log(`\n🎉  ALL CRITICAL QUERY PATHS USE DEDICATED INDEXES (0 COLLSCANs DETECTED) in ${durationSec}s.\n`);    } else {      console.error(`\n💥  INDEX DEFICIENCY: ${collscanCount} query path(s) required full collection scans!\n`);    }  }  await closeDb();  if (collscanCount > 0) {    process.exit(1);  }}runProfilerReport().catch((err) => {  console.error('Fatal error running profiler report:', err);  process.exit(1);});
+#!/usr/bin/env node
+/**
+ * MongoDB Query Performance Profiler & Index Auditor (Stage 5 D4).
+ * Audits critical application query paths using executionStats explain plans,
+ * inspects system.profile where available, and verifies zero COLLSCAN operations.
+ *
+ * Usage:
+ *   node scripts/profile-report.js
+ *   node scripts/profile-report.js --db marketlink_large
+ *   node scripts/profile-report.js --json
+ */
+
+import { ObjectId } from 'mongodb';
+import { env } from '../src/config/env.js';
+import { connectDb, closeDb } from '../src/db/client.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+function getArg(flag, defaultVal) {
+  const idx = args.indexOf(flag);
+  if (idx !== -1 && args[idx + 1]) {
+    return args[idx + 1];
+  }
+  return defaultVal;
+}
+
+const targetDbName = getArg('--db', process.env.DB_NAME || env.DB_NAME);
+const IS_JSON = args.includes('--json');
+
+/**
+ * Recursively inspects an execution plan tree to find all stages and index names.
+ */
+function inspectPlan(plan) {
+  const stages = [];
+  const indexes = [];
+
+  function walk(node) {
+    if (!node) return;
+    if (node.stage) stages.push(node.stage);
+    if (node.indexName) indexes.push(node.indexName);
+    if (node.inputStage) walk(node.inputStage);
+    if (Array.isArray(node.inputStages)) {
+      for (const s of node.inputStages) walk(s);
+    }
+  }
+
+  walk(plan);
+  return { stages, indexes };
+}
+
+async function runProfilerReport() {
+  const startTime = Date.now();
+  if (!IS_JSON) {
+    console.log(`\n========================================================================================`);
+    console.log(`⚡  MarketLink Query Performance Profiler & Index Auditor`);
+    console.log(`    Target Database: "${targetDbName}"`);
+    console.log(`========================================================================================\n`);
+  }
+
+  const db = await connectDb(env.MONGODB_URI, targetDbName);
+
+  // 1. Inspect existing collections and indexes
+  const collections = await db.listCollections().toArray();
+  let totalIndexesCount = 0;
+  const indexBreakdown = {};
+
+  for (const coll of collections) {
+    try {
+      const idxs = await db.collection(coll.name).indexes();
+      indexBreakdown[coll.name] = idxs.length;
+      totalIndexesCount += idxs.length;
+    } catch {
+      // Ignore views or system collections
+    }
+  }
+
+  // 2. Sample or construct mock identifiers for explain queries
+  const sampleProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({}, { projection: { _id: 1, farmerId: 1, categorySlug: 1 } });
+  const sampleUser = await db.collection(COLLECTIONS.USERS).findOne({}, { projection: { _id: 1 } });
+  const sampleFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({}, { projection: { _id: 1 } });
+
+  const dummyId = new ObjectId();
+  const prodId = sampleProduct?._id || dummyId;
+  const farmerId = sampleProduct?.farmerId || sampleFarmer?._id || dummyId;
+  const userId = sampleUser?._id || dummyId;
+  const categorySlug = sampleProduct?.categorySlug || 'vegetables';
+
+  // 3. Define Critical Application Query Paths to audit with explain('executionStats')
+  const queryAudits = [
+    {
+      name: '1. Catalog Browse (Filter + Sort)',
+      collection: COLLECTIONS.PRODUCTS,
+      run: (c) =>
+        c
+          .find({ listed: true, availability: { $in: ['in', 'low'] } })
+          .sort({ createdAt: -1 })
+          .limit(20)
+          .explain('executionStats'),
+    },
+    {
+      name: '2. Category Filtered Catalog',
+      collection: COLLECTIONS.PRODUCTS,
+      run: (c) =>
+        c
+          .find({ listed: true, categorySlug, availability: { $in: ['in', 'low'] } })
+          .limit(20)
+          .explain('executionStats'),
+    },
+    {
+      name: '3. Full-Text Search (Products)',
+      collection: COLLECTIONS.PRODUCTS,
+      run: (c) =>
+        c
+          .find({ $text: { $search: 'organic' }, listed: true })
+          .project({ score: { $meta: 'textScore' } })
+          .sort({ score: { $meta: 'textScore' } })
+          .limit(20)
+          .explain('executionStats'),
+    },
+    {
+      name: '4. Batch Products Lookup (Quote/Cart)',
+      collection: COLLECTIONS.PRODUCTS,
+      run: (c) =>
+        c
+          .find({ _id: { $in: [prodId, dummyId] } })
+          .explain('executionStats'),
+    },
+    {
+      name: '5. Farmer Profile By User ID',
+      collection: COLLECTIONS.FARMERS,
+      run: (c) =>
+        c
+          .find({ userId })
+          .explain('executionStats'),
+    },
+    {
+      name: '6. Customer Order History',
+      collection: COLLECTIONS.ORDERS,
+      run: (c) =>
+        c
+          .find({ customerId: userId })
+          .sort({ createdAt: -1 })
+          .limit(20)
+          .explain('executionStats'),
+    },
+    {
+      name: '7. Farmer Queue (By Status)',
+      collection: COLLECTIONS.ORDERS,
+      run: (c) =>
+        c
+          .find({ farmerId, status: 'placed' })
+          .sort({ createdAt: -1 })
+          .limit(20)
+          .explain('executionStats'),
+    },
+    {
+      name: '8. Active Session Validation (TTL)',
+      collection: COLLECTIONS.SESSIONS,
+      run: (c) =>
+        c
+          .find({ tokenHash: 'sample-hash-value', expiresAt: { $gt: new Date() } })
+          .explain('executionStats'),
+    },
+  ];
+
+  const results = [];
+  let collscanCount = 0;
+
+  for (const q of queryAudits) {
+    try {
+      const coll = db.collection(q.collection);
+      const explanation = await q.run(coll);
+
+      const stats = explanation.executionStats || {};
+      const plan = explanation.queryPlanner?.winningPlan || {};
+      const { stages, indexes } = inspectPlan(plan);
+
+      const hasCollscan = stages.includes('COLLSCAN');
+      if (hasCollscan) {
+        collscanCount++;
+      }
+
+      const primaryStage = stages[0] || 'UNKNOWN';
+      const indexUsed = indexes.length > 0 ? indexes.join(', ') : (hasCollscan ? 'NONE (COLLSCAN)' : 'PRIMARY KEY');
+
+      results.push({
+        query: q.name,
+        collection: q.collection,
+        stage: primaryStage,
+        indexUsed,
+        nReturned: stats.nReturned ?? 0,
+        docsExamined: stats.totalDocsExamined ?? 0,
+        keysExamined: stats.totalKeysExamined ?? 0,
+        timeMs: stats.executionTimeMillis ?? 0,
+        status: hasCollscan ? '❌ COLLSCAN' : '✓ INDEXED',
+      });
+    } catch (err) {
+      results.push({
+        query: q.name,
+        collection: q.collection,
+        stage: 'ERROR',
+        indexUsed: 'N/A',
+        nReturned: 0,
+        docsExamined: 0,
+        keysExamined: 0,
+        timeMs: 0,
+        status: `⚠️ ${err.message.slice(0, 30)}`,
+      });
+    }
+  }
+
+  // 4. Inspect system.profile if accessible
+  let slowQueriesCount = 0;
+  let profilerEnabled = false;
+  try {
+    const profileCollection = db.collection('system.profile');
+    const slowQueries = await profileCollection
+      .find({ millis: { $gt: 100 } })
+      .sort({ ts: -1 })
+      .limit(10)
+      .toArray();
+
+    slowQueriesCount = slowQueries.length;
+    profilerEnabled = true;
+  } catch {
+    // Expected on restricted Atlas clusters without explicit profiler privileges
+    profilerEnabled = false;
+  }
+
+  const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
+
+  if (IS_JSON) {
+    console.log(
+      JSON.stringify(
+        {
+          targetDb: targetDbName,
+          totalIndexesCount,
+          indexBreakdown,
+          collscanCount,
+          allIndexed: collscanCount === 0,
+          results,
+          profilerEnabled,
+          slowQueriesCount,
+          durationSec,
+        },
+        null,
+        2
+      )
+    );
+  } else {
+    console.table(
+      results.map((r) => ({
+        'Query Path': r.query,
+        Collection: r.collection,
+        Status: r.status,
+        'Index Applied': r.indexUsed,
+        'Docs Examined': r.docsExamined,
+        'Keys Examined': r.keysExamined,
+        'Time (ms)': r.timeMs,
+      }))
+    );
+
+    console.log(`\n----------------------------------------------------------------------------------------`);
+    console.log(`📊  Audited Index Coverage:`);
+    console.log(`    Total Indexed Collections: ${Object.keys(indexBreakdown).length}`);
+    console.log(`    Total Managed Indexes:     ${totalIndexesCount}`);
+    console.log(`    Critical Queries Audited:  ${results.length}`);
+    console.log(`    Full Table Scans Found:    ${collscanCount}`);
+    console.log(`    Profiler Status:           ${profilerEnabled ? 'Active' : 'Unprivileged/Standby'}`);
+    console.log(`----------------------------------------------------------------------------------------`);
+
+    if (collscanCount === 0) {
+      console.log(`\n🎉  ALL CRITICAL QUERY PATHS USE DEDICATED INDEXES (0 COLLSCANs DETECTED) in ${durationSec}s.\n`);
+    } else {
+      console.error(`\n💥  INDEX DEFICIENCY: ${collscanCount} query path(s) required full collection scans!\n`);
+    }
+  }
+
+  await closeDb();
+
+  if (collscanCount > 0) {
+    process.exit(1);
+  }
+}
+
+runProfilerReport().catch((err) => {
+  console.error('Fatal error running profiler report:', err);
+  process.exit(1);
+});

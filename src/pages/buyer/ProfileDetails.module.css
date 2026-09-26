@@ -1,28 +1,9 @@
-.container {
-  padding-bottom: var(--space-12);
-}
-
-.section {
-  background: var(--color-white);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  margin-bottom: var(--space-8);
-}
-
-.sectionTitle {
-  margin: 0 0 var(--space-1) 0;
-  font-family: var(--font-body);
-  font-size: var(--text-base);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink);
-}
-
-.sectionDesc {
-  margin: 0 0 var(--space-6) 0;
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-  line-height: var(--leading-normal);
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-4);
+  width: 100%;
 }
 
 .fields {
@@ -32,50 +13,16 @@
 }
 
 .footer {
-  margin-top: var(--space-6);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--color-white);
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-3) 0 calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-sticky);
 }
 
-.saveBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-3) var(--space-6);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-white);
-  background: var(--color-beet);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: opacity var(--transition-fast);
-}
-
-.saveBtn:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.saveBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.dangerBtn {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-danger);
-  background: transparent;
-  border: 1px solid var(--color-hairline);
-  padding: var(--space-2-5) var(--space-4);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.dangerBtn:hover {
-  background: var(--color-canvas-soft);
+.submitButton {
+  width: 100%;
 }

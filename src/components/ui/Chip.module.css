@@ -1,1 +1,48 @@
-.chip {  flex: 0 0 auto;  display: inline-flex;  align-items: center;  justify-content: center;  min-height: var(--tap-min);  height: var(--tap-min);  padding: 0 var(--space-4);  border: 1px solid var(--color-border);  border-radius: var(--radius-full);  background-color: var(--color-white);  color: var(--color-ink);  font-family: var(--font-body);  font-size: var(--text-body);  font-weight: var(--weight-medium);  line-height: 1;  white-space: nowrap;  cursor: pointer;  user-select: none;  touch-action: manipulation;  -webkit-tap-highlight-color: transparent;  transition: background-color var(--duration-fast) var(--ease-standard),              border-color var(--duration-fast) var(--ease-standard),              color var(--duration-fast) var(--ease-standard);}.chip:hover {  background-color: var(--color-canvas-soft);  border-color: var(--color-ink-soft);}.chip:focus-visible {  outline: var(--focus-ring);  outline-offset: var(--focus-offset);}.selected {  background-color: var(--color-beet-tint);  border-color: var(--color-beet);  color: var(--color-beet);}.selected:hover {  background-color: var(--color-beet-tint);  border-color: var(--color-beet-dark);}
+/* Chip — filter pill */
+
+.chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background-color: var(--color-white);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+
+.chip:hover {
+  background-color: var(--color-canvas-soft);
+  border-color: var(--color-ink-soft);
+}
+
+.chip:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.selected {
+  background-color: var(--color-beet-tint);
+  border-color: var(--color-beet);
+  color: var(--color-beet);
+}
+
+.selected:hover {
+  background-color: var(--color-beet-tint);
+  border-color: var(--color-beet-dark);
+}

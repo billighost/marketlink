@@ -1,1 +1,12 @@
-import { apiFetch } from './client';export async function submitContact(payload) {  const res = await apiFetch('/contact', {    method: 'POST',    body: payload,  });  return res.data;}
+/**
+ * Public Contact API
+ */
+import { apiFetch } from './client';
+
+export async function submitContact(payload) {
+  const res = await apiFetch('/contact', {
+    method: 'POST',
+    body: payload,
+  });
+  return res.data;
+}

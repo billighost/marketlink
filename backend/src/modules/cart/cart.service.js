@@ -7,7 +7,7 @@
 import { getDb } from '../../db/client.js';
 import { COLLECTIONS } from '../../db/collections.js';
 import { toObjectId } from '../../utils/ids.js';
-import { getUpcomingSlots, formatCutoffLabel } from '../../utils/slots.js';
+import { getUpcomingSlots } from '../../utils/slots.js';
 import { AppError } from '../../utils/errors.js';
 
 const BLOCKING_ISSUE_CODES = new Set([
@@ -131,10 +131,6 @@ export async function getCartQuote(groups, { now = new Date() } = {}) {
       const match = upcomingSlots.find((s) => s.start === group.slotStart);
       if (!match || !match.isOpen) {
         groupIssues.push({
-          code: 'PAST_CUTOFF',
-          message: 'The reserve-by deadline for this pickup time has passed.',
-        });
-        groupIssues.push({
           code: 'SLOT_CLOSED',
           message: 'That pickup time has closed.',
         });
@@ -154,13 +150,6 @@ export async function getCartQuote(groups, { now = new Date() } = {}) {
       }
     }
 
-    if (upcomingSlots.length === 0) {
-      groupIssues.push({
-        code: 'NO_SLOTS',
-        message: 'No pickup slots available for this stall.',
-      });
-    }
-
     let groupSubtotalCents = 0;
     const lines = [];
 
@@ -169,41 +158,23 @@ export async function getCartQuote(groups, { now = new Date() } = {}) {
       const lineIssues = [];
 
       if (!p || !p.listed || p.availability === 'hidden') {
-        const msg = 'No longer available.';
         lineIssues.push({
           code: 'UNAVAILABLE',
-          message: msg,
-        });
-        groupIssues.push({
-          code: 'UNAVAILABLE',
-          productId: item.productId.toString(),
-          message: msg,
+          message: 'No longer available.',
         });
       } else {
         // Check stock
         if (p.availability === 'out' || p.quantityAvailable <= 0) {
-          const msg = `${p.name} is out of stock.`;
           lineIssues.push({
             code: 'OUT_OF_STOCK',
-            message: msg,
+            message: 'Out of stock.',
             maxQuantity: 0,
           });
-          groupIssues.push({
-            code: 'OUT_OF_STOCK',
-            productId: item.productId.toString(),
-            message: msg,
-          });
         } else if (p.quantityAvailable < item.quantity) {
-          const msg = `Only ${p.quantityAvailable} ${p.unit || 'left'}.`;
           lineIssues.push({
             code: 'NOT_ENOUGH_STOCK',
-            message: msg,
+            message: `Only ${p.quantityAvailable} left.`,
             maxQuantity: p.quantityAvailable,
-          });
-          groupIssues.push({
-            code: 'INSUFFICIENT_STOCK',
-            productId: item.productId.toString(),
-            message: msg,
           });
         }
 
@@ -214,15 +185,9 @@ export async function getCartQuote(groups, { now = new Date() } = {}) {
         ) {
           const oldFormatted = (item.expectedPriceCents / 100).toFixed(2);
           const newFormatted = (p.priceCents / 100).toFixed(2);
-          const msg = `The price changed from $${oldFormatted} to $${newFormatted}.`;
           lineIssues.push({
             code: 'PRICE_CHANGED',
-            message: msg,
-          });
-          groupIssues.push({
-            code: 'PRICE_CHANGED',
-            productId: item.productId.toString(),
-            message: msg,
+            message: `The price changed from $${oldFormatted} to $${newFormatted}.`,
           });
         }
       }
@@ -261,51 +226,18 @@ export async function getCartQuote(groups, { now = new Date() } = {}) {
 
     overallTotalCents += groupSubtotalCents;
 
-    const primaryMarket = farmerMarkets[0] || markets[0];
-    const marketTz = primaryMarket?.timezone || 'America/New_York';
-    const cutoffIso = cutoffAt ? (cutoffAt instanceof Date ? cutoffAt.toISOString() : String(cutoffAt)) : null;
-    const cutoffLabel = cutoffIso ? formatCutoffLabel(cutoffIso, marketTz) : null;
-
-    const pickupWindows = upcomingSlots.map((s) => ({
-      id: s.start,
-      startsAt: s.start,
-      endsAt: s.end,
-      label: s.label,
-      available: Boolean(s.isOpen),
-      remaining: Math.max(0, (farmer?.maxOrdersPerSlot ?? 30) - (s.orderCount || 0)),
-    }));
-
-    const enrichedFarmer = {
-      id: farmer ? farmer._id.toString() : group.farmerId.toString(),
-      stallName: farmer ? farmer.stallName : 'Unknown Farm',
-      name: farmer ? (farmer.contactPerson || farmer.stallName) : 'Unknown Farm',
-      stallNumber: farmer ? farmer.stallNumber || '' : '',
-      marketId: primaryMarket ? (primaryMarket._id ? primaryMarket._id.toString() : primaryMarket.id) : '',
-      marketName: primaryMarket ? primaryMarket.name : '',
-    };
-
-    const items = lines.map((l) => ({
-      productId: l.productId,
-      name: l.name,
-      unit: l.unit,
-      quantity: l.quantity,
-      unitPriceCents: l.unitPriceCents,
-      lineTotalCents: l.lineTotalCents,
-      availability: l.availability,
-    }));
-
     resultGroups.push({
       farmerId: group.farmerId.toString(),
-      farmer: enrichedFarmer,
-      items,
-      lines,
-      subtotalCents: groupSubtotalCents,
-      cutoffAt: cutoffIso,
-      cutoffLabel,
-      pickupWindows,
+      farmer: {
+        stallName: farmer ? farmer.stallName : 'Unknown Farm',
+        stallNumber: farmer ? farmer.stallNumber || '' : '',
+      },
       slots: upcomingSlots,
       selectedSlot,
+      cutoffAt,
+      lines,
       issues: groupIssues,
+      subtotalCents: groupSubtotalCents,
     });
   }
 

@@ -1,1 +1,113 @@
-import { apiFetch, getAccessToken } from './client';const p = () => (getAccessToken() ? '' : '/public');export async function getCategories(signal) {  const res = await apiFetch('/categories', { signal });  return res.data;}export async function getMarkets(query = {}, signal) {  const res = await apiFetch(`${p()}/markets`, { query, signal });  return res;}export async function getMarketDetail(id, signal) {  const res = await apiFetch(`${p()}/markets/${id}`, { signal });  return res.data;}export async function getMarketFarmers(id, query = {}, signal) {  const res = await apiFetch(`${p()}/markets/${id}/farmers`, { query, signal });  return res;}export async function getMarketProducts(id, query = {}, signal) {  const res = await apiFetch(`${p()}/markets/${id}/products`, { query, signal });  return res;}export async function getFarmers(query = {}, signal) {  const res = await apiFetch(`${p()}/farmers`, { query, signal });  return res;}export async function getFarmerDetail(id, signal) {  const res = await apiFetch(`${p()}/farmers/${id}`, { signal });  return res.data;}export async function getFarmerProducts(id, query = {}, signal) {  const res = await apiFetch(`${p()}/farmers/${id}/products`, { query, signal });  return res;}export async function getFarmerReviews(id, query = {}, signal) {  const res = await apiFetch(`${p()}/farmers/${id}/reviews`, { query, signal });  return res;}export async function getFarmerPickupSlots(id, signal) {  const res = await apiFetch(`${p()}/farmers/${id}/pickup-slots`, { signal });  return res.data;}export async function getProducts(query = {}, signal) {  const res = await apiFetch(`${p()}/products`, { query, signal });  return res;}export async function getProductDetail(id, signal) {  const res = await apiFetch(`${p()}/products/${id}`, { signal });  return res.data;}export async function getProductReviews(id, query = {}, signal) {  const res = await apiFetch(`${p()}/products/${id}/reviews`, { query, signal });  return res;}export async function getRelatedProducts(id, signal) {  const res = await apiFetch(`${p()}/products/${id}/related`, { signal });  return res.data;}export const getProductRelated = getRelatedProducts;export async function getSearchSuggestions(q, signal) {  const res = await apiFetch('/search/suggestions', { query: { q }, signal });  return res.data;}export async function getSearchHistory(signal) {  const res = await apiFetch('/search/history', { signal });  return res.data;}export async function recordSearchHistory(term) {  const res = await apiFetch('/search/history', {    method: 'POST',    body: { term },  });  return res.data;}export async function getFeed(cursor, signal) {  const query = cursor ? { cursor } : {};  const res = await apiFetch('/feed', { query, signal });  return res;}export async function getFeedMeta(signal) {  const res = await apiFetch('/feed/meta', { signal });  return res.data;}export async function getPublicHome(signal) {  const res = await apiFetch('/public/home', { signal });  return res.data;}
+/**
+ * Catalog, Markets, Farmers, Products, Search & Feed API
+ * Supports seamless unauthenticated guest access via /api/public fallback
+ */
+import { apiFetch, getAccessToken } from './client';
+
+const p = () => (getAccessToken() ? '' : '/public');
+
+export async function getCategories(signal) {
+  const res = await apiFetch('/categories', { signal });
+  return res.data;
+}
+
+export async function getMarkets(query = {}, signal) {
+  const res = await apiFetch(`${p()}/markets`, { query, signal });
+  return res;
+}
+
+export async function getMarketDetail(id, signal) {
+  const res = await apiFetch(`${p()}/markets/${id}`, { signal });
+  return res.data;
+}
+
+export async function getMarketFarmers(id, query = {}, signal) {
+  const res = await apiFetch(`${p()}/markets/${id}/farmers`, { query, signal });
+  return res;
+}
+
+export async function getMarketProducts(id, query = {}, signal) {
+  const res = await apiFetch(`${p()}/markets/${id}/products`, { query, signal });
+  return res;
+}
+
+export async function getFarmers(query = {}, signal) {
+  const res = await apiFetch(`${p()}/farmers`, { query, signal });
+  return res;
+}
+
+export async function getFarmerDetail(id, signal) {
+  const res = await apiFetch(`${p()}/farmers/${id}`, { signal });
+  return res.data;
+}
+
+export async function getFarmerProducts(id, query = {}, signal) {
+  const res = await apiFetch(`${p()}/farmers/${id}/products`, { query, signal });
+  return res;
+}
+
+export async function getFarmerReviews(id, query = {}, signal) {
+  const res = await apiFetch(`${p()}/farmers/${id}/reviews`, { query, signal });
+  return res;
+}
+
+export async function getFarmerPickupSlots(id, signal) {
+  const res = await apiFetch(`${p()}/farmers/${id}/pickup-slots`, { signal });
+  return res.data;
+}
+
+export async function getProducts(query = {}, signal) {
+  const res = await apiFetch(`${p()}/products`, { query, signal });
+  return res;
+}
+
+export async function getProductDetail(id, signal) {
+  const res = await apiFetch(`${p()}/products/${id}`, { signal });
+  return res.data;
+}
+
+export async function getProductReviews(id, query = {}, signal) {
+  const res = await apiFetch(`${p()}/products/${id}/reviews`, { query, signal });
+  return res;
+}
+
+export async function getRelatedProducts(id, signal) {
+  const res = await apiFetch(`${p()}/products/${id}/related`, { signal });
+  return res.data;
+}
+export const getProductRelated = getRelatedProducts;
+
+
+export async function getSearchSuggestions(q, signal) {
+  const res = await apiFetch('/search/suggestions', { query: { q }, signal });
+  return res.data;
+}
+
+export async function getSearchHistory(signal) {
+  const res = await apiFetch('/search/history', { signal });
+  return res.data;
+}
+
+export async function recordSearchHistory(term) {
+  const res = await apiFetch('/search/history', {
+    method: 'POST',
+    body: { term },
+  });
+  return res.data;
+}
+
+export async function getFeed(cursor, signal) {
+  const query = cursor ? { cursor } : {};
+  const res = await apiFetch('/feed', { query, signal });
+  return res;
+}
+
+export async function getFeedMeta(signal) {
+  const res = await apiFetch('/feed/meta', { signal });
+  return res.data;
+}
+
+export async function getPublicHome(signal) {
+  const res = await apiFetch('/public/home', { signal });
+  return res.data;
+}

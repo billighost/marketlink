@@ -1,1 +1,168 @@
-import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { ObjectId } from 'mongodb';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { COLLECTIONS } from '../src/db/collections.js';describe('Saved Markets & Home Summary Suite (T3.201 - T3.210)', () => {  let db;  let customerGeorgeAuth;  let customerMiaAuth;  let activeMarket1;  let activeMarket2;  before(async () => {    const env = await setupTestEnvironment();    db = env.db;    customerGeorgeAuth = await loginUser('george@example.com', 'market123');    customerMiaAuth = await loginUser('mia@example.com', 'market123');    const markets = await db      .collection(COLLECTIONS.MARKETS)      .find({ status: 'active' })      .limit(2)      .toArray();    activeMarket1 = markets[0];    activeMarket2 = markets[1];    await db.collection(COLLECTIONS.USERS).updateOne(      { _id: new ObjectId(customerGeorgeAuth.user.id) },      { $set: { savedMarketIds: [], homeMarketId: null } }    );  });  after(async () => {    await teardownTestEnvironment();  });  it('T3.201: PUT /api/users/me/saved-markets/:marketId saves a market (idempotent)', async () => {    const res1 = await request(`/api/users/me/saved-markets/${activeMarket1._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res1.status, 200);    const res2 = await request(`/api/users/me/saved-markets/${activeMarket1._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res2.status, 200);    const user = await db      .collection(COLLECTIONS.USERS)      .findOne({ _id: new ObjectId(customerGeorgeAuth.user.id) });    assert.equal(user.savedMarketIds.length, 1);    assert.equal(user.savedMarketIds[0].toString(), activeMarket1._id.toString());  });  it('T3.202: GET /api/users/me/saved-markets returns marketCard list with directions and next opening', async () => {    const res = await request('/api/users/me/saved-markets', {      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.equal(body.data.length, 1);    assert.equal(body.data[0].id, activeMarket1._id.toString());    assert.equal(body.data[0].name, activeMarket1.name);    assert.ok(body.data[0].directionsUrls);    assert.ok(body.data[0].directionsUrls.google);  });  it('T3.203: PUT /api/users/me/saved-markets returns 404 for nonexistent market', async () => {    const fakeId = new ObjectId().toString();    const res = await request(`/api/users/me/saved-markets/${fakeId}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 404);  });  it('T3.204: PUT /api/users/me/saved-markets enforces maximum limit of 10 saved markets', async () => {    const dummyIds = Array.from({ length: 10 }, () => new ObjectId());    await db.collection(COLLECTIONS.USERS).updateOne(      { _id: new ObjectId(customerGeorgeAuth.user.id) },      { $set: { savedMarketIds: dummyIds } }    );    const res = await request(`/api/users/me/saved-markets/${activeMarket2._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 409);    const body = await res.json();    assert.equal(body.error.code, 'LIMIT_EXCEEDED');    await db.collection(COLLECTIONS.USERS).updateOne(      { _id: new ObjectId(customerGeorgeAuth.user.id) },      { $set: { savedMarketIds: [activeMarket1._id] } }    );  });  it('T3.205: DELETE /api/users/me/saved-markets/:marketId removes market (idempotent)', async () => {    const res1 = await request(`/api/users/me/saved-markets/${activeMarket1._id.toString()}`, {      method: 'DELETE',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res1.status, 200);    const res2 = await request(`/api/users/me/saved-markets/${activeMarket1._id.toString()}`, {      method: 'DELETE',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res2.status, 200);    const user = await db      .collection(COLLECTIONS.USERS)      .findOne({ _id: new ObjectId(customerGeorgeAuth.user.id) });    assert.equal(user.savedMarketIds.length, 0);  });  it('T3.206: PUT /api/users/me/home-market/:marketId updates customer home market', async () => {    const res = await request(`/api/users/me/home-market/${activeMarket1._id.toString()}`, {      method: 'PUT',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const user = await db      .collection(COLLECTIONS.USERS)      .findOne({ _id: new ObjectId(customerGeorgeAuth.user.id) });    assert.equal(user.homeMarketId.toString(), activeMarket1._id.toString());  });  it('T3.207: GET /api/home/summary returns ready order, next pickup, and unread notifications count', async () => {    const res = await request('/api/home/summary', {      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok('readyForPickup' in body.data);    assert.ok('nextPickup' in body.data);    assert.ok(typeof body.data.unreadNotifications === 'number');    assert.equal(body.data.cartHint, null);  });});
+/**
+ * Saved markets, home market, and home summary integration test suite (T3.201 - T3.210).
+ * Tests saved markets management (max 10 limit), home market assignment,
+ * and GET /api/home/summary consolidated overview.
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { ObjectId } from 'mongodb';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+
+describe('Saved Markets & Home Summary Suite (T3.201 - T3.210)', () => {
+  let db;
+  let customerGeorgeAuth;
+  let customerMiaAuth;
+
+  let activeMarket1;
+  let activeMarket2;
+
+  before(async () => {
+    const env = await setupTestEnvironment();
+    db = env.db;
+
+    customerGeorgeAuth = await loginUser('george@example.com', 'market123');
+    customerMiaAuth = await loginUser('mia@example.com', 'market123');
+
+    const markets = await db
+      .collection(COLLECTIONS.MARKETS)
+      .find({ status: 'active' })
+      .limit(2)
+      .toArray();
+
+    activeMarket1 = markets[0];
+    activeMarket2 = markets[1];
+
+    // Reset George's saved markets and home market
+    await db.collection(COLLECTIONS.USERS).updateOne(
+      { _id: new ObjectId(customerGeorgeAuth.user.id) },
+      { $set: { savedMarketIds: [], homeMarketId: null } }
+    );
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
+  });
+
+  it('T3.201: PUT /api/users/me/saved-markets/:marketId saves a market (idempotent)', async () => {
+    const res1 = await request(`/api/users/me/saved-markets/${activeMarket1._id.toString()}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+    });
+
+    assert.equal(res1.status, 200);
+
+    // Call again to verify idempotency
+    const res2 = await request(`/api/users/me/saved-markets/${activeMarket1._id.toString()}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+    });
+
+    assert.equal(res2.status, 200);
+
+    const user = await db
+      .collection(COLLECTIONS.USERS)
+      .findOne({ _id: new ObjectId(customerGeorgeAuth.user.id) });
+    assert.equal(user.savedMarketIds.length, 1);
+    assert.equal(user.savedMarketIds[0].toString(), activeMarket1._id.toString());
+  });
+
+  it('T3.202: GET /api/users/me/saved-markets returns marketCard list with directions and next opening', async () => {
+    const res = await request('/api/users/me/saved-markets', {
+      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.ok(Array.isArray(body.data));
+    assert.equal(body.data.length, 1);
+    assert.equal(body.data[0].id, activeMarket1._id.toString());
+    assert.equal(body.data[0].name, activeMarket1.name);
+    assert.ok(body.data[0].directionsUrls);
+    assert.ok(body.data[0].directionsUrls.google);
+  });
+
+  it('T3.203: PUT /api/users/me/saved-markets returns 404 for nonexistent market', async () => {
+    const fakeId = new ObjectId().toString();
+    const res = await request(`/api/users/me/saved-markets/${fakeId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+    });
+
+    assert.equal(res.status, 404);
+  });
+
+  it('T3.204: PUT /api/users/me/saved-markets enforces maximum limit of 10 saved markets', async () => {
+    // Fill up to 10 with dummy market ObjectIds
+    const dummyIds = Array.from({ length: 10 }, () => new ObjectId());
+    await db.collection(COLLECTIONS.USERS).updateOne(
+      { _id: new ObjectId(customerGeorgeAuth.user.id) },
+      { $set: { savedMarketIds: dummyIds } }
+    );
+
+    const res = await request(`/api/users/me/saved-markets/${activeMarket2._id.toString()}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+    });
+
+    assert.equal(res.status, 409);
+    const body = await res.json();
+    assert.equal(body.error.code, 'LIMIT_EXCEEDED');
+
+    // Reset saved markets back to just activeMarket1
+    await db.collection(COLLECTIONS.USERS).updateOne(
+      { _id: new ObjectId(customerGeorgeAuth.user.id) },
+      { $set: { savedMarketIds: [activeMarket1._id] } }
+    );
+  });
+
+  it('T3.205: DELETE /api/users/me/saved-markets/:marketId removes market (idempotent)', async () => {
+    const res1 = await request(`/api/users/me/saved-markets/${activeMarket1._id.toString()}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+    });
+
+    assert.equal(res1.status, 200);
+
+    // Call again to verify idempotency
+    const res2 = await request(`/api/users/me/saved-markets/${activeMarket1._id.toString()}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+    });
+
+    assert.equal(res2.status, 200);
+
+    const user = await db
+      .collection(COLLECTIONS.USERS)
+      .findOne({ _id: new ObjectId(customerGeorgeAuth.user.id) });
+    assert.equal(user.savedMarketIds.length, 0);
+  });
+
+  it('T3.206: PUT /api/users/me/home-market/:marketId updates customer home market', async () => {
+    const res = await request(`/api/users/me/home-market/${activeMarket1._id.toString()}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+    });
+
+    assert.equal(res.status, 200);
+
+    const user = await db
+      .collection(COLLECTIONS.USERS)
+      .findOne({ _id: new ObjectId(customerGeorgeAuth.user.id) });
+    assert.equal(user.homeMarketId.toString(), activeMarket1._id.toString());
+  });
+
+  it('T3.207: GET /api/home/summary returns ready order, next pickup, and unread notifications count', async () => {
+    const res = await request('/api/home/summary', {
+      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
+    });
+
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.ok('readyForPickup' in body.data);
+    assert.ok('nextPickup' in body.data);
+    assert.ok(typeof body.data.unreadNotifications === 'number');
+    assert.equal(body.data.cartHint, null);
+  });
+});

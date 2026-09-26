@@ -1,67 +1,46 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, ArrowRight, ShoppingBag, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useOpenSheet } from '@/hooks/useOpenSheet';
 import { useFeed } from '@/hooks/useFeed';
 import { useQuery } from '@/hooks/useQuery';
 import { getFeedMeta } from '@/api/catalog';
 import { getHomeSummary } from '@/api/me';
 import { getGreeting } from '@/utils/greeting';
-import Page from '@/components/layout/Page';
-import MarketClock from '@/components/layout/MarketClock';
 import HorizontalRow from '@/components/layout/HorizontalRow';
 import ProductCard from '@/components/domain/ProductCard';
 import FarmerCard from '@/components/domain/FarmerCard';
-import StallStrip from '@/components/domain/StallStrip';
-import PickupBanner from '@/components/domain/PickupBanner';
-import HomeSkeleton from '@/components/layout/HomeSkeleton';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import styles from './Home.module.css';
 
 /**
- * Customer landing page ("Today at the market" /buyer).
- *
- * Density budget at 390x844:
- *  1. Top bar (56px)
- *  2. Greeting h1 (Idiqlat --text-h1)
- *  3. MarketClock (one line + progress rule)
- *  4. Search field (44px)
- *  5. First row header + the first card and a half peeking
- * (PickupBanner is a conditional 6th element)
+ * Customer Home page ("Market" tab).
+ * Minimal UI specifications:
+ *  - Density budget: greeting h1, one muted line, one search field, then first row
+ *  - Feed sections loaded from GET /api/feed with cursor-based endless scroll
+ *  - Active pickup notification from GET /api/home/summary
+ *  - Sub-line from GET /api/feed/meta
  */
 export function Home() {
   const { user, selectedMarketId } = useAuth();
+  const { openSheet } = useOpenSheet();
   const { sections, loadMore, loading, hasMore } = useFeed();
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
   const sentinelRef = useRef(null);
 
-  const fetchFeedMeta = useCallback(
-    ({ signal }) => getFeedMeta(signal),
-    []
-  );
-  const fetchHomeSummary = useCallback(
-    ({ signal }) => getHomeSummary(signal),
-    []
-  );
+  const { data: feedMeta } = useQuery(['feed-meta', selectedMarketId], ({ signal }) => getFeedMeta(signal));
+  const { data: homeSummary } = useQuery(['home-summary', selectedMarketId], ({ signal }) => getHomeSummary(signal));
 
-  const { data: feedMeta, loading: metaLoading } = useQuery(
-    ['feed-meta', selectedMarketId],
-    fetchFeedMeta
-  );
-  const { data: homeSummary } = useQuery(
-    ['home-summary', selectedMarketId],
-    fetchHomeSummary
-  );
+  const greetingName = feedMeta?.greetingName || user?.firstName || user?.name?.split(' ')[0] || 'there';
+  const scheduleLine =
+    feedMeta?.line ||
+    (feedMeta?.homeMarket?.name ? `${feedMeta.homeMarket.name} ┬╖ Open Saturday` : 'Local Farmers Market');
 
-  const greetingName =
-    feedMeta?.greetingName ||
-    user?.firstName ||
-    user?.name?.split(' ')[0] ||
-    'there';
-
+  // Active pickup order from server summary
   const activePickup = homeSummary?.readyForPickup || homeSummary?.nextPickup;
 
   // IntersectionObserver to load endless feed sections as user scrolls down
@@ -83,66 +62,101 @@ export function Home() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    const query = searchQuery.trim();
-    if (query) {
-      navigate(`/buyer/products?search=${encodeURIComponent(query)}`);
+    if (searchQuery.trim()) {
+      navigate(`/buyer/products?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
       navigate('/buyer/products');
     }
   };
 
-  // Initial full-page loading state
-  if (loading && sections.length === 0) {
-    return (
-      <Page width="wide">
-        <HomeSkeleton />
-      </Page>
-    );
-  }
+  const handleOpenActiveOrder = () => {
+    if (activePickup?.id) {
+      openSheet(`/buyer/orders/${activePickup.id}`);
+    }
+  };
 
   return (
-    <Page width="wide">
-      {/* Bespoke Header Area: Greeting + MarketClock + Search Field */}
+    <div className={styles.page}>
+      {/* ΓöÇΓöÇ Header Area ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
       <header className={styles.header}>
-        <div className={styles.headGroup}>
+        <div className={styles.greetingGroup}>
           <h1 className={styles.greeting}>{getGreeting(greetingName)}</h1>
-          {metaLoading && !feedMeta ? (
-            <div className={styles.clockSkeleton} aria-hidden="true" />
-          ) : (
-            <MarketClock
-              marketName={feedMeta?.homeMarket?.name || 'Your market'}
-              openNow={feedMeta?.clock?.openNow}
-              windowLabel={feedMeta?.clock?.windowLabel}
-              nextOpenLabel={feedMeta?.clock?.nextOpenLabel}
-              closesAtLabel={feedMeta?.clock?.closesAtLabel}
-              progress={feedMeta?.clock?.todayProgress ?? 0}
-            />
-          )}
+          <p className={styles.marketSchedule}>{scheduleLine}</p>
         </div>
 
-        {/* Full-width Search Field */}
+        {/* Clean, full-width search field */}
         <form className={styles.searchForm} onSubmit={handleSearchSubmit} role="search">
           <Search size={18} className={styles.searchIcon} aria-hidden="true" />
           <input
             type="search"
             className={styles.searchInput}
-            placeholder="Search produce, stalls, markets"
+            placeholder="Search farm fresh produce, bakery..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Search produce, stalls and markets"
+            aria-label="Search produce, bakery, and farm goods"
           />
         </form>
       </header>
 
-      {/* Conditional Active Pickup Banner */}
-      <PickupBanner order={activePickup} />
+      {/* ΓöÇΓöÇ Active Pickup Banner (if active order exists) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {activePickup && (
+        <section className={styles.pickupBanner} aria-label="Active order notification">
+          <div className={styles.pickupContent}>
+            <div className={styles.pickupIconWrap}>
+              <ShoppingBag size={20} className={styles.pickupIcon} aria-hidden="true" />
+            </div>
+            <div className={styles.pickupText}>
+              <div className={styles.pickupStatus}>
+                <span className={styles.pickupBadge}>
+                  {activePickup.status === 'ready' ? 'Ready for pickup' : 'Order Placed'}
+                </span>
+                <span className={styles.pickupNumber}>{activePickup.orderNumber}</span>
+              </div>
+              <p className={styles.pickupDesc}>
+                {activePickup.status === 'ready'
+                  ? `Your order is packed and waiting at ${activePickup.farmer?.stallName || 'the stall'}.`
+                  : `Scheduled pickup: ${activePickup.pickup?.label || 'Saturday window'}`}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={styles.pickupAction}
+            onClick={handleOpenActiveOrder}
+            aria-label={`View order ${activePickup.orderNumber} details`}
+          >
+            <span>View order</span>
+            <ArrowRight size={16} aria-hidden="true" />
+          </button>
+        </section>
+      )}
 
-      {/* Curated and Endless Feed */}
+      {/* ΓöÇΓöÇ Curated & Endless Feed ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Smart Basket CTA (shown when no active pickup) ──────────── */}
+      {!activePickup && (
+        <section className={styles.smartBasketCta} aria-label="Smart Basket">
+          <div className={styles.smartBasketCtaContent}>
+            <div className={styles.smartBasketCtaIcon} aria-hidden="true">
+              <Sparkles size={20} />
+            </div>
+            <div className={styles.smartBasketCtaText}>
+              <strong className={styles.smartBasketCtaTitle}>Build a Smart Basket</strong>
+              <span className={styles.smartBasketCtaDesc}>Tell us your budget — we'll find the best from local farmers.</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={styles.smartBasketCtaBtn}
+            onClick={() => openSheet('/buyer/smart-basket')}
+            aria-label="Open Smart Basket builder"
+          >
+            <span>Build</span>
+            <ArrowRight size={14} aria-hidden="true" />
+          </button>
+        </section>
+      )}
+
       <div className={styles.feed}>
-        {/* First row: At the market today (StallStrip) */}
-        <StallStrip marketId={selectedMarketId} />
-
-        {/* Server curated sections */}
         {sections.map((section, idx) => (
           <React.Fragment key={section.id}>
             <div className={styles.sectionWrap}>
@@ -173,14 +187,18 @@ export function Home() {
               </HorizontalRow>
             </div>
 
-            {/* Quiet assistant line after the 3rd server section */}
+            {/* Quiet assistant line after the 3rd section */}
             {idx === 2 && (
               <div className={styles.assistantCallout}>
                 <p className={styles.assistantText}>
                   Not sure what to cook?{' '}
-                  <Link to="/buyer/assistant" className={styles.assistantLink}>
+                  <button
+                    type="button"
+                    onClick={() => openSheet('/buyer/assistant')}
+                    className={styles.assistantLink}
+                  >
                     Ask MarketLink
-                  </Link>
+                  </button>
                   .
                 </p>
               </div>
@@ -188,8 +206,8 @@ export function Home() {
           </React.Fragment>
         ))}
 
-        {/* Skeletons while loading more feed batches */}
-        {loading && sections.length > 0 && (
+        {/* Loading Skeletons */}
+        {loading && (
           <div className={styles.skeletonRow} aria-label="Loading more market items">
             <SkeletonCard />
             <SkeletonCard />
@@ -197,21 +215,19 @@ export function Home() {
           </div>
         )}
 
-        {/* Empty feed state */}
         {!loading && sections.length === 0 && (
           <EmptyState
-            scene="market-closed"
             title="Nothing on the stalls yet"
-            text="Farmers are still setting up for the next market day."
+            text="Farmers are still setting up. Check back soon."
             actionLabel="Browse markets"
-            actionTo="/buyer/markets"
+            onAction={() => navigate('/buyer/markets')}
           />
         )}
 
-        {/* Endless scroll sentinel */}
+        {/* Intersection Sentinel */}
         <div ref={sentinelRef} className={styles.sentinel} aria-hidden="true" />
       </div>
-    </Page>
+    </div>
   );
 }
 

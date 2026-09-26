@@ -1,16 +1,14 @@
 import React from 'react';
-import Scene from '@/components/domain/Scene/Scene';
+import { AlertCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import styles from './ErrorState.module.css';
 
 /**
- * Standard error state component used across app areas.
+ * Standard error state component used across all app areas.
  * Conforms to Stage 8 specification D3:
  * Title "Couldn't load this", mapped user-friendly message, and "Try again" action.
- * Accepts an optional `scene` prop defaulting to 'offline-field'.
  */
 export function ErrorState({
-  scene = 'offline-field',
   title = "Couldn't load this",
   text = 'Something went wrong. Please check your connection and try again.',
   buttonText = 'Try again',
@@ -19,7 +17,9 @@ export function ErrorState({
 }) {
   return (
     <div className={`${styles.errorState} ${className}`} role="alert">
-      <Scene name={scene} size="md" className={styles.scene} />
+      <div className={styles.iconWrap} aria-hidden="true">
+        <AlertCircle size={28} strokeWidth={2} />
+      </div>
       <h2 className={styles.title}>{title}</h2>
       <p className={styles.text}>{text}</p>
       {onRetry && (

@@ -159,7 +159,7 @@ export function CartProvider({ children }) {
     setLoadingQuote(true);
     quoteDebounceRef.current = setTimeout(() => {
       fetchQuote(items);
-    }, 400);
+    }, 300);
 
     return () => {
       clearTimeout(quoteDebounceRef.current);
@@ -202,15 +202,13 @@ export function CartProvider({ children }) {
 
   const setSlot = useCallback((farmerId, slotStart) => {
     setItems((prev) =>
-      prev.map((item) => {
-        const match =
-          item.farmerId === farmerId ||
-          item.productId === farmerId ||
-          quote?.groups?.some((g) => g.farmerId === farmerId && g.items?.some((i) => i.productId === item.productId));
-        return match ? { ...item, farmerId: farmerId || item.farmerId, slotStart } : item;
-      })
+      prev.map((item) =>
+        item.farmerId === farmerId || item.productId === farmerId
+          ? { ...item, slotStart }
+          : item
+      )
     );
-  }, [quote]);
+  }, []);
 
   const remove = useCallback((productId) => {
     setItems((prev) => prev.filter((item) => item.productId !== productId));
@@ -254,13 +252,10 @@ export function CartProvider({ children }) {
 
   // Execute checkout
   const performCheckout = useCallback(
-    async (notes = '', keyOverride = null) => {
-      const activeKey = keyOverride || idempotencyKey;
+    async (notes = '') => {
       const groupsMap = new Map();
       for (const item of items) {
-        const fId =
-          item.farmerId ||
-          quote?.groups?.find((g) => g.items?.some((i) => i.productId === item.productId))?.farmerId;
+        const fId = item.farmerId;
         if (!fId) continue;
         if (!groupsMap.has(fId)) {
           // Fall back to quote selected slot or first open slot if not on item
@@ -283,7 +278,7 @@ export function CartProvider({ children }) {
       }
 
       const groups = Array.from(groupsMap.values());
-      const res = await apiCheckout({ groups }, activeKey);
+      const res = await apiCheckout({ groups }, idempotencyKey);
 
       // Invalidate relevant queries
       invalidateQueries('/orders');

@@ -100,11 +100,3 @@ export async function markAllNotificationsRead() {
   });
   return res.data;
 }
-
-export async function signOutAllDevices() {
-  const res = await apiFetch('/users/me/sessions', {
-    method: 'DELETE',
-  });
-  return res.data;
-}
-

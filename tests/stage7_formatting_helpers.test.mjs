@@ -1,1 +1,166 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {  formatPrice,  formatCurrency,  parseDollarsToCents,  formatCentsToDollarsInput,  formatDate,  formatDateShort,  formatTime,  formatCountdown,  formatRelativeTime,  formatMarketSchedule,  formatMinutesToTime,  generateTimeOptions,} from '../src/utils/format.js';import * as constants from '../src/constants.js';import * as farmerApi from '../src/api/farmer.js';import * as adminApi from '../src/api/admin.js';test('parseDollarsToCents correctly parses valid dollar strings with pure integer math', () => {  assert.equal(parseDollarsToCents('4.50'), 450);  assert.equal(parseDollarsToCents('4.5'), 450);  assert.equal(parseDollarsToCents('4'), 400);  assert.equal(parseDollarsToCents('0.05'), 5);  assert.equal(parseDollarsToCents('$14.99'), 1499);  assert.equal(parseDollarsToCents('100.00'), 10000);  assert.equal(parseDollarsToCents('9999.99'), 999999);});test('parseDollarsToCents rejects invalid strings', () => {  assert.equal(parseDollarsToCents(''), null);  assert.equal(parseDollarsToCents('abc'), null);  assert.equal(parseDollarsToCents('1.234'), null);  assert.equal(parseDollarsToCents('-5.00'), null);  assert.equal(parseDollarsToCents('10000.00'), null); });test('formatCentsToDollarsInput converts integer cents to decimal string', () => {  assert.equal(formatCentsToDollarsInput(450), '4.50');  assert.equal(formatCentsToDollarsInput(5), '0.05');  assert.equal(formatCentsToDollarsInput(1000), '10.00');  assert.equal(formatCentsToDollarsInput(0), '0.00');});test('formatPrice and formatCurrency correctly format USD amounts', () => {  assert.equal(formatPrice(450), '$4.50');  assert.equal(formatCurrency(450), '$4.50');  assert.equal(formatPrice(0), '$0.00');  assert.equal(formatPrice(10000), '$100.00');});test('Date and time formatting works as expected', () => {  const d = '2026-09-26T14:30:00.000Z';  assert.ok(formatDate(d).includes('2026'));  assert.ok(formatDateShort(d).includes('Sep'));  assert.ok(typeof formatTime(d) === 'string');});test('formatMinutesToTime maps minutes to 12-hour format', () => {  assert.equal(formatMinutesToTime(300), '5:00 am');  assert.equal(formatMinutesToTime(480), '8:00 am');  assert.equal(formatMinutesToTime(720), '12:00 pm');  assert.equal(formatMinutesToTime(780), '1:00 pm');  assert.equal(formatMinutesToTime(1020), '5:00 pm');  assert.equal(formatMinutesToTime(1380), '11:00 pm');});test('formatMarketSchedule formats arrays and objects', () => {  const schedArray = [    { day: 'sat', openMin: 480, closeMin: 780 },    { day: 'sun', openMin: 540, closeMin: 840 },  ];  const formatted = formatMarketSchedule({ schedule: schedArray });  assert.ok(formatted.includes('Sat'));  assert.ok(formatted.includes('8 am – 1 pm'));  assert.ok(formatted.includes('Sun'));});test('Farmer API module exports all required endpoints', () => {  const requiredFns = [    'getFarmerProfile',    'updateFarmerProfile',    'getFarmerProducts',    'createFarmerProduct',    'updateFarmerProduct',    'deleteFarmerProduct',    'updateProductStock',    'getWeeklyTemplate',    'saveWeeklyTemplate',    'applyWeeklyTemplate',    'getFarmerOrders',    'getFarmerOrderById',    'acceptFarmerOrder',    'declineFarmerOrder',    'readyFarmerOrder',    'completeFarmerOrder',    'cancelFarmerOrder',    'getFarmerReviews',    'replyToReview',    'reportReview',    'getFarmerInsights',    'uploadProductPhoto',  ];  for (const fn of requiredFns) {    assert.equal(typeof farmerApi[fn], 'function', `Missing farmer API method: ${fn}`);  }});test('Admin API module exports all required endpoints', () => {  const requiredFns = [    'getAdminOverview',    'getAdminFarmers',    'approveFarmer',    'rejectFarmer',    'suspendFarmer',    'reinstateFarmer',    'getAdminCustomers',    'deactivateCustomer',    'activateCustomer',    'getAdminMarkets',    'createMarket',    'updateMarket',    'deleteMarket',    'getModerationFlags',    'resolveModerationFlag',    'removeProductByAdmin',    'removeReviewByAdmin',    'getAdminReportsSummary',    'getReportsHistory',    'exportAdminReport',    'getAdminCategories',    'createAdminCategory',    'updateAdminCategory',    'deleteAdminCategory',    'reorderAdminCategories',    'getAdminAnnouncements',    'createAdminAnnouncement',    'updateAdminAnnouncement',    'publishAdminAnnouncement',    'deleteAdminAnnouncement',    'getAdminMessages',    'handleAdminMessage',    'getPlatformSettings',    'updatePlatformSettings',  ];  for (const fn of requiredFns) {    assert.equal(typeof adminApi[fn], 'function', `Missing admin API method: ${fn}`);  }});test('Domain constants are complete and aligned with backend', () => {  assert.deepEqual(constants.OPERATING_DAYS, ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);  assert.ok(constants.ALLOWED_ART_KEYS.includes('beet'));  assert.ok(constants.ALLOWED_ART_KEYS.includes('sourdough-boule'));  assert.ok(constants.MARKET_FACILITIES.includes('parking'));  assert.ok(constants.SETTINGS_KEYS.includes('maxItemsPerOrder'));});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+
+// Formatting & Integer Math helpers
+import {
+  formatPrice,
+  formatCurrency,
+  parseDollarsToCents,
+  formatCentsToDollarsInput,
+  formatDate,
+  formatDateShort,
+  formatTime,
+  formatCountdown,
+  formatRelativeTime,
+  formatMarketSchedule,
+  formatMinutesToTime,
+  generateTimeOptions,
+} from '../src/utils/format.js';
+
+// Constants
+import * as constants from '../src/constants.js';
+
+// Farmer API
+import * as farmerApi from '../src/api/farmer.js';
+
+// Admin API
+import * as adminApi from '../src/api/admin.js';
+
+test('parseDollarsToCents correctly parses valid dollar strings with pure integer math', () => {
+  assert.equal(parseDollarsToCents('4.50'), 450);
+  assert.equal(parseDollarsToCents('4.5'), 450);
+  assert.equal(parseDollarsToCents('4'), 400);
+  assert.equal(parseDollarsToCents('0.05'), 5);
+  assert.equal(parseDollarsToCents('$14.99'), 1499);
+  assert.equal(parseDollarsToCents('100.00'), 10000);
+  assert.equal(parseDollarsToCents('9999.99'), 999999);
+});
+
+test('parseDollarsToCents rejects invalid strings', () => {
+  assert.equal(parseDollarsToCents(''), null);
+  assert.equal(parseDollarsToCents('abc'), null);
+  assert.equal(parseDollarsToCents('1.234'), null);
+  assert.equal(parseDollarsToCents('-5.00'), null);
+  assert.equal(parseDollarsToCents('10000.00'), null); // > 4 integer digits
+});
+
+test('formatCentsToDollarsInput converts integer cents to decimal string', () => {
+  assert.equal(formatCentsToDollarsInput(450), '4.50');
+  assert.equal(formatCentsToDollarsInput(5), '0.05');
+  assert.equal(formatCentsToDollarsInput(1000), '10.00');
+  assert.equal(formatCentsToDollarsInput(0), '0.00');
+});
+
+test('formatPrice and formatCurrency correctly format USD amounts', () => {
+  assert.equal(formatPrice(450), '$4.50');
+  assert.equal(formatCurrency(450), '$4.50');
+  assert.equal(formatPrice(0), '$0.00');
+  assert.equal(formatPrice(10000), '$100.00');
+});
+
+test('Date and time formatting works as expected', () => {
+  const d = '2026-09-26T14:30:00.000Z';
+  assert.ok(formatDate(d).includes('2026'));
+  assert.ok(formatDateShort(d).includes('Sep'));
+  assert.ok(typeof formatTime(d) === 'string');
+});
+
+test('formatMinutesToTime maps minutes to 12-hour format', () => {
+  assert.equal(formatMinutesToTime(300), '5:00 am');
+  assert.equal(formatMinutesToTime(480), '8:00 am');
+  assert.equal(formatMinutesToTime(720), '12:00 pm');
+  assert.equal(formatMinutesToTime(780), '1:00 pm');
+  assert.equal(formatMinutesToTime(1020), '5:00 pm');
+  assert.equal(formatMinutesToTime(1380), '11:00 pm');
+});
+
+test('formatMarketSchedule formats arrays and objects', () => {
+  const schedArray = [
+    { day: 'sat', openMin: 480, closeMin: 780 },
+    { day: 'sun', openMin: 540, closeMin: 840 },
+  ];
+  const formatted = formatMarketSchedule({ schedule: schedArray });
+  assert.ok(formatted.includes('Sat'));
+  assert.ok(formatted.includes('8 am – 1 pm'));
+  assert.ok(formatted.includes('Sun'));
+});
+
+test('Farmer API module exports all required endpoints', () => {
+  const requiredFns = [
+    'getFarmerProfile',
+    'updateFarmerProfile',
+    'getFarmerProducts',
+    'createFarmerProduct',
+    'updateFarmerProduct',
+    'deleteFarmerProduct',
+    'updateProductStock',
+    'getWeeklyTemplate',
+    'saveWeeklyTemplate',
+    'applyWeeklyTemplate',
+    'getFarmerOrders',
+    'getFarmerOrderById',
+    'acceptFarmerOrder',
+    'declineFarmerOrder',
+    'readyFarmerOrder',
+    'completeFarmerOrder',
+    'cancelFarmerOrder',
+    'getFarmerReviews',
+    'replyToReview',
+    'reportReview',
+    'getFarmerInsights',
+    'uploadProductPhoto',
+  ];
+  for (const fn of requiredFns) {
+    assert.equal(typeof farmerApi[fn], 'function', `Missing farmer API method: ${fn}`);
+  }
+});
+
+test('Admin API module exports all required endpoints', () => {
+  const requiredFns = [
+    'getAdminOverview',
+    'getAdminFarmers',
+    'approveFarmer',
+    'rejectFarmer',
+    'suspendFarmer',
+    'reinstateFarmer',
+    'getAdminCustomers',
+    'deactivateCustomer',
+    'activateCustomer',
+    'getAdminMarkets',
+    'createMarket',
+    'updateMarket',
+    'deleteMarket',
+    'getModerationFlags',
+    'resolveModerationFlag',
+    'removeProductByAdmin',
+    'removeReviewByAdmin',
+    'getAdminReportsSummary',
+    'getReportsHistory',
+    'exportAdminReport',
+    'getAdminCategories',
+    'createAdminCategory',
+    'updateAdminCategory',
+    'deleteAdminCategory',
+    'reorderAdminCategories',
+    'getAdminAnnouncements',
+    'createAdminAnnouncement',
+    'updateAdminAnnouncement',
+    'publishAdminAnnouncement',
+    'deleteAdminAnnouncement',
+    'getAdminMessages',
+    'handleAdminMessage',
+    'getPlatformSettings',
+    'updatePlatformSettings',
+  ];
+  for (const fn of requiredFns) {
+    assert.equal(typeof adminApi[fn], 'function', `Missing admin API method: ${fn}`);
+  }
+});
+
+test('Domain constants are complete and aligned with backend', () => {
+  assert.deepEqual(constants.OPERATING_DAYS, ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
+  assert.ok(constants.ALLOWED_ART_KEYS.includes('beet'));
+  assert.ok(constants.ALLOWED_ART_KEYS.includes('sourdough-boule'));
+  assert.ok(constants.MARKET_FACILITIES.includes('parking'));
+  assert.ok(constants.SETTINGS_KEYS.includes('maxItemsPerOrder'));
+});
