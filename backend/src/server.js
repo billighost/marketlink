@@ -49,17 +49,6 @@ async function bootstrap() {
       console.log(`[SERVER] Health check ready at http://localhost:${env.PORT}/api/health`);
     });
 
-    // 4. Ensure collections and indexes in background
-    (async () => {
-      try {
-        console.log(`[DB] Verifying collections and indexes in background...`);
-        await createCollections(db);
-        await ensureIndexes(db);
-        console.log(`[DB] Collections and indexes verified.`);
-      } catch (err) {
-        console.warn(`[DB] Collections/indexes verification notice:`, err.message);
-      }
-    })();
 
     // 5. Non-blocking media cleanup job
     runMediaCleanup(db).catch((err) => {

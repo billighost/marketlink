@@ -24,8 +24,18 @@
   pointer-events: none;
 }
 
+.button:focus {
+  outline: none;
+}
+
+.button:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .button:active:not(:disabled) {
   transform: scale(0.98);
+  outline: none !important;
 }
 
 .button:focus-visible {
