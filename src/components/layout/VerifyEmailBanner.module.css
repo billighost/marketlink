@@ -1,0 +1,110 @@
+.banner {
+  background-color: var(--color-corn-light, #fdf6e7);
+  border-bottom: 1px solid var(--color-corn-border, #f4e3b5);
+  color: var(--color-ink, #2e2b26);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  position: relative;
+  z-index: var(--z-sticky, 20);
+}
+
+.inner {
+  max-width: var(--container-max, 1200px);
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.messageGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.icon {
+  color: var(--color-terracotta, #c25e40);
+  flex-shrink: 0;
+}
+
+.text {
+  color: var(--color-ink);
+}
+
+.actionsGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium, 500);
+  color: var(--color-beet, #7a2e3b);
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.resendBtn:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.resendBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.successFeedback {
+  font-size: var(--text-xs);
+  color: var(--color-sage, #356b46);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--weight-medium, 500);
+}
+
+.errorFeedback {
+  font-size: var(--text-xs);
+  color: var(--color-terracotta, #c25e40);
+  font-weight: var(--weight-medium, 500);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--color-ink-soft, #6b665f);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.closeBtn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-ink);
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

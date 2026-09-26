@@ -1,1 +1,235 @@
-.container {  display: flex;  flex-direction: column;  gap: var(--space-6);  padding-bottom: var(--space-12);}.header {  display: flex;  align-items: center;  justify-content: space-between;  gap: var(--space-4);  flex-wrap: wrap;}.title {  font-family: var(--font-display);  font-size: 1.75rem;  font-weight: 600;  color: var(--color-ink);  margin: 0;}.tabs {  display: flex;  gap: var(--space-2);  border-bottom: 1px solid var(--color-border);  padding-bottom: var(--space-2);}.tab {  background: transparent;  border: none;  font-size: 0.875rem;  font-weight: 500;  color: var(--color-ink-muted);  padding: var(--space-2) var(--space-3);  cursor: pointer;  border-radius: var(--radius-sm);  position: relative;}.tabActive {  color: var(--color-beet);  font-weight: 600;}.tabActive::after {  content: '';  position: absolute;  bottom: -9px;  left: 0;  right: 0;  height: 2px;  background: var(--color-beet);}.flagsList {  display: flex;  flex-direction: column;  gap: var(--space-4);}.flagCard {  background: var(--color-surface);  border: 1px solid var(--color-border);  border-radius: var(--radius-lg);  padding: var(--space-5);  display: flex;  flex-direction: column;  gap: var(--space-4);}.flagHeader {  display: flex;  justify-content: space-between;  align-items: flex-start;  flex-wrap: wrap;  gap: var(--space-2);}.flagMeta {  display: flex;  align-items: center;  gap: var(--space-2);}.typeBadge {  font-size: 0.75rem;  font-weight: 600;  text-transform: uppercase;  letter-spacing: 0.05em;  padding: 0.125rem 0.5rem;  border-radius: var(--radius-pill);  background: var(--color-surface-sunken);  color: var(--color-ink-soft);}.flagDate {  font-size: 0.8125rem;  color: var(--color-ink-muted);}.flagReason {  font-size: 0.875rem;  color: var(--color-ink);  background: rgba(184, 50, 48, 0.05);  border-left: 3px solid var(--color-danger);  padding: var(--space-2) var(--space-3);  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;}.previewBlock {  border: 1px solid var(--color-border);  border-radius: var(--radius-md);  padding: var(--space-4);  background: var(--color-surface-sunken);}.previewTitle {  font-size: 0.75rem;  text-transform: uppercase;  letter-spacing: 0.05em;  font-weight: 600;  color: var(--color-ink-muted);  margin-bottom: var(--space-2);}.listingPreview {  display: flex;  gap: var(--space-4);  align-items: center;}.previewImg {  width: 60px;  height: 60px;  border-radius: var(--radius-md);  object-fit: cover;  background: var(--color-surface);}.reviewStars {  color: #f59e0b;  font-size: 1rem;  margin-bottom: var(--space-1);}.reviewComment {  font-style: italic;  font-size: 0.875rem;  color: var(--color-ink);  margin-bottom: var(--space-1);}.reviewAuthor {  font-size: 0.75rem;  color: var(--color-ink-muted);}.cardActions {  display: flex;  justify-content: flex-end;  gap: var(--space-3);  border-top: 1px solid var(--color-border);  padding-top: var(--space-3);}.removeBtn {  background: var(--color-danger);  color: #fff;  border: none;  border-radius: var(--radius-pill);  padding: 0.5rem 1rem;  font-size: 0.8125rem;  font-weight: 600;  cursor: pointer;  min-height: 38px;}.removeBtn:hover {  opacity: 0.9;}.dismissBtn {  background: transparent;  color: var(--color-ink);  border: 1px solid var(--color-border);  border-radius: var(--radius-pill);  padding: 0.5rem 1rem;  font-size: 0.8125rem;  font-weight: 600;  cursor: pointer;  min-height: 38px;}.dismissBtn:hover {  background: var(--color-surface-hover);}.statusTag {  font-size: 0.75rem;  padding: 0.125rem 0.5rem;  border-radius: var(--radius-pill);  background: var(--color-surface-sunken);  color: var(--color-ink-muted);  text-transform: capitalize;}
+<<<<<<< HEAD
+.container {  display: flex;  flex-direction: column;  gap: var(--space-6);  padding-bottom: var(--space-12);}.header {  display: flex;  align-items: center;  justify-content: space-between;  gap: var(--space-4);  flex-wrap: wrap;}.title {  font-family: var(--font-display);  font-size: 1.75rem;  font-weight: 600;  color: var(--color-ink);  margin: 0;}.tabs {  display: flex;  gap: var(--space-2);  border-bottom: 1px solid var(--color-border);  padding-bottom: var(--space-2);}.tab {  background: transparent;  border: none;  font-size: 0.875rem;  font-weight: 500;  color: var(--color-ink-muted);  padding: var(--space-2) var(--space-3);  cursor: pointer;  border-radius: var(--radius-sm);  position: relative;}.tabActive {  color: var(--color-beet);  font-weight: 600;}.tabActive::after {  content: '';  position: absolute;  bottom: -9px;  left: 0;  right: 0;  height: 2px;  background: var(--color-beet);}.flagsList {  display: flex;  flex-direction: column;  gap: var(--space-4);}.flagCard {  background: var(--color-surface);  border: 1px solid var(--color-border);  border-radius: var(--radius-lg);  padding: var(--space-5);  display: flex;  flex-direction: column;  gap: var(--space-4);}.flagHeader {  display: flex;  justify-content: space-between;  align-items: flex-start;  flex-wrap: wrap;  gap: var(--space-2);}.flagMeta {  display: flex;  align-items: center;  gap: var(--space-2);}.typeBadge {  font-size: 0.75rem;  font-weight: 600;  text-transform: uppercase;  letter-spacing: 0.05em;  padding: 0.125rem 0.5rem;  border-radius: var(--radius-pill);  background: var(--color-surface-sunken);  color: var(--color-ink-soft);}.flagDate {  font-size: 0.8125rem;  color: var(--color-ink-muted);}.flagReason {  font-size: 0.875rem;  color: var(--color-ink);  background: rgba(184, 50, 48, 0.05);  border-left: 3px solid var(--color-danger);  padding: var(--space-2) var(--space-3);  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;}.previewBlock {  border: 1px solid var(--color-border);  border-radius: var(--radius-md);  padding: var(--space-4);  background: var(--color-surface-sunken);}.previewTitle {  font-size: 0.75rem;  text-transform: uppercase;  letter-spacing: 0.05em;  font-weight: 600;  color: var(--color-ink-muted);  margin-bottom: var(--space-2);}.listingPreview {  display: flex;  gap: var(--space-4);  align-items: center;}.previewImg {  width: 60px;  height: 60px;  border-radius: var(--radius-md);  object-fit: cover;  background: var(--color-surface);}.reviewStars {  color: #f59e0b;  font-size: 1rem;  margin-bottom: var(--space-1);}.reviewComment {  font-style: italic;  font-size: 0.875rem;  color: var(--color-ink);  margin-bottom: var(--space-1);}.reviewAuthor {  font-size: 0.75rem;  color: var(--color-ink-muted);}.cardActions {  display: flex;  justify-content: flex-end;  gap: var(--space-3);  border-top: 1px solid var(--color-border);  padding-top: var(--space-3);}.removeBtn {  background: var(--color-danger);  color: #fff;  border: none;  border-radius: var(--radius-pill);  padding: 0.5rem 1rem;  font-size: 0.8125rem;  font-weight: 600;  cursor: pointer;  min-height: 38px;}.removeBtn:hover {  opacity: 0.9;}.dismissBtn {  background: transparent;  color: var(--color-ink);  border: 1px solid var(--color-border);  border-radius: var(--radius-pill);  padding: 0.5rem 1rem;  font-size: 0.8125rem;  font-weight: 600;  cursor: pointer;  min-height: 38px;}.dismissBtn:hover {  background: var(--color-surface-hover);}.statusTag {  font-size: 0.75rem;  padding: 0.125rem 0.5rem;  border-radius: var(--radius-pill);  background: var(--color-surface-sunken);  color: var(--color-ink-muted);  text-transform: capitalize;}
+=======
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-bottom: var(--space-12);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  position: relative;
+}
+
+.tabActive {
+  color: var(--color-beet);
+  font-weight: 600;
+}
+
+.tabActive::after {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-beet);
+}
+
+.flagsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.flagCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.flagHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.flagMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.typeBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-ink-soft);
+}
+
+.flagDate {
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+}
+
+.flagReason {
+  font-size: 0.875rem;
+  color: var(--color-ink);
+  background: rgba(184, 50, 48, 0.05);
+  border-left: 3px solid var(--color-danger);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.previewBlock {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--color-surface-sunken);
+}
+
+.previewTitle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  margin-bottom: var(--space-2);
+}
+
+.listingPreview {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.previewImg {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  background: var(--color-surface);
+}
+
+.reviewStars {
+  color: #f59e0b;
+  font-size: 1rem;
+  margin-bottom: var(--space-1);
+}
+
+.reviewComment {
+  font-style: italic;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+  margin-bottom: var(--space-1);
+}
+
+.reviewAuthor {
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+
+.cardActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .flagCard {
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+  .cardActions {
+    flex-direction: column-reverse;
+  }
+  .removeBtn,
+  .dismissBtn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.removeBtn {
+  background: var(--color-danger);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 38px;
+}
+
+.removeBtn:hover {
+  opacity: 0.9;
+}
+
+.dismissBtn {
+  background: transparent;
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 38px;
+}
+
+.dismissBtn:hover {
+  background: var(--color-surface-hover);
+}
+
+.statusTag {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-ink-muted);
+  text-transform: capitalize;
+}
+>>>>>>> bc73418815cde522512fe21a2af884eee3163165

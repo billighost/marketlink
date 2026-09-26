@@ -1,1 +1,362 @@
-.page {  display: flex;  flex-direction: column;  gap: 24px;  max-width: 1200px;}.pageHeader {  display: flex;  justify-content: space-between;  align-items: flex-start;}.title {  font-family: 'Idiqlat', serif;  font-size: 1.5rem;  font-weight: 400;  color: #111;  margin: 0 0 4px 0;}.subtitle {  font-size: 0.85rem;  color: #6b7280;  margin: 0;}.card {  background-color: #fff;  border: 1px solid #e5e7eb;  border-radius: 10px;  overflow: hidden;}.toolbar {  display: flex;  justify-content: space-between;  align-items: center;  padding: 16px 24px;  border-bottom: 1px solid #e5e7eb;  gap: 16px;  flex-wrap: wrap;}.tabs {  display: flex;  gap: 4px;}.tabBtn {  padding: 6px 14px;  border-radius: 999px;  border: 1px solid #e5e7eb;  background: #fff;  color: #6b7280;  font-size: 0.8rem;  font-weight: 500;  cursor: pointer;  transition: all 0.15s;}.tabBtn:hover {  background-color: #f3f4f6;  color: #111;}.tabActive {  background-color: var(--color-herb, #5C7048);  color: #fff;  border-color: var(--color-herb, #5C7048);}.tabActive:hover {  background-color: var(--color-herb, #5C7048);  color: #fff;}.searchRow {  display: flex;  gap: 8px;  align-items: center;}.searchBox {  position: relative;  display: flex;  align-items: center;}.searchIcon {  position: absolute;  left: 10px;  color: #9ca3af;}.searchInput {  padding: 8px 12px 8px 32px;  border: 1px solid #e5e7eb;  border-radius: 8px;  font-size: 0.85rem;  width: 220px;  outline: none;  font-family: inherit;  transition: border-color 0.2s;}.searchInput:focus {  border-color: var(--color-herb, #5C7048);}.filterBtn {  display: flex;  align-items: center;  gap: 6px;  padding: 8px 14px;  background: #fff;  border: 1px solid #e5e7eb;  border-radius: 8px;  color: #374151;  font-size: 0.85rem;  font-weight: 500;  cursor: pointer;  transition: background-color 0.15s;}.filterBtn:hover {  background-color: #f3f4f6;}.tableWrap {  overflow-x: auto;}.table {  width: 100%;  border-collapse: collapse;}.table thead tr {  border-bottom: 1px solid #e5e7eb;}.table thead th {  padding: 16px 24px;  text-align: left;  font-size: 0.7rem;  font-weight: 600;  text-transform: uppercase;  letter-spacing: 0.04em;  color: #6b7280;  white-space: nowrap;  background-color: #fafafa;}.table tbody tr {  border-bottom: 1px solid #f3f4f6;  transition: background-color 0.15s;}.table tbody tr:last-child {  border-bottom: none;}.table tbody tr:hover {  background-color: var(--color-canvas-soft, #FAF7F0);}.table tbody td {  padding: 16px 24px;  font-size: 0.85rem;  vertical-align: middle;  color: #374151;  white-space: nowrap;}.tdMono {  font-family: 'SF Mono', 'Cascadia Code', monospace;  font-size: 0.8rem;  color: #6b7280;}.tdBold {  font-weight: 600;  color: #111;}.tdMuted {  color: #9ca3af;  font-size: 0.8rem;}.emptyRow {  text-align: center;  padding: 32px 24px !important;  color: #9ca3af;  font-style: italic;}.roleBadge {  display: inline-flex;  padding: 3px 10px;  border-radius: 999px;  font-size: 0.7rem;  font-weight: 600;}.roleFarmer {  background-color: rgba(92, 112, 72, 0.1);  color: var(--color-herb, #5C7048);}.roleCustomer {  background-color: #f3f4f6;  color: #6b7280;}.statusPill {  display: inline-flex;  padding: 3px 10px;  border-radius: 999px;  font-size: 0.7rem;  font-weight: 600;}.statusSuccess {  background-color: rgba(92, 112, 72, 0.12);  color: var(--color-herb, #5C7048);}.statusWarning {  background-color: rgba(224, 122, 44, 0.12);  color: var(--color-carrot-text, #9C4E14);}.statusDanger {  background-color: rgba(179, 38, 30, 0.1);  color: var(--color-danger, #B3261E);}.statusNeutral {  background-color: #f3f4f6;  color: #6b7280;}.iconBtn {  background: transparent;  border: none;  color: #9ca3af;  cursor: pointer;  padding: 4px;  border-radius: 4px;  display: flex;  align-items: center;  justify-content: center;  transition: color 0.15s;}.iconBtn:hover {  color: #111;}.itemActions {  display: flex;  gap: 4px;}.iconBtnSuccess:hover {  color: var(--color-herb, #5C7048);}.iconBtnWarning:hover {  color: var(--color-carrot-text, #9C4E14);}.iconBtnDanger:hover {  color: var(--color-danger, #B3261E);}@media (max-width: 768px) {  .toolbar {    flex-direction: column;    align-items: stretch;    padding: 16px;  }  .tabs {    overflow-x: auto;  }  .searchRow {    width: 100%;  }  .searchInput {    width: 100%;    flex: 1;  }  .table thead th,  .table tbody td {    padding: 10px 16px;  }}@media (max-width: 480px) {  .page {    gap: 16px;  }  .title {    font-size: 1.25rem;  }  .searchRow {    flex-direction: column;  }  .filterBtn {    width: 100%;    justify-content: center;  }}
+<<<<<<< HEAD
+.page {  display: flex;  flex-direction: column;  gap: 24px;  max-width: 1200px;}.pageHeader {  display: flex;  justify-content: space-between;  align-items: flex-start;}.title {  font-family: 'Idiqlat', serif;  font-size: 1.5rem;  font-weight: 400;  color: #111;  margin: 0 0 4px 0;}.subtitle {  font-size: 0.85rem;  color: #6b7280;  margin: 0;}.card {  background-color: #fff;  border: 1px solid #e5e7eb;  border-radius: 10px;  overflow: hidden;}.toolbar {  display: flex;  justify-content: space-between;  align-items: center;  padding: 16px 24px;  border-bottom: 1px solid #e5e7eb;  gap: 16px;  flex-wrap: wrap;}.tabs {  display: flex;  gap: 4px;}.tabBtn {  padding: 6px 14px;  border-radius: 999px;  border: 1px solid #e5e7eb;  background: #fff;  color: #6b7280;  font-size: 0.8rem;  font-weight: 500;  cursor: pointer;  transition: all 0.15s;}.tabBtn:hover {  background-color: #f3f4f6;  color: #111;}.tabActive {  background-color: var(--color-herb, #5C7048);  color: #fff;  border-color: var(--color-herb, #5C7048);}.tabActive:hover {  background-color: var(--color-herb, #5C7048);  color: #fff;}.searchRow {  display: flex;  gap: 8px;  align-items: center;}.searchBox {  position: relative;  display: flex;  align-items: center;}.searchIcon {  position: absolute;  left: 10px;  color: #9ca3af;}.searchInput {  padding: 8px 12px 8px 32px;  border: 1px solid #e5e7eb;  border-radius: 8px;  font-size: 0.85rem;  width: 220px;  outline: none;  font-family: inherit;  transition: border-color 0.2s;}.searchInput:focus {  border-color: var(--color-herb, #5C7048);}.filterBtn {  display: flex;  align-items: center;  gap: 6px;  padding: 8px 14px;  background: #fff;  border: 1px solid #e5e7eb;  border-radius: 8px;  color: #374151;  font-size: 0.85rem;  font-weight: 500;  cursor: pointer;  transition: background-color 0.15s;}.filterBtn:hover {  background-color: #f3f4f6;}.tableWrap {  overflow-x: auto;}.table {  width: 100%;  border-collapse: collapse;}.table thead tr {  border-bottom: 1px solid #e5e7eb;}.table thead th {  padding: 16px 24px;  text-align: left;  font-size: 0.7rem;  font-weight: 600;  text-transform: uppercase;  letter-spacing: 0.04em;  color: #6b7280;  white-space: nowrap;  background-color: #fafafa;}.table tbody tr {  border-bottom: 1px solid #f3f4f6;  transition: background-color 0.15s;}.table tbody tr:last-child {  border-bottom: none;}.table tbody tr:hover {  background-color: var(--color-canvas-soft, #FAF7F0);}.table tbody td {  padding: 16px 24px;  font-size: 0.85rem;  vertical-align: middle;  color: #374151;  white-space: nowrap;}.tdMono {  font-family: 'SF Mono', 'Cascadia Code', monospace;  font-size: 0.8rem;  color: #6b7280;}.tdBold {  font-weight: 600;  color: #111;}.tdMuted {  color: #9ca3af;  font-size: 0.8rem;}.emptyRow {  text-align: center;  padding: 32px 24px !important;  color: #9ca3af;  font-style: italic;}.roleBadge {  display: inline-flex;  padding: 3px 10px;  border-radius: 999px;  font-size: 0.7rem;  font-weight: 600;}.roleFarmer {  background-color: rgba(92, 112, 72, 0.1);  color: var(--color-herb, #5C7048);}.roleCustomer {  background-color: #f3f4f6;  color: #6b7280;}.statusPill {  display: inline-flex;  padding: 3px 10px;  border-radius: 999px;  font-size: 0.7rem;  font-weight: 600;}.statusSuccess {  background-color: rgba(92, 112, 72, 0.12);  color: var(--color-herb, #5C7048);}.statusWarning {  background-color: rgba(224, 122, 44, 0.12);  color: var(--color-carrot-text, #9C4E14);}.statusDanger {  background-color: rgba(179, 38, 30, 0.1);  color: var(--color-danger, #B3261E);}.statusNeutral {  background-color: #f3f4f6;  color: #6b7280;}.iconBtn {  background: transparent;  border: none;  color: #9ca3af;  cursor: pointer;  padding: 4px;  border-radius: 4px;  display: flex;  align-items: center;  justify-content: center;  transition: color 0.15s;}.iconBtn:hover {  color: #111;}.itemActions {  display: flex;  gap: 4px;}.iconBtnSuccess:hover {  color: var(--color-herb, #5C7048);}.iconBtnWarning:hover {  color: var(--color-carrot-text, #9C4E14);}.iconBtnDanger:hover {  color: var(--color-danger, #B3261E);}@media (max-width: 768px) {  .toolbar {    flex-direction: column;    align-items: stretch;    padding: 16px;  }  .tabs {    overflow-x: auto;  }  .searchRow {    width: 100%;  }  .searchInput {    width: 100%;    flex: 1;  }  .table thead th,  .table tbody td {    padding: 10px 16px;  }}@media (max-width: 480px) {  .page {    gap: 16px;  }  .title {    font-size: 1.25rem;  }  .searchRow {    flex-direction: column;  }  .filterBtn {    width: 100%;    justify-content: center;  }}
+=======
+/* Admin People */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.title {
+  font-family: 'Idiqlat', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #111;
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Card */
+.card {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tabBtn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tabBtn:hover {
+  background-color: #f3f4f6;
+  color: #111;
+}
+
+.tabActive {
+  background-color: var(--color-herb, #5C7048);
+  color: #fff;
+  border-color: var(--color-herb, #5C7048);
+}
+
+.tabActive:hover {
+  background-color: var(--color-herb, #5C7048);
+  color: #fff;
+}
+
+.searchRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.searchBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  color: #9ca3af;
+}
+
+.searchInput {
+  padding: 8px 12px 8px 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  width: 220px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  border-color: var(--color-herb, #5C7048);
+}
+
+.filterBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.filterBtn:hover {
+  background-color: #f3f4f6;
+}
+
+/* Table */
+.tableWrap,
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 640px) {
+  .toolbar {
+    padding: 12px 14px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .searchRow {
+    width: 100%;
+  }
+
+  .searchBox {
+    flex: 1;
+  }
+
+  .searchInput {
+    width: 100%;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 12px 14px;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table thead th {
+  padding: 16px 24px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  white-space: nowrap;
+  background-color: #fafafa;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.15s;
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background-color: var(--color-canvas-soft, #FAF7F0);
+}
+
+.table tbody td {
+  padding: 16px 24px;
+  font-size: 0.85rem;
+  vertical-align: middle;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.tdMono {
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.tdBold {
+  font-weight: 600;
+  color: #111;
+}
+
+.tdMuted {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.emptyRow {
+  text-align: center;
+  padding: 32px 24px !important;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Badges */
+.roleBadge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.roleFarmer {
+  background-color: rgba(92, 112, 72, 0.1);
+  color: var(--color-herb, #5C7048);
+}
+
+.roleCustomer {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.statusPill {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.statusSuccess {
+  background-color: rgba(92, 112, 72, 0.12);
+  color: var(--color-herb, #5C7048);
+}
+
+.statusWarning {
+  background-color: rgba(224, 122, 44, 0.12);
+  color: var(--color-carrot-text, #9C4E14);
+}
+
+.statusDanger {
+  background-color: rgba(179, 38, 30, 0.1);
+  color: var(--color-danger, #B3261E);
+}
+
+.statusNeutral {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.iconBtn {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.iconBtn:hover {
+  color: #111;
+}
+
+.itemActions {
+  display: flex;
+  gap: 4px;
+}
+
+.iconBtnSuccess:hover {
+  color: var(--color-herb, #5C7048);
+}
+
+.iconBtnWarning:hover {
+  color: var(--color-carrot-text, #9C4E14);
+}
+
+.iconBtnDanger:hover {
+  color: var(--color-danger, #B3261E);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+  .tabs {
+    overflow-x: auto;
+  }
+  .searchRow {
+    width: 100%;
+  }
+  .searchInput {
+    width: 100%;
+    flex: 1;
+  }
+  .table thead th,
+  .table tbody td {
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    gap: 16px;
+  }
+  .title {
+    font-size: 1.25rem;
+  }
+  .searchRow {
+    flex-direction: column;
+  }
+  .filterBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+>>>>>>> bc73418815cde522512fe21a2af884eee3163165

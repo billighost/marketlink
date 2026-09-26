@@ -1,1 +1,96 @@
-import { apiFetch, setAccessToken, clearAccessToken, performTokenRefresh } from './client';export async function login({ email, password }) {  const res = await apiFetch('/auth/login', {    method: 'POST',    body: { email, password },  });  if (res?.data?.accessToken) {    setAccessToken(res.data.accessToken);  }  return res.data;}export async function logout() {  try {    await apiFetch('/auth/logout', { method: 'POST' });  } finally {    clearAccessToken();    try {      localStorage.setItem('marketlink_signed_out', Date.now().toString());    } catch {    }  }}export async function refresh() {  return performTokenRefresh();}export async function registerCustomer(payload) {  const res = await apiFetch('/auth/register/customer', {    method: 'POST',    body: payload,  });  if (res?.data?.accessToken) {    setAccessToken(res.data.accessToken);  }  return res.data;}export async function registerFarmer(payload) {  const res = await apiFetch('/auth/register/farmer', {    method: 'POST',    body: payload,  });  if (res?.data?.accessToken) {    setAccessToken(res.data.accessToken);  }  return res.data;}export async function getMe(signal) {  const res = await apiFetch('/auth/me', { signal });  return res.data;}export async function forgotPassword(email) {  const res = await apiFetch('/auth/forgot-password', {    method: 'POST',    body: { email },  });  return res.data;}export async function resetPassword({ token, newPassword, confirmPassword }) {  const res = await apiFetch('/auth/reset-password', {    method: 'POST',    body: { token, newPassword, confirmPassword },  });  return res.data;}
+<<<<<<< HEAD
+import { apiFetch, setAccessToken, clearAccessToken, performTokenRefresh } from './client';export async function login({ email, password }) {  const res = await apiFetch('/auth/login', {    method: 'POST',    body: { email, password },  });  if (res?.data?.accessToken) {    setAccessToken(res.data.accessToken);  }  return res.data;}export async function logout() {  try {    await apiFetch('/auth/logout', { method: 'POST' });  } finally {    clearAccessToken();    try {      localStorage.setItem('marketlink_signed_out', Date.now().toString());    } catch {    }  }}export async function refresh() {  return performTokenRefresh();}export async function registerCustomer(payload) {  const res = await apiFetch('/auth/register/customer', {    method: 'POST',    body: payload,  });  if (res?.data?.accessToken) {    setAccessToken(res.data.accessToken);  }  return res.data;}export async function registerFarmer(payload) {  const res = await apiFetch('/auth/register/farmer', {    method: 'POST',    body: payload,  });  if (res?.data?.accessToken) {    setAccessToken(res.data.accessToken);  }  return res.data;}export async function getMe(signal) {  const res = await apiFetch('/auth/me', { signal });  return res.data;}export async function forgotPassword(email) {  const res = await apiFetch('/auth/forgot-password', {    method: 'POST',    body: { email },  });  return res.data;}export async function resetPassword({ token, newPassword, confirmPassword }) {  const res = await apiFetch('/auth/reset-password', {    method: 'POST',    body: { token, newPassword, confirmPassword },  });  return res.data;}
+=======
+/**
+ * Authentication & session API endpoints
+ */
+import { apiFetch, setAccessToken, clearAccessToken, performTokenRefresh } from './client';
+
+export async function login({ email, password }) {
+  const res = await apiFetch('/auth/login', {
+    method: 'POST',
+    body: { email, password },
+  });
+  if (res?.data?.accessToken) {
+    setAccessToken(res.data.accessToken);
+  }
+  return res.data;
+}
+
+export async function logout() {
+  try {
+    await apiFetch('/auth/logout', { method: 'POST' });
+  } finally {
+    clearAccessToken();
+    try {
+      localStorage.setItem('marketlink_signed_out', Date.now().toString());
+    } catch {
+      // ignore
+    }
+  }
+}
+
+export async function refresh() {
+  return performTokenRefresh();
+}
+
+export async function registerCustomer(payload) {
+  const res = await apiFetch('/auth/register/customer', {
+    method: 'POST',
+    body: payload,
+  });
+  if (res?.data?.accessToken) {
+    setAccessToken(res.data.accessToken);
+  }
+  return res.data;
+}
+
+export async function registerFarmer(payload) {
+  const res = await apiFetch('/auth/register/farmer', {
+    method: 'POST',
+    body: payload,
+  });
+  if (res?.data?.accessToken) {
+    setAccessToken(res.data.accessToken);
+  }
+  return res.data;
+}
+
+export async function getMe(signal) {
+  const res = await apiFetch('/auth/me', { signal });
+  return res.data;
+}
+
+export async function forgotPassword(email) {
+  const res = await apiFetch('/auth/forgot-password', {
+    method: 'POST',
+    body: { email },
+  });
+  return res.data;
+}
+
+export async function resetPassword({ token, newPassword, confirmPassword }) {
+  const res = await apiFetch('/auth/reset-password', {
+    method: 'POST',
+    body: { token, newPassword, confirmPassword },
+  });
+  return res.data;
+}
+
+export async function verifyEmail(token) {
+  const res = await apiFetch('/auth/verify-email', {
+    method: 'POST',
+    body: { token },
+  });
+  return res.data;
+}
+
+export async function resendVerification(email) {
+  const res = await apiFetch('/auth/resend-verification', {
+    method: 'POST',
+    body: { email },
+  });
+  return res.data;
+}
+
+>>>>>>> bc73418815cde522512fe21a2af884eee3163165

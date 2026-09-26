@@ -1,1 +1,42 @@
-{  "name": "MarketLink",  "short_name": "MarketLink",  "description": "Pre-order fresh produce and goods from local farmers markets for Saturday pickup.",  "start_url": "/buyer",  "display": "standalone",  "background_color": "#FFFFFF",  "theme_color": "#FFFFFF",  "icons": [    {      "src": "/favicon.svg",      "sizes": "any",      "type": "image/svg+xml",      "purpose": "any maskable"    }  ]}
+<<<<<<< HEAD
+{  "name": "MarketLink",  "short_name": "MarketLink",  "description": "Pre-order fresh produce and goods from local farmers markets for Saturday pickup.",  "start_url": "/buyer",  "display": "standalone",  "background_color": "#FFFFFF",  "theme_color": "#FFFFFF",  "icons": [    {      "src": "/favicon.svg",      "sizes": "any",      "type": "image/svg+xml",      "purpose": "any maskable"    }  ]}
+=======
+{
+  "id": "/",
+  "name": "MarketLink",
+  "short_name": "MarketLink",
+  "description": "Pre-order fresh produce from local farmers markets and pick it up in person.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "/icons/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
+>>>>>>> bc73418815cde522512fe21a2af884eee3163165
