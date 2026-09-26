@@ -3,7 +3,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-5);
 }
 
 .backRow {
@@ -36,7 +36,7 @@
 .header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .title {
@@ -46,31 +46,32 @@
   color: var(--color-ink);
   line-height: var(--lh-h1);
   margin: 0;
+  letter-spacing: var(--tracking-head);
 }
 
 .address {
   font-family: var(--font-body);
   font-size: var(--text-sm);
   color: var(--color-ink-soft);
-  line-height: var(--lh-normal);
+  line-height: var(--lh-ui);
   margin: 0;
 }
 
 .clockWrap {
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
 }
 
 .openingDaysWrap {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .scheduleText {
   font-family: var(--font-body);
-  font-size: var(--text-body);
-  color: var(--color-ink);
-  line-height: var(--lh-normal);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-ui);
   margin: 0;
 }
 
@@ -80,7 +81,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: var(--tap-min);
+  height: var(--control-h-sm);
   padding: 0 var(--space-4);
   border-radius: var(--radius-md);
   font-family: var(--font-body);
@@ -108,32 +109,32 @@
 
 .savedActive {
   background-color: var(--color-white);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-hairline);
   color: var(--color-ink);
 }
 
 .savedActive:hover {
-  background-color: var(--color-canvas);
+  background-color: var(--color-canvas-soft);
   border-color: var(--color-ink-soft);
 }
 
-/* Stalls Grid: 2 / 3 / 4 columns */
+/* Stalls Grid: 2 / 3 columns */
 .stallsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .stallsGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
 }
 
 @media (min-width: 1024px) {
   .stallsGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-6);
+    gap: var(--space-4);
   }
 }

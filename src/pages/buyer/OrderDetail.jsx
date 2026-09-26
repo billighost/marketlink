@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getOrderDetail, cancelOrder, getReorderPreview } from '@/api/orders';
-import { formatDate } from '@/utils/format';
+
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import Page from '@/components/layout/Page';
@@ -116,15 +116,26 @@ export function OrderDetail() {
   // Cutoff checks
   const cutoffTime = order.cutoffAt ? new Date(order.cutoffAt).getTime() : null;
   const isBeforeCutoff = order.canCancel && (cutoffTime == null || cutoffTime > Date.now());
-  const cutoffFormatted = order.cutoffAt
-    ? formatDate(new Date(order.cutoffAt), { weekday: 'long', hour: '2-digit', minute: '2-digit' })
-    : 'Friday 18:00';
+  const cutoffFormatted = (() => {
+    if (!order.cutoffAt) return 'Friday 18:00';
+    try {
+      const d = new Date(order.cutoffAt);
+      return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return 'Friday 18:00';
+    }
+  })();
 
   // Format reserved date for header context
   const createdDate = order.createdAt ? new Date(order.createdAt) : null;
-  const reservedDateLabel = createdDate
-    ? formatDate(createdDate, { weekday: 'short', day: 'numeric', month: 'short' })
-    : 'recently';
+  const reservedDateLabel = (() => {
+    if (!createdDate) return 'recently';
+    try {
+      return createdDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+    } catch {
+      return 'recently';
+    }
+  })();
   const statusContext = `${statusLabel} · reserved ${reservedDateLabel}`;
 
   // Stall info
@@ -227,7 +238,7 @@ export function OrderDetail() {
       <div className={styles.layout}>
         {/* Left Column: Timeline, What you reserved, Review form */}
         <div className={styles.leftCol}>
-          {/* Collection Code shown here on mobile if below fold */}
+          {/* Collection Code — mobile only, shown above timeline */}
           <div className={styles.mobileCodeBlock}>
             <PickupCode code={order.pickupCode} size="lg" />
           </div>

@@ -247,15 +247,15 @@ export async function listFarmersAtMarket(marketId, { sort = 'rating', cursor, l
     };
   }
 
-  const [farmers, markets] = await Promise.all([
+  const [farmers] = await Promise.all([
     db
       .collection(COLLECTIONS.FARMERS)
       .find(filter)
       .sort(activeSort.mongoSort)
       .limit(limit + 1)
       .toArray(),
-    db.collection(COLLECTIONS.MARKETS).find({ status: 'active' }, { projection: { _id: 1, name: 1 } }).toArray(),
   ]);
+
 
   let nextCursor = null;
   if (farmers.length > limit) {
@@ -286,7 +286,18 @@ export async function listFarmersAtMarket(marketId, { sort = 'rating', cursor, l
     : [];
   const stockMap = new Map(stockCounts.map((s) => [s._id.toString(), s]));
 
-  const marketLookup = new Map(markets.map((m) => [m._id.toString(), m]));
+  // Collect only the market IDs that the returned farmers reference — avoids a full collection scan
+  const allMarketIds = [...new Set(farmers.flatMap((f) => (f.marketIds || []).map((id) => id.toString())))];
+  const marketDocs = allMarketIds.length > 0
+    ? await db
+        .collection(COLLECTIONS.MARKETS)
+        .find(
+          { _id: { $in: allMarketIds.map((id) => new ObjectId(id)) } },
+          { projection: { _id: 1, name: 1 } }
+        )
+        .toArray()
+    : [];
+  const marketLookup = new Map(marketDocs.map((m) => [m._id.toString(), m]));
   const data = farmers.map((f) => {
     const fMarkets = (f.marketIds || []).map((id) => marketLookup.get(id.toString())).filter(Boolean);
     const counts = stockMap.get(f._id.toString());
@@ -296,6 +307,7 @@ export async function listFarmersAtMarket(marketId, { sort = 'rating', cursor, l
       soldOutCount: counts?.out ?? 0,
     });
   });
+
 
   return {
     data,
