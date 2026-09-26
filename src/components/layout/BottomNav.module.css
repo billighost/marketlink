@@ -12,7 +12,7 @@
   backdrop-filter: blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
   border-top: 1px solid rgba(46, 43, 38, 0.08);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   box-shadow: 0 -4px 24px rgba(46, 43, 38, 0.06);
 }
 
@@ -143,6 +143,17 @@
 
 .active .label {
   font-weight: 700;
+}
+
+@media (max-width: 360px) {
+  .label {
+    font-size: 0.6rem;
+    letter-spacing: -0.02em;
+  }
+  .iconWrap {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 /* Desktop: hide bottom nav */

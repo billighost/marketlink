@@ -6,6 +6,14 @@
   margin: 0 auto;
   gap: var(--space-4, 16px);
   padding: 24px var(--page-pad, 20px) 48px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px var(--page-pad, 16px) 36px;
+    gap: var(--space-3);
+  }
 }
 
 .header {
@@ -47,6 +55,18 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .productGrid {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 340px) {
+  .productGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (min-width: 768px) {

@@ -194,6 +194,7 @@ export function Markets() {
             label: m.name,
             subtitle: m.address,
             markerType: 'market',
+            highlight: highlightMarketIds.includes(m.id),
             _raw: m,
           }))
       : []),
@@ -207,6 +208,7 @@ export function Markets() {
             label: f.stallName,
             subtitle: f.specialty || '',
             markerType: 'farmer',
+            highlight: highlightFarmerIds.includes(f.id),
             _raw: f,
           }))
       : []),

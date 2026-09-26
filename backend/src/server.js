@@ -25,16 +25,7 @@ async function bootstrap() {
     const db = await connectDb();
     console.log(`[DB] Connected successfully.`);
 
-    // 2. Ensure collections with validators and indexes
-    console.log(`[DB] Verifying collections and indexes...`);
-    await createCollections(db);
-    await ensureIndexes(db);
-    console.log(`[DB] Collections and indexes verified.`);
-
-    // 2b. Verify Gmail SMTP credentials
-    await verifyMailerConnection();
-
-    // 3. Create Express application
+    // 2. Create Express application
     const app = createApp();
     server = http.createServer(app);
 

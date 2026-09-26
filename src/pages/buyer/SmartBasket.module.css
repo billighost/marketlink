@@ -98,13 +98,13 @@
 /* ---- Step 1: Intro + Form ---- */
 .intro {
   text-align: center;
-  padding: var(--space-6) var(--space-4) var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-3);
 }
 
 .introIllustration {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto var(--space-4);
+  width: 72px;
+  height: 72px;
+  margin: 0 auto var(--space-3);
 }
 
 .introArt {
@@ -127,6 +127,83 @@
   line-height: var(--lh-body);
 }
 
+/* Natural Language Prompt Area */
+.promptSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.promptTextarea {
+  width: 100%;
+  min-height: 84px;
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink);
+  background: var(--color-canvas-soft);
+  border: 1.5px solid var(--color-wood-line);
+  border-radius: var(--radius-md);
+  resize: vertical;
+  line-height: 1.5;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.promptTextarea:focus {
+  outline: none;
+  border-color: var(--color-beet);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px var(--color-beet-tint);
+}
+
+.promptPillsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.promptPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-wood-line);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.promptPill:hover {
+  background: var(--color-beet-tint);
+  border-color: var(--color-beet);
+  color: var(--color-beet);
+}
+
+.promptDivider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 var(--space-2);
+  color: var(--color-ink-faint);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.promptDivider::before,
+.promptDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-wood-line);
+}
+
 /* ---- Form ---- */
 .form {
   display: flex;
@@ -145,7 +222,6 @@
   font-weight: var(--weight-semibold);
   color: var(--color-ink);
   letter-spacing: 0.02em;
-  text-transform: uppercase;
 }
 
 .optional {
@@ -299,51 +375,66 @@
   margin-top: var(--space-2);
 }
 
-/* ---- Step 2: Generating skeleton ---- */
-.generating {
-  padding: var(--space-6) 0;
-  text-align: center;
-}
-
-.generatingSpinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--color-wood-line);
-  border-top-color: var(--color-beet);
-  border-radius: 50%;
-  margin: 0 auto var(--space-4);
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.generatingText {
-  color: var(--color-ink-soft);
-  font-size: var(--text-body);
-  margin: 0 0 var(--space-5);
-}
-
-.skeletonGroup {
+/* ---- Step 2: Results ---- */
+.results {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  padding-bottom: var(--space-6);
 }
 
-/* ---- Budget bar ---- */
-.budgetBar {
+/* Tabs toggle: Items vs Map */
+.viewToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   background: var(--color-canvas);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-wood-line);
+}
+
+.toggleTabBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--color-ink-soft);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toggleTabBtnActive {
+  background: var(--color-white);
+  color: var(--color-beet);
+  font-weight: var(--weight-semibold);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Budget Bar */
+.budgetBar {
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-wood-line);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .budgetBarHeader {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: var(--space-2);
 }
 
 .budgetLabel {
@@ -354,50 +445,71 @@
 
 .budgetRemaining {
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
 }
 
 .budgetTrack {
   height: 8px;
-  background: var(--color-wood-line);
-  border-radius: 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-canvas);
   overflow: hidden;
-  margin-bottom: var(--space-2);
 }
 
 .budgetFill {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s ease, background-color 0.3s;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease, background-color 0.3s ease;
 }
 
-.budgetStats {
+.budgetStatsRow {
   display: flex;
-  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
   font-size: var(--text-xs);
   color: var(--color-ink-soft);
-  align-items: center;
 }
 
-/* ---- Issues banner ---- */
+.budgetAdjustGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adjustBudgetBtn {
+  padding: 2px 7px;
+  background: var(--color-white);
+  border: 1px solid var(--color-wood-line);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  cursor: pointer;
+  font-weight: var(--weight-medium);
+  transition: background 0.1s;
+}
+
+.adjustBudgetBtn:hover {
+  background: var(--color-canvas);
+}
+
+/* Issues Banner */
 .issuesBanner {
   display: flex;
-  gap: var(--space-3);
   align-items: flex-start;
-  padding: var(--space-3);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   background: var(--color-carrot-bg);
+  border: 1px solid rgba(224, 122, 44, 0.3);
   border-radius: var(--radius-md);
   color: var(--color-carrot-text);
   font-size: var(--text-sm);
-  margin-bottom: var(--space-3);
 }
 
 .issueText {
   margin: var(--space-1) 0 0;
-  font-size: var(--text-xs);
+  line-height: 1.4;
 }
 
-/* ---- Items list ---- */
+/* Items List */
 .itemsList {
   list-style: none;
   padding: 0;
@@ -410,28 +522,39 @@
 .itemCard {
   display: flex;
   gap: var(--space-3);
-  padding: var(--space-3);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
-  transition: border-color 0.15s;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-white);
+  border: 1px solid var(--color-wood-line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(46, 43, 38, 0.03);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.itemCard:hover {
+  border-color: var(--color-beet);
+}
+
+.itemCardSelected {
+  border-color: var(--color-beet);
+  box-shadow: 0 0 0 2px var(--color-beet);
+  background: var(--color-beet-tint);
 }
 
 .itemCardIssue {
   border-color: var(--color-carrot);
-  background: var(--color-carrot-bg);
+  background: #FFF9F5;
 }
 
 .itemArt {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-sm);
-  background: var(--color-canvas);
-  overflow: hidden;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-canvas);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .itemImg {
@@ -441,13 +564,12 @@
 }
 
 .itemIllustration {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
 }
 
 .itemBody {
   flex: 1;
-  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -464,45 +586,42 @@
   font-size: var(--text-body);
   font-weight: var(--weight-semibold);
   color: var(--color-ink);
-  margin: 0;
-  line-height: 1.3;
+  margin: 0 0 2px;
+  cursor: pointer;
+}
+
+.itemName:hover {
+  color: var(--color-beet);
 }
 
 .itemFarmer {
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   color: var(--color-ink-soft);
-  margin: 2px 0 0;
+  margin: 0;
 }
 
 .itemMarket {
   font-size: var(--text-xs);
-  color: var(--color-ink-faint);
+  color: var(--color-herb);
+  font-weight: var(--weight-medium);
   margin: 2px 0 0;
 }
 
 .removeBtn {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: var(--color-canvas);
-  color: var(--color-ink-soft);
+  background: transparent;
+  border: none;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, background-color 0.15s;
 }
-.removeBtn:hover { background: var(--color-danger-bg); border-color: var(--color-danger); color: var(--color-danger); }
-
-.itemIssue {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--text-xs);
-  color: var(--color-carrot-text);
-  margin: 0;
+.removeBtn:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
 }
 
 .itemFooter {
@@ -511,6 +630,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-2);
+  margin-top: auto;
 }
 
 .itemPrice {
@@ -531,35 +651,59 @@
 
 .availBadge {
   font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
   padding: 2px 8px;
   border-radius: var(--radius-full);
+  font-weight: var(--weight-medium);
 }
-
 .availIn {
   background: var(--color-herb-bg);
   color: var(--color-herb);
 }
-
 .availLow {
   background: var(--color-carrot-bg);
   color: var(--color-carrot-text);
 }
 
-/* Stepper */
-.stepper {
+.itemControls {
   display: flex;
   align-items: center;
-  gap: 0;
-  border: 1.5px solid var(--color-border);
+  gap: var(--space-2);
+}
+
+.replaceBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-wood-line);
   border-radius: var(--radius-full);
-  overflow: hidden;
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  font-weight: var(--weight-medium);
+  transition: all 0.15s ease;
+}
+
+.replaceBtn:hover {
+  background: var(--color-beet-tint);
+  border-color: var(--color-beet);
+  color: var(--color-beet);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
   background: var(--color-bg);
+  height: 28px;
+  overflow: hidden;
 }
 
 .stepperBtn {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border: none;
   background: transparent;
   color: var(--color-ink);
@@ -567,27 +711,56 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  transition: background 0.12s;
 }
-.stepperBtn:hover:not(:disabled) { background: var(--color-canvas); }
-.stepperBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.stepperBtn:hover:not(:disabled) {
+  background: var(--color-canvas);
+}
+.stepperBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
 .stepperQty {
-  min-width: 28px;
+  min-width: 22px;
   text-align: center;
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   color: var(--color-ink);
 }
 
-/* ---- Total row ---- */
+/* Add product button */
+.addProductBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1.5px dashed var(--color-wood-line);
+  background: var(--color-canvas-soft);
+  border-radius: var(--radius-md);
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.addProductBtn:hover {
+  border-color: var(--color-beet);
+  color: var(--color-beet);
+  background: var(--color-beet-tint);
+}
+
+/* Total row */
 .totalRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: var(--space-4) 0;
-  border-top: 2px solid var(--color-border);
-  margin-top: var(--space-4);
+  align-items: baseline;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-canvas-soft);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-wood-line);
 }
 
 .totalLabel {
@@ -597,108 +770,246 @@
 }
 
 .totalAmount {
-  font-size: var(--text-h3);
   font-family: var(--font-head);
-  font-weight: var(--weight-head);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
   color: var(--color-beet);
 }
 
-/* ---- Action row ---- */
+/* Action row */
 .actionRow {
   display: flex;
   gap: var(--space-2);
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: var(--space-3);
-  padding-bottom: var(--space-6);
 }
 
 .secondaryAction {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: var(--space-2) var(--space-3);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-bg);
-  color: var(--color-ink-soft);
+  padding: var(--space-3) var(--space-3);
+  background: var(--color-white);
+  border: 1.5px solid var(--color-wood-line);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
+
 .secondaryAction:hover {
   border-color: var(--color-beet);
   color: var(--color-beet);
-  background: var(--color-beet-tint);
 }
 
 .reserveBtn {
   flex: 1;
-  min-width: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
 
-/* ---- Empty basket ---- */
-.emptyBasket {
-  padding: var(--space-8) 0;
-}
-
-/* ---- Error states ---- */
-.generateError,
-.quoteError {
+/* Map & Tree View */
+.mapViewSection {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: var(--space-3);
-  padding: var(--space-8) 0;
-  text-align: center;
 }
 
-.errorIcon,
-.quoteErrorIcon {
-  color: var(--color-danger);
+.mapTreeCard {
+  background: var(--color-white);
+  border: 1px solid var(--color-wood-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
 }
 
-.errorText {
+.mapTreeTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+  margin: 0 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.marketBranch {
+  margin-bottom: var(--space-3);
+  padding-left: var(--space-2);
+  border-left: 2px solid var(--color-wood-line);
+}
+
+.marketBranchTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-beet);
+  margin-bottom: var(--space-1);
+}
+
+.farmerBranch {
+  margin-left: var(--space-3);
+  margin-bottom: var(--space-2);
+  padding-left: var(--space-2);
+  border-left: 1.5px dashed var(--color-herb);
+}
+
+.farmerBranchTitle {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-herb);
+  margin-bottom: 3px;
+  cursor: pointer;
+}
+
+.itemBranchItem {
+  font-size: var(--text-xs);
   color: var(--color-ink-soft);
-  font-size: var(--text-body);
-  max-width: 300px;
-  line-height: var(--lh-body);
+  margin-left: var(--space-3);
+  padding: 2px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.itemBranchItem:hover {
+  color: var(--color-beet);
+  font-weight: var(--weight-medium);
+}
+
+/* Replacement Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(46, 43, 38, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modalSheet {
+  background: var(--color-white);
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 580px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.16);
+  animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modalTitle {
+  font-family: var(--font-head);
+  font-size: var(--text-h4);
+  color: var(--color-ink);
   margin: 0;
 }
 
-/* ---- Step 3: Checkout ---- */
-.checkoutLoading {
-  padding: var(--space-4) 0;
+.modalClose {
+  background: var(--color-canvas);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-ink-soft);
 }
 
+.modalBody {
+  padding: var(--space-4);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.replacementCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  border: 1px solid var(--color-wood-line);
+  border-radius: var(--radius-md);
+  background: var(--color-canvas-soft);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.replacementCard:hover {
+  border-color: var(--color-beet);
+  background: var(--color-beet-tint);
+}
+
+.replacementInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.replacementName {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+.replacementFarmer {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.replacementPrice {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-beet);
+}
+
+/* Step 3: Checkout */
 .checkout {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding-bottom: var(--space-8);
 }
 
 .checkoutTitle {
   font-family: var(--font-head);
   font-size: var(--text-h3);
-  font-weight: var(--weight-head);
   color: var(--color-ink);
   margin: 0;
 }
 
 .checkoutGroup {
-  border: 1.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
+  background: var(--color-white);
 }
 
 .checkoutGroupTitle {
@@ -770,13 +1081,66 @@
   gap: var(--space-2);
 }
 
-/* ---- Results section ---- */
-.results {
-  padding-bottom: var(--space-4);
+/* Generating loader */
+.generating {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-/* ---- Responsive ---- */
-@media (max-width: 480px) {
+.generatingSpinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-wood-line);
+  border-top-color: var(--color-beet);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.generatingText {
+  color: var(--color-ink-soft);
+  font-size: var(--text-body);
+}
+
+.skeletonGroup {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.generateError {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.errorIcon {
+  color: var(--color-danger);
+}
+
+.errorText {
+  color: var(--color-danger);
+  font-size: var(--text-body);
+}
+
+.emptyBasket {
+  padding: var(--space-8) var(--space-4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 540px) {
   .stepWrap {
     padding: var(--space-3);
   }
@@ -799,8 +1163,8 @@
     align-items: flex-start;
   }
 
-  .budgetBarHeader {
-    flex-direction: column;
-    gap: var(--space-1);
+  .itemControls {
+    width: 100%;
+    justify-content: space-between;
   }
 }

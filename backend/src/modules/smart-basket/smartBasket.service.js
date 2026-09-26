@@ -14,16 +14,59 @@ import { AppError } from '../../utils/errors.js';
  * Maps common user-facing terms to actual slug values stored in DB.
  */
 const CATEGORY_KEYWORD_MAP = {
-  vegetables:  ['vegetables', 'vegetable', 'veggies', 'greens', 'produce'],
-  fruits:      ['fruits', 'fruit'],
-  eggs:        ['eggs', 'egg', 'poultry'],
-  dairy:       ['dairy', 'milk', 'cheese', 'yogurt'],
-  bakery:      ['bakery', 'bread', 'loaf', 'baked'],
-  herbs:       ['herbs', 'herb', 'spices'],
-  meat:        ['meat', 'chicken', 'pork', 'beef', 'fish', 'seafood'],
-  honey:       ['honey', 'jam', 'preserves'],
-  flowers:     ['flowers', 'plants'],
+  vegetables:          ['vegetables', 'vegetable', 'veggies', 'greens', 'produce', 'produce', 'salad', 'carrot', 'tomato', 'kale', 'spinach', 'potato'],
+  fruit:               ['fruits', 'fruit', 'apple', 'banana', 'berries', 'strawberry', 'blueberry', 'pineapple', 'citrus'],
+  'dairy-and-eggs':    ['eggs', 'egg', 'poultry', 'dairy', 'milk', 'cheese', 'yogurt', 'butter'],
+  bakery:              ['bakery', 'bread', 'loaf', 'baked', 'pastry', 'croissant', 'sourdough', 'rye'],
+  'herbs-and-flowers': ['herbs', 'herb', 'spices', 'flowers', 'plants', 'lavender', 'basil'],
+  'meat-and-fish':     ['meat', 'chicken', 'pork', 'beef', 'fish', 'seafood', 'sausages', 'steak'],
+  'honey-and-jam':     ['honey', 'jam', 'preserves', 'syrup', 'spread'],
 };
+
+/**
+ * Converts internal cent pricing to clean Naira denomination for display & allocation.
+ * E.g. 450 cents (~$4.50) -> ₦2,000, 350 -> ₦1,500, 600 -> ₦2,500
+ */
+export function centsToNaira(cents) {
+  if (typeof cents !== 'number' || isNaN(cents)) return 500;
+  const raw = cents * 4.4444;
+  return Math.max(500, Math.round(raw / 500) * 500);
+}
+
+/**
+ * Parses freeform natural language requests into budget, categories, and pickup days.
+ * E.g. "I have ₦10,000. I need vegetables, fruits and eggs for Saturday."
+ */
+export function parseBasketPrompt(prompt) {
+  if (!prompt || typeof prompt !== 'string') return {};
+  const text = prompt.toLowerCase();
+
+  // 1. Extract budget: matches "₦10,000", "₦10000", "#10000", "10000", "10,000"
+  let budget = null;
+  const budgetMatch = text.match(/[₦#]?\s*(\d{1,3}(?:,\d{3})+|\d{3,7})/);
+  if (budgetMatch) {
+    budget = parseInt(budgetMatch[1].replace(/,/g, ''), 10);
+  }
+
+  // 2. Extract categories
+  const categories = [];
+  if (/vegetable|veggie|greens|produce|spinach|tomato|carrot|kale|salad/.test(text)) categories.push('vegetables');
+  if (/fruit|banana|apple|berries|strawberry|pineapple|orange/.test(text)) categories.push('fruit');
+  if (/egg|eggs|poultry|dairy|milk|cheese/.test(text)) categories.push('dairy-and-eggs');
+  if (/bakery|bread|loaf|pastry|croissant|sourdough/.test(text)) categories.push('bakery');
+  if (/herb|flower|lavender|basil|spices/.test(text)) categories.push('herbs-and-flowers');
+  if (/meat|fish|chicken|beef|pork|sausage|seafood/.test(text)) categories.push('meat-and-fish');
+  if (/honey|jam|preserves/.test(text)) categories.push('honey-and-jam');
+
+  // 3. Extract day
+  let pickupDay = null;
+  if (/wednesday|wed\b/.test(text)) pickupDay = 'wed';
+  else if (/friday|fri\b/.test(text)) pickupDay = 'fri';
+  else if (/saturday|sat\b/.test(text)) pickupDay = 'sat';
+  else if (/sunday|sun\b/.test(text)) pickupDay = 'sun';
+
+  return { budget, categories, pickupDay };
+}
 
 /**
  * Resolves requested category keywords to actual slugs available in the DB.
@@ -39,11 +82,10 @@ async function resolveCategorySlugs(categories, db) {
   const candidateSlugs = new Set();
   for (const cat of categories) {
     const normalized = cat.toLowerCase().trim();
-    // Direct slug match
     candidateSlugs.add(normalized);
-    // Keyword expansion
+
     for (const [slug, keywords] of Object.entries(CATEGORY_KEYWORD_MAP)) {
-      if (keywords.includes(normalized)) {
+      if (slug === normalized || keywords.includes(normalized)) {
         candidateSlugs.add(slug);
       }
     }
@@ -63,28 +105,30 @@ async function resolveCategorySlugs(categories, db) {
  * Generates a budget-aware smart basket from live product inventory.
  *
  * @param {object} params
- * @param {number} params.budget - Budget in naira (whole number, e.g. 10000)
+ * @param {number} params.budget - Budget in naira or base currency
  * @param {string[]} params.categories - Requested category names
  * @param {string} [params.marketId] - Optional market filter
  * @param {string} [params.pickupDate] - Optional pickup date (ISO string)
+ * @param {string} [params.pickupTime] - Optional pickup time
  * @returns {Promise<object>} Basket result with items, totals, market groups
  */
-export async function generateBasket({ budget, categories, marketId, pickupDate }) {
+export async function generateBasket({ budget, categories, marketId, pickupDate, pickupTime }) {
   const db = getDb();
+  const isNaira = budget >= 200; // E.g. ₦1,000, ₦5,000, ₦10,000 vs $25, $50
+  const budgetNaira = isNaira ? Math.round(budget) : Math.round(budget * 400);
   const budgetCents = Math.round(budget * 100);
 
   // 1. Resolve category slugs from DB
-  const slugs = await resolveCategorySlugs(categories, db);
+  let slugs = await resolveCategorySlugs(categories, db);
 
   if (slugs.length === 0) {
-    // No matching categories — try to return general produce anyway
-    const fallbackSlugs = ['vegetables', 'fruits', 'eggs'];
+    const fallbackSlugs = ['vegetables', 'fruit', 'dairy-and-eggs'];
     const fallbackCategories = await db
       .collection(COLLECTIONS.CATEGORIES)
       .find({ slug: { $in: fallbackSlugs }, active: true })
       .project({ slug: 1 })
       .toArray();
-    slugs.push(...fallbackCategories.map((c) => c.slug));
+    slugs = fallbackCategories.map((c) => c.slug);
   }
 
   // 2. Build product query filter
@@ -103,7 +147,7 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
     productFilter.marketIds = toObjectId(marketId);
   }
 
-  // 3. Fetch candidate products (capped at 300 to avoid full-collection scans)
+  // 3. Fetch candidate products
   const candidateProducts = await db
     .collection(COLLECTIONS.PRODUCTS)
     .find(productFilter)
@@ -115,9 +159,12 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
     return {
       budget,
       budgetCents,
+      budgetNaira,
       items: [],
       totalCents: 0,
+      totalNaira: 0,
       remainingBudgetCents: budgetCents,
+      remainingBudgetNaira: budgetNaira,
       marketGroups: [],
       message: 'No products available matching your request right now.',
     };
@@ -131,21 +178,35 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
       _id: { $in: farmerIds.map((id) => toObjectId(id)) },
       listingEnabled: { $ne: false },
     })
-    .project({ _id: 1, stallName: 1, contactPerson: 1, marketIds: 1, location: 1, ratingAvg: 1, ratingCount: 1, operatingDays: 1, pickupWindows: 1, imageUrl: 1, art: 1 })
+    .project({
+      _id: 1,
+      stallName: 1,
+      contactPerson: 1,
+      marketIds: 1,
+      location: 1,
+      ratingAvg: 1,
+      ratingCount: 1,
+      operatingDays: 1,
+      pickupWindows: 1,
+      imageUrl: 1,
+      art: 1,
+      stallNumber: 1,
+    })
     .toArray();
 
   const farmerMap = new Map(farmersRaw.map((f) => [f._id.toString(), f]));
-
-  // Filter products to only those with a valid, listed farmer
   const validProducts = candidateProducts.filter((p) => farmerMap.has(p.farmerId.toString()));
 
   if (validProducts.length === 0) {
     return {
       budget,
       budgetCents,
+      budgetNaira,
       items: [],
       totalCents: 0,
+      totalNaira: 0,
       remainingBudgetCents: budgetCents,
+      remainingBudgetNaira: budgetNaira,
       marketGroups: [],
       message: 'No available products from active farmers at the moment.',
     };
@@ -176,7 +237,6 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
     bySlug.get(slug).push(product);
   }
 
-  // Sort each slug bucket: availability 'in' first, then by ratingAvg desc, then priceCents asc
   for (const [, products] of bySlug) {
     products.sort((a, b) => {
       const aIn = a.availability === 'in' ? 0 : 1;
@@ -188,67 +248,77 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
     });
   }
 
-  // 7. Greedy budget allocation algorithm
-  //    - One item per slug (best-value pick first)
-  //    - Then try to add more units of already-selected items
-  //    - Stop when remaining budget < cheapest remaining item
-
-  const selectedItems = new Map(); // productId → { product, farmer, quantity }
+  // 7. Allocation algorithm
+  const selectedItems = new Map(); // productId → { product, farmer, quantity, itemPriceNaira }
+  let spentNaira = 0;
   let spentCents = 0;
+  const targetBudget = isNaira ? budgetNaira : budgetCents;
 
-  // Determine iteration order: requested categories first, then others
   const orderedSlugs = [...new Set([...slugs, ...bySlug.keys()])];
 
-  // First pass: pick the top product from each slug
+  // Pass 1: Choose top item from each requested category
   for (const slug of orderedSlugs) {
     const products = bySlug.get(slug);
     if (!products || products.length === 0) continue;
 
     for (const product of products) {
-      if (spentCents + product.priceCents > budgetCents) continue; // skip if over budget
+      const itemPriceN = centsToNaira(product.priceCents);
+      const costToCheck = isNaira ? itemPriceN : product.priceCents;
+      const currentSpent = isNaira ? spentNaira : spentCents;
+
+      if (currentSpent + costToCheck > targetBudget && selectedItems.size > 0) continue;
+
       const farmer = farmerMap.get(product.farmerId.toString());
       if (!farmer) continue;
 
       const productId = product._id.toString();
       if (!selectedItems.has(productId)) {
-        selectedItems.set(productId, { product, farmer, quantity: 1 });
+        selectedItems.set(productId, { product, farmer, quantity: 1, itemPriceNaira: itemPriceN });
+        spentNaira += itemPriceN;
         spentCents += product.priceCents;
-        break; // one per slug in first pass
+        break;
       }
     }
   }
 
-  // Second pass: try to add more units of already-selected items (or new items)
+  // Pass 2: Add units of existing items or additional diverse picks if budget remains
   let improved = true;
-  let safetyLimit = 20; // prevent infinite loops
+  let safetyLimit = 15;
   while (improved && safetyLimit-- > 0) {
     improved = false;
-    const remainingCents = budgetCents - spentCents;
-    if (remainingCents <= 0) break;
+    const remaining = targetBudget - (isNaira ? spentNaira : spentCents);
+    if (remaining <= 0) break;
 
-    // Try to increment quantities of existing items
-    for (const [productId, entry] of selectedItems) {
-      const { product } = entry;
-      const canAddMore = entry.quantity < product.quantityAvailable;
-      if (canAddMore && product.priceCents <= remainingCents) {
+    // Try to increase quantity of items that aren't at max stock
+    for (const [, entry] of selectedItems) {
+      const { product, itemPriceNaira } = entry;
+      const unitCost = isNaira ? itemPriceNaira : product.priceCents;
+      if (entry.quantity < Math.min(product.quantityAvailable, 5) && unitCost <= remaining) {
         entry.quantity += 1;
+        spentNaira += itemPriceNaira;
         spentCents += product.priceCents;
         improved = true;
         break;
       }
     }
 
-    // Also try to add new items from the pool if budget allows
+    // If still budget left, add another distinct product from candidate slugs
     if (!improved) {
       for (const slug of orderedSlugs) {
         const products = bySlug.get(slug) || [];
         for (const product of products) {
           const productId = product._id.toString();
           if (selectedItems.has(productId)) continue;
-          if (product.priceCents > remainingCents) continue;
+
+          const itemPriceN = centsToNaira(product.priceCents);
+          const unitCost = isNaira ? itemPriceN : product.priceCents;
+          if (unitCost > remaining) continue;
+
           const farmer = farmerMap.get(product.farmerId.toString());
           if (!farmer) continue;
-          selectedItems.set(productId, { product, farmer, quantity: 1 });
+
+          selectedItems.set(productId, { product, farmer, quantity: 1, itemPriceNaira: itemPriceN });
+          spentNaira += itemPriceN;
           spentCents += product.priceCents;
           improved = true;
           break;
@@ -258,10 +328,9 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
     }
   }
 
-  // 8. Shape the response
+  // 8. Shape the response items
   const items = [];
-  for (const [, { product, farmer, quantity }] of selectedItems) {
-    // Resolve the best market for this product (prefer requested marketId)
+  for (const [, { product, farmer, quantity, itemPriceNaira }] of selectedItems) {
     let resolvedMarket = null;
     if (Array.isArray(product.marketIds)) {
       for (const mId of product.marketIds) {
@@ -281,9 +350,11 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
       name: product.name,
       description: product.description || null,
       priceCents: product.priceCents,
+      priceNaira: itemPriceNaira,
       unit: product.unit,
       quantity,
       lineTotalCents: product.priceCents * quantity,
+      lineTotalNaira: itemPriceNaira * quantity,
       quantityAvailable: product.quantityAvailable,
       availability: product.availability,
       categorySlug: product.categorySlug,
@@ -299,6 +370,7 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
       farmerImageUrl: farmer.imageUrl || null,
       farmerOperatingDays: farmer.operatingDays || [],
       farmerPickupWindows: farmer.pickupWindows || [],
+      farmerStallNumber: farmer.stallNumber || null,
       marketId: resolvedMarket ? resolvedMarket._id.toString() : null,
       marketName: resolvedMarket ? resolvedMarket.name : null,
       marketAddress: resolvedMarket ? resolvedMarket.address : null,
@@ -307,17 +379,17 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
     });
   }
 
-  // 9. Build market groups (for map overlay + visit planner)
+  // 9. Build market groups (for map hierarchy + visit planner)
   const marketGroupsMap = new Map();
   for (const item of items) {
     const mId = item.marketId || 'unknown';
     if (!marketGroupsMap.has(mId)) {
       marketGroupsMap.set(mId, {
         marketId: mId,
-        marketName: item.marketName,
-        marketAddress: item.marketAddress,
+        marketName: item.marketName || 'Local Market',
+        marketAddress: item.marketAddress || '',
         marketLocation: item.marketLocation,
-        marketSchedule: item.marketSchedule,
+        marketSchedule: item.marketSchedule || [],
         farmers: new Map(),
       });
     }
@@ -332,6 +404,7 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
         farmerImageUrl: item.farmerImageUrl,
         farmerOperatingDays: item.farmerOperatingDays,
         farmerPickupWindows: item.farmerPickupWindows,
+        farmerStallNumber: item.farmerStallNumber || null,
         items: [],
       });
     }
@@ -340,29 +413,120 @@ export async function generateBasket({ budget, categories, marketId, pickupDate 
       name: item.name,
       quantity: item.quantity,
       priceCents: item.priceCents,
+      priceNaira: item.priceNaira,
+      lineTotalNaira: item.lineTotalNaira,
       unit: item.unit,
+      art: item.art,
+      imageUrl: item.imageUrl,
     });
   }
 
-  // Convert nested Maps to arrays
   const marketGroups = [...marketGroupsMap.values()].map((mg) => ({
     ...mg,
     farmers: [...mg.farmers.values()],
   }));
 
   const totalCents = spentCents;
-  const remainingBudgetCents = budgetCents - totalCents;
+  const totalNaira = spentNaira;
+  const remainingBudgetNaira = Math.max(0, budgetNaira - totalNaira);
+  const remainingBudgetCents = Math.max(0, budgetCents - totalCents);
 
   return {
     budget,
     budgetCents,
+    budgetNaira,
     items,
     totalCents,
+    totalNaira,
     remainingBudgetCents,
+    remainingBudgetNaira,
     marketGroups,
     farmerCount: new Set(items.map((i) => i.farmerId)).size,
     marketCount: new Set(items.map((i) => i.marketId).filter(Boolean)).size,
   };
+}
+
+/**
+ * Returns alternative products in the same category or market for item replacement.
+ */
+export async function getReplacementProducts(productId, { marketId, limit = 6 } = {}) {
+  const db = getDb();
+  const currentProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: toObjectId(productId) });
+  if (!currentProduct) {
+    throw AppError.notFound('Product not found.');
+  }
+
+  const filter = {
+    _id: { $ne: currentProduct._id },
+    categorySlug: currentProduct.categorySlug,
+    availability: { $in: ['in', 'low'] },
+    quantityAvailable: { $gt: 0 },
+    listed: { $ne: false },
+    archived: { $ne: true },
+  };
+
+  if (marketId && isValidObjectId(marketId)) {
+    filter.marketIds = toObjectId(marketId);
+  }
+
+  let replacements = await db
+    .collection(COLLECTIONS.PRODUCTS)
+    .find(filter)
+    .sort({ ratingAvg: -1, salesCount: -1, priceCents: 1 })
+    .limit(limit)
+    .toArray();
+
+  if (replacements.length === 0) {
+    const generalFilter = {
+      _id: { $ne: currentProduct._id },
+      availability: { $in: ['in', 'low'] },
+      quantityAvailable: { $gt: 0 },
+      listed: { $ne: false },
+      archived: { $ne: true },
+    };
+    if (marketId && isValidObjectId(marketId)) {
+      generalFilter.marketIds = toObjectId(marketId);
+    }
+    replacements = await db
+      .collection(COLLECTIONS.PRODUCTS)
+      .find(generalFilter)
+      .sort({ ratingAvg: -1, salesCount: -1 })
+      .limit(limit)
+      .toArray();
+  }
+
+  const farmerIds = [...new Set(replacements.map((p) => p.farmerId.toString()))];
+  const farmers = await db
+    .collection(COLLECTIONS.FARMERS)
+    .find({ _id: { $in: farmerIds.map(toObjectId) }, listingEnabled: { $ne: false } })
+    .project({ _id: 1, stallName: 1, location: 1, ratingAvg: 1, imageUrl: 1, pickupWindows: 1, stallNumber: 1 })
+    .toArray();
+  const farmerMap = new Map(farmers.map((f) => [f._id.toString(), f]));
+
+  return replacements
+    .filter((p) => farmerMap.has(p.farmerId.toString()))
+    .map((p) => {
+      const f = farmerMap.get(p.farmerId.toString());
+      return {
+        id: p._id.toString(),
+        productId: p._id.toString(),
+        name: p.name,
+        description: p.description,
+        priceCents: p.priceCents,
+        priceNaira: centsToNaira(p.priceCents),
+        unit: p.unit,
+        quantityAvailable: p.quantityAvailable,
+        availability: p.availability,
+        categorySlug: p.categorySlug,
+        art: p.art,
+        imageUrl: p.imageUrl,
+        farmerId: f._id.toString(),
+        farmerName: f.stallName,
+        farmerRatingAvg: f.ratingAvg || 0,
+        farmerPickupWindows: f.pickupWindows || [],
+        farmerStallNumber: f.stallNumber || null,
+      };
+    });
 }
 
 /**
@@ -399,7 +563,7 @@ export async function validateBasket(items) {
     }
 
     if (product.availability === 'out' || product.availability === 'hidden') {
-      issues.push({ productId: item.productId, name: product.name, issue: 'OUT_OF_STOCK', message: `${product.name} is no longer available.` });
+      issues.push({ productId: item.productId, name: product.name, issue: 'OUT_OF_STOCK', message: `${product.name} is sold out.` });
       continue;
     }
 
@@ -412,13 +576,14 @@ export async function validateBasket(items) {
         message: `Only ${adjustedQty} ${product.unit} of ${product.name} remaining.`,
         adjustedQuantity: adjustedQty,
         currentPriceCents: product.priceCents,
+        currentPriceNaira: centsToNaira(product.priceCents),
       });
-      // Still include with adjusted quantity
       validatedItems.push({
         productId: item.productId,
         name: product.name,
         quantity: adjustedQty,
         priceCents: product.priceCents,
+        priceNaira: centsToNaira(product.priceCents),
         unit: product.unit,
         availability: product.availability,
       });
@@ -429,7 +594,8 @@ export async function validateBasket(items) {
       productId: item.productId,
       name: product.name,
       quantity: item.quantity,
-      priceCents: product.priceCents, // Always use server price
+      priceCents: product.priceCents,
+      priceNaira: centsToNaira(product.priceCents),
       unit: product.unit,
       availability: product.availability,
     });

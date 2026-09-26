@@ -158,7 +158,12 @@ export function createApp() {
   app.use('/api/farmer/slots', farmerSlotsRouter);
   app.use('/api/farmer/products', farmerProductsRouter);
   app.use('/api/farmer/weekly-template', weeklyTemplateRouter);
+  app.use('/api/farmer/template', weeklyTemplateRouter);
   app.use('/api/farmer/orders', farmerOrdersRouter);
+  app.use('/api/farmer/picklist', (req, res, next) => {
+    req.url = '/pick-list' + (req.url.startsWith('?') ? req.url : req.url.replace(/^\/?/, '?'));
+    farmerOrdersRouter(req, res, next);
+  });
   app.use('/api/farmer/reviews', farmerReviewsRouter);
   app.use('/api/farmer', farmerInsightsRouter);
   app.use('/api/farmer/uploads', uploadsRouter);

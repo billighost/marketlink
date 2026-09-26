@@ -103,28 +103,28 @@ const TIMELINE_STEPS = [
 
 const TEAM = [
   {
-    name: 'Elena Vance',
+    name: 'Adeleke Aliyah',
     role: 'Co-Founder & Organic Soil Cultivator',
     farm: 'Riverbend Farm (Hudson Valley, NY)',
-    image: '/images/farmer-elena.jpg',
+    image: '../asset/Aliyah.jpeg',
     bio: 'Fourth-generation grower managing 45 certified organic acres along the Hudson. Elena co-founded MarketLink to protect family farms from predatory distributor margins.',
   },
   {
-    name: 'Marcus Bennett',
+    name: 'billal',
     role: 'Regional Market Operations Director',
     farm: 'Greenwich Village Farmers Alliance',
     image: '/images/farmer-marcus.jpg',
     bio: 'Former agricultural economist and fifteen-year market manager dedicated to revitalizing historic urban square markets across Lower Manhattan.',
   },
   {
-    name: 'Priya Patel',
+    name: 'ayomide',
     role: 'Heritage Grains Specialist & Artisan Baker',
     farm: 'Oak & Mill Bakery (Kingston, NY)',
     image: '/images/hero-carrots.jpg',
     bio: 'Priya champions stone-milled New York wheat varieties, baking naturally fermented sourdough boules in wood-fired stone deck ovens.',
   },
   {
-    name: 'David Cho',
+    name: 'malik',
     role: 'Food Access & Community Partnerships',
     farm: 'Orchard & Grove Collective',
     image: '/images/farmer-david.jpg',

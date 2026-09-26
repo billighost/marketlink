@@ -7,8 +7,16 @@ import dotenv from 'dotenv';
 import path from 'node:path';
 import fs from 'node:fs';
 
-// Load .env file
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env file (try cwd first, then backend/.env)
 dotenv.config();
+if (!process.env.MONGODB_URI) {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+}
 
 const requiredEnvs = ['MONGODB_URI', 'JWT_SECRET'];
 

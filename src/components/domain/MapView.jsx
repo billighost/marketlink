@@ -18,12 +18,14 @@ export function MapView({
   zoom,
   interactive = true,
   showDirectionsLink = true,
+  showRoute = false,
   className = '',
   ariaLabel = 'Interactive map of market locations',
 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markerLayersRef = useRef(new Map());
+  const routeLayerRef = useRef(null);
   const [tileError, setTileError] = useState(false);
 
   // Validate coordinates
@@ -78,10 +80,10 @@ export function MapView({
         map.setView([validMarkers[0].lat, validMarkers[0].lng], zoom || 15);
       } else {
         const bounds = L.latLngBounds(validMarkers.map((m) => [m.lat, m.lng]));
-        map.fitBounds(bounds, { padding: [30, 30] });
+        map.fitBounds(bounds, { padding: [35, 35] });
       }
     } else {
-      map.setView([51.4545, -2.5879], zoom || 12);
+      map.setView([40.735, -74.172], zoom || 12);
     }
 
     // Accessible keyboard zoom control labels
@@ -94,10 +96,11 @@ export function MapView({
       map.remove();
       mapRef.current = null;
       markerLayersRef.current.clear();
+      routeLayerRef.current = null;
     };
   }, []); // Mount once
 
-  // Synchronize markers
+  // Synchronize markers and route line
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -108,23 +111,29 @@ export function MapView({
     }
     markerLayersRef.current.clear();
 
+    if (routeLayerRef.current) {
+      routeLayerRef.current.remove();
+      routeLayerRef.current = null;
+    }
+
     if (validMarkers.length === 0) return;
 
     validMarkers.forEach((marker) => {
       const isSelected = selectedId && marker.id === selectedId;
       const isHighlighted = Boolean(marker.highlight);
       const markerType = marker.markerType || 'market'; // 'market' | 'farmer' | 'pickup'
+      const stopNum = marker.stopNumber != null ? marker.stopNumber : marker.badgeNumber;
 
-      // Custom divIcon with type-aware colors
+      // Custom divIcon with type-aware colors and optional stop number
       const customIcon = L.divIcon({
         className: 'marketlink-map-pin',
         html: `
           <div class="marketlink-pin-badge ${markerType} ${isSelected ? 'selected' : ''} ${isHighlighted ? 'highlighted' : ''}">
-            <div class="marketlink-pin-inner"></div>
+            ${stopNum != null ? `<span class="marketlink-pin-num">${stopNum}</span>` : `<div class="marketlink-pin-inner"></div>`}
           </div>
         `,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
+        iconSize: stopNum != null ? [34, 34] : [30, 30],
+        iconAnchor: stopNum != null ? [17, 34] : [15, 30],
         popupAnchor: [0, -32],
       });
 
@@ -151,7 +160,8 @@ export function MapView({
         leafletMarker.bindPopup(
           `
             <div class="marketlink-popup-title">${marker.label}</div>
-            ${marker.subtitle ? `<div>${marker.subtitle}</div>` : ''}
+            ${marker.subtitle ? `<div class="marketlink-popup-subtitle">${marker.subtitle}</div>` : ''}
+            ${marker.detail ? `<div class="marketlink-popup-detail">${marker.detail}</div>` : ''}
           `,
           { className: 'marketlink-popup', closeButton: false }
         );
@@ -166,25 +176,32 @@ export function MapView({
       markerLayersRef.current.set(marker.id, leafletMarker);
     });
 
-    // Map click for repositioning pin when in draggable mode
-    if (draggable && onMove) {
-      map.on('click', (e) => {
-        const newPos = {
-          lat: parseFloat(e.latlng.lat.toFixed(6)),
-          lng: parseFloat(e.latlng.lng.toFixed(6)),
-        };
-        onMove(newPos);
-      });
+    // Draw route line if requested (for Market Visit Planner)
+    if (showRoute && validMarkers.length > 1) {
+      const latLngs = validMarkers.map((m) => [m.lat, m.lng]);
+      const polyline = L.polyline(latLngs, {
+        color: '#7A2E3B',
+        weight: 3,
+        opacity: 0.85,
+        dashArray: '6, 8',
+        lineCap: 'round',
+      }).addTo(map);
+      routeLayerRef.current = polyline;
     }
 
-    // Update bounds when markers change
-    if (validMarkers.length === 1) {
+    // Pan to selected marker if selected
+    if (selectedId) {
+      const sel = validMarkers.find((m) => m.id === selectedId);
+      if (sel) {
+        map.panTo([sel.lat, sel.lng], { animate: true, duration: 0.4 });
+      }
+    } else if (validMarkers.length === 1) {
       map.setView([validMarkers[0].lat, validMarkers[0].lng], zoom || 15);
     } else if (validMarkers.length > 1) {
       const bounds = L.latLngBounds(validMarkers.map((m) => [m.lat, m.lng]));
-      map.fitBounds(bounds, { padding: [30, 30] });
+      map.fitBounds(bounds, { padding: [35, 35] });
     }
-  }, [JSON.stringify(validMarkers), selectedId, draggable]);
+  }, [JSON.stringify(validMarkers), selectedId, draggable, showRoute]);
 
   const singleMarker = validMarkers.length === 1 ? validMarkers[0] : null;
   const directionsUrl = singleMarker

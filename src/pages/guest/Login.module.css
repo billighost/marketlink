@@ -30,6 +30,20 @@
   }
 }
 
+@media (max-width: 480px) {
+  .loginPage {
+    padding: 12px 8px;
+  }
+
+  .loginContainer {
+    border-radius: 14px;
+  }
+
+  .formPanel {
+    padding: 24px 16px;
+  }
+}
+
 /* ─── LEFT SHOWCASE PANEL ────────────────────────────────────────── */
 .showcasePanel {
   position: relative;

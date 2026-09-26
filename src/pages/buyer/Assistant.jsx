@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, ArrowLeft } from 'lucide-react';
+import { Send, Sparkles, ArrowLeft, ShoppingBasket } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { streamAssistantMessage } from '@/api/assistant';
 import { getProductDetail } from '@/api/catalog';
 import { useAuth } from '@/context/AuthContext';

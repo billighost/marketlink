@@ -6,6 +6,14 @@
   margin: 0 auto;
   gap: var(--space-6);
   padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .page {
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-3) var(--space-8);
+  }
 }
 
 .header {
@@ -13,6 +21,12 @@
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-2) 0;
+}
+
+@media (max-width: 480px) {
+  .header {
+    gap: var(--space-3);
+  }
 }
 
 .avatar {
