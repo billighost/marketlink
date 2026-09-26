@@ -1,17 +1,1 @@
-import '../src/config/env.js';
-import { connectDb, closeDb } from '../src/db/client.js';
-import { ensureIndexes } from '../src/db/indexes.js';
-
-async function main() {
-  const db = await connectDb(process.env.MONGODB_URI, 'marketlink_test');
-  const res = await db.collection('users').deleteMany({ email: { $regex: 'concurrent' } });
-  console.log(`Deleted ${res.deletedCount} concurrent test users.`);
-  await ensureIndexes(db);
-  console.log('Ensured indexes on marketlink_test successfully.');
-  await closeDb();
-}
-
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+import '../src/config/env.js';import { connectDb, closeDb } from '../src/db/client.js';import { ensureIndexes } from '../src/db/indexes.js';async function main() {  const db = await connectDb(process.env.MONGODB_URI, 'marketlink_test');  const res = await db.collection('users').deleteMany({ email: { $regex: 'concurrent' } });  console.log(`Deleted ${res.deletedCount} concurrent test users.`);  await ensureIndexes(db);  console.log('Ensured indexes on marketlink_test successfully.');  await closeDb();}main().catch(err => {  console.error(err);  process.exit(1);});

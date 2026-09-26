@@ -1,181 +1,1 @@
-.card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  gap: var(--space-2);
-  transition: border-color var(--duration-fast) var(--ease-standard);
-  user-select: none;
-  min-width: 0;
-}
-
-.card:hover {
-  border-color: var(--color-ink-soft);
-}
-
-.stretchedLink {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: calc(var(--tap-min) + var(--space-4));
-  z-index: 1;
-  text-decoration: none;
-  border-top-left-radius: var(--radius-lg);
-  border-top-right-radius: var(--radius-lg);
-}
-
-.stretchedLink:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.numberStatus {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.orderNumber {
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink);
-  white-space: nowrap;
-}
-
-.total {
-  font-size: var(--text-body);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink);
-  white-space: nowrap;
-}
-
-.farmers {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-.farmerNames {
-  font-size: var(--text-sm);
-  color: var(--color-ink);
-  font-weight: var(--weight-medium);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-.slotRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: var(--text-xs);
-  color: var(--color-ink-soft);
-  min-width: 0;
-}
-
-.dot {
-  margin: 0 var(--space-1);
-}
-
-/* Product Mini Tiles Stack */
-.bottomRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--color-border);
-  min-height: var(--tap-min);
-  min-width: 0;
-}
-
-/* Hide thumbnails below 480px to avoid crowding */
-.productTiles {
-  display: none;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-@media (min-width: 480px) {
-  .productTiles {
-    display: flex;
-  }
-}
-
-.tile {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-canvas);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.moreTile {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-canvas-soft);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink-soft);
-  flex-shrink: 0;
-}
-
-.buyAgainButton {
-  position: relative;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  padding: 0 var(--space-3);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink);
-  cursor: pointer;
-  min-height: var(--tap-min);
-  height: var(--tap-min);
-  white-space: nowrap;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: background-color var(--duration-fast) var(--ease-standard),
-              border-color var(--duration-fast) var(--ease-standard);
-  margin-left: auto;
-}
-
-.buyAgainButton:hover {
-  background-color: var(--color-canvas);
-  border-color: var(--color-ink-soft);
-}
-
-.buyAgainButton:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
+.card {  position: relative;  display: flex;  flex-direction: column;  background-color: var(--color-white);  border: 1px solid var(--color-border);  border-radius: var(--radius-lg);  padding: var(--space-4);  gap: var(--space-2);  transition: border-color var(--duration-fast) var(--ease-standard);  user-select: none;  min-width: 0;}.card:hover {  border-color: var(--color-ink-soft);}.stretchedLink {  position: absolute;  top: 0;  left: 0;  right: 0;  bottom: calc(var(--tap-min) + var(--space-4));  z-index: 1;  text-decoration: none;  border-top-left-radius: var(--radius-lg);  border-top-right-radius: var(--radius-lg);}.stretchedLink:focus-visible {  outline: var(--focus-ring);  outline-offset: var(--focus-offset);}.header {  display: flex;  align-items: center;  justify-content: space-between;  gap: var(--space-2);  min-width: 0;}.numberStatus {  display: flex;  align-items: center;  gap: var(--space-3);  min-width: 0;}.orderNumber {  font-family: var(--font-body);  font-size: var(--text-body);  font-weight: var(--weight-semibold);  color: var(--color-ink);  white-space: nowrap;}.total {  font-size: var(--text-body);  font-weight: var(--weight-semibold);  color: var(--color-ink);  white-space: nowrap;}.farmers {  display: flex;  align-items: center;  min-width: 0;}.farmerNames {  font-size: var(--text-sm);  color: var(--color-ink);  font-weight: var(--weight-medium);  white-space: nowrap;  overflow: hidden;  text-overflow: ellipsis;  min-width: 0;}.slotRow {  display: flex;  align-items: center;  gap: var(--space-1);  font-size: var(--text-xs);  color: var(--color-ink-soft);  min-width: 0;}.dot {  margin: 0 var(--space-1);}.bottomRow {  display: flex;  align-items: center;  justify-content: space-between;  gap: var(--space-2);  margin-top: var(--space-2);  padding-top: var(--space-2);  border-top: 1px solid var(--color-border);  min-height: var(--tap-min);  min-width: 0;}.productTiles {  display: none;  align-items: center;  gap: var(--space-1);}@media (min-width: 480px) {  .productTiles {    display: flex;  }}.tile {  width: 36px;  height: 36px;  border-radius: var(--radius-sm);  background-color: var(--color-canvas);  border: 1px solid var(--color-border);  display: flex;  align-items: center;  justify-content: center;  overflow: hidden;  flex-shrink: 0;}.moreTile {  width: 36px;  height: 36px;  border-radius: var(--radius-sm);  background-color: var(--color-canvas-soft);  border: 1px solid var(--color-border);  display: flex;  align-items: center;  justify-content: center;  font-size: var(--text-xs);  font-weight: var(--weight-semibold);  color: var(--color-ink-soft);  flex-shrink: 0;}.buyAgainButton {  position: relative;  z-index: 2;  display: inline-flex;  align-items: center;  gap: var(--space-1);  background: none;  border: 1px solid var(--color-border);  border-radius: var(--radius-full);  padding: 0 var(--space-3);  font-size: var(--text-xs);  font-weight: var(--weight-medium);  color: var(--color-ink);  cursor: pointer;  min-height: var(--tap-min);  height: var(--tap-min);  white-space: nowrap;  touch-action: manipulation;  -webkit-tap-highlight-color: transparent;  transition: background-color var(--duration-fast) var(--ease-standard),              border-color var(--duration-fast) var(--ease-standard);  margin-left: auto;}.buyAgainButton:hover {  background-color: var(--color-canvas);  border-color: var(--color-ink-soft);}.buyAgainButton:focus-visible {  outline: var(--focus-ring);  outline-offset: var(--focus-offset);}

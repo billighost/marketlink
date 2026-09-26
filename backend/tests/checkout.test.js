@@ -1,320 +1,1 @@
-/**
- * Checkout service and endpoint integration suite (T3.021 - T3.050).
- * Tests single & multi-vendor checkouts, DB price snapshotting, atomic stock decrements,
- * deterministic multi-line rollbacks, idempotency replays, and notification dispatches.
- */
-
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
-import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
-import { COLLECTIONS } from '../src/db/collections.js';
-import { signAccessToken } from '../src/utils/tokens.js';
-import { mailer } from '../src/utils/mailer.js';
-
-describe('Checkout Suite (T3.021 - T3.050)', () => {
-  let db;
-  let customerAuth;
-  let farmerAuth;
-  let inactiveCustomerToken;
-  let riverbendFarmer;
-  let oakmillFarmer;
-  let carrotsProduct;
-  let tomatoesProduct;
-  let sourdoughProduct;
-  let openRiverSlot;
-  let openOakSlot;
-
-  before(async () => {
-    const env = await setupTestEnvironment();
-    db = env.db;
-
-    customerAuth = await loginUser('george@example.com', 'market123');
-    farmerAuth = await loginUser('riverbend@example.com', 'market123');
-    const inactiveUser = await db.collection(COLLECTIONS.USERS).findOne({ email: 'inactive.customer@example.com' });
-    inactiveCustomerToken = signAccessToken({ sub: inactiveUser._id.toString(), role: 'customer' });
-
-    riverbendFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Riverbend Farm' });
-    oakmillFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Oak & Mill Bakery' });
-
-    carrotsProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Rainbow carrots' });
-    tomatoesProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Heirloom tomatoes' });
-    sourdoughProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Sourdough boule' });
-
-    // Fetch upcoming slots via quote to ensure we have valid open slotStart
-    const quoteRes = await request('/api/cart/quote', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
-      body: {
-        groups: [
-          { farmerId: riverbendFarmer._id.toString(), items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }] },
-          { farmerId: oakmillFarmer._id.toString(), items: [{ productId: sourdoughProduct._id.toString(), quantity: 1 }] },
-        ],
-      },
-    });
-
-    const quoteBody = await quoteRes.json();
-    openRiverSlot = quoteBody.data.groups[0].slots.find((s) => s.isOpen);
-    openOakSlot = quoteBody.data.groups[1].slots.find((s) => s.isOpen);
-    initialCarrots = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });
-    initialSourdough = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sourdoughProduct._id });
-  });
-
-  let initialCarrots;
-  let initialSourdough;
-  const createdCheckoutIds = [];
-
-  after(async () => {
-    if (createdCheckoutIds.length > 0) {
-      await db.collection(COLLECTIONS.ORDERS).deleteMany({ checkoutId: { $in: createdCheckoutIds.map(String) } });
-      await db.collection(COLLECTIONS.CHECKOUTS).deleteMany({ _id: { $in: createdCheckoutIds } });
-    }
-    if (initialCarrots) {
-      await db.collection(COLLECTIONS.PRODUCTS).updateOne(
-        { _id: carrotsProduct._id },
-        { $set: { quantityAvailable: initialCarrots.quantityAvailable, availability: initialCarrots.availability } }
-      );
-    }
-    if (initialSourdough) {
-      await db.collection(COLLECTIONS.PRODUCTS).updateOne(
-        { _id: sourdoughProduct._id },
-        { $set: { quantityAvailable: initialSourdough.quantityAvailable, availability: initialSourdough.availability } }
-      );
-    }
-    await teardownTestEnvironment();
-  });
-
-  it('T3.021: Single vendor checkout creates order with DB price snapshots and 201 status', async () => {
-    const pBefore = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });
-    const stockBefore = pBefore.quantityAvailable;
-
-    const idempotencyKey = `chk-key-${Date.now()}-1`;
-    const res = await request('/api/orders/checkout', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${customerAuth.accessToken}`,
-        'Idempotency-Key': idempotencyKey,
-      },
-      body: {
-        groups: [
-          {
-            farmerId: riverbendFarmer._id.toString(),
-            slotStart: openRiverSlot.start,
-            note: 'Please pack carefully',
-            items: [{ productId: carrotsProduct._id.toString(), quantity: 2 }],
-          },
-        ],
-      },
-    });
-
-    assert.equal(res.status, 201);
-    const body = await res.json();
-    assert.ok(body.data.checkoutId);
-    createdCheckoutIds.push(new ObjectId(body.data.checkoutId));
-    assert.equal(body.data.orders.length, 1);
-
-    const orderSummary = body.data.orders[0];
-    assert.equal(orderSummary.status, 'placed');
-    assert.equal(orderSummary.farmer.stallName, 'Riverbend Farm');
-    assert.equal(orderSummary.itemCount, 2);
-    assert.equal(orderSummary.totalCents, carrotsProduct.priceCents * 2);
-
-    // Verify DB stock decrement
-    const pAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });
-    assert.equal(pAfter.quantityAvailable, stockBefore - 2);
-
-    // Verify order document in DB
-    const orderDoc = await db.collection(COLLECTIONS.ORDERS).findOne({ orderNumber: orderSummary.orderNumber });
-    assert.ok(orderDoc);
-    assert.equal(orderDoc.checkoutId, body.data.checkoutId);
-    assert.equal(orderDoc.items[0].priceCents, carrotsProduct.priceCents);
-    assert.equal(orderDoc.note, 'Please pack carefully');
-  });
-
-  it('T3.022: Multi-vendor checkout creates contiguous order numbers and shares checkoutId', async () => {
-    const idempotencyKey = `chk-key-${Date.now()}-2`;
-    const res = await request('/api/orders/checkout', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${customerAuth.accessToken}`,
-        'Idempotency-Key': idempotencyKey,
-      },
-      body: {
-        groups: [
-          {
-            farmerId: riverbendFarmer._id.toString(),
-            slotStart: openRiverSlot.start,
-            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
-          },
-          {
-            farmerId: oakmillFarmer._id.toString(),
-            slotStart: openOakSlot.start,
-            items: [{ productId: sourdoughProduct._id.toString(), quantity: 1 }],
-          },
-        ],
-      },
-    });
-
-    assert.equal(res.status, 201);
-    const body = await res.json();
-    createdCheckoutIds.push(new ObjectId(body.data.checkoutId));
-    assert.equal(body.data.orders.length, 2);
-
-    const [o1, o2] = body.data.orders;
-    const num1 = parseInt(o1.orderNumber.replace('ML-', ''), 10);
-    const num2 = parseInt(o2.orderNumber.replace('ML-', ''), 10);
-    assert.equal(num2, num1 + 1, 'Order numbers across multiple groups must be contiguous');
-  });
-
-  it('T3.023: Idempotent replay with same key returns same orders with 200', async () => {
-    const idempotencyKey = `chk-key-${Date.now()}-3`;
-    const payload = {
-      groups: [
-        {
-          farmerId: riverbendFarmer._id.toString(),
-          slotStart: openRiverSlot.start,
-          items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
-        },
-      ],
-    };
-
-    // First attempt -> 201
-    const res1 = await request('/api/orders/checkout', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${customerAuth.accessToken}`, 'Idempotency-Key': idempotencyKey },
-      body: payload,
-    });
-    assert.equal(res1.status, 201);
-    const body1 = await res1.json();
-    createdCheckoutIds.push(new ObjectId(body1.data.checkoutId));
-
-    // Replay attempt -> 200 with identical data
-    const res2 = await request('/api/orders/checkout', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${customerAuth.accessToken}`, 'Idempotency-Key': idempotencyKey },
-      body: payload,
-    });
-    assert.equal(res2.status, 200);
-    const body2 = await res2.json();
-
-    assert.equal(body2.data.checkoutId, body1.data.checkoutId);
-    assert.equal(body2.data.orders[0].orderNumber, body1.data.orders[0].orderNumber);
-  });
-
-  it('T3.024: Missing or invalid Idempotency-Key header returns 422', async () => {
-    // Missing
-    const res1 = await request('/api/orders/checkout', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },
-      body: {
-        groups: [
-          {
-            farmerId: riverbendFarmer._id.toString(),
-            slotStart: openRiverSlot.start,
-            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
-          },
-        ],
-      },
-    });
-    assert.equal(res1.status, 422);
-
-    // Too short (< 8 chars)
-    const res2 = await request('/api/orders/checkout', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${customerAuth.accessToken}`, 'Idempotency-Key': 'short' },
-      body: {
-        groups: [
-          {
-            farmerId: riverbendFarmer._id.toString(),
-            slotStart: openRiverSlot.start,
-            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
-          },
-        ],
-      },
-    });
-    assert.equal(res2.status, 422);
-  });
-
-  it('T3.025: Multi-line inventory failure rolls back all reserved lines', async () => {
-    // Carrots has stock; set beets to 0
-    const beets = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Red and gold beets' });
-    const originalBeetsQty = beets.quantityAvailable;
-    await db.collection(COLLECTIONS.PRODUCTS).updateOne({ _id: beets._id }, { $set: { quantityAvailable: 0, availability: 'out' } });
-
-    const carrotsBefore = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });
-    const originalCarrotsQty = carrotsBefore.quantityAvailable;
-
-    const idempotencyKey = `chk-key-${Date.now()}-fail`;
-    const res = await request('/api/orders/checkout', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${customerAuth.accessToken}`, 'Idempotency-Key': idempotencyKey },
-      body: {
-        groups: [
-          {
-            farmerId: riverbendFarmer._id.toString(),
-            slotStart: openRiverSlot.start,
-            items: [
-              { productId: carrotsProduct._id.toString(), quantity: 2 },
-              { productId: beets._id.toString(), quantity: 1 },
-            ],
-          },
-        ],
-      },
-    });
-
-    assert.equal(res.status, 409);
-    const body = await res.json();
-    assert.equal(body.error.code, 'NOT_ENOUGH_STOCK');
-
-    // Confirm that carrots stock was completely rolled back and NOT decremented
-    const carrotsAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });
-    assert.equal(carrotsAfter.quantityAvailable, originalCarrotsQty);
-
-    // Restore beets
-    await db.collection(COLLECTIONS.PRODUCTS).updateOne({ _id: beets._id }, { $set: { quantityAvailable: originalBeetsQty, availability: 'low' } });
-  });
-
-  it('T3.026: Inactive customer is rejected with 403 ACCOUNT_INACTIVE', async () => {
-    const res = await request('/api/orders/checkout', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${inactiveCustomerToken}`,
-        'Idempotency-Key': `chk-key-${Date.now()}-inactive`,
-      },
-      body: {
-        groups: [
-          {
-            farmerId: riverbendFarmer._id.toString(),
-            slotStart: openRiverSlot.start,
-            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
-          },
-        ],
-      },
-    });
-
-    assert.equal(res.status, 403);
-    const body = await res.json();
-    assert.equal(body.error.code, 'ACCOUNT_INACTIVE');
-  });
-
-  it('T3.027: Farmer role cannot call checkout (403 FORBIDDEN)', async () => {
-    const res = await request('/api/orders/checkout', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${farmerAuth.accessToken}`,
-        'Idempotency-Key': `chk-key-${Date.now()}-farmer`,
-      },
-      body: {
-        groups: [
-          {
-            farmerId: riverbendFarmer._id.toString(),
-            slotStart: openRiverSlot.start,
-            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],
-          },
-        ],
-      },
-    });
-
-    assert.equal(res.status, 403);
-  });
-});
+import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { ObjectId } from 'mongodb';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { COLLECTIONS } from '../src/db/collections.js';import { signAccessToken } from '../src/utils/tokens.js';import { mailer } from '../src/utils/mailer.js';describe('Checkout Suite (T3.021 - T3.050)', () => {  let db;  let customerAuth;  let farmerAuth;  let inactiveCustomerToken;  let riverbendFarmer;  let oakmillFarmer;  let carrotsProduct;  let tomatoesProduct;  let sourdoughProduct;  let openRiverSlot;  let openOakSlot;  before(async () => {    const env = await setupTestEnvironment();    db = env.db;    customerAuth = await loginUser('george@example.com', 'market123');    farmerAuth = await loginUser('riverbend@example.com', 'market123');    const inactiveUser = await db.collection(COLLECTIONS.USERS).findOne({ email: 'inactive.customer@example.com' });    inactiveCustomerToken = signAccessToken({ sub: inactiveUser._id.toString(), role: 'customer' });    riverbendFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Riverbend Farm' });    oakmillFarmer = await db.collection(COLLECTIONS.FARMERS).findOne({ stallName: 'Oak & Mill Bakery' });    carrotsProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Rainbow carrots' });    tomatoesProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Heirloom tomatoes' });    sourdoughProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Sourdough boule' });    const quoteRes = await request('/api/cart/quote', {      method: 'POST',      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },      body: {        groups: [          { farmerId: riverbendFarmer._id.toString(), items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }] },          { farmerId: oakmillFarmer._id.toString(), items: [{ productId: sourdoughProduct._id.toString(), quantity: 1 }] },        ],      },    });    const quoteBody = await quoteRes.json();    openRiverSlot = quoteBody.data.groups[0].slots.find((s) => s.isOpen);    openOakSlot = quoteBody.data.groups[1].slots.find((s) => s.isOpen);    initialCarrots = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });    initialSourdough = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sourdoughProduct._id });  });  let initialCarrots;  let initialSourdough;  const createdCheckoutIds = [];  after(async () => {    if (createdCheckoutIds.length > 0) {      await db.collection(COLLECTIONS.ORDERS).deleteMany({ checkoutId: { $in: createdCheckoutIds.map(String) } });      await db.collection(COLLECTIONS.CHECKOUTS).deleteMany({ _id: { $in: createdCheckoutIds } });    }    if (initialCarrots) {      await db.collection(COLLECTIONS.PRODUCTS).updateOne(        { _id: carrotsProduct._id },        { $set: { quantityAvailable: initialCarrots.quantityAvailable, availability: initialCarrots.availability } }      );    }    if (initialSourdough) {      await db.collection(COLLECTIONS.PRODUCTS).updateOne(        { _id: sourdoughProduct._id },        { $set: { quantityAvailable: initialSourdough.quantityAvailable, availability: initialSourdough.availability } }      );    }    await teardownTestEnvironment();  });  it('T3.021: Single vendor checkout creates order with DB price snapshots and 201 status', async () => {    const pBefore = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });    const stockBefore = pBefore.quantityAvailable;    const idempotencyKey = `chk-key-${Date.now()}-1`;    const res = await request('/api/orders/checkout', {      method: 'POST',      headers: {        Authorization: `Bearer ${customerAuth.accessToken}`,        'Idempotency-Key': idempotencyKey,      },      body: {        groups: [          {            farmerId: riverbendFarmer._id.toString(),            slotStart: openRiverSlot.start,            note: 'Please pack carefully',            items: [{ productId: carrotsProduct._id.toString(), quantity: 2 }],          },        ],      },    });    assert.equal(res.status, 201);    const body = await res.json();    assert.ok(body.data.checkoutId);    createdCheckoutIds.push(new ObjectId(body.data.checkoutId));    assert.equal(body.data.orders.length, 1);    const orderSummary = body.data.orders[0];    assert.equal(orderSummary.status, 'placed');    assert.equal(orderSummary.farmer.stallName, 'Riverbend Farm');    assert.equal(orderSummary.itemCount, 2);    assert.equal(orderSummary.totalCents, carrotsProduct.priceCents * 2);    const pAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });    assert.equal(pAfter.quantityAvailable, stockBefore - 2);    const orderDoc = await db.collection(COLLECTIONS.ORDERS).findOne({ orderNumber: orderSummary.orderNumber });    assert.ok(orderDoc);    assert.equal(orderDoc.checkoutId, body.data.checkoutId);    assert.equal(orderDoc.items[0].priceCents, carrotsProduct.priceCents);    assert.equal(orderDoc.note, 'Please pack carefully');  });  it('T3.022: Multi-vendor checkout creates contiguous order numbers and shares checkoutId', async () => {    const idempotencyKey = `chk-key-${Date.now()}-2`;    const res = await request('/api/orders/checkout', {      method: 'POST',      headers: {        Authorization: `Bearer ${customerAuth.accessToken}`,        'Idempotency-Key': idempotencyKey,      },      body: {        groups: [          {            farmerId: riverbendFarmer._id.toString(),            slotStart: openRiverSlot.start,            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],          },          {            farmerId: oakmillFarmer._id.toString(),            slotStart: openOakSlot.start,            items: [{ productId: sourdoughProduct._id.toString(), quantity: 1 }],          },        ],      },    });    assert.equal(res.status, 201);    const body = await res.json();    createdCheckoutIds.push(new ObjectId(body.data.checkoutId));    assert.equal(body.data.orders.length, 2);    const [o1, o2] = body.data.orders;    const num1 = parseInt(o1.orderNumber.replace('ML-', ''), 10);    const num2 = parseInt(o2.orderNumber.replace('ML-', ''), 10);    assert.equal(num2, num1 + 1, 'Order numbers across multiple groups must be contiguous');  });  it('T3.023: Idempotent replay with same key returns same orders with 200', async () => {    const idempotencyKey = `chk-key-${Date.now()}-3`;    const payload = {      groups: [        {          farmerId: riverbendFarmer._id.toString(),          slotStart: openRiverSlot.start,          items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],        },      ],    };    const res1 = await request('/api/orders/checkout', {      method: 'POST',      headers: { Authorization: `Bearer ${customerAuth.accessToken}`, 'Idempotency-Key': idempotencyKey },      body: payload,    });    assert.equal(res1.status, 201);    const body1 = await res1.json();    createdCheckoutIds.push(new ObjectId(body1.data.checkoutId));    const res2 = await request('/api/orders/checkout', {      method: 'POST',      headers: { Authorization: `Bearer ${customerAuth.accessToken}`, 'Idempotency-Key': idempotencyKey },      body: payload,    });    assert.equal(res2.status, 200);    const body2 = await res2.json();    assert.equal(body2.data.checkoutId, body1.data.checkoutId);    assert.equal(body2.data.orders[0].orderNumber, body1.data.orders[0].orderNumber);  });  it('T3.024: Missing or invalid Idempotency-Key header returns 422', async () => {    const res1 = await request('/api/orders/checkout', {      method: 'POST',      headers: { Authorization: `Bearer ${customerAuth.accessToken}` },      body: {        groups: [          {            farmerId: riverbendFarmer._id.toString(),            slotStart: openRiverSlot.start,            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],          },        ],      },    });    assert.equal(res1.status, 422);    const res2 = await request('/api/orders/checkout', {      method: 'POST',      headers: { Authorization: `Bearer ${customerAuth.accessToken}`, 'Idempotency-Key': 'short' },      body: {        groups: [          {            farmerId: riverbendFarmer._id.toString(),            slotStart: openRiverSlot.start,            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],          },        ],      },    });    assert.equal(res2.status, 422);  });  it('T3.025: Multi-line inventory failure rolls back all reserved lines', async () => {    const beets = await db.collection(COLLECTIONS.PRODUCTS).findOne({ name: 'Red and gold beets' });    const originalBeetsQty = beets.quantityAvailable;    await db.collection(COLLECTIONS.PRODUCTS).updateOne({ _id: beets._id }, { $set: { quantityAvailable: 0, availability: 'out' } });    const carrotsBefore = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });    const originalCarrotsQty = carrotsBefore.quantityAvailable;    const idempotencyKey = `chk-key-${Date.now()}-fail`;    const res = await request('/api/orders/checkout', {      method: 'POST',      headers: { Authorization: `Bearer ${customerAuth.accessToken}`, 'Idempotency-Key': idempotencyKey },      body: {        groups: [          {            farmerId: riverbendFarmer._id.toString(),            slotStart: openRiverSlot.start,            items: [              { productId: carrotsProduct._id.toString(), quantity: 2 },              { productId: beets._id.toString(), quantity: 1 },            ],          },        ],      },    });    assert.equal(res.status, 409);    const body = await res.json();    assert.equal(body.error.code, 'NOT_ENOUGH_STOCK');    const carrotsAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: carrotsProduct._id });    assert.equal(carrotsAfter.quantityAvailable, originalCarrotsQty);    await db.collection(COLLECTIONS.PRODUCTS).updateOne({ _id: beets._id }, { $set: { quantityAvailable: originalBeetsQty, availability: 'low' } });  });  it('T3.026: Inactive customer is rejected with 403 ACCOUNT_INACTIVE', async () => {    const res = await request('/api/orders/checkout', {      method: 'POST',      headers: {        Authorization: `Bearer ${inactiveCustomerToken}`,        'Idempotency-Key': `chk-key-${Date.now()}-inactive`,      },      body: {        groups: [          {            farmerId: riverbendFarmer._id.toString(),            slotStart: openRiverSlot.start,            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],          },        ],      },    });    assert.equal(res.status, 403);    const body = await res.json();    assert.equal(body.error.code, 'ACCOUNT_INACTIVE');  });  it('T3.027: Farmer role cannot call checkout (403 FORBIDDEN)', async () => {    const res = await request('/api/orders/checkout', {      method: 'POST',      headers: {        Authorization: `Bearer ${farmerAuth.accessToken}`,        'Idempotency-Key': `chk-key-${Date.now()}-farmer`,      },      body: {        groups: [          {            farmerId: riverbendFarmer._id.toString(),            slotStart: openRiverSlot.start,            items: [{ productId: carrotsProduct._id.toString(), quantity: 1 }],          },        ],      },    });    assert.equal(res.status, 403);  });});

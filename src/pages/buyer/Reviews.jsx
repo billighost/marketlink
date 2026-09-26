@@ -1,259 +1,1 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Star,
-  MessageSquare,
-  CheckCircle,
-  Clock,
-  Sparkles,
-  Search,
-  Filter,
-  ArrowRight,
-  Store,
-  Leaf,
-  Plus,
-  X,
-  ShoppingBag,
-  ShieldCheck,
-} from 'lucide-react';
-import { getOrders, createOrderReview } from '@/api/orders';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/context/ToastContext';
-import Stars from '@/components/ui/Stars';
-import SegmentedControl from '@/components/ui/SegmentedControl';
-import EmptyState from '@/components/ui/EmptyState';
-import Button from '@/components/ui/Button';
-import styles from './Reviews.module.css';
-
-export function Reviews() {
-  const { user } = useAuth();
-  const { showToast } = useToast();
-  const navigate = useNavigate();
-
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'mine'
-  const [completedOrders, setCompletedOrders] = useState([]);
-  const [loadingOrders, setLoadingOrders] = useState(true);
-
-  // Review Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [targetOrder, setTargetOrder] = useState(null);
-  const [rating, setRating] = useState(5);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    setLoadingOrders(true);
-    getOrders({ status: 'completed' })
-      .then((res) => {
-        if (!active) return;
-        setCompletedOrders(res?.data || []);
-      })
-      .catch(() => {
-        if (active) setCompletedOrders([]);
-      })
-      .finally(() => {
-        if (active) setLoadingOrders(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const handleOpenReviewModal = (order) => {
-    setTargetOrder(order);
-    setRating(5);
-    setComment('');
-    setIsModalOpen(true);
-  };
-
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-    if (!targetOrder) return;
-
-    setSubmitting(true);
-    try {
-      await createOrderReview(targetOrder.id, {
-        rating,
-        comment: comment.trim(),
-      });
-      showToast('Thank you for sharing your feedback with the farmer!', 'success');
-      setIsModalOpen(false);
-      // Remove from pending reviews or mark reviewed
-      setCompletedOrders((prev) => prev.filter((o) => o.id !== targetOrder.id));
-    } catch (err) {
-      showToast(err?.message || 'Failed to submit review. Please try again.', 'error');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerBadge}>
-          <Sparkles size={14} className={styles.headerBadgeIcon} aria-hidden="true" />
-          <span>Community Feedback</span>
-        </div>
-        <h1 className={styles.title}>Stall & Harvest Reviews</h1>
-        <p className={styles.subtitle}>
-          Help your neighborhood community and growers by sharing feedback on your collected harvest orders.
-        </p>
-      </header>
-
-      {/* Main Tab Controls */}
-      <div className={styles.tabsWrapper}>
-        <SegmentedControl
-          name="reviews-tab"
-          value={activeTab}
-          onChange={setActiveTab}
-          options={[
-            {
-              value: 'pending',
-              label: completedOrders.length > 0 ? `To Review (${completedOrders.length})` : 'To Review',
-            },
-            { value: 'mine', label: 'Past Orders' },
-          ]}
-        />
-      </div>
-
-      {/* Content Area */}
-      {loadingOrders ? (
-        <div className={styles.loadingArea}>
-          <p className={styles.loadingText}>Checking completed pickups...</p>
-        </div>
-      ) : activeTab === 'pending' ? (
-        completedOrders.length > 0 ? (
-          <div className={styles.pendingGrid}>
-            {completedOrders.map((order) => (
-              <div key={order.id} className={styles.orderCard}>
-                <div className={styles.orderHeader}>
-                  <div className={styles.orderIconWrap}>
-                    <ShoppingBag size={20} />
-                  </div>
-                  <div>
-                    <h3 className={styles.orderStallName}>{order.farmer?.stallName || 'Market Stall'}</h3>
-                    <span className={styles.orderNumber}>Order #{order.orderNumber}</span>
-                  </div>
-                </div>
-                <div className={styles.orderItemsPreview}>
-                  {(order.items || []).map((item, idx) => (
-                    <span key={idx} className={styles.orderItemPill}>
-                      {item.quantity}× {item.productName || item.name}
-                    </span>
-                  ))}
-                </div>
-                <div className={styles.orderFooter}>
-                  <Button variant="primary" size="sm" onClick={() => handleOpenReviewModal(order)}>
-                    Write Review
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="No reviews yet"
-            text="They appear after Customers collect orders."
-            actionLabel="Browse the market"
-            onAction={() => navigate('/buyer/products')}
-          />
-        )
-      ) : (
-        <div className={styles.mineList}>
-          {completedOrders.length > 0 ? (
-            <p className={styles.emptyPrompt}>You have {completedOrders.length} completed order(s) eligible for review.</p>
-          ) : (
-            <EmptyState
-              title="No past orders yet"
-              text="Collected orders will appear here."
-              actionLabel="Browse the market"
-              onAction={() => navigate('/buyer/products')}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Review Modal Dialog */}
-      {isModalOpen && targetOrder && (
-        <div
-          className={styles.modalOverlay}
-          onClick={() => !submitting && setIsModalOpen(false)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Review {targetOrder.farmer?.stallName || 'Stall'}</h2>
-              <button
-                type="button"
-                className={styles.modalCloseBtn}
-                onClick={() => setIsModalOpen(false)}
-                disabled={submitting}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitReview} className={styles.reviewForm}>
-              <div className={styles.ratingSection}>
-                <label className={styles.label}>Your Rating</label>
-                <div className={styles.starPicker}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      className={styles.starBtn}
-                      onMouseEnter={() => setHoverRating(star)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      onClick={() => setRating(star)}
-                    >
-                      <Star
-                        size={28}
-                        fill={(hoverRating || rating) >= star ? 'var(--color-beet)' : 'none'}
-                        color={(hoverRating || rating) >= star ? 'var(--color-beet)' : 'var(--color-border)'}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className={styles.commentSection}>
-                <label htmlFor="review-comment" className={styles.label}>
-                  Your Feedback
-                </label>
-                <textarea
-                  id="review-comment"
-                  className={styles.textarea}
-                  rows={4}
-                  placeholder="How was the harvest quality, freshness, and pickup experience?"
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formActions}>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setIsModalOpen(false)}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="primary" size="md" disabled={submitting}>
-                  {submitting ? 'Submitting...' : 'Submit Review'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default Reviews;
+import React, { useState, useEffect, useMemo } from 'react';import { useNavigate } from 'react-router-dom';import {  Star,  MessageSquare,  CheckCircle,  Clock,  Sparkles,  Search,  Filter,  ArrowRight,  Store,  Leaf,  Plus,  X,  ShoppingBag,  ShieldCheck,} from 'lucide-react';import { getOrders, createOrderReview } from '@/api/orders';import { useAuth } from '@/context/AuthContext';import { useToast } from '@/context/ToastContext';import Stars from '@/components/ui/Stars';import SegmentedControl from '@/components/ui/SegmentedControl';import EmptyState from '@/components/ui/EmptyState';import Button from '@/components/ui/Button';import styles from './Reviews.module.css';export function Reviews() {  const { user } = useAuth();  const { showToast } = useToast();  const navigate = useNavigate();  const [activeTab, setActiveTab] = useState('pending');   const [completedOrders, setCompletedOrders] = useState([]);  const [loadingOrders, setLoadingOrders] = useState(true);  const [isModalOpen, setIsModalOpen] = useState(false);  const [targetOrder, setTargetOrder] = useState(null);  const [rating, setRating] = useState(5);  const [hoverRating, setHoverRating] = useState(0);  const [comment, setComment] = useState('');  const [submitting, setSubmitting] = useState(false);  useEffect(() => {    let active = true;    setLoadingOrders(true);    getOrders({ status: 'completed' })      .then((res) => {        if (!active) return;        setCompletedOrders(res?.data || []);      })      .catch(() => {        if (active) setCompletedOrders([]);      })      .finally(() => {        if (active) setLoadingOrders(false);      });    return () => {      active = false;    };  }, []);  const handleOpenReviewModal = (order) => {    setTargetOrder(order);    setRating(5);    setComment('');    setIsModalOpen(true);  };  const handleSubmitReview = async (e) => {    e.preventDefault();    if (!targetOrder) return;    setSubmitting(true);    try {      await createOrderReview(targetOrder.id, {        rating,        comment: comment.trim(),      });      showToast('Thank you for sharing your feedback with the farmer!', 'success');      setIsModalOpen(false);      setCompletedOrders((prev) => prev.filter((o) => o.id !== targetOrder.id));    } catch (err) {      showToast(err?.message || 'Failed to submit review. Please try again.', 'error');    } finally {      setSubmitting(false);    }  };  return (    <div className={styles.container}>      <header className={styles.header}>        <div className={styles.headerBadge}>          <Sparkles size={14} className={styles.headerBadgeIcon} aria-hidden="true" />          <span>Community Feedback</span>        </div>        <h1 className={styles.title}>Stall & Harvest Reviews</h1>        <p className={styles.subtitle}>          Help your neighborhood community and growers by sharing feedback on your collected harvest orders.        </p>      </header>      {}      <div className={styles.tabsWrapper}>        <SegmentedControl          name="reviews-tab"          value={activeTab}          onChange={setActiveTab}          options={[            {              value: 'pending',              label: completedOrders.length > 0 ? `To Review (${completedOrders.length})` : 'To Review',            },            { value: 'mine', label: 'Past Orders' },          ]}        />      </div>      {}      {loadingOrders ? (        <div className={styles.loadingArea}>          <p className={styles.loadingText}>Checking completed pickups...</p>        </div>      ) : activeTab === 'pending' ? (        completedOrders.length > 0 ? (          <div className={styles.pendingGrid}>            {completedOrders.map((order) => (              <div key={order.id} className={styles.orderCard}>                <div className={styles.orderHeader}>                  <div className={styles.orderIconWrap}>                    <ShoppingBag size={20} />                  </div>                  <div>                    <h3 className={styles.orderStallName}>{order.farmer?.stallName || 'Market Stall'}</h3>                    <span className={styles.orderNumber}>Order #{order.orderNumber}</span>                  </div>                </div>                <div className={styles.orderItemsPreview}>                  {(order.items || []).map((item, idx) => (                    <span key={idx} className={styles.orderItemPill}>                      {item.quantity}× {item.productName || item.name}                    </span>                  ))}                </div>                <div className={styles.orderFooter}>                  <Button variant="primary" size="sm" onClick={() => handleOpenReviewModal(order)}>                    Write Review                  </Button>                </div>              </div>            ))}          </div>        ) : (          <EmptyState            title="No reviews yet"            text="They appear after Customers collect orders."            actionLabel="Browse the market"            onAction={() => navigate('/buyer/products')}          />        )      ) : (        <div className={styles.mineList}>          {completedOrders.length > 0 ? (            <p className={styles.emptyPrompt}>You have {completedOrders.length} completed order(s) eligible for review.</p>          ) : (            <EmptyState              title="No past orders yet"              text="Collected orders will appear here."              actionLabel="Browse the market"              onAction={() => navigate('/buyer/products')}            />          )}        </div>      )}      {}      {isModalOpen && targetOrder && (        <div          className={styles.modalOverlay}          onClick={() => !submitting && setIsModalOpen(false)}          role="dialog"          aria-modal="true"        >          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>            <div className={styles.modalHeader}>              <h2 className={styles.modalTitle}>Review {targetOrder.farmer?.stallName || 'Stall'}</h2>              <button                type="button"                className={styles.modalCloseBtn}                onClick={() => setIsModalOpen(false)}                disabled={submitting}              >                <X size={18} />              </button>            </div>            <form onSubmit={handleSubmitReview} className={styles.reviewForm}>              <div className={styles.ratingSection}>                <label className={styles.label}>Your Rating</label>                <div className={styles.starPicker}>                  {[1, 2, 3, 4, 5].map((star) => (                    <button                      key={star}                      type="button"                      className={styles.starBtn}                      onMouseEnter={() => setHoverRating(star)}                      onMouseLeave={() => setHoverRating(0)}                      onClick={() => setRating(star)}                    >                      <Star                        size={28}                        fill={(hoverRating || rating) >= star ? 'var(--color-beet)' : 'none'}                        color={(hoverRating || rating) >= star ? 'var(--color-beet)' : 'var(--color-border)'}                      />                    </button>                  ))}                </div>              </div>              <div className={styles.commentSection}>                <label htmlFor="review-comment" className={styles.label}>                  Your Feedback                </label>                <textarea                  id="review-comment"                  className={styles.textarea}                  rows={4}                  placeholder="How was the harvest quality, freshness, and pickup experience?"                  value={comment}                  onChange={(e) => setComment(e.target.value)}                />              </div>              <div className={styles.formActions}>                <Button                  type="button"                  variant="secondary"                  size="md"                  onClick={() => setIsModalOpen(false)}                  disabled={submitting}                >                  Cancel                </Button>                <Button type="submit" variant="primary" size="md" disabled={submitting}>                  {submitting ? 'Submitting...' : 'Submit Review'}                </Button>              </div>            </form>          </div>        </div>      )}    </div>  );}export default Reviews;

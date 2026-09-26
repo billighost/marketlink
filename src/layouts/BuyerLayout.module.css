@@ -1,61 +1,1 @@
-/* BuyerLayout — Customer application frame */
-
-.appShell {
-  --stack-nav: var(--bottom-nav-height);
-  --stack-cart: 0px;
-  --stack-bottom: calc(var(--stack-nav) + var(--stack-cart) + env(safe-area-inset-bottom, 0px));
-
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-white);
-  color: var(--color-ink);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  overscroll-behavior-y: none;
-  position: relative;
-}
-
-.appShell[data-cart-visible="true"] {
-  --stack-cart: calc(var(--cart-bar-height) + var(--stack-gap));
-}
-
-@media (min-width: 1024px) {
-  .appShell {
-    --stack-nav: 0px;
-  }
-}
-
-/* Skip link */
-.skipLink {
-  position: absolute;
-  top: -999px;
-  left: var(--space-4);
-  background-color: var(--color-primary);
-  color: var(--color-on-primary);
-  padding: var(--space-2) var(--space-4);
-  min-height: var(--tap-min);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  z-index: var(--z-toast);
-  font-weight: var(--weight-medium);
-  text-decoration: none;
-  transition: top var(--duration-fast) var(--ease-standard);
-}
-
-.skipLink:focus {
-  top: var(--space-4);
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
-
-/* Main content wrapper with dynamic bottom stack offset */
-.main {
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  padding-bottom: calc(var(--stack-bottom) + var(--space-8));
-}
+.appShell {  --stack-nav: var(--bottom-nav-height);  --stack-cart: 0px;  --stack-bottom: calc(var(--stack-nav) + var(--stack-cart) + env(safe-area-inset-bottom, 0px));  min-height: 100dvh;  display: flex;  flex-direction: column;  background-color: var(--color-white);  color: var(--color-ink);  -webkit-tap-highlight-color: transparent;  touch-action: manipulation;  overscroll-behavior-y: none;  position: relative;}.appShell[data-cart-visible="true"] {  --stack-cart: calc(var(--cart-bar-height) + var(--stack-gap));}@media (min-width: 1024px) {  .appShell {    --stack-nav: 0px;  }}.skipLink {  position: absolute;  top: -999px;  left: var(--space-4);  background-color: var(--color-primary);  color: var(--color-on-primary);  padding: var(--space-2) var(--space-4);  min-height: var(--tap-min);  display: inline-flex;  align-items: center;  justify-content: center;  border-radius: var(--radius-md);  z-index: var(--z-toast);  font-weight: var(--weight-medium);  text-decoration: none;  transition: top var(--duration-fast) var(--ease-standard);}.skipLink:focus {  top: var(--space-4);  outline: var(--focus-ring);  outline-offset: var(--focus-offset);}.main {  flex: 1 0 auto;  display: flex;  flex-direction: column;  width: 100%;  padding-bottom: calc(var(--stack-bottom) + var(--space-8));}

@@ -1,98 +1,1 @@
-/**
- * Farmer Overview service layer.
- * Aggregates dashboard cards: pending orders, today's pickups, low stock count,
- * recent orders, and recent customer reviews.
- */
-
-import { ObjectId } from 'mongodb';
-import { getDb } from '../../../db/client.js';
-import { COLLECTIONS } from '../../../db/collections.js';
-import { toObjectId } from '../../../utils/ids.js';
-import { AppError } from '../../../utils/errors.js';
-import { toFarmerOrderDto } from '../orders/farmerOrders.service.js';
-import { toReviewItem } from '../../../utils/shapes.js';
-
-/**
- * Retrieves executive overview metrics for a farmer dashboard.
- *
- * @param {string|ObjectId} farmerId
- * @returns {Promise<object>}
- */
-export async function getFarmerOverview(farmerId) {
-  const db = getDb();
-  const fId = toObjectId(farmerId);
-
-  const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: fId });
-  if (!farmer) {
-    throw AppError.notFound('Farmer profile not found');
-  }
-
-  // Today in market timezone
-  let tz = 'America/New_York';
-  if (Array.isArray(farmer.marketIds) && farmer.marketIds.length > 0) {
-    const market = await db
-      .collection(COLLECTIONS.MARKETS)
-      .findOne({ _id: farmer.marketIds[0] }, { projection: { timezone: 1 } });
-    if (market?.timezone) {
-      tz = market.timezone;
-    }
-  }
-
-  const todayStr = new Intl.DateTimeFormat('en-CA', {
-    timeZone: tz,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-
-  const [pendingOrders, todayOrders, lowStockCount, recentOrders, recentReviews] = await Promise.all([
-    // 1. Pending orders
-    db.collection(COLLECTIONS.ORDERS).countDocuments({
-      farmerId: fId,
-      status: 'placed',
-    }),
-
-    // 2. Today's pickups
-    db
-      .collection(COLLECTIONS.ORDERS)
-      .find({
-        farmerId: fId,
-        status: { $in: ['placed', 'accepted', 'ready'] },
-        'pickup.start': { $regex: `^${todayStr}` },
-      })
-      .toArray(),
-
-    // 3. Low or out of stock products
-    db.collection(COLLECTIONS.PRODUCTS).countDocuments({
-      farmerId: fId,
-      archived: { $ne: true },
-      availability: { $in: ['low', 'out'] },
-    }),
-
-    // 4. Recent orders (last 5)
-    db
-      .collection(COLLECTIONS.ORDERS)
-      .find({ farmerId: fId })
-      .sort({ createdAt: -1, _id: -1 })
-      .limit(5)
-      .toArray(),
-
-    // 5. Recent reviews (last 3)
-    db
-      .collection(COLLECTIONS.REVIEWS)
-      .find({ farmerId: fId, status: 'visible' })
-      .sort({ createdAt: -1, _id: -1 })
-      .limit(3)
-      .toArray(),
-  ]);
-
-  return {
-    pendingOrders,
-    todayPickupsCount: todayOrders.length,
-    lowStockCount,
-    ratingAvg: farmer.ratingAvg || 0,
-    ratingCount: farmer.ratingCount || 0,
-    recentOrders: recentOrders.map((o) => toFarmerOrderDto(o)),
-    recentReviews: recentReviews.map((r) => toReviewItem(r)),
-  };
-}
+import { ObjectId } from 'mongodb';import { getDb } from '../../../db/client.js';import { COLLECTIONS } from '../../../db/collections.js';import { toObjectId } from '../../../utils/ids.js';import { AppError } from '../../../utils/errors.js';import { toFarmerOrderDto } from '../orders/farmerOrders.service.js';import { toReviewItem } from '../../../utils/shapes.js';export async function getFarmerOverview(farmerId) {  const db = getDb();  const fId = toObjectId(farmerId);  const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: fId });  if (!farmer) {    throw AppError.notFound('Farmer profile not found');  }  let tz = 'America/New_York';  if (Array.isArray(farmer.marketIds) && farmer.marketIds.length > 0) {    const market = await db      .collection(COLLECTIONS.MARKETS)      .findOne({ _id: farmer.marketIds[0] }, { projection: { timezone: 1 } });    if (market?.timezone) {      tz = market.timezone;    }  }  const todayStr = new Intl.DateTimeFormat('en-CA', {    timeZone: tz,    year: 'numeric',    month: '2-digit',    day: '2-digit',  }).format(new Date());  const [pendingOrders, todayOrders, lowStockCount, recentOrders, recentReviews] = await Promise.all([    db.collection(COLLECTIONS.ORDERS).countDocuments({      farmerId: fId,      status: 'placed',    }),    db      .collection(COLLECTIONS.ORDERS)      .find({        farmerId: fId,        status: { $in: ['placed', 'accepted', 'ready'] },        'pickup.start': { $regex: `^${todayStr}` },      })      .toArray(),    db.collection(COLLECTIONS.PRODUCTS).countDocuments({      farmerId: fId,      archived: { $ne: true },      availability: { $in: ['low', 'out'] },    }),    db      .collection(COLLECTIONS.ORDERS)      .find({ farmerId: fId })      .sort({ createdAt: -1, _id: -1 })      .limit(5)      .toArray(),    db      .collection(COLLECTIONS.REVIEWS)      .find({ farmerId: fId, status: 'visible' })      .sort({ createdAt: -1, _id: -1 })      .limit(3)      .toArray(),  ]);  return {    pendingOrders,    todayPickupsCount: todayOrders.length,    lowStockCount,    ratingAvg: farmer.ratingAvg || 0,    ratingCount: farmer.ratingCount || 0,    recentOrders: recentOrders.map((o) => toFarmerOrderDto(o)),    recentReviews: recentReviews.map((r) => toReviewItem(r)),  };}

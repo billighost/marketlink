@@ -1,165 +1,1 @@
-/**
- * T2.076 - T2.100: Farmers module, directory filters, privacy, and slots test suite.
- */
-
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
-import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
-import { getSeedFacts } from './seedFacts.js';
-
-describe('Farmers Module Suite (T2.076 - T2.100)', () => {
-  let customerAuth;
-  let facts;
-  let activeFarmerId;
-  let pendingFarmerId;
-  let suspendedFarmerId;
-
-  before(async () => {
-    const env = await setupTestEnvironment();
-    customerAuth = await loginUser('george@example.com');
-    facts = getSeedFacts();
-
-    const activeFarmer = await env.db.collection('farmers').findOne({ email: 'riverbend@example.com' });
-    activeFarmerId = activeFarmer._id.toString();
-
-    const pendingFarmer = await env.db.collection('farmers').findOne({ email: 'pending.farmer@example.com' });
-    pendingFarmerId = pendingFarmer._id.toString();
-
-    const suspendedFarmer = await env.db.collection('farmers').findOne({ email: 'suspended.farmer@example.com' });
-    suspendedFarmerId = suspendedFarmer._id.toString();
-  });
-
-  after(async () => {
-    await teardownTestEnvironment();
-  });
-
-  function authHeaders() {
-    return { Authorization: `Bearer ${customerAuth.accessToken}` };
-  }
-
-  it('T2.076: GET /api/farmers requires authentication', async () => {
-    const res = await request('/api/farmers');
-    assert.equal(res.status, 401);
-  });
-
-  it('T2.077: GET /api/farmers returns only active listed farmers, never pending or suspended', async () => {
-    const res = await request('/api/farmers', { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.equal(body.data.length, facts.listedFarmersCount);
-
-    const returnedIds = body.data.map((f) => f.id);
-    assert.equal(returnedIds.includes(pendingFarmerId), false, 'Pending farmer must not appear in list');
-    assert.equal(returnedIds.includes(suspendedFarmerId), false, 'Suspended farmer must not appear in list');
-  });
-
-  it('T2.078: GET /api/farmers filters by market and category', async () => {
-    const res = await request(`/api/farmers?market=${facts.elmMarketId}&category=vegetables`, {
-      headers: authHeaders(),
-    });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(body.data.length >= 1);
-    for (const f of body.data) {
-      assert.ok(f.markets.some((m) => m.id === facts.elmMarketId));
-    }
-  });
-
-  it('T2.079: GET /api/farmers pagination with limit=5 visits all listed farmers without duplicates', async () => {
-    let nextCursor = null;
-    const collected = [];
-
-    do {
-      const url = nextCursor
-        ? `/api/farmers?sort=rating&limit=5&cursor=${encodeURIComponent(nextCursor)}`
-        : `/api/farmers?sort=rating&limit=5`;
-
-      const res = await request(url, { headers: authHeaders() });
-      assert.equal(res.status, 200);
-      const body = await res.json();
-
-      collected.push(...body.data);
-      nextCursor = body.meta.nextCursor;
-    } while (nextCursor);
-
-    assert.equal(collected.length, facts.listedFarmersCount);
-    const idSet = new Set(collected.map((f) => f.id));
-    assert.equal(idSet.size, facts.listedFarmersCount, 'No duplicate farmers during pagination');
-  });
-
-  it('T2.080: GET /api/farmers/:id returns farmerDetail with ratingBreakdown and no private contact', async () => {
-    const res = await request(`/api/farmers/${activeFarmerId}`, { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(body.data);
-    const f = body.data;
-
-    assert.equal(f.id, activeFarmerId);
-    assert.ok(f.stallName);
-    assert.ok(f.story);
-    assert.ok(f.contactPerson);
-    assert.equal(f.phone, undefined, 'Farmer phone must never leak in detail');
-    assert.equal(f.email, undefined, 'Farmer email must never leak in detail');
-    assert.ok(f.ratingBreakdown);
-    assert.equal(typeof f.ratingBreakdown[5], 'number');
-    assert.ok(typeof f.productCount === 'number');
-  });
-
-  it('T2.081: GET /api/farmers/:id returns 404 for pending and suspended farmers', async () => {
-    const pendingRes = await request(`/api/farmers/${pendingFarmerId}`, { headers: authHeaders() });
-    assert.equal(pendingRes.status, 404);
-
-    const suspendedRes = await request(`/api/farmers/${suspendedFarmerId}`, { headers: authHeaders() });
-    assert.equal(suspendedRes.status, 404);
-  });
-
-  it('T2.082: GET /api/farmers/:id/products returns listed products for farmer', async () => {
-    const res = await request(`/api/farmers/${activeFarmerId}/products`, { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.ok(body.data.length >= 1);
-
-    for (const p of body.data) {
-      assert.equal(p.farmer.id, activeFarmerId);
-      assert.ok(p.priceCents > 0);
-    }
-  });
-
-  it('T2.083: GET /api/farmers/:id/reviews returns reviews with redacted customer name', async () => {
-    const res = await request(`/api/farmers/${activeFarmerId}/reviews`, { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-
-    if (body.data.length > 0) {
-      const review = body.data[0];
-      assert.ok(review.id);
-      assert.ok(review.rating >= 1 && review.rating <= 5);
-      // Redacted customer name (e.g. "George A." or single word)
-      assert.ok(/^[A-Z][a-z]+(\s[A-Z]\.)?$/.test(review.customerName) || review.customerName.length > 0);
-    }
-  });
-
-  it('T2.084: GET /api/farmers/:id/pickup-slots returns upcoming slots', async () => {
-    const res = await request(`/api/farmers/${activeFarmerId}/pickup-slots?days=14`, { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.ok(body.data.length >= 1);
-
-    const slot = body.data[0];
-    assert.ok(slot.start);
-    assert.ok(slot.end);
-    assert.ok(slot.label);
-    assert.ok(slot.marketName);
-    assert.equal(typeof slot.isOpen, 'boolean');
-  });
-});
+import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { getSeedFacts } from './seedFacts.js';describe('Farmers Module Suite (T2.076 - T2.100)', () => {  let customerAuth;  let facts;  let activeFarmerId;  let pendingFarmerId;  let suspendedFarmerId;  before(async () => {    const env = await setupTestEnvironment();    customerAuth = await loginUser('george@example.com');    facts = getSeedFacts();    const activeFarmer = await env.db.collection('farmers').findOne({ email: 'riverbend@example.com' });    activeFarmerId = activeFarmer._id.toString();    const pendingFarmer = await env.db.collection('farmers').findOne({ email: 'pending.farmer@example.com' });    pendingFarmerId = pendingFarmer._id.toString();    const suspendedFarmer = await env.db.collection('farmers').findOne({ email: 'suspended.farmer@example.com' });    suspendedFarmerId = suspendedFarmer._id.toString();  });  after(async () => {    await teardownTestEnvironment();  });  function authHeaders() {    return { Authorization: `Bearer ${customerAuth.accessToken}` };  }  it('T2.076: GET /api/farmers requires authentication', async () => {    const res = await request('/api/farmers');    assert.equal(res.status, 401);  });  it('T2.077: GET /api/farmers returns only active listed farmers, never pending or suspended', async () => {    const res = await request('/api/farmers', { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.equal(body.data.length, facts.listedFarmersCount);    const returnedIds = body.data.map((f) => f.id);    assert.equal(returnedIds.includes(pendingFarmerId), false, 'Pending farmer must not appear in list');    assert.equal(returnedIds.includes(suspendedFarmerId), false, 'Suspended farmer must not appear in list');  });  it('T2.078: GET /api/farmers filters by market and category', async () => {    const res = await request(`/api/farmers?market=${facts.elmMarketId}&category=vegetables`, {      headers: authHeaders(),    });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(body.data.length >= 1);    for (const f of body.data) {      assert.ok(f.markets.some((m) => m.id === facts.elmMarketId));    }  });  it('T2.079: GET /api/farmers pagination with limit=5 visits all listed farmers without duplicates', async () => {    let nextCursor = null;    const collected = [];    do {      const url = nextCursor        ? `/api/farmers?sort=rating&limit=5&cursor=${encodeURIComponent(nextCursor)}`        : `/api/farmers?sort=rating&limit=5`;      const res = await request(url, { headers: authHeaders() });      assert.equal(res.status, 200);      const body = await res.json();      collected.push(...body.data);      nextCursor = body.meta.nextCursor;    } while (nextCursor);    assert.equal(collected.length, facts.listedFarmersCount);    const idSet = new Set(collected.map((f) => f.id));    assert.equal(idSet.size, facts.listedFarmersCount, 'No duplicate farmers during pagination');  });  it('T2.080: GET /api/farmers/:id returns farmerDetail with ratingBreakdown and no private contact', async () => {    const res = await request(`/api/farmers/${activeFarmerId}`, { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(body.data);    const f = body.data;    assert.equal(f.id, activeFarmerId);    assert.ok(f.stallName);    assert.ok(f.story);    assert.ok(f.contactPerson);    assert.equal(f.phone, undefined, 'Farmer phone must never leak in detail');    assert.equal(f.email, undefined, 'Farmer email must never leak in detail');    assert.ok(f.ratingBreakdown);    assert.equal(typeof f.ratingBreakdown[5], 'number');    assert.ok(typeof f.productCount === 'number');  });  it('T2.081: GET /api/farmers/:id returns 404 for pending and suspended farmers', async () => {    const pendingRes = await request(`/api/farmers/${pendingFarmerId}`, { headers: authHeaders() });    assert.equal(pendingRes.status, 404);    const suspendedRes = await request(`/api/farmers/${suspendedFarmerId}`, { headers: authHeaders() });    assert.equal(suspendedRes.status, 404);  });  it('T2.082: GET /api/farmers/:id/products returns listed products for farmer', async () => {    const res = await request(`/api/farmers/${activeFarmerId}/products`, { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.ok(body.data.length >= 1);    for (const p of body.data) {      assert.equal(p.farmer.id, activeFarmerId);      assert.ok(p.priceCents > 0);    }  });  it('T2.083: GET /api/farmers/:id/reviews returns reviews with redacted customer name', async () => {    const res = await request(`/api/farmers/${activeFarmerId}/reviews`, { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    if (body.data.length > 0) {      const review = body.data[0];      assert.ok(review.id);      assert.ok(review.rating >= 1 && review.rating <= 5);      assert.ok(/^[A-Z][a-z]+(\s[A-Z]\.)?$/.test(review.customerName) || review.customerName.length > 0);    }  });  it('T2.084: GET /api/farmers/:id/pickup-slots returns upcoming slots', async () => {    const res = await request(`/api/farmers/${activeFarmerId}/pickup-slots?days=14`, { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.ok(body.data.length >= 1);    const slot = body.data[0];    assert.ok(slot.start);    assert.ok(slot.end);    assert.ok(slot.label);    assert.ok(slot.marketName);    assert.equal(typeof slot.isOpen, 'boolean');  });});

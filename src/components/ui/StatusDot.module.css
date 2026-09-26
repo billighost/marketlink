@@ -1,42 +1,1 @@
-/* StatusDot — order status indicator */
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.dot {
-  width: var(--space-2);
-  height: var(--space-2);
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
-}
-
-.label {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  line-height: var(--lh-ui);
-}
-
-.neutral .dot,
-.neutral {
-  background-color: var(--color-ink-faint);
-}
-
-.success {
-  background-color: var(--color-success);
-}
-
-.danger {
-  background-color: var(--color-danger);
-}
-
-/* Label colour follows the dot tone for emphasis */
-.status:has(.success) .label {
-  color: var(--color-success);
-}
-
-.status:has(.danger) .label {
-  color: var(--color-danger);
-}
+.status {  display: inline-flex;  align-items: center;  gap: var(--space-2);}.dot {  width: var(--space-2);  height: var(--space-2);  border-radius: var(--radius-full);  flex-shrink: 0;}.label {  font-family: var(--font-body);  font-size: var(--text-sm);  font-weight: var(--weight-medium);  line-height: var(--lh-ui);}.neutral .dot,.neutral {  background-color: var(--color-ink-faint);}.success {  background-color: var(--color-success);}.danger {  background-color: var(--color-danger);}.status:has(.success) .label {  color: var(--color-success);}.status:has(.danger) .label {  color: var(--color-danger);}

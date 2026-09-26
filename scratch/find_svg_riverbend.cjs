@@ -1,34 +1,1 @@
-const { chromium } = require('playwright');
-
-(async () => {
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-  await page.addInitScript(() => {
-    localStorage.setItem('marketlink_role', 'buyer');
-    localStorage.setItem(
-      'marketlink_user',
-      JSON.stringify({
-        id: 'user-george',
-        name: 'George Adams',
-        firstName: 'George',
-        email: 'george@example.com',
-        role: 'buyer',
-      })
-    );
-  });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('http://localhost:3000/buyer/farmers/f-riverbend');
-  await page.waitForTimeout(500);
-
-  const svgs = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('svg')).map(s => {
-      const rect = s.getBoundingClientRect();
-      const parent = s.parentElement ? (s.parentElement.className || s.parentElement.tagName) : '';
-      const outer = s.outerHTML.slice(0, 140);
-      return { outer, parent, w: Math.round(rect.width), h: Math.round(rect.height), ratio: rect.width / rect.height };
-    }).filter(s => s.w > 0 && Math.abs(s.ratio - 0.78) < 0.08);
-  });
-  console.log('Farmer SVGs around 0.78:', svgs);
-
-  await browser.close();
-})();
+const { chromium } = require('playwright');(async () => {  const browser = await chromium.launch();  const page = await browser.newPage();  await page.addInitScript(() => {    localStorage.setItem('marketlink_role', 'buyer');    localStorage.setItem(      'marketlink_user',      JSON.stringify({        id: 'user-george',        name: 'George Adams',        firstName: 'George',        email: 'george@example.com',        role: 'buyer',      })    );  });  await page.setViewportSize({ width: 390, height: 844 });  await page.goto('http://localhost:3000/buyer/farmers/f-riverbend');  await page.waitForTimeout(500);  const svgs = await page.evaluate(() => {    return Array.from(document.querySelectorAll('svg')).map(s => {      const rect = s.getBoundingClientRect();      const parent = s.parentElement ? (s.parentElement.className || s.parentElement.tagName) : '';      const outer = s.outerHTML.slice(0, 140);      return { outer, parent, w: Math.round(rect.width), h: Math.round(rect.height), ratio: rect.width / rect.height };    }).filter(s => s.w > 0 && Math.abs(s.ratio - 0.78) < 0.08);  });  console.log('Farmer SVGs around 0.78:', svgs);  await browser.close();})();

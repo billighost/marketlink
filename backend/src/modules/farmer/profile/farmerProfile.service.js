@@ -1,195 +1,1 @@
-/**
- * Farmer profile service layer.
- * Handles farmer profile retrieval, validation, and denormalized updates.
- */
-
-import fs from 'node:fs';
-import path from 'node:path';
-import { getDb } from '../../../db/client.js';
-import { COLLECTIONS } from '../../../db/collections.js';
-import { toObjectId } from '../../../utils/ids.js';
-import { AppError } from '../../../utils/errors.js';
-import { clearSlotsCache } from '../../../utils/slots.js';
-import { syncFarmerStallInfo, syncFarmerMarkets } from '../../../utils/sync.js';
-import { env } from '../../../config/env.js';
-import { validateAndAttachImage } from '../../uploads/attachHelper.js';
-
-/**
- * Retrieves the farmer profile for an authenticated user.
- *
- * @param {string|import('mongodb').ObjectId} userId
- * @returns {Promise<object>}
- */
-export async function getFarmerProfile(userId) {
-  const db = getDb();
-  const uid = toObjectId(userId);
-
-  const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: uid });
-  if (!farmer) {
-    throw AppError.notFound('Farmer profile not found.');
-  }
-
-  const user = await db.collection(COLLECTIONS.USERS).findOne({ _id: uid }, { projection: { status: 1 } });
-
-  const { _id, ...rest } = farmer;
-  return {
-    id: _id.toString(),
-    approvalStatus: user?.status || 'pending',
-    ...rest,
-  };
-}
-
-/**
- * Updates permitted farmer profile fields and synchronizes denormalized collections.
- *
- * @param {string|import('mongodb').ObjectId} userId
- * @param {object} updates
- * @returns {Promise<object>}
- */
-export async function updateFarmerProfile(userId, updates) {
-  const db = getDb();
-  const uid = toObjectId(userId);
-
-  const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: uid });
-  if (!farmer) {
-    throw AppError.notFound('Farmer profile not found.');
-  }
-
-  const effectiveOperatingDays = updates.operatingDays || farmer.operatingDays || [];
-
-  // Validate marketIds (0..5 existing active market IDs)
-  if (updates.marketIds !== undefined) {
-    const marketOids = [];
-    for (const mId of updates.marketIds) {
-      const mOid = toObjectId(mId);
-      const market = await db
-        .collection(COLLECTIONS.MARKETS)
-        .findOne({ _id: mOid, status: 'active' });
-      if (!market) {
-        throw AppError.unprocessable([
-          { field: 'marketIds', message: `Market ${mId} does not exist or is inactive.` },
-        ]);
-      }
-      marketOids.push(mOid);
-    }
-    updates.marketIds = marketOids;
-  }
-
-  // Validate pickupWindows
-  if (updates.pickupWindows !== undefined) {
-    const windows = updates.pickupWindows;
-    if (windows.length > 14) {
-      throw AppError.unprocessable([
-        { field: 'pickupWindows', message: 'Pickup windows cannot exceed 14 entries.' },
-      ]);
-    }
-
-    const dayWindows = new Map();
-    for (let i = 0; i < windows.length; i++) {
-      const w = windows[i];
-      if (!effectiveOperatingDays.includes(w.day)) {
-        throw AppError.unprocessable([
-          {
-            field: `pickupWindows[${i}].day`,
-            message: `Pickup window day '${w.day}' must be included in operating days.`,
-          },
-        ]);
-      }
-      if (w.startMin < 0 || w.startMin > 1439) {
-        throw AppError.unprocessable([
-          { field: `pickupWindows[${i}].startMin`, message: 'startMin must be between 0 and 1439.' },
-        ]);
-      }
-      if (w.endMin < 1 || w.endMin > 1440) {
-        throw AppError.unprocessable([
-          { field: `pickupWindows[${i}].endMin`, message: 'endMin must be between 1 and 1440.' },
-        ]);
-      }
-      if (w.endMin - w.startMin < 30) {
-        throw AppError.unprocessable([
-          {
-            field: `pickupWindows[${i}]`,
-            message: 'Pickup window duration must be at least 30 minutes.',
-          },
-        ]);
-      }
-
-      if (!dayWindows.has(w.day)) {
-        dayWindows.set(w.day, []);
-      }
-      dayWindows.get(w.day).push({ start: w.startMin, end: w.endMin, index: i });
-    }
-
-    // Check for overlapping windows on the same day
-    for (const [day, list] of dayWindows.entries()) {
-      for (let a = 0; a < list.length; a++) {
-        for (let b = a + 1; b < list.length; b++) {
-          const w1 = list[a];
-          const w2 = list[b];
-          if (w1.start < w2.end && w2.start < w1.end) {
-            throw AppError.unprocessable([
-              {
-                field: `pickupWindows[${w2.index}]`,
-                message: `Overlapping pickup windows detected on ${day}.`,
-              },
-            ]);
-          }
-        }
-      }
-    }
-  }
-
-  // Format location as GeoJSON Point if supplied
-  const docUpdates = { ...updates, updatedAt: new Date() };
-
-  // Validate imageUrl if supplied
-  if (updates.imageUrl !== undefined) {
-    const attachRes = await validateAndAttachImage({
-      db,
-      imageUrl: updates.imageUrl,
-      imagePublicId: updates.imagePublicId,
-      ownerUserId: uid,
-      attachTo: { type: 'farmer', id: farmer._id },
-      oldPublicId: farmer.imagePublicId,
-    });
-    docUpdates.imageUrl = attachRes.imageUrl;
-    docUpdates.imagePublicId = attachRes.imagePublicId;
-  }
-  if (updates.location && typeof updates.location.lat === 'number' && typeof updates.location.lng === 'number') {
-    docUpdates.location = {
-      type: 'Point',
-      coordinates: [updates.location.lng, updates.location.lat],
-    };
-  }
-
-  if (updates.stallName) {
-    docUpdates.stallNameLower = updates.stallName.toLowerCase();
-  }
-
-  // Apply updates to farmers collection
-  await db.collection(COLLECTIONS.FARMERS).updateOne(
-    { _id: farmer._id },
-    { $set: docUpdates }
-  );
-
-  // Synchronize denormalized fields
-  if (updates.stallName !== undefined || updates.stallNumber !== undefined) {
-    await syncFarmerStallInfo(
-      farmer._id,
-      {
-        stallName: updates.stallName,
-        stallNumber: updates.stallNumber,
-      },
-      { db }
-    );
-  }
-
-  if (updates.marketIds !== undefined) {
-    await syncFarmerMarkets(farmer._id, updates.marketIds, farmer.marketIds || [], { db });
-  }
-
-  // Clear slots cache so upcoming slots reflect changes
-  clearSlotsCache();
-
-  return getFarmerProfile(userId);
-}
+import fs from 'node:fs';import path from 'node:path';import { getDb } from '../../../db/client.js';import { COLLECTIONS } from '../../../db/collections.js';import { toObjectId } from '../../../utils/ids.js';import { AppError } from '../../../utils/errors.js';import { clearSlotsCache } from '../../../utils/slots.js';import { syncFarmerStallInfo, syncFarmerMarkets } from '../../../utils/sync.js';import { env } from '../../../config/env.js';import { validateAndAttachImage } from '../../uploads/attachHelper.js';export async function getFarmerProfile(userId) {  const db = getDb();  const uid = toObjectId(userId);  const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: uid });  if (!farmer) {    throw AppError.notFound('Farmer profile not found.');  }  const user = await db.collection(COLLECTIONS.USERS).findOne({ _id: uid }, { projection: { status: 1 } });  const { _id, ...rest } = farmer;  return {    id: _id.toString(),    approvalStatus: user?.status || 'pending',    ...rest,  };}export async function updateFarmerProfile(userId, updates) {  const db = getDb();  const uid = toObjectId(userId);  const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: uid });  if (!farmer) {    throw AppError.notFound('Farmer profile not found.');  }  const effectiveOperatingDays = updates.operatingDays || farmer.operatingDays || [];  if (updates.marketIds !== undefined) {    const marketOids = [];    for (const mId of updates.marketIds) {      const mOid = toObjectId(mId);      const market = await db        .collection(COLLECTIONS.MARKETS)        .findOne({ _id: mOid, status: 'active' });      if (!market) {        throw AppError.unprocessable([          { field: 'marketIds', message: `Market ${mId} does not exist or is inactive.` },        ]);      }      marketOids.push(mOid);    }    updates.marketIds = marketOids;  }  if (updates.pickupWindows !== undefined) {    const windows = updates.pickupWindows;    if (windows.length > 14) {      throw AppError.unprocessable([        { field: 'pickupWindows', message: 'Pickup windows cannot exceed 14 entries.' },      ]);    }    const dayWindows = new Map();    for (let i = 0; i < windows.length; i++) {      const w = windows[i];      if (!effectiveOperatingDays.includes(w.day)) {        throw AppError.unprocessable([          {            field: `pickupWindows[${i}].day`,            message: `Pickup window day '${w.day}' must be included in operating days.`,          },        ]);      }      if (w.startMin < 0 || w.startMin > 1439) {        throw AppError.unprocessable([          { field: `pickupWindows[${i}].startMin`, message: 'startMin must be between 0 and 1439.' },        ]);      }      if (w.endMin < 1 || w.endMin > 1440) {        throw AppError.unprocessable([          { field: `pickupWindows[${i}].endMin`, message: 'endMin must be between 1 and 1440.' },        ]);      }      if (w.endMin - w.startMin < 30) {        throw AppError.unprocessable([          {            field: `pickupWindows[${i}]`,            message: 'Pickup window duration must be at least 30 minutes.',          },        ]);      }      if (!dayWindows.has(w.day)) {        dayWindows.set(w.day, []);      }      dayWindows.get(w.day).push({ start: w.startMin, end: w.endMin, index: i });    }    for (const [day, list] of dayWindows.entries()) {      for (let a = 0; a < list.length; a++) {        for (let b = a + 1; b < list.length; b++) {          const w1 = list[a];          const w2 = list[b];          if (w1.start < w2.end && w2.start < w1.end) {            throw AppError.unprocessable([              {                field: `pickupWindows[${w2.index}]`,                message: `Overlapping pickup windows detected on ${day}.`,              },            ]);          }        }      }    }  }  const docUpdates = { ...updates, updatedAt: new Date() };  if (updates.imageUrl !== undefined) {    const attachRes = await validateAndAttachImage({      db,      imageUrl: updates.imageUrl,      imagePublicId: updates.imagePublicId,      ownerUserId: uid,      attachTo: { type: 'farmer', id: farmer._id },      oldPublicId: farmer.imagePublicId,    });    docUpdates.imageUrl = attachRes.imageUrl;    docUpdates.imagePublicId = attachRes.imagePublicId;  }  if (updates.location && typeof updates.location.lat === 'number' && typeof updates.location.lng === 'number') {    docUpdates.location = {      type: 'Point',      coordinates: [updates.location.lng, updates.location.lat],    };  }  if (updates.stallName) {    docUpdates.stallNameLower = updates.stallName.toLowerCase();  }  await db.collection(COLLECTIONS.FARMERS).updateOne(    { _id: farmer._id },    { $set: docUpdates }  );  if (updates.stallName !== undefined || updates.stallNumber !== undefined) {    await syncFarmerStallInfo(      farmer._id,      {        stallName: updates.stallName,        stallNumber: updates.stallNumber,      },      { db }    );  }  if (updates.marketIds !== undefined) {    await syncFarmerMarkets(farmer._id, updates.marketIds, farmer.marketIds || [], { db });  }  clearSlotsCache();  return getFarmerProfile(userId);}

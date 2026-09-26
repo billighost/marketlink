@@ -1,132 +1,1 @@
-/**
- * T2.101 - T2.120: Markets module, geolocation distance, and attending catalog test suite.
- */
-
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
-import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
-import { getSeedFacts } from './seedFacts.js';
-
-describe('Markets Module Suite (T2.101 - T2.120)', () => {
-  let customerAuth;
-  let facts;
-
-  before(async () => {
-    await setupTestEnvironment();
-    customerAuth = await loginUser('george@example.com');
-    facts = getSeedFacts();
-  });
-
-  after(async () => {
-    await teardownTestEnvironment();
-  });
-
-  function authHeaders() {
-    return { Authorization: `Bearer ${customerAuth.accessToken}` };
-  }
-
-  it('T2.101: GET /api/markets requires authentication', async () => {
-    const res = await request('/api/markets');
-    assert.equal(res.status, 401);
-  });
-
-  it('T2.102: GET /api/markets without coordinates returns markets sorted alphabetically by name', async () => {
-    const res = await request('/api/markets', { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.ok(body.data.length >= 4);
-
-    for (let i = 1; i < body.data.length; i++) {
-      assert.ok(body.data[i].name.localeCompare(body.data[i - 1].name) >= 0);
-    }
-
-    const first = body.data[0];
-    assert.ok(first.id);
-    assert.ok(first.name);
-    assert.ok(first.slug);
-    assert.ok(first.address);
-    assert.ok(first.location);
-    assert.ok(first.directionsUrls?.google);
-    assert.ok(first.directionsUrls?.osm);
-  });
-
-  it('T2.103: GET /api/markets with coordinates returns markets sorted by distance ascending', async () => {
-    // Maplewood coordinates: lat 40.73, lng -74.17
-    const res = await request('/api/markets?lat=40.73&lng=-74.17&radiusKm=50', { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.ok(body.data.length >= 1);
-
-    for (const m of body.data) {
-      assert.equal(typeof m.distanceMeters, 'number');
-    }
-
-    for (let i = 1; i < body.data.length; i++) {
-      assert.ok(body.data[i].distanceMeters >= body.data[i - 1].distanceMeters);
-    }
-  });
-
-  it('T2.104: GET /api/markets?day=sat filters markets by schedule day', async () => {
-    const res = await request('/api/markets?day=sat', { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.equal(body.data.length, 2, 'Exactly 2 markets have Saturday schedule');
-    for (const m of body.data) {
-      assert.ok(m.schedule.some((s) => s.day === 'sat'));
-    }
-  });
-
-  it('T2.105: GET /api/markets/:id returns marketDetail', async () => {
-    const res = await request(`/api/markets/${facts.elmMarketId}`, { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(body.data);
-    assert.equal(body.data.id, facts.elmMarketId);
-    assert.equal(body.data.name, 'Elm Street Market');
-    assert.ok(Array.isArray(body.data.facilities));
-    assert.equal(body.data.timezone, 'America/New_York');
-    assert.ok(body.data.farmerCount >= 6);
-  });
-
-  it('T2.106: GET /api/markets/:id returns 404 for non-existent market', async () => {
-    const res = await request('/api/markets/66a000000000000000000000', { headers: authHeaders() });
-    assert.equal(res.status, 404);
-  });
-
-  it('T2.107: GET /api/markets/:id/farmers returns attending farmers at market', async () => {
-    const res = await request(`/api/markets/${facts.elmMarketId}/farmers?sort=rating`, { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.ok(body.data.length >= 6);
-
-    for (const f of body.data) {
-      assert.ok(f.id);
-      assert.ok(f.stallName);
-      assert.equal(f.phone, undefined, 'Farmer phone must never leak');
-      assert.equal(f.email, undefined, 'Farmer email must never leak');
-    }
-  });
-
-  it('T2.108: GET /api/markets/:id/products returns fresh products at that market', async () => {
-    const res = await request(`/api/markets/${facts.elmMarketId}/products`, { headers: authHeaders() });
-    assert.equal(res.status, 200);
-
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.ok(body.data.length >= 1);
-
-    for (const p of body.data) {
-      assert.ok(p.id);
-      assert.ok(p.name);
-      assert.ok(p.priceCents);
-    }
-  });
-});
+import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { getSeedFacts } from './seedFacts.js';describe('Markets Module Suite (T2.101 - T2.120)', () => {  let customerAuth;  let facts;  before(async () => {    await setupTestEnvironment();    customerAuth = await loginUser('george@example.com');    facts = getSeedFacts();  });  after(async () => {    await teardownTestEnvironment();  });  function authHeaders() {    return { Authorization: `Bearer ${customerAuth.accessToken}` };  }  it('T2.101: GET /api/markets requires authentication', async () => {    const res = await request('/api/markets');    assert.equal(res.status, 401);  });  it('T2.102: GET /api/markets without coordinates returns markets sorted alphabetically by name', async () => {    const res = await request('/api/markets', { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.ok(body.data.length >= 4);    for (let i = 1; i < body.data.length; i++) {      assert.ok(body.data[i].name.localeCompare(body.data[i - 1].name) >= 0);    }    const first = body.data[0];    assert.ok(first.id);    assert.ok(first.name);    assert.ok(first.slug);    assert.ok(first.address);    assert.ok(first.location);    assert.ok(first.directionsUrls?.google);    assert.ok(first.directionsUrls?.osm);  });  it('T2.103: GET /api/markets with coordinates returns markets sorted by distance ascending', async () => {    const res = await request('/api/markets?lat=40.73&lng=-74.17&radiusKm=50', { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.ok(body.data.length >= 1);    for (const m of body.data) {      assert.equal(typeof m.distanceMeters, 'number');    }    for (let i = 1; i < body.data.length; i++) {      assert.ok(body.data[i].distanceMeters >= body.data[i - 1].distanceMeters);    }  });  it('T2.104: GET /api/markets?day=sat filters markets by schedule day', async () => {    const res = await request('/api/markets?day=sat', { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.equal(body.data.length, 2, 'Exactly 2 markets have Saturday schedule');    for (const m of body.data) {      assert.ok(m.schedule.some((s) => s.day === 'sat'));    }  });  it('T2.105: GET /api/markets/:id returns marketDetail', async () => {    const res = await request(`/api/markets/${facts.elmMarketId}`, { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(body.data);    assert.equal(body.data.id, facts.elmMarketId);    assert.equal(body.data.name, 'Elm Street Market');    assert.ok(Array.isArray(body.data.facilities));    assert.equal(body.data.timezone, 'America/New_York');    assert.ok(body.data.farmerCount >= 6);  });  it('T2.106: GET /api/markets/:id returns 404 for non-existent market', async () => {    const res = await request('/api/markets/66a000000000000000000000', { headers: authHeaders() });    assert.equal(res.status, 404);  });  it('T2.107: GET /api/markets/:id/farmers returns attending farmers at market', async () => {    const res = await request(`/api/markets/${facts.elmMarketId}/farmers?sort=rating`, { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.ok(body.data.length >= 6);    for (const f of body.data) {      assert.ok(f.id);      assert.ok(f.stallName);      assert.equal(f.phone, undefined, 'Farmer phone must never leak');      assert.equal(f.email, undefined, 'Farmer email must never leak');    }  });  it('T2.108: GET /api/markets/:id/products returns fresh products at that market', async () => {    const res = await request(`/api/markets/${facts.elmMarketId}/products`, { headers: authHeaders() });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.ok(body.data.length >= 1);    for (const p of body.data) {      assert.ok(p.id);      assert.ok(p.name);      assert.ok(p.priceCents);    }  });});

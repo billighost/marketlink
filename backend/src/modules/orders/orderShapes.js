@@ -1,108 +1,1 @@
-/**
- * Order response shapes and data transformers.
- * Transforms database order documents into safe, normalized orderSummary and orderDetail contracts.
- */
-
-import { formatSlotLabel } from '../../utils/slots.js';
-import { toMarketCard } from '../../utils/shapes.js';
-
-/**
- * Transforms an order document into a standard orderSummary contract.
- *
- * @param {object} order
- * @param {object} [options]
- * @param {Date} [options.now=new Date()]
- * @param {string} [options.tz='America/New_York']
- * @returns {object}
- */
-export function toOrderSummary(order, { now = new Date(), tz = 'America/New_York' } = {}) {
-  const pStart = order.pickup?.start ? (order.pickup.start instanceof Date ? order.pickup.start : new Date(order.pickup.start)) : null;
-  const pEnd = order.pickup?.end ? (order.pickup.end instanceof Date ? order.pickup.end : new Date(order.pickup.end)) : null;
-  const cutoff = order.cutoffAt ? (order.cutoffAt instanceof Date ? order.cutoffAt : new Date(order.cutoffAt)) : null;
-  const nowDate = now instanceof Date ? now : new Date(now);
-
-  const label = order.pickup?.label || (pStart && pEnd && !isNaN(pStart.getTime()) && !isNaN(pEnd.getTime()) ? formatSlotLabel(pStart, pEnd, tz) : '');
-  const itemCount = Array.isArray(order.items)
-    ? order.items.reduce((sum, it) => sum + (it.quantity || 0), 0)
-    : 0;
-
-  const itemsPreview = Array.isArray(order.items)
-    ? order.items.slice(0, 3).map((it) => ({ name: it.name, art: it.art || 'carrot' }))
-    : [];
-
-  const canModify = order.status === 'placed' && cutoff && !isNaN(cutoff.getTime()) && nowDate < cutoff;
-
-  return {
-    id: order._id ? order._id.toString() : order.id,
-    orderNumber: order.orderNumber,
-    status: order.status,
-    farmer: {
-      id: order.farmerId ? order.farmerId.toString() : '',
-      stallName: order.farmerName || '',
-      stallNumber: order.pickup?.stallNumber || '',
-      art: order.farmerArt || 'stall',
-    },
-    pickup: {
-      start: pStart && !isNaN(pStart.getTime()) ? pStart.toISOString() : (order.pickup?.start || ''),
-      end: pEnd && !isNaN(pEnd.getTime()) ? pEnd.toISOString() : (order.pickup?.end || ''),
-      label,
-    },
-    cutoffAt: cutoff && !isNaN(cutoff.getTime()) ? cutoff.toISOString() : null,
-    itemCount,
-    totalCents: order.totalCents,
-    itemsPreview,
-    canModify: Boolean(canModify),
-    reviewed: Boolean(order.reviewed),
-  };
-}
-
-/**
- * Transforms an order document into a complete orderDetail contract.
- *
- * @param {object} order
- * @param {object} [options]
- * @param {object} [options.marketDoc]
- * @param {Date} [options.now=new Date()]
- * @param {string} [options.tz='America/New_York']
- * @returns {object}
- */
-export function toOrderDetail(order, { marketDoc, now = new Date(), tz = 'America/New_York' } = {}) {
-  const summary = toOrderSummary(order, { now, tz });
-  const cutoff = order.cutoffAt instanceof Date ? order.cutoffAt : new Date(order.cutoffAt);
-  const nowDate = now instanceof Date ? now : new Date(now);
-  const canCancel = ['placed', 'accepted'].includes(order.status) && nowDate < cutoff;
-
-  const items = Array.isArray(order.items)
-    ? order.items.map((it) => ({
-        productId: it.productId ? it.productId.toString() : '',
-        name: it.name,
-        unit: it.unit || 'each',
-        art: it.art || 'carrot',
-        priceCents: it.priceCents,
-        quantity: it.quantity,
-        lineTotalCents: it.lineTotalCents || it.priceCents * it.quantity,
-      }))
-    : [];
-
-  const timeline = Array.isArray(order.timeline)
-    ? order.timeline.map((t) => ({
-        status: t.status,
-        at: t.at instanceof Date ? t.at.toISOString() : t.at,
-        byRole: t.byRole,
-        note: t.note || undefined,
-      }))
-    : [];
-
-  const market = marketDoc ? toMarketCard(marketDoc) : null;
-
-  return {
-    ...summary,
-    items,
-    subtotalCents: order.subtotalCents,
-    timeline,
-    market,
-    canCancel,
-    cancelReason: order.cancelReason || null,
-    note: order.note || '',
-  };
-}
+import { formatSlotLabel } from '../../utils/slots.js';import { toMarketCard } from '../../utils/shapes.js';export function toOrderSummary(order, { now = new Date(), tz = 'America/New_York' } = {}) {  const pStart = order.pickup?.start ? (order.pickup.start instanceof Date ? order.pickup.start : new Date(order.pickup.start)) : null;  const pEnd = order.pickup?.end ? (order.pickup.end instanceof Date ? order.pickup.end : new Date(order.pickup.end)) : null;  const cutoff = order.cutoffAt ? (order.cutoffAt instanceof Date ? order.cutoffAt : new Date(order.cutoffAt)) : null;  const nowDate = now instanceof Date ? now : new Date(now);  const label = order.pickup?.label || (pStart && pEnd && !isNaN(pStart.getTime()) && !isNaN(pEnd.getTime()) ? formatSlotLabel(pStart, pEnd, tz) : '');  const itemCount = Array.isArray(order.items)    ? order.items.reduce((sum, it) => sum + (it.quantity || 0), 0)    : 0;  const itemsPreview = Array.isArray(order.items)    ? order.items.slice(0, 3).map((it) => ({ name: it.name, art: it.art || 'carrot' }))    : [];  const canModify = order.status === 'placed' && cutoff && !isNaN(cutoff.getTime()) && nowDate < cutoff;  return {    id: order._id ? order._id.toString() : order.id,    orderNumber: order.orderNumber,    status: order.status,    farmer: {      id: order.farmerId ? order.farmerId.toString() : '',      stallName: order.farmerName || '',      stallNumber: order.pickup?.stallNumber || '',      art: order.farmerArt || 'stall',    },    pickup: {      start: pStart && !isNaN(pStart.getTime()) ? pStart.toISOString() : (order.pickup?.start || ''),      end: pEnd && !isNaN(pEnd.getTime()) ? pEnd.toISOString() : (order.pickup?.end || ''),      label,    },    cutoffAt: cutoff && !isNaN(cutoff.getTime()) ? cutoff.toISOString() : null,    itemCount,    totalCents: order.totalCents,    itemsPreview,    canModify: Boolean(canModify),    reviewed: Boolean(order.reviewed),  };}export function toOrderDetail(order, { marketDoc, now = new Date(), tz = 'America/New_York' } = {}) {  const summary = toOrderSummary(order, { now, tz });  const cutoff = order.cutoffAt instanceof Date ? order.cutoffAt : new Date(order.cutoffAt);  const nowDate = now instanceof Date ? now : new Date(now);  const canCancel = ['placed', 'accepted'].includes(order.status) && nowDate < cutoff;  const items = Array.isArray(order.items)    ? order.items.map((it) => ({        productId: it.productId ? it.productId.toString() : '',        name: it.name,        unit: it.unit || 'each',        art: it.art || 'carrot',        priceCents: it.priceCents,        quantity: it.quantity,        lineTotalCents: it.lineTotalCents || it.priceCents * it.quantity,      }))    : [];  const timeline = Array.isArray(order.timeline)    ? order.timeline.map((t) => ({        status: t.status,        at: t.at instanceof Date ? t.at.toISOString() : t.at,        byRole: t.byRole,        note: t.note || undefined,      }))    : [];  const market = marketDoc ? toMarketCard(marketDoc) : null;  return {    ...summary,    items,    subtotalCents: order.subtotalCents,    timeline,    market,    canCancel,    cancelReason: order.cancelReason || null,    note: order.note || '',  };}

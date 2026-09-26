@@ -1,162 +1,1 @@
-/**
- * Rule-Based Assistant integration test suite (T3.211 - T3.245).
- * Tests deterministic intent resolution, entity extraction, 30-query table test,
- * database-backed card enrichment, graceful fallback on nonsense, and input validation.
- */
-
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
-import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
-
-describe('Rule-Based Assistant Suite (T3.211 - T3.245)', () => {
-  let customerGeorgeAuth;
-  let farmerRiverbendAuth;
-
-  before(async () => {
-    await setupTestEnvironment();
-    customerGeorgeAuth = await loginUser('george@example.com', 'market123');
-    farmerRiverbendAuth = await loginUser('riverbend@example.com', 'market123');
-  });
-
-  after(async () => {
-    await teardownTestEnvironment();
-  });
-
-  // Mandatory 30-case table test
-  const tableTestCases = [
-    // 1-4: Greetings & Help
-    { id: 'T3.211', q: 'Hello', expectInReply: 'Welcome to MarketLink' },
-    { id: 'T3.212', q: 'Hi there', expectInReply: 'Welcome to MarketLink' },
-    { id: 'T3.213', q: 'help', expectInReply: 'Welcome to MarketLink' },
-    { id: 'T3.214', q: 'What can you do?', expectInReply: 'MarketLink' },
-
-    // 5-9: Market Timings
-    { id: 'T3.215', q: 'When does Elm Street Market open?', expectInReply: 'Elm Street Market' },
-    { id: 'T3.216', q: 'What time does Elm Street close?', expectInReply: 'Elm Street' },
-    { id: 'T3.217', q: 'When is Riverside Sunday Market open?', expectInReply: 'Riverside Sunday Market' },
-    { id: 'T3.218', q: 'Hilltop market schedule', expectInReply: 'Hilltop' },
-    { id: 'T3.219', q: 'When is Elm Street open on Saturday?', expectInReply: 'Elm Street' },
-
-    // 10-13: Farmer Availability
-    { id: 'T3.220', q: 'Where is Riverbend Farm?', expectInReply: 'Riverbend Farm' },
-    { id: 'T3.221', q: 'Is Riverbend at Elm Street on Saturday?', expectInReply: 'Riverbend' },
-    { id: 'T3.222', q: 'When can I find Riverbend Farm?', expectInReply: 'Riverbend' },
-    { id: 'T3.223', q: 'What stall is Riverbend?', expectInReply: 'Riverbend' },
-
-    // 14-18: Who Sells X
-    { id: 'T3.224', q: 'Who sells carrots?', expectInReply: 'carrots' },
-    { id: 'T3.225', q: 'Who has tomatoes?', expectInReply: 'tomatoes' },
-    { id: 'T3.226', q: 'Where can I buy honey?', expectInReply: 'honey' },
-    { id: 'T3.227', q: 'Who sells eggs?', expectInReply: 'eggs' },
-    { id: 'T3.228', q: 'Looking for sourdough bread', expectInReply: 'sourdough' },
-
-    // 19-22: Product Price & Details
-    { id: 'T3.229', q: 'How much are carrots?', expectInReply: '$' },
-    { id: 'T3.230', q: 'What is the price of tomatoes?', expectInReply: '$' },
-    { id: 'T3.231', q: 'How much for honey?', expectInReply: '$' },
-    { id: 'T3.232', q: 'Cost of carrots', expectInReply: '$' },
-
-    // 23-25: What's Fresh on <Day>
-    { id: 'T3.233', q: "What's fresh on Saturday?", expectInReply: 'fresh' },
-    { id: 'T3.234', q: 'What is available on Sunday?', expectInReply: 'fresh' },
-    { id: 'T3.235', q: 'What fresh produce do you have?', expectInReply: 'fresh' },
-
-    // 26-27: Cut-off and Pickup Windows
-    { id: 'T3.236', q: 'When is the cut-off for Riverbend Farm?', expectInReply: 'cut-off' },
-    { id: 'T3.237', q: 'When do pre-orders close?', expectInReply: 'cut-off' },
-
-    // 28: Order Status
-    { id: 'T3.238', q: 'Where is my order?', expectInReply: 'order' },
-
-    // 29-30: Graceful Fallbacks on Unknown / Nonsense Input
-    { id: 'T3.239', q: 'asdkfjqwerty12345', expectInReply: 'not quite sure' },
-    { id: 'T3.240', q: 'quantum vegetable superposition', expectInReply: 'not quite sure' },
-  ];
-
-  for (const tc of tableTestCases) {
-    it(`${tc.id}: Assistant query '${tc.q}' returns sensible reply`, async () => {
-      const res = await request('/api/assistant/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
-        },
-        body: JSON.stringify({ text: tc.q }),
-      });
-
-      assert.equal(res.status, 200);
-      const body = await res.json();
-      assert.ok(body.data.reply);
-      assert.ok(Array.isArray(body.data.cards));
-      assert.ok(Array.isArray(body.data.suggestions));
-      assert.ok(body.data.suggestions.length >= 2);
-      assert.ok(
-        body.data.reply.toLowerCase().includes(tc.expectInReply.toLowerCase()),
-        `Expected reply to include '${tc.expectInReply}', got: '${body.data.reply}'`
-      );
-    });
-  }
-
-  it('T3.241: Validation failure: text over 300 characters returns 422', async () => {
-    const longText = 'a'.repeat(301);
-    const res = await request('/api/assistant/message', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
-      },
-      body: JSON.stringify({ text: longText }),
-    });
-
-    assert.equal(res.status, 422);
-  });
-
-  it('T3.242: Validation failure: empty text returns 422', async () => {
-    const res = await request('/api/assistant/message', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
-      },
-      body: JSON.stringify({ text: '   ' }),
-    });
-
-    assert.equal(res.status, 422);
-  });
-
-  it('T3.243: Validation failure: unknown field in request body returns 422', async () => {
-    const res = await request('/api/assistant/message', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,
-      },
-      body: JSON.stringify({ text: 'Hello', extra: 123 }),
-    });
-
-    assert.equal(res.status, 422);
-  });
-
-  it('T3.244: Role authorization: non-customer cannot access assistant route (403)', async () => {
-    const res = await request('/api/assistant/message', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${farmerRiverbendAuth.accessToken}`,
-      },
-      body: JSON.stringify({ text: 'Hello' }),
-    });
-
-    assert.equal(res.status, 403);
-  });
-
-  it('T3.245: Unauthenticated request returns 401', async () => {
-    const res = await request('/api/assistant/message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: 'Hello' }),
-    });
-
-    assert.equal(res.status, 401);
-  });
-});
+import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';describe('Rule-Based Assistant Suite (T3.211 - T3.245)', () => {  let customerGeorgeAuth;  let farmerRiverbendAuth;  before(async () => {    await setupTestEnvironment();    customerGeorgeAuth = await loginUser('george@example.com', 'market123');    farmerRiverbendAuth = await loginUser('riverbend@example.com', 'market123');  });  after(async () => {    await teardownTestEnvironment();  });  const tableTestCases = [    { id: 'T3.211', q: 'Hello', expectInReply: 'Welcome to MarketLink' },    { id: 'T3.212', q: 'Hi there', expectInReply: 'Welcome to MarketLink' },    { id: 'T3.213', q: 'help', expectInReply: 'Welcome to MarketLink' },    { id: 'T3.214', q: 'What can you do?', expectInReply: 'MarketLink' },    { id: 'T3.215', q: 'When does Elm Street Market open?', expectInReply: 'Elm Street Market' },    { id: 'T3.216', q: 'What time does Elm Street close?', expectInReply: 'Elm Street' },    { id: 'T3.217', q: 'When is Riverside Sunday Market open?', expectInReply: 'Riverside Sunday Market' },    { id: 'T3.218', q: 'Hilltop market schedule', expectInReply: 'Hilltop' },    { id: 'T3.219', q: 'When is Elm Street open on Saturday?', expectInReply: 'Elm Street' },    { id: 'T3.220', q: 'Where is Riverbend Farm?', expectInReply: 'Riverbend Farm' },    { id: 'T3.221', q: 'Is Riverbend at Elm Street on Saturday?', expectInReply: 'Riverbend' },    { id: 'T3.222', q: 'When can I find Riverbend Farm?', expectInReply: 'Riverbend' },    { id: 'T3.223', q: 'What stall is Riverbend?', expectInReply: 'Riverbend' },    { id: 'T3.224', q: 'Who sells carrots?', expectInReply: 'carrots' },    { id: 'T3.225', q: 'Who has tomatoes?', expectInReply: 'tomatoes' },    { id: 'T3.226', q: 'Where can I buy honey?', expectInReply: 'honey' },    { id: 'T3.227', q: 'Who sells eggs?', expectInReply: 'eggs' },    { id: 'T3.228', q: 'Looking for sourdough bread', expectInReply: 'sourdough' },    { id: 'T3.229', q: 'How much are carrots?', expectInReply: '$' },    { id: 'T3.230', q: 'What is the price of tomatoes?', expectInReply: '$' },    { id: 'T3.231', q: 'How much for honey?', expectInReply: '$' },    { id: 'T3.232', q: 'Cost of carrots', expectInReply: '$' },    { id: 'T3.233', q: "What's fresh on Saturday?", expectInReply: 'fresh' },    { id: 'T3.234', q: 'What is available on Sunday?', expectInReply: 'fresh' },    { id: 'T3.235', q: 'What fresh produce do you have?', expectInReply: 'fresh' },    { id: 'T3.236', q: 'When is the cut-off for Riverbend Farm?', expectInReply: 'cut-off' },    { id: 'T3.237', q: 'When do pre-orders close?', expectInReply: 'cut-off' },    { id: 'T3.238', q: 'Where is my order?', expectInReply: 'order' },    { id: 'T3.239', q: 'asdkfjqwerty12345', expectInReply: 'not quite sure' },    { id: 'T3.240', q: 'quantum vegetable superposition', expectInReply: 'not quite sure' },  ];  for (const tc of tableTestCases) {    it(`${tc.id}: Assistant query '${tc.q}' returns sensible reply`, async () => {      const res = await request('/api/assistant/message', {        method: 'POST',        headers: {          'Content-Type': 'application/json',          Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,        },        body: JSON.stringify({ text: tc.q }),      });      assert.equal(res.status, 200);      const body = await res.json();      assert.ok(body.data.reply);      assert.ok(Array.isArray(body.data.cards));      assert.ok(Array.isArray(body.data.suggestions));      assert.ok(body.data.suggestions.length >= 2);      assert.ok(        body.data.reply.toLowerCase().includes(tc.expectInReply.toLowerCase()),        `Expected reply to include '${tc.expectInReply}', got: '${body.data.reply}'`      );    });  }  it('T3.241: Validation failure: text over 300 characters returns 422', async () => {    const longText = 'a'.repeat(301);    const res = await request('/api/assistant/message', {      method: 'POST',      headers: {        'Content-Type': 'application/json',        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,      },      body: JSON.stringify({ text: longText }),    });    assert.equal(res.status, 422);  });  it('T3.242: Validation failure: empty text returns 422', async () => {    const res = await request('/api/assistant/message', {      method: 'POST',      headers: {        'Content-Type': 'application/json',        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,      },      body: JSON.stringify({ text: '   ' }),    });    assert.equal(res.status, 422);  });  it('T3.243: Validation failure: unknown field in request body returns 422', async () => {    const res = await request('/api/assistant/message', {      method: 'POST',      headers: {        'Content-Type': 'application/json',        Authorization: `Bearer ${customerGeorgeAuth.accessToken}`,      },      body: JSON.stringify({ text: 'Hello', extra: 123 }),    });    assert.equal(res.status, 422);  });  it('T3.244: Role authorization: non-customer cannot access assistant route (403)', async () => {    const res = await request('/api/assistant/message', {      method: 'POST',      headers: {        'Content-Type': 'application/json',        Authorization: `Bearer ${farmerRiverbendAuth.accessToken}`,      },      body: JSON.stringify({ text: 'Hello' }),    });    assert.equal(res.status, 403);  });  it('T3.245: Unauthenticated request returns 401', async () => {    const res = await request('/api/assistant/message', {      method: 'POST',      headers: { 'Content-Type': 'application/json' },      body: JSON.stringify({ text: 'Hello' }),    });    assert.equal(res.status, 401);  });});

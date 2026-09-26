@@ -1,115 +1,1 @@
-.illustration {
-  display: inline-block;
-  vertical-align: middle;
-  stroke: var(--color-ink-soft);
-  stroke-width: var(--illus-stroke);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-  flex-shrink: 0;
-}
-
-/* Sizes */
-.sm {
-  width: var(--space-8);
-  height: var(--space-8);
-}
-
-.md {
-  width: var(--space-12);
-  height: var(--space-12);
-}
-
-.lg {
-  width: var(--space-20);
-  height: var(--space-20);
-}
-
-.xl {
-  width: var(--space-24);
-  height: var(--space-24);
-}
-
-/* Soft Tint Fills */
-.fillCarrot {
-  fill: var(--color-carrot-bg);
-  stroke: var(--color-ink-soft);
-}
-
-.fillHerb {
-  fill: var(--color-herb-bg);
-  stroke: var(--color-ink-soft);
-}
-
-.fillBeet {
-  fill: var(--color-beet-tint);
-  stroke: var(--color-ink-soft);
-}
-
-.fillCanvas {
-  fill: var(--color-canvas-soft);
-  stroke: var(--color-ink-soft);
-}
-
-.fillCanvasMedium {
-  fill: var(--color-canvas);
-  stroke: var(--color-ink-soft);
-}
-
-.fillWhite {
-  fill: var(--color-white);
-  stroke: var(--color-ink-soft);
-}
-
-/* Lines */
-.line {
-  stroke: var(--color-ink-soft);
-  stroke-width: var(--illus-stroke);
-  fill: none;
-}
-
-.subtleLine {
-  stroke: var(--color-wood-line);
-  stroke-width: 1px;
-  fill: none;
-}
-
-.scoreLine {
-  stroke: var(--color-wood);
-  stroke-width: 1px;
-  fill: none;
-}
-
-.woodLine {
-  stroke: var(--color-wood);
-  stroke-width: 1px;
-  fill: none;
-}
-
-.scallopLine {
-  stroke: var(--color-wood-line);
-  stroke-width: var(--illus-stroke);
-  fill: none;
-}
-
-.tagFill {
-  fill: var(--color-white);
-  stroke: var(--color-border);
-  stroke-width: 1px;
-}
-
-.tagTwine {
-  stroke: var(--color-wood);
-  stroke-width: 1px;
-  fill: none;
-}
-
-.tagText {
-  font-family: var(--font-body);
-  font-size: 6px;
-  font-weight: 600;
-  fill: var(--color-ink);
-  stroke: none;
-  text-anchor: middle;
-  dominant-baseline: central;
-}
+.illustration {  display: inline-block;  vertical-align: middle;  stroke: var(--color-ink-soft);  stroke-width: var(--illus-stroke);  stroke-linecap: round;  stroke-linejoin: round;  fill: none;  flex-shrink: 0;}.sm {  width: var(--space-8);  height: var(--space-8);}.md {  width: var(--space-12);  height: var(--space-12);}.lg {  width: var(--space-20);  height: var(--space-20);}.xl {  width: var(--space-24);  height: var(--space-24);}.fillCarrot {  fill: var(--color-carrot-bg);  stroke: var(--color-ink-soft);}.fillHerb {  fill: var(--color-herb-bg);  stroke: var(--color-ink-soft);}.fillBeet {  fill: var(--color-beet-tint);  stroke: var(--color-ink-soft);}.fillCanvas {  fill: var(--color-canvas-soft);  stroke: var(--color-ink-soft);}.fillCanvasMedium {  fill: var(--color-canvas);  stroke: var(--color-ink-soft);}.fillWhite {  fill: var(--color-white);  stroke: var(--color-ink-soft);}.line {  stroke: var(--color-ink-soft);  stroke-width: var(--illus-stroke);  fill: none;}.subtleLine {  stroke: var(--color-wood-line);  stroke-width: 1px;  fill: none;}.scoreLine {  stroke: var(--color-wood);  stroke-width: 1px;  fill: none;}.woodLine {  stroke: var(--color-wood);  stroke-width: 1px;  fill: none;}.scallopLine {  stroke: var(--color-wood-line);  stroke-width: var(--illus-stroke);  fill: none;}.tagFill {  fill: var(--color-white);  stroke: var(--color-border);  stroke-width: 1px;}.tagTwine {  stroke: var(--color-wood);  stroke-width: 1px;  fill: none;}.tagText {  font-family: var(--font-body);  font-size: 6px;  font-weight: 600;  fill: var(--color-ink);  stroke: none;  text-anchor: middle;  dominant-baseline: central;}

@@ -1,159 +1,1 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: var(--space-6) var(--space-4) var(--space-8);
-  gap: var(--space-5);
-  width: 100%;
-  max-width: var(--container-form);
-  margin: 0 auto;
-}
-
-.standalone {
-  padding-top: var(--space-12);
-}
-
-/* Animated Checkmark Circle */
-.iconCircle {
-  width: 72px;
-  height: 72px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-herb-bg);
-  border: 2px solid var(--color-herb);
-  color: var(--color-herb);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: scaleIn var(--duration-base) var(--ease-standard);
-}
-
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.checkIcon {
-  animation: checkReveal var(--duration-base) var(--ease-standard);
-}
-
-@keyframes checkReveal {
-  0% {
-    transform: scale(0.5);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.title {
-  font-family: var(--font-head);
-  font-size: var(--text-h2);
-  font-weight: var(--weight-head);
-  color: var(--color-ink);
-  letter-spacing: var(--tracking-head);
-  margin: 0;
-}
-
-.orderNumber {
-  font-size: var(--text-body);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink-soft);
-  margin: 0;
-}
-
-/* Summary Card */
-.summaryCard {
-  width: 100%;
-  background-color: var(--color-canvas-soft);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  text-align: left;
-}
-
-.summaryRow {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-}
-
-.metaIcon {
-  color: var(--color-primary);
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.metaText {
-  display: flex;
-  flex-direction: column;
-}
-
-.metaLabel {
-  font-size: var(--text-xs);
-  color: var(--color-ink-soft);
-}
-
-.metaValue {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink);
-}
-
-.guidance {
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-  line-height: var(--lh-body);
-  margin: 0;
-}
-
-/* Actions */
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  width: 100%;
-  margin-top: var(--space-2);
-}
-
-.primaryButton {
-  width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-}
-
-.secondaryLink {
-  background: none;
-  border: none;
-  color: var(--color-ink-soft);
-  font-size: var(--text-body);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-  padding: var(--space-2);
-}
-
-.secondaryLink:hover {
-  color: var(--color-ink);
-}
-
-.secondaryLink:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
+.container {  display: flex;  flex-direction: column;  align-items: center;  text-align: center;  padding: var(--space-6) var(--space-4) var(--space-8);  gap: var(--space-5);  width: 100%;  max-width: var(--container-form);  margin: 0 auto;}.standalone {  padding-top: var(--space-12);}.iconCircle {  width: 72px;  height: 72px;  border-radius: var(--radius-full);  background-color: var(--color-herb-bg);  border: 2px solid var(--color-herb);  color: var(--color-herb);  display: flex;  align-items: center;  justify-content: center;  animation: scaleIn var(--duration-base) var(--ease-standard);}@keyframes scaleIn {  0% {    transform: scale(0.6);    opacity: 0;  }  100% {    transform: scale(1);    opacity: 1;  }}.checkIcon {  animation: checkReveal var(--duration-base) var(--ease-standard);}@keyframes checkReveal {  0% {    transform: scale(0.5);  }  100% {    transform: scale(1);  }}.header {  display: flex;  flex-direction: column;  gap: var(--space-1);}.title {  font-family: var(--font-head);  font-size: var(--text-h2);  font-weight: var(--weight-head);  color: var(--color-ink);  letter-spacing: var(--tracking-head);  margin: 0;}.orderNumber {  font-size: var(--text-body);  font-weight: var(--weight-semibold);  color: var(--color-ink-soft);  margin: 0;}.summaryCard {  width: 100%;  background-color: var(--color-canvas-soft);  border: 1px solid var(--color-border);  border-radius: var(--radius-lg);  padding: var(--space-4);  display: flex;  flex-direction: column;  gap: var(--space-3);  text-align: left;}.summaryRow {  display: flex;  align-items: flex-start;  gap: var(--space-3);}.metaIcon {  color: var(--color-primary);  margin-top: 2px;  flex-shrink: 0;}.metaText {  display: flex;  flex-direction: column;}.metaLabel {  font-size: var(--text-xs);  color: var(--color-ink-soft);}.metaValue {  font-size: var(--text-sm);  font-weight: var(--weight-semibold);  color: var(--color-ink);}.guidance {  font-size: var(--text-sm);  color: var(--color-ink-soft);  line-height: var(--lh-body);  margin: 0;}.actions {  display: flex;  flex-direction: column;  gap: var(--space-3);  width: 100%;  margin-top: var(--space-2);}.primaryButton {  width: 100%;  display: inline-flex;  align-items: center;  justify-content: center;  gap: var(--space-2);}.secondaryLink {  background: none;  border: none;  color: var(--color-ink-soft);  font-size: var(--text-body);  font-weight: var(--weight-medium);  cursor: pointer;  padding: var(--space-2);}.secondaryLink:hover {  color: var(--color-ink);}.secondaryLink:focus-visible {  outline: var(--focus-ring);  outline-offset: var(--focus-offset);}

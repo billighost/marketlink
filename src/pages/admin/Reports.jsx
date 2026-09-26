@@ -1,227 +1,1 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  getAdminReportsSummary,
-  exportAdminReport,
-  getReportsHistory,
-} from '../../api/admin';
-import { BarChart } from '../../components/domain/BarChart';
-import EmptyState from '../../components/ui/EmptyState';
-import ErrorState from '../../components/ui/ErrorState';
-import { useToast } from '../../components/ui/Toast';
-import { formatCurrency, formatDate } from '../../utils/format';
-import styles from './Reports.module.css';
-
-export default function Reports() {
-  const toast = useToast();
-  const [range, setRange] = useState('30d');
-  const [summary, setSummary] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [exportingType, setExportingType] = useState(null);
-
-  const fetchReports = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [sumRes, histRes] = await Promise.all([
-        getAdminReportsSummary(range),
-        getReportsHistory().catch(() => ({ data: [] })),
-      ]);
-      setSummary(sumRes.data || sumRes);
-      setHistory(histRes.data || []);
-    } catch (err) {
-      toast.show(err.message || 'Failed to load report data', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [range, toast]);
-
-  useEffect(() => {
-    fetchReports();
-  }, [fetchReports]);
-
-  const handleExport = async (type) => {
-    try {
-      setExportingType(type);
-      toast.show('Preparing your file...', 'info');
-      const blob = await exportAdminReport(type, range);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `marketlink-${type}-${range}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.show('Export downloaded successfully', 'success');
-      // Refresh history to show newly generated report
-      const histRes = await getReportsHistory().catch(() => ({ data: [] }));
-      setHistory(histRes.data || []);
-    } catch (err) {
-      toast.show(err.message || 'Export failed', 'error');
-    } finally {
-      setExportingType(null);
-    }
-  };
-
-  const marketChartData = (summary?.revenueByMarket || []).map((m) => ({
-    label: m.name || 'Market',
-    value: (m.revenueCents || 0) / 100,
-    valueLabel: formatCurrency(m.revenueCents || 0),
-  }));
-
-  const dailyChartData = (summary?.byDay || []).map((d) => ({
-    label: d.date ? d.date.slice(5) : d._id ? d._id.slice(5) : '',
-    value: d.orders || 0,
-    valueLabel: `${d.orders} orders`,
-  }));
-
-  const totalOrders = summary?.totalOrders || 0;
-  const revenueCents = summary?.revenueCents || 0;
-  const avgOrderCents = totalOrders > 0 ? Math.round(revenueCents / totalOrders) : 0;
-
-  return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Reports & Analytics</h1>
-        <div className={styles.rangePills}>
-          {['7d', '30d', '90d', '365d'].map((r) => (
-            <button
-              key={r}
-              type="button"
-              className={`${styles.rangePill} ${range === r ? styles.rangePillActive : ''}`}
-              onClick={() => setRange(r)}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {loading && !summary ? (
-        <p>Loading analytics...</p>
-      ) : totalOrders === 0 ? (
-        <EmptyState
-          illustration="basket"
-          title="No orders in this period"
-          text="Try a longer range."
-          actionLabel="365 days"
-          onAction={() => setRange('365d')}
-        />
-      ) : (
-        <>
-          {/* Key Metric Totals */}
-          <div className={styles.metricsGrid}>
-            <div className={styles.metricCard}>
-              <div className={styles.metricLabel}>Total Revenue</div>
-              <div className={styles.metricValue}>
-                {formatCurrency(revenueCents)}
-              </div>
-            </div>
-            <div className={styles.metricCard}>
-              <div className={styles.metricLabel}>Total Orders</div>
-              <div className={styles.metricValue}>{totalOrders}</div>
-            </div>
-            <div className={styles.metricCard}>
-              <div className={styles.metricLabel}>Avg. Order Value</div>
-              <div className={styles.metricValue}>
-                {formatCurrency(avgOrderCents)}
-              </div>
-            </div>
-          </div>
-
-          {/* Revenue by Market (Horizontal BarChart) */}
-          <div className={styles.chartCard}>
-            <div className={styles.chartHeader}>
-              <h2 className={styles.chartTitle}>Revenue by Market</h2>
-            </div>
-            <BarChart
-              data={marketChartData}
-              layout="horizontal"
-              valueFormatter={(v) => formatCurrency(v * 100)}
-              ariaLabel="Revenue by market horizontal chart"
-            />
-          </div>
-
-          {/* Orders per Day (Vertical BarChart) */}
-          <div className={styles.chartCard}>
-            <div className={styles.chartHeader}>
-              <h2 className={styles.chartTitle}>Orders per Day</h2>
-            </div>
-            <BarChart
-              data={dailyChartData}
-              layout="vertical"
-              height={180}
-              valueFormatter={(v) => `${v} orders`}
-              ariaLabel="Orders per day chart"
-            />
-          </div>
-
-          {/* CSV Exports */}
-          <div className={styles.exportsSection}>
-            <h2 className={styles.exportsTitle}>Export CSV Data</h2>
-            <p style={{ fontSize: '0.875rem', color: 'var(--color-ink-muted)', margin: 0 }}>
-              Export full datasets for external accounting, audits, and spreadsheet analysis.
-            </p>
-            <div className={styles.exportButtons}>
-              <button
-                type="button"
-                className={styles.exportBtn}
-                disabled={Boolean(exportingType)}
-                onClick={() => handleExport('orders')}
-              >
-                📥 {exportingType === 'orders' ? 'Preparing file...' : 'Export Orders CSV'}
-              </button>
-              <button
-                type="button"
-                className={styles.exportBtn}
-                disabled={Boolean(exportingType)}
-                onClick={() => handleExport('revenue')}
-              >
-                📥 {exportingType === 'revenue' ? 'Preparing file...' : 'Export Revenue CSV'}
-              </button>
-              <button
-                type="button"
-                className={styles.exportBtn}
-                disabled={Boolean(exportingType)}
-                onClick={() => handleExport('farmers')}
-              >
-                📥 {exportingType === 'farmers' ? 'Preparing file...' : 'Export Farmers CSV'}
-              </button>
-            </div>
-          </div>
-
-          {/* Report History */}
-          {history.length > 0 && (
-            <div className={styles.historySection}>
-              <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--color-border)' }}>
-                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Recent Generated Reports</h3>
-              </div>
-              <table className={styles.historyTable}>
-                <thead>
-                  <tr>
-                    <th className={styles.historyTh}>Type</th>
-                    <th className={styles.historyTh}>Range</th>
-                    <th className={styles.historyTh}>Generated</th>
-                    <th className={styles.historyTh}>Records</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((h) => (
-                    <tr key={h.id || h._id}>
-                      <td className={styles.historyTd} style={{ textTransform: 'capitalize', fontWeight: 500 }}>
-                        {h.type}
-                      </td>
-                      <td className={styles.historyTd}>{h.range}</td>
-                      <td className={styles.historyTd}>{formatDate(h.createdAt)}</td>
-                      <td className={styles.historyTd}>{h.recordCount ?? h.rows ?? '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
+import { useState, useEffect, useCallback } from 'react';import {  getAdminReportsSummary,  exportAdminReport,  getReportsHistory,} from '../../api/admin';import { BarChart } from '../../components/domain/BarChart';import EmptyState from '../../components/ui/EmptyState';import ErrorState from '../../components/ui/ErrorState';import { useToast } from '../../components/ui/Toast';import { formatCurrency, formatDate } from '../../utils/format';import styles from './Reports.module.css';export default function Reports() {  const toast = useToast();  const [range, setRange] = useState('30d');  const [summary, setSummary] = useState(null);  const [history, setHistory] = useState([]);  const [loading, setLoading] = useState(true);  const [exportingType, setExportingType] = useState(null);  const fetchReports = useCallback(async () => {    try {      setLoading(true);      const [sumRes, histRes] = await Promise.all([        getAdminReportsSummary(range),        getReportsHistory().catch(() => ({ data: [] })),      ]);      setSummary(sumRes.data || sumRes);      setHistory(histRes.data || []);    } catch (err) {      toast.show(err.message || 'Failed to load report data', 'error');    } finally {      setLoading(false);    }  }, [range, toast]);  useEffect(() => {    fetchReports();  }, [fetchReports]);  const handleExport = async (type) => {    try {      setExportingType(type);      toast.show('Preparing your file...', 'info');      const blob = await exportAdminReport(type, range);      const url = window.URL.createObjectURL(blob);      const a = document.createElement('a');      a.href = url;      a.download = `marketlink-${type}-${range}.csv`;      document.body.appendChild(a);      a.click();      a.remove();      window.URL.revokeObjectURL(url);      toast.show('Export downloaded successfully', 'success');      const histRes = await getReportsHistory().catch(() => ({ data: [] }));      setHistory(histRes.data || []);    } catch (err) {      toast.show(err.message || 'Export failed', 'error');    } finally {      setExportingType(null);    }  };  const marketChartData = (summary?.revenueByMarket || []).map((m) => ({    label: m.name || 'Market',    value: (m.revenueCents || 0) / 100,    valueLabel: formatCurrency(m.revenueCents || 0),  }));  const dailyChartData = (summary?.byDay || []).map((d) => ({    label: d.date ? d.date.slice(5) : d._id ? d._id.slice(5) : '',    value: d.orders || 0,    valueLabel: `${d.orders} orders`,  }));  const totalOrders = summary?.totalOrders || 0;  const revenueCents = summary?.revenueCents || 0;  const avgOrderCents = totalOrders > 0 ? Math.round(revenueCents / totalOrders) : 0;  return (    <div className={styles.container}>      <div className={styles.header}>        <h1 className={styles.title}>Reports & Analytics</h1>        <div className={styles.rangePills}>          {['7d', '30d', '90d', '365d'].map((r) => (            <button              key={r}              type="button"              className={`${styles.rangePill} ${range === r ? styles.rangePillActive : ''}`}              onClick={() => setRange(r)}            >              {r}            </button>          ))}        </div>      </div>      {loading && !summary ? (        <p>Loading analytics...</p>      ) : totalOrders === 0 ? (        <EmptyState          illustration="basket"          title="No orders in this period"          text="Try a longer range."          actionLabel="365 days"          onAction={() => setRange('365d')}        />      ) : (        <>          {}          <div className={styles.metricsGrid}>            <div className={styles.metricCard}>              <div className={styles.metricLabel}>Total Revenue</div>              <div className={styles.metricValue}>                {formatCurrency(revenueCents)}              </div>            </div>            <div className={styles.metricCard}>              <div className={styles.metricLabel}>Total Orders</div>              <div className={styles.metricValue}>{totalOrders}</div>            </div>            <div className={styles.metricCard}>              <div className={styles.metricLabel}>Avg. Order Value</div>              <div className={styles.metricValue}>                {formatCurrency(avgOrderCents)}              </div>            </div>          </div>          {}          <div className={styles.chartCard}>            <div className={styles.chartHeader}>              <h2 className={styles.chartTitle}>Revenue by Market</h2>            </div>            <BarChart              data={marketChartData}              layout="horizontal"              valueFormatter={(v) => formatCurrency(v * 100)}              ariaLabel="Revenue by market horizontal chart"            />          </div>          {}          <div className={styles.chartCard}>            <div className={styles.chartHeader}>              <h2 className={styles.chartTitle}>Orders per Day</h2>            </div>            <BarChart              data={dailyChartData}              layout="vertical"              height={180}              valueFormatter={(v) => `${v} orders`}              ariaLabel="Orders per day chart"            />          </div>          {}          <div className={styles.exportsSection}>            <h2 className={styles.exportsTitle}>Export CSV Data</h2>            <p style={{ fontSize: '0.875rem', color: 'var(--color-ink-muted)', margin: 0 }}>              Export full datasets for external accounting, audits, and spreadsheet analysis.            </p>            <div className={styles.exportButtons}>              <button                type="button"                className={styles.exportBtn}                disabled={Boolean(exportingType)}                onClick={() => handleExport('orders')}              >                📥 {exportingType === 'orders' ? 'Preparing file...' : 'Export Orders CSV'}              </button>              <button                type="button"                className={styles.exportBtn}                disabled={Boolean(exportingType)}                onClick={() => handleExport('revenue')}              >                📥 {exportingType === 'revenue' ? 'Preparing file...' : 'Export Revenue CSV'}              </button>              <button                type="button"                className={styles.exportBtn}                disabled={Boolean(exportingType)}                onClick={() => handleExport('farmers')}              >                📥 {exportingType === 'farmers' ? 'Preparing file...' : 'Export Farmers CSV'}              </button>            </div>          </div>          {}          {history.length > 0 && (            <div className={styles.historySection}>              <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--color-border)' }}>                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Recent Generated Reports</h3>              </div>              <table className={styles.historyTable}>                <thead>                  <tr>                    <th className={styles.historyTh}>Type</th>                    <th className={styles.historyTh}>Range</th>                    <th className={styles.historyTh}>Generated</th>                    <th className={styles.historyTh}>Records</th>                  </tr>                </thead>                <tbody>                  {history.map((h) => (                    <tr key={h.id || h._id}>                      <td className={styles.historyTd} style={{ textTransform: 'capitalize', fontWeight: 500 }}>                        {h.type}                      </td>                      <td className={styles.historyTd}>{h.range}</td>                      <td className={styles.historyTd}>{formatDate(h.createdAt)}</td>                      <td className={styles.historyTd}>{h.recordCount ?? h.rows ?? '-'}</td>                    </tr>                  ))}                </tbody>              </table>            </div>          )}        </>      )}    </div>  );}
