@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import { extractEntities } from './entities.js';import { matchAndResolveIntent } from './intents.js';export async function processAssistantMessage({ text, history = [], user } = {}) {  try {    const entities = extractEntities(text);    const result = await matchAndResolveIntent(entities, user);    return {      reply: result.reply,      cards: Array.isArray(result.cards) ? result.cards : [],      suggestions: Array.isArray(result.suggestions) ? result.suggestions : [],    };  } catch (err) {    return {      reply: "I'm having a little trouble looking that up right now, but I'm here to help with market schedules, produce prices, and order tracking. Try asking one of these:",      cards: [],      suggestions: ['When is Elm Street Market open?', 'Who sells eggs?', "What's fresh on Saturday?"],    };  }}
-=======
 /**
  * MarketLink Assistant Service Layer.
  * Powered by Google Gemini with multi-key rotation, function-calling grounding against DB records,
@@ -272,4 +269,3 @@ function deriveSuggestions(toolsCalled = []) {
   }
   return DEFAULT_SUGGESTIONS;
 }
->>>>>>> bc73418815cde522512fe21a2af884eee3163165
