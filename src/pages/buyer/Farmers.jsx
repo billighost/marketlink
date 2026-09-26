@@ -1,124 +1,219 @@
-﻿import React, { useState } from 'react';
-import { Search, X } from 'lucide-react';
-import { getFarmers, getCategories } from '@/api/catalog';
+import React, { useState, useMemo } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@/hooks/useQuery';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { getFarmers, getCategories, getMarketDetail } from '@/api/catalog';
+import Page from '@/components/layout/Page';
+import PageTitle from '@/components/layout/PageTitle';
 import FarmerCard from '@/components/domain/FarmerCard';
-import Chip from '@/components/ui/Chip';
 import EmptyState from '@/components/ui/EmptyState';
 import Skeleton from '@/components/ui/Skeleton';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { byOpenThenScarcity } from '@/utils/sortStalls';
 import styles from './Farmers.module.css';
 
 /**
- * Customer Farmers directory page.
- * Displays all local producers with real API search and category filtering.
+ * Page A: Stalls index (/buyer/stalls)
+ *
+ * Density and aesthetics:
+ *  - Page width="wide"
+ *  - PageTitle title="Stalls" with context line from count and market
+ *  - One non-wrapping chip row (max seven: All, Open today, top categories)
+ *  - Active chip is ink-filled, never beet
+ *  - Grid of FarmerCard variant="stall" (2 / 3 / 4 columns)
+ *  - byOpenThenScarcity sorting
+ *  - EmptyState with "market-closed" scene
  */
 export function Farmers() {
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const debouncedSearch = useDebouncedValue(search, 250);
+  useDocumentTitle('Stalls · MarketLink');
 
-  const { data: categoriesData } = useQuery(['categories'], ({ signal }) => getCategories(signal));
-  const categoriesList = categoriesData || [];
+  const { selectedMarketId, user } = useAuth();
+  const [selectedFilter, setSelectedFilter] = useState('all');
 
+  // Fetch current market details for context name
+  const { data: marketData } = useQuery(
+    ['market-detail', selectedMarketId],
+    ({ signal }) => getMarketDetail(selectedMarketId, signal),
+    { enabled: Boolean(selectedMarketId) }
+  );
+
+  const marketName =
+    marketData?.name ||
+    user?.homeMarket?.name ||
+    'the market';
+
+  // Fetch categories
+  const { data: categoriesData } = useQuery(
+    ['categories'],
+    ({ signal }) => getCategories(signal)
+  );
+
+  // Fetch stalls for the current market (or all stalls if no market)
   const { data: farmersData, loading } = useQuery(
-    ['buyer-farmers', debouncedSearch, selectedCategory],
+    ['buyer-stalls', selectedMarketId],
     ({ signal }) =>
       getFarmers(
         {
-          q: debouncedSearch || undefined,
-          category: selectedCategory !== 'All' ? selectedCategory.toLowerCase() : undefined,
+          market: selectedMarketId || undefined,
+          limit: 50,
         },
         signal
       )
   );
 
-  const farmersList = farmersData?.data || [];
+  const rawStalls = useMemo(() => {
+    const list = Array.isArray(farmersData)
+      ? farmersData
+      : farmersData?.data || [];
+    return [...list].sort(byOpenThenScarcity);
+  }, [farmersData]);
 
-  const handleClear = () => {
-    setSearch('');
-    setSelectedCategory('All');
-  };
+  // Compute available categories (max 5 top categories for 7 total chips)
+  const categoryChips = useMemo(() => {
+    const rawCategories = Array.isArray(categoriesData) ? categoriesData : [];
+    const usedSlugs = new Set();
+    const chips = [];
+
+    // Prioritize categories that actually exist on currently loaded stalls
+    for (const stall of rawStalls) {
+      const slug = stall.categorySlug || stall.category;
+      const name = stall.categoryName || stall.category || stall.specialty;
+      if (slug && !usedSlugs.has(slug)) {
+        usedSlugs.add(slug);
+        chips.push({ id: slug, label: name || slug });
+      }
+      if (chips.length >= 5) break;
+    }
+
+    // Fall back to server categories if needed
+    if (chips.length < 5) {
+      for (const cat of rawCategories) {
+        const slug = cat.slug || cat.id || cat.name?.toLowerCase();
+        const name = cat.name || cat;
+        if (slug && !usedSlugs.has(slug)) {
+          usedSlugs.add(slug);
+          chips.push({ id: slug, label: name });
+        }
+        if (chips.length >= 5) break;
+      }
+    }
+
+    return chips.slice(0, 5);
+  }, [rawStalls, categoriesData]);
+
+  // Filter stalls according to chip selection
+  const filteredStalls = useMemo(() => {
+    if (selectedFilter === 'all') {
+      return rawStalls;
+    }
+    if (selectedFilter === 'open') {
+      return rawStalls.filter((s) => Boolean(s.openToday));
+    }
+    // Category slug match
+    const filterLower = selectedFilter.toLowerCase();
+    return rawStalls.filter((s) => {
+      const stallCat = (s.categorySlug || s.category || s.specialty || '').toLowerCase();
+      return stallCat.includes(filterLower);
+    });
+  }, [rawStalls, selectedFilter]);
+
+  const countText =
+    filteredStalls.length === 1 ? '1 stall' : `${filteredStalls.length} stalls`;
+  const contextLine = marketName
+    ? `${countText} at ${marketName}`
+    : countText;
 
   return (
-    <div className={styles.page}>
+    <Page width="wide">
       <header className={styles.header}>
-        <h1 className={styles.title}>Farmers & Producers</h1>
+        <PageTitle title="Stalls" context={contextLine} />
 
-        {/* Search Bar */}
-        <div className={styles.searchWrapper}>
-          <Search size={18} className={styles.searchIcon} aria-hidden="true" />
-          <input
-            type="search"
-            className={styles.searchInput}
-            placeholder="Search farm stalls, bakers, beekeepers..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Search farmers and producers"
-          />
-          {search && (
-            <button
-              type="button"
-              className={styles.clearSearch}
-              onClick={() => setSearch('')}
-              aria-label="Clear search"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
-
-        {/* Category Chips */}
-        <div className={styles.categoriesScroll} role="tablist" aria-label="Farmer categories">
-          <Chip
-            selected={selectedCategory === 'All'}
-            onClick={() => setSelectedCategory('All')}
+        {/* One non-wrapping chip row, max 7 chips */}
+        <div
+          className={styles.chipScroll}
+          role="tablist"
+          aria-label="Filter stalls"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={selectedFilter === 'all'}
+            className={[
+              styles.chip,
+              selectedFilter === 'all' ? styles.activeChip : '',
+            ].filter(Boolean).join(' ')}
+            onClick={() => setSelectedFilter('all')}
           >
             All
-          </Chip>
-          {categoriesList.map((cat) => {
-            const catName = cat.name || cat;
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={selectedFilter === 'open'}
+            className={[
+              styles.chip,
+              selectedFilter === 'open' ? styles.activeChip : '',
+            ].filter(Boolean).join(' ')}
+            onClick={() => setSelectedFilter('open')}
+          >
+            Open today
+          </button>
+
+          {categoryChips.map((cat) => {
+            const isSelected = selectedFilter === cat.id;
             return (
-              <Chip
-                key={cat.id || cat.slug || catName}
-                selected={selectedCategory.toLowerCase() === catName.toLowerCase()}
-                onClick={() => setSelectedCategory(catName)}
+              <button
+                key={cat.id}
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                className={[
+                  styles.chip,
+                  isSelected ? styles.activeChip : '',
+                ].filter(Boolean).join(' ')}
+                onClick={() => setSelectedFilter(cat.id)}
               >
-                {catName}
-              </Chip>
+                {cat.label}
+              </button>
             );
           })}
         </div>
       </header>
 
-      {/* Farmers Grid */}
-      <div className={styles.contentWrap}>
-        {loading && (
-          <div className={styles.list}>
-            <Skeleton height="88px" borderRadius="var(--radius-md)" />
-            <Skeleton height="88px" borderRadius="var(--radius-md)" />
-            <Skeleton height="88px" borderRadius="var(--radius-md)" />
-          </div>
-        )}
+      {/* Loading Skeletons */}
+      {loading && rawStalls.length === 0 && (
+        <div className={styles.grid}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className={styles.skeletonCard} aria-hidden="true">
+              <Skeleton height="2.5rem" width="2.5rem" borderRadius="var(--radius-full)" />
+              <Skeleton height="1.25rem" width="70%" />
+              <Skeleton height="0.875rem" width="50%" />
+              <Skeleton height="1rem" width="40%" />
+            </div>
+          ))}
+        </div>
+      )}
 
-        {!loading && farmersList.length === 0 && (
-          <EmptyState
-            title="No farmers found"
-            description="No producers match your current search criteria. Try clearing your filters."
-            actionLabel="Reset search"
-            onAction={handleClear}
-          />
-        )}
+      {/* Empty State */}
+      {!loading && filteredStalls.length === 0 && (
+        <EmptyState
+          scene="market-closed"
+          title="No stalls listed"
+          text="Try another market, or check back before market day."
+          actionLabel="Browse markets"
+          actionTo="/buyer/markets"
+        />
+      )}
 
-        {!loading && farmersList.length > 0 && (
-          <div className={styles.list}>
-            {farmersList.map((farmer) => (
-              <FarmerCard key={farmer.id} farmer={farmer} variant="grid" />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+      {/* Stalls Grid: 2 / 3 / 4 columns */}
+      {!loading && filteredStalls.length > 0 && (
+        <div className={styles.grid}>
+          {filteredStalls.map((farmer) => (
+            <FarmerCard key={farmer.id} farmer={farmer} variant="stall" />
+          ))}
+        </div>
+      )}
+    </Page>
   );
 }
 

@@ -1,11 +1,17 @@
-/* EmptyState — friendly guidance */
+/* EmptyState — friendly guidance with full-scene illustration */
 .empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: var(--space-12) var(--space-4);
-  gap: var(--space-4);
+  gap: var(--space-5);
+  padding: var(--space-10) var(--space-4) var(--space-12);
+  width: 100%;
+}
+
+.scene {
+  margin-inline: auto;
+  margin-bottom: var(--space-2);
 }
 
 .title {
@@ -13,10 +19,15 @@
   font-size: var(--text-h3);
   font-weight: var(--weight-head);
   color: var(--color-ink);
+  line-height: var(--lh-tight);
+  margin: 0;
 }
 
 .text {
+  font-family: var(--font-body);
   font-size: var(--text-body);
   color: var(--color-ink-soft);
   max-width: var(--measure-narrow);
+  line-height: var(--lh-relaxed);
+  margin: 0;
 }

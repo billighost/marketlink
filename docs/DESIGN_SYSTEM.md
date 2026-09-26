@@ -525,64 +525,139 @@ marketlink-frontend/
 
 ---
 
-## 18. Customer (Buyer) App Shell & Sheet Architecture
+## 18. Customer (Buyer) App Shell & Page-First Architecture
 
-### Sheet-First Navigation (Section 19 Spec)
-In the signed-in Customer experience, any detail destination (a product, a farmer, a market, the cart, an order, settings screens, or the assistant) opens as a **modal bottom sheet over the current page**, keeping the underlying page mounted and preserving its scroll position.
+### Page-First Navigation Architecture
+In the signed-in Customer experience, MarketLink is strictly **page-first**. Every primary destination is a distinct, shareable, refreshable URL with clean browser history and back-button behavior. The legacy sheet-first routing has been completely eliminated.
 
-#### Route Architecture: Page vs Sheet
-| Route Path | Type | Mobile Size | Desktop Appearance | Underlying State |
+#### The Four-Part Test for Overlays
+An overlay (modal dialog or bottom sheet) is legitimate in MarketLink ONLY if it satisfies all four criteria:
+1. **Ephemeral Interaction**: It supports a temporary sub-task (e.g. tuning filter criteria or confirming a destructive action), not a primary destination.
+2. **Not Shareable/Bookmarkable**: It does not represent an addressable resource that a user would send to someone else or bookmark.
+3. **Focus Trapped & Restored**: It traps keyboard focus while active and safely returns focus to the triggering element upon `Esc` or dismissal.
+4. **No Deep Flow**: It contains no nested routes, multi-step sub-navigation, or independent page flows.
+
+#### The Five Surviving Overlays
+1. **Filter BottomSheet** (`FilterPanel` on mobile `<1024px` for `/buyer/products`): Ephemeral filtering panel.
+2. **Market Switcher** (`MarketDropdown` in top bar): Quick home market selector.
+3. **Command Palette** (`CommandPalette`, triggered via `⌘K` / `Ctrl+K`): Instant search and keyboard navigation.
+4. **Confirmation Dialogs** (`ConfirmStep`, order cancellation modal, sign-out modal): High-stakes action confirmation.
+5. **Toast Notifications** (`ToastContext`): Floating confirmation notices.
+
+#### The 19 Canonical Buyer Pages
+| Path | Page Name | Width Variant | Density / Layout |
+|---|---|---|---|
+| `/buyer` | Today at the Market | `wide` | MarketClock + StallStrip + Curated Feed |
+| `/buyer/products` | Browse Produce | `wide` | Filter rail (desktop) / BottomSheet (mobile) + Catalog grid |
+| `/buyer/products/:id` | Produce Detail | `detail` | 2-column detail: Image illustration + Info/Order + Reviews |
+| `/buyer/stalls` | Stalls Index | `wide` | Stalls grid sorted by open/scarcity |
+| `/buyer/stalls/:id` | Stall Detail | `detail` | Stall header + DayDots + Operating schedule + Produce grid |
+| `/buyer/markets` | Markets Index | `wide` | Segmented list/map view + Market cards |
+| `/buyer/markets/:id` | Market Detail | `detail` | Market info + Stall list + Leaflet map with directions |
+| `/buyer/basket` | Basket | `detail` | Multi-stall groups + Cutoff countdown + Pickup window summary |
+| `/buyer/checkout` | Review Pickup | `detail` | Pickup window selector per stall + Cash at stall confirmation |
+| `/buyer/orders` | Orders | `detail` | Active & Past segmented control + Order rows |
+| `/buyer/orders/:id` | Order Detail | `detail` | 4-letter collection code + Status timeline + Location map |
+| `/buyer/orders/:id/confirmed` | Order Confirmed | `detail` | Pickup code display + Stall instructions + Calendar action |
+| `/buyer/saved` | Saved | `wide` | Tabs: Saved produce, stalls, and markets |
+| `/buyer/profile` | You (Account) | `read` | Profile summary + Navigation links + Sign out |
+| `/buyer/profile/details` | Personal Details | `read` | Name, contact phone, and collection address form |
+| `/buyer/profile/markets` | Saved Markets | `read` | Primary market selection + Saved market list |
+| `/buyer/profile/notifications` | Notification Preferences | `read` | SMS & Email preference toggles |
+| `/buyer/profile/reviews` | Your Reviews | `read` | Editable user ratings and commentary |
+| `/buyer/notifications` | Notifications Feed | `read` | Activity timeline with "Mark all as read" |
+| `/buyer/assistant` | Ask MarketLink | `read` | Agricultural assistant chat with prompt chips |
+| `/buyer/help` | How MarketLink Works | `read` | 4-step collection guide + FAQ accordions |
+| `/buyer/*` | Buyer 404 | `read` | Lost path scene with return link |
+
+---
+
+## 18A. Full-Scene SVG Illustration System (`<Scene>`)
+MarketLink features ten bespoke, handcrafted full-scene vector artworks designed specifically for local farmers market storytelling.
+
+### Specification & Geometric Hierarchy
+- **Canvas Dimensions**: `viewBox="0 0 640 400"`, aspect ratio 16:10.
+- **Horizon Line**: Exactly at `y = 252` on all landscape and market scenes.
+- **Layer Architecture (Bottom to Top)**:
+  1. Sky / Background wash (`opacity="0.08"`)
+  2. Distant treeline / hills (`opacity="0.18"`)
+  3. Midground stall silhouettes (`opacity="0.35"`)
+  4. Architectural canopy frames (`opacity="0.55"`)
+  5. Stall counters and produce crates (`opacity="0.75"`)
+  6. Foreground produce details (`opacity="0.95"`)
+  7. Human silhouettes and market goers (`opacity="0.85"`)
+  8. Architectural hairlines (`stroke="var(--color-wood-line)"`, 1px)
+  9. Focus Accent element (Strictly ONE accent fill: Beet, Carrot, or Herb)
+- **The One-Accent Rule**: Each artwork uses neutral monochrome ink layers with strictly ONE thematic accent color:
+  - *Herb* (`#5C7048`): Fresh greens, morning produce, open markets.
+  - *Carrot* (`#E07A2C`): Harvest root crates, sunset awnings, dusk.
+  - *Beet* (`#7A2E3B`): Berry baskets, jam jars, signature marks.
+- **The Ten Scene Artworks**:
+  1. `market-morning`: Sunrise over market stalls, opening day (Used in Today feed header / welcome).
+  2. `market-closed`: Stalls wrapped in canvas tarp under calm evening sky (Used when market is closed).
+  3. `empty-basket`: Woven market basket sitting empty on wooden boards (Used in empty Basket).
+  4. `order-placed`: Farmer packing fresh greens into brown paper bag (Used in Order Confirmation).
+  5. `walk-to-market`: Customer walking along tree-lined avenue toward market gates (Used in search empty states).
+  6. `farmer-packing`: Farmer hand-selecting heirloom produce at crate counter (Used in Order Timeline).
+  7. `stall-at-dusk`: Warm twilight lanterns hung above rustic wooden stall frame (Used in late cutoff notices).
+  8. `lost-path`: Quiet fork in rural farm road with stone milestone (Used in 404 Not Found & empty search).
+  9. `kitchen-table`: Farm table with fresh herbs, knife, and cutting board (Used in empty Saved/Favorites).
+  10. `harvest-crates`: Stacked cedar bushel crates filled with field crops (Used in Stalls/Reviews empty states).
+
+---
+
+## 18B. Two-Accent Budget & Enforcement
+To maintain visual serenity and prevent UI noise, **no rendered screen may display more than two Beet (`var(--color-beet)`) elements simultaneously**.
+
+### The Rule
+- **First Beet Element**: The single primary action button (e.g., "Place pre-order", "Add to basket", "Save changes") OR the active navigation link.
+- **Second Beet Element**: The active tab indicator or secondary emphasis pill.
+- **Zero-Beet Screens**: Read-only inspection pages (e.g. Orders list, Today feed when browsing) feature zero or one accent only.
+
+| Screen | Viewport | Beet Element 1 | Beet Element 2 | Total Beet |
 |---|---|---|---|---|
-| `/buyer` | Page | Full page | Centered feed | Base route |
-| `/buyer/products` | Page | Full page | Responsive grid | Base route |
-| `/buyer/orders` | Page | Full page | Centered narrow | Base route |
-| `/buyer/favorites` | Page | Full page | Responsive grid | Base route |
-| `/buyer/profile` | Page | Full page | Settings list | Base route |
-| `/buyer/markets` | Page | Full page | List / Map view | Base route |
-| `/buyer/farmers` | Page | Full page | List view | Base route |
-| `/buyer/products/:id` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
-| `/buyer/farmers/:id` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
-| `/buyer/markets/:id` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
-| `/buyer/cart` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
-| `/buyer/order-confirmed` | Sheet | `peek` (content) | Centered dialog (~440px) | Preserved |
-| `/buyer/orders/:id` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
-| `/buyer/assistant` | Sheet | `full` (100dvh) | Right drawer (~480px) | Preserved |
-| `/buyer/profile/details` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
-| `/buyer/profile/markets` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
-| `/buyer/profile/notifications`| Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
-| `/buyer/profile/help` | Sheet | `tall` (92dvh) | Right drawer (~480px) | Preserved |
+| Today (`/buyer`) | 390 / 1440 | Active bottom nav "Market" | None (or search submit focus) | 1 |
+| Browse (`/buyer/products`) | 390 / 1440 | Active bottom nav "Browse" | Filter count badge | 2 |
+| Produce (`/buyer/products/:id`) | 390 / 1440 | "Add to basket" button | None | 1 |
+| Stalls (`/buyer/stalls`) | 390 / 1440 | Active nav item | None | 1 |
+| Stall (`/buyer/stalls/:id`) | 390 / 1440 | Active nav item | None | 1 |
+| Markets (`/buyer/markets`) | 390 / 1440 | Active nav item | None | 1 |
+| Market (`/buyer/markets/:id`) | 390 / 1440 | Active nav item | None | 1 |
+| Basket (`/buyer/basket`) | 390 / 1440 | "Review pickup" primary CTA | Active bottom nav "Basket" | 2 |
+| Checkout (`/buyer/checkout`) | 390 / 1440 | "Place pre-order" primary CTA | None | 1 |
+| Orders (`/buyer/orders`) | 390 / 1440 | Active bottom nav "Orders" | None | 1 |
+| Order Detail (`/buyer/orders/:id`)| 390 / 1440 | Active nav item | None | 1 |
+| Confirmed (`/buyer/orders/:id/confirmed`) | 390 / 1440 | "View order" primary CTA | None | 1 |
+| Saved (`/buyer/saved`) | 390 / 1440 | Active tab indicator | None | 1 |
+| You (`/buyer/profile`) | 390 / 1440 | Active bottom nav "You" | None | 1 |
+| Personal Details | 390 / 1440 | "Save changes" CTA | None | 1 |
+| Saved Markets | 390 / 1440 | None | None | 0 |
+| Notification Prefs | 390 / 1440 | None (Toggles use neutral ink) | None | 0 |
+| Your Reviews | 390 / 1440 | None | None | 0 |
+| Notifications | 390 / 1440 | "Mark all read" link | None | 1 |
+| Ask MarketLink | 390 / 1440 | Send button | None | 1 |
+| Help | 390 / 1440 | None | None | 0 |
+| Buyer 404 | 390 / 1440 | "Return to market" CTA | None | 1 |
 
-#### Background-Location Router Implementation
-`AppRoutes.jsx` uses React Router's dual `<Routes>` pattern:
-1. `<Routes location={background || location}>` renders the underlying layout and page.
-2. When `background` exists in `location.state`, a second `<Routes>` block renders `<SheetRoute>` floating over the backdrop.
-3. **Replace-Not-Stack Rule**: When navigating from one sheet to another (e.g., product detail -> farmer detail), `useOpenSheet` passes `replace: true` and preserves `state.background`. Sheets never stack; pressing browser Back or close always returns directly to the underlying page.
-4. **Full-Page Fallback**: When visited directly without a `background` (bookmarks, direct links), each sheet route has a fallback that renders with `inSheet={false}` providing accessible back navigation.
+---
 
-### Mobile Bottom Navigation
-- **Height**: `--bottom-nav-height: 4rem (64px)`.
-- **Items (5)**: Market (`/buyer`), Browse (`/buyer/products`), Cart (`/buyer/cart` sheet), Orders (`/buyer/orders`), You (`/buyer/profile`).
-- **Active State**: Beet icon + text label with a 2px beet indicator bar.
-- **Cart Badge**: Pill badge with count over the basket icon.
-- **Desktop (>= 768px)**: Hidden via CSS; top navigation in `BuyerTopBar` takes over.
+## 18C. Reusable Component Directory (Stages 1–9)
+All Customer-facing pages build on the unified component set:
 
-### Horizontal Rows
-- **Component**: `HorizontalRow.jsx` with section title, subtitle, and "See all" action.
-- **Mechanics**: Bleed-to-edge scroll container with snap-start alignment, peek effect on trailing card, and hidden scrollbars.
-- **Desktop**: Subtle chevron buttons appear at 1024px+ for mouse scrolling.
-- **Rule**: Horizontal rows never auto-advance under any circumstance.
-
-### Home Feed & Endless Scroll
-- **Curated Sections**: 8 fixed thematic rows (Featured today, Recently bought, Top-selling Farmers, Order soon, New this week, From Riverbend Farm, In season right now, Baked this morning).
-- **Endless Feed**: Dynamically loads 12+ seasonal templates via `IntersectionObserver`.
-- **Punctuation Dividers**: Warm quotes and proverbs from local farmers placed between sections.
-- **Performance**: `content-visibility: auto; contain-intrinsic-size: 320px;` applied to section wrappers.
-- **State Persistence**: Module-level cache in `useFeed.js` preserves loaded sections and scroll position when sheets open and close.
-
-### Add-to-Cart Micro-Interaction
-- **Animation Sequence**: Button press scales to 0.92, transitions to checkmark, flying beet dot arcs to cart icon in top/bottom nav via `element.animate()`, cart icon bounces, badge pops.
-- **Reduced Motion**: When `prefers-reduced-motion: reduce` is active, the flying dot and bumps are immediately skipped.
-- **Stepper Transformation**: Once added, the button seamlessly morphs into an accessible `QuantityStepper`.
+- **`<Page width="wide|detail|read">`**: Top-level page container with consistent padding and max-widths.
+- **`<PageTitle title context backTo backLabel action>`**: Standardized `<h1>` header block in Idiqlat with optional back link and status metadata.
+- **`<Section title subtitle action to>`**: Section heading block with standardized vertical rhythm (`--section-gap`).
+- **`<MarketClock marketName openNow windowLabel nextOpenLabel closesAtLabel progress>`**: Live SVG market operating indicator with progress bar.
+- **`<Scene name="market-morning|..." alt height>`**: Full-scene vector illustration renderer.
+- **`<EmptyState scene title text actionLabel onAction actionTo>`**: Standard empty state block with scene illustration and single primary CTA.
+- **`<ErrorState title text onRetry>`**: Standard error block with retry button.
+- **`<FilterPanel value onChange onReset categories markets layout="rail|sheet">`**: Unified produce filter panel.
+- **`<StallStrip marketId>`**: Horizontal scroll strip of operating farmer stalls.
+- **`<StallGroup farmer items pickupWindows cutoffAt onRemove onQuantityChange>`**: Grouped cart display per farm stall.
+- **`<DayDots days>`**: 7-day operating schedule indicator circles.
+- **`<OrderTimeline events status>`**: Chronological order progress milestone tracker.
+- **`<PickupCode code>`**: 4-letter collection code display tile with copy interaction.
+- **`<CommandPalette>`**: `⌘K` spotlight modal for instant search and deep page linking.
 
 ---
 

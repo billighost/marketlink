@@ -1,376 +1,236 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Navigation, Compass, Map as MapIcon, List, X, Star, MapPin, Clock, ShoppingBag } from 'lucide-react';
-import { getMarkets, getFarmers, getMarketFarmers } from '@/api/catalog';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { getMarkets } from '@/api/catalog';
 import { useQuery } from '@/hooks/useQuery';
-import { useAuth } from '@/context/AuthContext';
-import { setHomeMarket } from '@/api/me';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import Page from '@/components/layout/Page';
+import PageTitle from '@/components/layout/PageTitle';
 import MarketCard from '@/components/domain/MarketCard';
 import { MapView } from '@/components/domain/MapView';
 import SegmentedControl from '@/components/ui/SegmentedControl';
-import Chip from '@/components/ui/Chip';
-import Skeleton from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
-import Button from '@/components/ui/Button';
+import Skeleton from '@/components/ui/Skeleton';
 import styles from './Markets.module.css';
 
 const DAY_OPTIONS = [
-  { label: 'All days', val: undefined },
-  { label: 'Wednesday', val: 'wed' },
-  { label: 'Friday', val: 'fri' },
-  { label: 'Saturday', val: 'sat' },
-  { label: 'Sunday', val: 'sun' },
-];
-
-const MARKER_FILTERS = [
-  { id: 'market', label: 'Markets' },
-  { id: 'farmer', label: 'Farmers' },
+  { label: 'Any day', val: undefined },
+  { label: 'Sun', val: 'sun' },
+  { label: 'Mon', val: 'mon' },
+  { label: 'Tue', val: 'tue' },
+  { label: 'Wed', val: 'wed' },
+  { label: 'Thu', val: 'thu' },
+  { label: 'Fri', val: 'fri' },
+  { label: 'Sat', val: 'sat' },
 ];
 
 /**
- * Rich popup that shows when clicking a market or farmer marker on the map.
- */
-function MarkerPopup({ item, type, onClose, onNavigate }) {
-  if (!item) return null;
-
-  return (
-    <div className={styles.popup} role="dialog" aria-label={`Details for ${item.name || item.stallName}`}>
-      <div className={styles.popupHeader}>
-        <div className={styles.popupIconWrap} aria-hidden="true">
-          {type === 'market' ? <MapPin size={16} /> : <ShoppingBag size={16} />}
-        </div>
-        <div className={styles.popupMeta}>
-          <strong className={styles.popupName}>{type === 'market' ? item.name : item.stallName}</strong>
-          {type === 'market' && item.address && (
-            <span className={styles.popupSub}>{item.address}</span>
-          )}
-          {type === 'farmer' && (
-            <span className={styles.popupSub}>
-              {item.ratingAvg > 0 && (
-                <><Star size={11} aria-hidden="true" fill="currentColor" /> {item.ratingAvg.toFixed(1)}</>
-              )}
-            </span>
-          )}
-        </div>
-        <button className={styles.popupClose} onClick={onClose} aria-label="Close popup">
-          <X size={14} aria-hidden="true" />
-        </button>
-      </div>
-
-      {type === 'market' && (
-        <div className={styles.popupBody}>
-          {Array.isArray(item.schedule) && item.schedule.length > 0 && (
-            <p className={styles.popupDetail}>
-              <Clock size={12} aria-hidden="true" />
-              {item.schedule.map((s) => {
-                const dayLabels = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
-                const h = (min) => {
-                  const h24 = Math.floor(min / 60);
-                  const m = min % 60;
-                  const ampm = h24 >= 12 ? 'PM' : 'AM';
-                  const h12 = h24 % 12 || 12;
-                  return `${h12}${m ? `:${String(m).padStart(2,'0')}` : ''}${ampm}`;
-                };
-                return `${dayLabels[s.day] || s.day} ${h(s.openMin)}–${h(s.closeMin)}`;
-              }).join(' · ')}
-            </p>
-          )}
-          {item.farmerCount > 0 && (
-            <p className={styles.popupDetail}>
-              <ShoppingBag size={12} aria-hidden="true" />
-              {item.farmerCount} active farmer{item.farmerCount !== 1 ? 's' : ''}
-            </p>
-          )}
-        </div>
-      )}
-
-      {type === 'farmer' && (
-        <div className={styles.popupBody}>
-          {item.specialty && (
-            <p className={styles.popupDetail}><span className={styles.popupTag}>{item.specialty}</span></p>
-          )}
-          {Array.isArray(item.operatingDays) && item.operatingDays.length > 0 && (
-            <p className={styles.popupDetail}>
-              <Clock size={12} aria-hidden="true" />
-              {item.operatingDays.join(', ')}
-            </p>
-          )}
-        </div>
-      )}
-
-      <button
-        type="button"
-        className={styles.popupAction}
-        onClick={() => onNavigate(item, type)}
-        aria-label={`View ${type === 'market' ? item.name : item.stallName}`}
-      >
-        View {type === 'market' ? 'market' : 'farmer'} →
-      </button>
-    </div>
-  );
-}
-
-/**
- * Customer Markets directory page — Live Market Map with typed markers and popups.
+ * Page C: Markets index (/buyer/markets)
+ *
+ * Requirements:
+ *  - Page width="wide"
+ *  - PageTitle title="Markets" with context line (e.g. "6 markets near you")
+ *  - SegmentedControl toggles List / Map (List is default, persisted in URL)
+ *  - Day chips satisfy SRS "browse markets by location and day"
+ *  - MarketCard full-width row card (1 per row under 768, 2 columns at 768+)
+ *  - MapView 420px with all markers, marker selection with card below
+ *  - EmptyState with "lost-path" scene
+ *  - 0 beet elements
  */
 export function Markets() {
-  const { user, switchMarket } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  useDocumentTitle('Markets · MarketLink');
 
-  const [viewMode, setViewMode] = useState('list');
-  const [selectedDay, setSelectedDay] = useState(undefined);
-  const [userCoords, setUserCoords] = useState(null);
-  const [geoLocating, setGeoLocating] = useState(false);
-  const [geoError, setGeoError] = useState(null);
-  const [activeMarkerFilters, setActiveMarkerFilters] = useState(['market', 'farmer']);
-  const [selectedPopup, setSelectedPopup] = useState(null); // { item, type }
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewMode = searchParams.get('view') === 'map' ? 'map' : 'list';
+  const dayParam = searchParams.get('day') || undefined;
 
-  // Highlight IDs passed from Smart Basket "View on map"
-  const highlightFarmerIds = location.state?.highlightFarmerIds || [];
-  const highlightMarketIds = location.state?.highlightMarketIds || [];
+  const [selectedDay, setSelectedDay] = useState(dayParam);
+  const [selectedMarketId, setSelectedMarketId] = useState(null);
+  const selectedCardRef = useRef(null);
 
-  const queryParams = {
-    day: selectedDay,
-    lat: userCoords?.lat,
-    lng: userCoords?.lng,
-    radiusKm: userCoords ? 50 : undefined,
-  };
-
-  const { data: marketsData, loading: marketsLoading } = useQuery(
-    ['buyer-markets', selectedDay, userCoords?.lat, userCoords?.lng],
-    ({ signal }) => getMarkets(queryParams, signal)
-  );
-
-  const { data: farmersData, loading: farmersLoading } = useQuery(
-    ['buyer-live-farmers', selectedDay],
-    ({ signal }) => getFarmers({ day: selectedDay, limit: 100 }, signal)
-  );
-
-  const markets = marketsData?.data || [];
-  const farmers = farmersData?.data || [];
-  const loading = marketsLoading;
-  const selectedMarketId = user?.homeMarketId || user?.homeMarket?.id || markets[0]?.id;
-
-  const handleUseMyLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      setGeoError('Geolocation is not supported by your browser.');
-      return;
-    }
-    setGeoLocating(true);
-    setGeoError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setGeoLocating(false);
+  const setViewMode = (mode) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (mode === 'map') {
+          next.set('view', 'map');
+        } else {
+          next.delete('view');
+        }
+        return next;
       },
-      () => {
-        setGeoLocating(false);
-        setGeoError('Location permission denied. Showing all regional markets.');
-      },
-      { timeout: 8000 }
-    );
-  }, []);
-
-  const handleSelectMarket = (market) => { switchMarket?.(market.id); };
-
-  const toggleFilter = (filterId) => {
-    setActiveMarkerFilters((prev) =>
-      prev.includes(filterId)
-        ? prev.length > 1 ? prev.filter((f) => f !== filterId) : prev // keep at least 1
-        : [...prev, filterId]
+      { replace: true }
     );
   };
 
-  // Build typed markers for the map
-  const mapMarkers = [
-    ...(activeMarkerFilters.includes('market')
-      ? markets
-          .filter((m) => m.location?.lat && m.location?.lng)
-          .map((m) => ({
-            id: m.id,
-            lat: m.location.lat,
-            lng: m.location.lng,
-            label: m.name,
-            subtitle: m.address,
-            markerType: 'market',
-            _raw: m,
-          }))
-      : []),
-    ...(activeMarkerFilters.includes('farmer')
-      ? farmers
-          .filter((f) => f.location?.lat && f.location?.lng)
-          .map((f) => ({
-            id: f.id,
-            lat: f.location.lat,
-            lng: f.location.lng,
-            label: f.stallName,
-            subtitle: f.specialty || '',
-            markerType: 'farmer',
-            _raw: f,
-          }))
-      : []),
-  ];
-
-  const handleMarkerClick = (marker) => {
-    setSelectedPopup({ item: marker._raw, type: marker.markerType });
+  const handleSelectDay = (val) => {
+    setSelectedDay(val);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (val) {
+          next.set('day', val);
+        } else {
+          next.delete('day');
+        }
+        return next;
+      },
+      { replace: true }
+    );
   };
 
-  const handlePopupNavigate = (item, type) => {
-    if (type === 'market') {
-      navigate(`/buyer/markets/${item.id}`);
-    } else {
-      navigate(`/buyer/farmers/${item.id}`);
-    }
-    setSelectedPopup(null);
-  };
+  // Fetch markets with day filter
+  const { data: marketsData, loading } = useQuery(
+    ['buyer-markets', selectedDay],
+    ({ signal }) => getMarkets({ day: selectedDay || undefined }, signal)
+  );
 
-  // Auto-switch to map view if navigated from Smart Basket
+  const markets = useMemo(() => {
+    return Array.isArray(marketsData) ? marketsData : marketsData?.data || [];
+  }, [marketsData]);
+
+  // Set default selected market for map view
   useEffect(() => {
-    if (highlightFarmerIds.length > 0 || highlightMarketIds.length > 0) {
-      setViewMode('map');
+    if (markets.length > 0 && !selectedMarketId) {
+      setSelectedMarketId(markets[0].id);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [markets, selectedMarketId]);
+
+  // Filter valid markers for MapView
+  const mapMarkers = useMemo(() => {
+    return markets
+      .filter((m) => m?.location?.lat && m?.location?.lng)
+      .map((m) => ({
+        id: m.id,
+        lat: Number(m.location.lat),
+        lng: Number(m.location.lng),
+        title: m.name,
+        subtitle: m.address,
+      }));
+  }, [markets]);
+
+  const handleMarkerSelect = (id) => {
+    setSelectedMarketId(id);
+    if (selectedCardRef.current) {
+      selectedCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
+  const selectedMarket = useMemo(() => {
+    return markets.find((m) => m.id === selectedMarketId) || markets[0] || null;
+  }, [markets, selectedMarketId]);
+
+  const countText =
+    markets.length === 1 ? '1 market near you' : `${markets.length} markets near you`;
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.titleRow}>
-          <h1 className={styles.title}>Live Market</h1>
-          <SegmentedControl
-            name="markets-view"
-            value={viewMode}
-            onChange={setViewMode}
-            options={[
-              { value: 'list', label: <><List size={14} aria-hidden="true" /> List</> },
-              { value: 'map', label: <><MapIcon size={14} aria-hidden="true" /> Map</> },
-            ]}
+    <Page width="wide">
+      <div className={styles.container}>
+        <header className={styles.topBar}>
+          <PageTitle title="Markets" context={countText} />
+
+          <div className={styles.controlsWrap}>
+            {/* View switcher: List vs Map */}
+            <div className={styles.segmentedWrap}>
+              <SegmentedControl
+                name="markets-view"
+                value={viewMode}
+                onChange={setViewMode}
+                options={[
+                  { value: 'list', label: 'List' },
+                  { value: 'map', label: 'Map' },
+                ]}
+              />
+            </div>
+
+            {/* Day filter chips row */}
+            <div className={styles.dayChips} role="tablist" aria-label="Filter markets by day">
+              {DAY_OPTIONS.map((opt) => {
+                const isSelected = selectedDay === opt.val;
+                return (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    className={[
+                      styles.chip,
+                      isSelected ? styles.activeChip : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => handleSelectDay(opt.val)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </header>
+
+        {/* Loading Skeletons */}
+        {loading && markets.length === 0 && (
+          <div className={styles.listGrid}>
+            <div className={styles.skeletonCard} aria-hidden="true">
+              <Skeleton height="1.75rem" width="60%" />
+              <Skeleton height="1rem" width="40%" />
+              <Skeleton height="1rem" width="50%" />
+            </div>
+            <div className={styles.skeletonCard} aria-hidden="true">
+              <Skeleton height="1.75rem" width="60%" />
+              <Skeleton height="1rem" width="40%" />
+              <Skeleton height="1rem" width="50%" />
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && markets.length === 0 && (
+          <EmptyState
+            scene="lost-path"
+            title="No markets found"
+            text="Try a different day."
+            actionLabel="View all days"
+            onAction={() => handleSelectDay(undefined)}
           />
-        </div>
+        )}
 
-        {/* Day of week chips */}
-        <div className={styles.daysScroll} role="tablist" aria-label="Market days">
-          <button
-            type="button"
-            className={`${styles.locationBtn} ${userCoords ? styles.locationActive : ''}`}
-            onClick={handleUseMyLocation}
-            disabled={geoLocating}
-            aria-label="Sort markets by current location"
-          >
-            <Navigation size={14} className={geoLocating ? styles.spin : ''} aria-hidden="true" />
-            <span>{geoLocating ? 'Locating…' : userCoords ? 'Near me' : 'Use my location'}</span>
-          </button>
-
-          {DAY_OPTIONS.map((opt) => (
-            <Chip
-              key={opt.label}
-              selected={selectedDay === opt.val}
-              onClick={() => setSelectedDay(opt.val)}
-            >
-              {opt.label}
-            </Chip>
-          ))}
-        </div>
-
-        {geoError && <p className={styles.geoNote} role="alert">{geoError}</p>}
-      </header>
-
-      {/* ── Map view ────────────────────────────────────────── */}
-      {viewMode === 'map' && (
-        <div className={styles.mapContainer}>
-          {/* Marker type filters */}
-          <div className={styles.mapFilterBar} role="group" aria-label="Toggle marker types">
-            {MARKER_FILTERS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className={`${styles.mapFilterChip} ${styles[`mapFilterChip_${id}`]} ${activeMarkerFilters.includes(id) ? styles.mapFilterChipActive : ''}`}
-                onClick={() => toggleFilter(id)}
-                aria-pressed={activeMarkerFilters.includes(id)}
-              >
-                {label}
-              </button>
+        {/* List View */}
+        {!loading && markets.length > 0 && viewMode === 'list' && (
+          <div className={styles.listGrid}>
+            {markets.map((market) => (
+              <MarketCard key={market.id} market={market} />
             ))}
-            {(highlightFarmerIds.length > 0 || highlightMarketIds.length > 0) && (
-              <span className={styles.basketHighlightBadge}>
-                🛒 Basket items highlighted
-              </span>
+          </div>
+        )}
+
+        {/* Map View */}
+        {!loading && markets.length > 0 && viewMode === 'map' && (
+          <div className={styles.mapViewWrap}>
+            <div className={styles.mapWrapper}>
+              <MapView
+                markers={mapMarkers}
+                selectedId={selectedMarketId}
+                onSelect={handleMarkerSelect}
+                height="420px"
+                zoom={12}
+                interactive={true}
+                showDirectionsLink={false}
+                ariaLabel="Map of nearby farmers markets"
+              />
+            </div>
+
+            {/* Selected market card directly below map */}
+            {selectedMarket && (
+              <div ref={selectedCardRef} className={styles.selectedCardWrap}>
+                <MarketCard
+                  market={selectedMarket}
+                  isSelected={true}
+                />
+              </div>
             )}
           </div>
-
-          <MapView
-            markers={mapMarkers.map((m) => ({
-              ...m,
-              // Pulse/highlight markers that come from Smart Basket
-              highlight:
-                (m.markerType === 'farmer' && highlightFarmerIds.includes(m.id)) ||
-                (m.markerType === 'market' && highlightMarketIds.includes(m.id)),
-            }))}
-            selectedId={selectedMarketId}
-            onSelect={handleMarkerClick}
-            height="55dvh"
-            ariaLabel="Live market map showing markets and farmers"
-          />
-
-          {/* Popup panel */}
-          {selectedPopup && (
-            <div className={styles.popupOverlay}>
-              <MarkerPopup
-                item={selectedPopup.item}
-                type={selectedPopup.type}
-                onClose={() => setSelectedPopup(null)}
-                onNavigate={handlePopupNavigate}
-              />
-            </div>
-          )}
-
-          {/* Scrollable market cards below map */}
-          <div className={styles.mapCardList}>
-            {markets.map((market) => (
-              <MarketCard
-                key={market.id}
-                market={market}
-                onSelect={handleSelectMarket}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── List view ────────────────────────────────────────── */}
-      {viewMode === 'list' && (
-        <div className={styles.listContainer}>
-          {loading && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <Skeleton height="100px" borderRadius="var(--radius-md)" />
-              <Skeleton height="100px" borderRadius="var(--radius-md)" />
-              <Skeleton height="100px" borderRadius="var(--radius-md)" />
-            </div>
-          )}
-
-          {!loading && markets.length === 0 && (
-            <EmptyState
-              title="No markets found"
-              description="No markets operate on the selected day. Try viewing all days."
-              actionLabel="View all days"
-              onAction={() => setSelectedDay(undefined)}
-            />
-          )}
-
-          {!loading && markets.length > 0 && (
-            <div className={styles.grid}>
-              {markets.map((market) => (
-                <MarketCard
-                  key={market.id}
-                  market={market}
-                  onSelect={handleSelectMarket}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </Page>
   );
 }
 

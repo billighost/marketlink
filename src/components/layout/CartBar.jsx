@@ -5,25 +5,22 @@ import { formatPrice } from '@/utils/format';
 import styles from './CartBar.module.css';
 
 /**
- * Floating cart pill that appears when the cart has items.
- * Hidden on the Cart page, when any sheet is open, and when the cart is empty.
+ * Floating basket pill that appears on mobile/tablet when the basket has items.
+ * Hidden on the Cart page, when any sheet is open, and on desktop (1024px+).
  */
 export function CartBar() {
   const { count, subtotal } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Don't show when cart is empty
+  // Don't show when basket is empty
   if (count === 0) return null;
 
-  // Don't show when a sheet is already open
-  if (location.state?.background) return null;
-
-  // Don't show on the Cart route itself
-  if (location.pathname === '/buyer/cart') return null;
+  // Don't show on the Basket route itself
+  if (location.pathname === '/buyer/basket') return null;
 
   const handleClick = () => {
-    navigate('/buyer/cart', { state: { background: location } });
+    navigate('/buyer/basket');
   };
 
   return (
@@ -31,11 +28,11 @@ export function CartBar() {
       type="button"
       className={styles.bar}
       onClick={handleClick}
-      aria-label={`View cart, ${count} items, ${formatPrice(subtotal)}`}
+      aria-label={`View basket, ${count} ${count === 1 ? 'item' : 'items'}, ${formatPrice(subtotal)}`}
       data-cart-bar
     >
       <span className={styles.text}>
-        View cart · {count} {count === 1 ? 'item' : 'items'} · {formatPrice(subtotal)}
+        View basket · {count} {count === 1 ? 'item' : 'items'} · {formatPrice(subtotal)}
       </span>
     </button>
   );

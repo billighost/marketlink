@@ -1,134 +1,159 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  width: 100%;
+  padding-bottom: var(--space-12);
 }
 
 .intro {
+  margin: 0 0 var(--space-6) 0;
   font-size: var(--text-sm);
   color: var(--color-ink-soft);
-  line-height: var(--lh-body);
-  margin: 0;
+  line-height: var(--leading-normal);
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
 }
 
-.marketCard {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+.marketRow {
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-white);
-  transition: border-color var(--duration-fast) var(--ease-standard);
-}
-
-.selectedCard {
-  border-color: var(--color-herb);
-  background-color: var(--color-herb-bg);
-}
-
-.iconWrap {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background-color: var(--color-canvas);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.storeIcon {
-  color: var(--color-primary);
-}
-
-.details {
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  min-width: 0;
-  gap: 2px;
+  gap: var(--space-4);
 }
 
-.nameRow {
+.marketMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.nameGroup {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.name {
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: var(--weight-semibold);
-  color: var(--color-ink);
+.marketName {
   margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  text-decoration: none;
 }
 
-.currentBadge {
+.marketName:hover {
+  text-decoration: underline;
+}
+
+.homeBadge {
   font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  color: var(--color-herb);
-  background-color: var(--color-white);
-  padding: 1px var(--space-2);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-herb);
+  font-weight: var(--weight-medium);
+  padding: var(--space-0-5) var(--space-2);
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-full);
+  color: var(--color-ink);
 }
 
 .addressRow {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   font-size: var(--text-xs);
   color: var(--color-ink-soft);
+  flex-wrap: wrap;
 }
 
 .metaIcon {
-  color: var(--color-ink-soft);
   flex-shrink: 0;
 }
 
-.dot {
-  margin: 0 var(--space-1);
-}
-
-.schedule {
-  font-size: var(--text-xs);
-  color: var(--color-ink-soft);
-}
-
-.selectButton {
+.directionsLink {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-white);
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
   color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.directionsLink:hover {
+  color: var(--color-ink-soft);
+}
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-hairline-soft);
+  padding-top: var(--space-3);
+}
+
+.setHomeBtn {
   font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  padding: var(--space-1-5) var(--space-3);
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.setHomeBtn:hover {
+  background: var(--color-canvas-soft);
+}
+
+.removeBtn {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-1-5) var(--space-2);
+  border-radius: var(--radius-md);
+  transition: color var(--transition-fast);
+}
+
+.removeBtn:hover {
+  color: var(--color-danger);
+}
+
+.addMarketLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  cursor: pointer;
-  min-height: var(--control-h-sm);
-  flex-shrink: 0;
-  transition: background-color var(--duration-fast) var(--ease-standard);
+  color: var(--color-ink);
+  text-decoration: none;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-white);
+  border: 1px dashed var(--color-hairline);
+  border-radius: var(--radius-lg);
+  transition: background-color var(--transition-fast);
 }
 
-.selectButton:hover:not(:disabled) {
-  background-color: var(--color-canvas);
-}
-
-.selectedButton {
-  border-color: var(--color-herb);
-  background-color: var(--color-herb);
-  color: var(--color-white);
-  cursor: default;
+.addMarketLink:hover {
+  background: var(--color-canvas-soft);
 }
