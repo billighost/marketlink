@@ -1,5 +1,5 @@
-﻿/* ==========================================================================
-   Market.module.css ΓÇö Luxury Editorial Design for Market Explorer & Map View
+/* ==========================================================================
+   Market.module.css — Luxury Editorial Design for Market Explorer & Map View
    ========================================================================== */
 
 .pageContainer {
@@ -10,7 +10,7 @@
   flex-direction: column;
 }
 
-/* ΓöÇΓöÇΓöÇ HEADER BAR ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─── HEADER BAR ─────────────────────────────────────────────────── */
 .headerBar {
   background-color: #ffffff;
   border-bottom: 1px solid #ece4de;
@@ -127,14 +127,22 @@
   box-shadow: 0 2px 6px rgba(84, 23, 34, 0.25);
 }
 
-/* ΓöÇΓöÇΓöÇ MAP VIEW SPLIT CONTAINER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─── MAP VIEW SPLIT CONTAINER ───────────────────────────────────── */
 .mapViewContainer {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 150px);
-  min-height: 640px;
+  height: calc(100vh - 200px);
+  min-height: 580px;
   position: relative;
   overflow: hidden;
+}
+
+@media (max-width: 859px) {
+  .mapViewContainer {
+    height: auto;
+    min-height: calc(100vh - 120px);
+    overflow: visible;
+  }
 }
 
 @media (min-width: 860px) {
@@ -143,7 +151,7 @@
   }
 }
 
-/* ΓöÇΓöÇΓöÇ LEFT MAP SIDEBAR ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─── LEFT MAP SIDEBAR ───────────────────────────────────────────── */
 .mapSidebar {
   width: 100%;
   background-color: #faf5f2;
@@ -151,15 +159,32 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 420px;
+  height: 380px;
   flex-shrink: 0;
   box-shadow: 2px 0 10px rgba(46, 43, 38, 0.03);
-  z-index: 5;
+  z-index: 10;
+}
+
+@media (max-width: 859px) {
+  .mapSidebar {
+    height: 340px;
+    max-height: 400px;
+    border-right: none;
+    border-top: 1px solid #ebe1db;
+    order: 2;
+  }
+  .mapCanvasArea {
+    min-height: 300px;
+    height: 340px;
+    order: 1;
+  }
 }
 
 @media (min-width: 860px) {
   .mapSidebar {
     width: 420px;
+    min-width: 380px;
+    max-width: 440px;
     height: 100%;
   }
 }
@@ -390,7 +415,7 @@
   font-weight: 600;
 }
 
-/* ΓöÇΓöÇΓöÇ SCROLLABLE CARDS LIST (CUSTOM SLIM SCROLLBAR) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─── SCROLLABLE CARDS LIST (CUSTOM SLIM SCROLLBAR) ───────────────── */
 .cardsListScroll {
   flex: 1;
   overflow-y: auto;
@@ -460,8 +485,8 @@
 
 .cardThumbWrap {
   position: relative;
-  width: 84px;
-  height: 84px;
+  width: 120px;
+  height: 120px;
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
@@ -572,6 +597,11 @@
   text-overflow: ellipsis;
 }
 
+.cardAddress svg {
+  flex-shrink: 0;
+  color: #541722;
+}
+
 .cardMetaBottom {
   display: flex;
   align-items: center;
@@ -587,6 +617,12 @@
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.68rem;
   color: #6b6259;
+}
+
+.vendorsCountTag svg,
+.hoursTag svg {
+  flex-shrink: 0;
+  color: #8c8175;
 }
 
 .cardActionsRow {
@@ -648,12 +684,18 @@
   cursor: pointer;
 }
 
-/* ΓöÇΓöÇΓöÇ MAP CANVAS AREA (RIGHT) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─── MAP CANVAS AREA (RIGHT) ────────────────────────────────────── */
 .mapCanvasArea {
   flex: 1;
   position: relative;
   overflow: hidden;
   background-color: #ede8df;
+}
+
+.mapCanvasArea > :first-child {
+  position: relative;
+  z-index: 1;
+  height: 100%;
 }
 
 .mapVectorBackground {
@@ -671,7 +713,7 @@
   display: block;
 }
 
-/* ΓöÇΓöÇΓöÇ CUSTOM MAP PINS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─── CUSTOM MAP PINS ────────────────────────────────────────────── */
 .mapPinContainer {
   position: absolute;
   transform: translate(-50%, -100%);
@@ -781,7 +823,7 @@
   filter: drop-shadow(0 2px 4px rgba(84, 23, 34, 0.3));
 }
 
-/* ΓöÇΓöÇΓöÇ MAP ZOOM CONTROLS (TOP RIGHT) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─── MAP ZOOM CONTROLS (TOP RIGHT) ──────────────────────────────── */
 .mapControlsWrap {
   position: absolute;
   top: 16px;
@@ -814,38 +856,61 @@
   border-color: #541722;
 }
 
-/* ΓöÇΓöÇΓöÇ FLOATING DETAIL CARD (BOTTOM RIGHT) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─── FLOATING DETAIL CARD (BOTTOM RIGHT) ─────────────────────────── */
 .floatingMarketCard {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
-  width: 370px;
-  max-width: calc(100% - 40px);
+  bottom: 18px;
+  right: 18px;
+  width: 350px;
+  max-width: calc(100% - 36px);
+  max-height: calc(100% - 36px);
   background-color: #ffffff;
-  border: 1px solid #ebdcd5;
-  border-radius: 16px;
+  border: 1px solid rgba(84, 23, 34, 0.12);
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(46, 43, 38, 0.2);
-  z-index: 30;
-  animation: floatUp 220ms ease;
+  box-shadow: 0 16px 40px -6px rgba(46, 43, 38, 0.22), 0 4px 14px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+  pointer-events: auto;
+  animation: floatCardUp 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-@keyframes floatUp {
+.floatingMarketCard:hover {
+  box-shadow: 0 20px 48px -4px rgba(46, 43, 38, 0.26), 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 640px) {
+  .floatingMarketCard {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+    max-height: calc(100% - 24px);
+    z-index: 10;
+  }
+}
+
+@keyframes floatCardUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(12px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .floatingImgWrap {
   position: relative;
   width: 100%;
-  height: 120px;
+  height: 135px;
   background-color: #f0ebe5;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .floatingCoverImg {
@@ -853,30 +918,42 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 400ms ease;
+}
+
+.floatingMarketCard:hover .floatingCoverImg {
+  transform: scale(1.03);
 }
 
 .floatingImgOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.48) 0%, transparent 45%, rgba(0, 0, 0, 0.35) 100%);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 12px 14px;
 }
 
 .floatingStatusBadge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background-color: rgba(23, 94, 33, 0.9);
-  backdrop-filter: blur(4px);
+  gap: 6px;
+  background-color: rgba(23, 94, 33, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: #ffffff;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.floatingStatusBadgeUpcoming {
+  background-color: rgba(50, 42, 38, 0.88);
 }
 
 .floatingStatusDot {
@@ -884,39 +961,49 @@
   height: 6px;
   border-radius: 50%;
   background-color: #55d66d;
+  box-shadow: 0 0 6px #55d66d;
 }
 
 .floatingCloseBtn {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   border-radius: 50%;
-  background-color: rgba(30, 27, 22, 0.6);
-  backdrop-filter: blur(4px);
-  border: none;
+  background-color: rgba(26, 21, 20, 0.68);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 120ms ease;
+  transition: all 140ms ease;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .floatingCloseBtn:hover {
-  background-color: rgba(30, 27, 22, 0.85);
+  background-color: rgba(26, 21, 20, 0.92);
+  transform: scale(1.08);
+  border-color: rgba(255, 255, 255, 0.45);
 }
 
 .floatingCardBody {
   padding: 16px 18px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: #ffffff;
+  overflow-y: auto;
 }
 
 .floatingTitleRow {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 2px;
+  gap: 10px;
 }
 
 .floatingTitle {
@@ -926,26 +1013,33 @@
   color: #4a1521;
   margin: 0;
   line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .floatingRating {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  background-color: #fef7ed;
+  border: 1px solid #fed7aa;
+  padding: 3px 8px;
+  border-radius: 999px;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  color: #24201c;
+  color: #9a3412;
+  flex-shrink: 0;
 }
 
 .floatingLocation {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.74rem;
-  color: #7d7266;
-  margin: 0 0 8px 0;
+  font-size: 0.75rem;
+  color: #6e655c;
+  margin: 0;
+  line-height: 1.35;
 }
 
 .floatingPinIcon {
@@ -953,50 +1047,40 @@
   flex-shrink: 0;
 }
 
-.floatingDesc {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: #544d45;
-  margin: 0 0 14px 0;
-}
-
-.floatingStatsGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.floatingStatBox {
-  background-color: #faf5f2;
-  border: 1px solid #ebdcd5;
-  border-radius: 8px;
-  padding: 8px 12px;
+.floatingInfoSection {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background-color: #faf6f2;
+  border-radius: 10px;
+  border: 1px solid #ebdcd5;
 }
 
-.floatingStatLabel {
+.floatingInfoRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.65rem;
-  color: #8c8175;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: 1px;
+  font-size: 0.74rem;
+  color: #4a433b;
+  line-height: 1.35;
 }
 
-.floatingStatValue {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: #24201c;
+.floatingInfoIcon {
+  color: #8c3f20;
+  flex-shrink: 0;
+}
+
+.floatingInfoText {
+  font-weight: 500;
 }
 
 .floatingActionsRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  margin-top: 2px;
 }
 
 .viewFullMarketBtn {
@@ -1004,43 +1088,47 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 16px;
+  gap: 8px;
+  height: 42px;
+  padding: 0 16px;
   background-color: #541722;
   color: #ffffff;
-  border-radius: 8px;
+  border-radius: 10px;
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.8125rem;
   font-weight: 700;
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(84, 23, 34, 0.2);
-  transition: all 120ms ease;
+  box-shadow: 0 3px 10px rgba(84, 23, 34, 0.22);
+  transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .viewFullMarketBtn:hover {
-  background-color: #3e0e16;
+  background-color: #3b0f17;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(84, 23, 34, 0.3);
 }
 
 .floatingBookmarkBtn {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  border-radius: 8px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 10px;
   background-color: #faf5f2;
-  border: 1px solid #ebdcd5;
+  border: 1px solid #ded3cb;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #541722;
   cursor: pointer;
-  transition: all 120ms ease;
+  transition: all 140ms ease;
   flex-shrink: 0;
 }
 
 .floatingBookmarkBtn:hover {
-  background-color: #faede9;
+  background-color: #f4eae4;
   border-color: #541722;
+  transform: translateY(-1px);
 }
 
 .floatingBookmarkActive {
@@ -1048,7 +1136,7 @@
   border-color: #541722;
 }
 
-/* ΓöÇΓöÇΓöÇ GRID / LIST VIEW STYLING ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─── GRID / LIST VIEW STYLING ───────────────────────────────────── */
 .listFilterBar {
   display: flex;
   flex-direction: column;

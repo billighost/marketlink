@@ -160,7 +160,7 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
     setFieldErrors((prev) => ({ ...prev, imageUrl: '' }));
     try {
       const res = await uploadFarmerImage(file, 'product');
-      setImageUrl(res?.data?.url || '');
+      setImageUrl(res?.data?.imageUrl || res?.data?.url || '');
       setImagePublicId(res?.data?.publicId || null);
       setIsDirty(true);
     } catch (err) {
@@ -223,12 +223,17 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
       priceCents,
       unit,
       quantity: Number(quantity),
+      quantityAvailable: Number(quantity),
       lowStockThreshold: Number(lowStockThreshold),
       description: description.trim(),
       tags,
-      art: imageUrl ? undefined : art,
+      art: art || 'basket',
       imageUrl: imageUrl || null,
       imagePublicId: imagePublicId || null,
+      weekly: {
+        enabled: templateEnabled,
+        defaultQty: Number(templateDefaultQty),
+      },
       weeklyTemplate: {
         enabled: templateEnabled,
         defaultQuantity: Number(templateDefaultQty),

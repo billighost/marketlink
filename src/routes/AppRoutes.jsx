@@ -64,6 +64,8 @@ import BuyerProfileDetails from '@/pages/buyer/ProfileDetails';
 import BuyerSavedMarkets from '@/pages/buyer/SavedMarkets';
 import BuyerProfileNotifications from '@/pages/buyer/ProfileNotifications';
 import BuyerHelp from '@/pages/buyer/Help';
+import BuyerSmartBasket from '@/pages/buyer/SmartBasket';
+import BuyerVisitPlanner from '@/pages/buyer/VisitPlanner';
 
 // Sheet wrapper component
 import SheetRoute from '@/components/layout/SheetRoute';
@@ -117,6 +119,7 @@ export function AppRoutes() {
           <Route path="insights" element={<VendorInsights />} />
           <Route path="reviews" element={<VendorReviews />} />
           <Route path="settings" element={<VendorMyStall />} />
+          <Route path="stall" element={<VendorMyStall />} />
         </Route>
 
         {/* ── Admin Routes ──────────────────────────────────────── */}
@@ -168,6 +171,8 @@ export function AppRoutes() {
           <Route path="profile/markets" element={<SheetRoute size="tall"><BuyerSavedMarkets /></SheetRoute>} />
           <Route path="profile/notifications" element={<SheetRoute size="tall"><BuyerProfileNotifications /></SheetRoute>} />
           <Route path="profile/help" element={<SheetRoute size="tall"><BuyerHelp /></SheetRoute>} />
+          <Route path="smart-basket" element={<SheetRoute size="full"><BuyerSmartBasket /></SheetRoute>} />
+          <Route path="visit-planner" element={<SheetRoute size="full"><BuyerVisitPlanner /></SheetRoute>} />
         </Route>
 
         {/* ── Guest (Unauthenticated) Routes ─────────────────────── */}
@@ -288,6 +293,22 @@ export function AppRoutes() {
             element={
               <SheetRoute size="tall" title="Help & FAQ">
                 <BuyerHelp />
+              </SheetRoute>
+            }
+          />
+          <Route
+            path="/buyer/smart-basket"
+            element={
+              <SheetRoute size="full">
+                <BuyerSmartBasket />
+              </SheetRoute>
+            }
+          />
+          <Route
+            path="/buyer/visit-planner"
+            element={
+              <SheetRoute size="full">
+                <BuyerVisitPlanner />
               </SheetRoute>
             }
           />

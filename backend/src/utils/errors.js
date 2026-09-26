@@ -71,11 +71,17 @@ export class AppError extends Error {
   }
 
   static unprocessable(details = [], message = 'Please check the highlighted fields.') {
-    return new AppError(422, 'VALIDATION_FAILED', message, details);
+    if (typeof details === 'string') {
+      return new AppError(422, 'VALIDATION_FAILED', details, Array.isArray(message) ? message : message ? [message] : []);
+    }
+    return new AppError(422, 'VALIDATION_FAILED', message, Array.isArray(details) ? details : details ? [details] : []);
   }
 
   static validation(details = [], message = 'Please check the highlighted fields.') {
-    return new AppError(422, 'VALIDATION_FAILED', message, details);
+    if (typeof details === 'string') {
+      return new AppError(422, 'VALIDATION_FAILED', details, Array.isArray(message) ? message : message ? [message] : []);
+    }
+    return new AppError(422, 'VALIDATION_FAILED', message, Array.isArray(details) ? details : details ? [details] : []);
   }
 
   static rateLimited(message = 'Too many requests. Please slow down and try again later.') {

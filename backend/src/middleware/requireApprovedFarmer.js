@@ -20,7 +20,7 @@ import { AppError } from '../utils/errors.js';
  * Returns 403 ACCOUNT_SUSPENDED for suspended or rejected accounts.
  */
 export async function requireApprovedFarmer(req, res, next) {
-  if (!req.user || req.user.role !== 'farmer') {
+  if (!req.user || (req.user.role !== 'farmer' && req.user.role !== 'vendor')) {
     return next(AppError.forbidden('Only farmers can access this resource.', 'FORBIDDEN'));
   }
 
@@ -74,7 +74,7 @@ export async function requireApprovedFarmer(req, res, next) {
  * but immediately rejects suspended or rejected farmers with 403 ACCOUNT_SUSPENDED.
  */
 export async function requireNotSuspendedFarmer(req, res, next) {
-  if (!req.user || req.user.role !== 'farmer') {
+  if (!req.user || (req.user.role !== 'farmer' && req.user.role !== 'vendor')) {
     return next(AppError.forbidden('Only farmers can access this resource.', 'FORBIDDEN'));
   }
 

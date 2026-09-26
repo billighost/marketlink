@@ -24,12 +24,54 @@ export async function getFarmerProfile(userId) {
   const db = getDb();
   const uid = toObjectId(userId);
 
-  const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: uid });
-  if (!farmer) {
+  let farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: uid });
+  const user = await db
+    .collection(COLLECTIONS.USERS)
+    .findOne({ _id: uid }, { projection: { status: 1, name: 1, email: 1, phone: 1, address: 1, role: 1 } });
+
+  if (!farmer && user && (user.role === 'farmer' || user.role === 'vendor')) {
+    const now = new Date();
+    const newFarmer = {
+      userId: uid,
+      stallName: user.name ? `${user.name}'s Stall` : 'My Stall',
+      stallNameLower: user.name ? `${user.name}'s stall`.toLowerCase() : 'my stall',
+      contactPerson: user.name || '',
+      phone: user.phone || '',
+      email: user.email || '',
+      specialty: 'Farm Fresh Produce',
+      story: '',
+      since: new Date().getFullYear(),
+      marketIds: [],
+      operatingDays: ['sat', 'sun'],
+      pickupWindows: [
+        { day: 'sat', startMin: 540, endMin: 780 },
+        { day: 'sun', startMin: 540, endMin: 780 },
+      ],
+      cutoffMinutesBefore: 120,
+      maxOrdersPerSlot: 20,
+      address: user.address || '',
+      location: null,
+      imageUrl: null,
+      imagePublicId: null,
+      stallNumber: '',
+      slotOverrides: [],
+      ratingAvg: 5.0,
+      ratingCount: 0,
+      ratingSum: 0,
+      salesCount: 0,
+      isTopSeller: false,
+      isNew: true,
+      listingEnabled: true,
+      rnd: Math.random(),
+      categorySlugs: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const res = await db.collection(COLLECTIONS.FARMERS).insertOne(newFarmer);
+    farmer = { ...newFarmer, _id: res.insertedId };
+  } else if (!farmer) {
     throw AppError.notFound('Farmer profile not found.');
   }
-
-  const user = await db.collection(COLLECTIONS.USERS).findOne({ _id: uid }, { projection: { status: 1 } });
 
   const { _id, ...rest } = farmer;
   return {

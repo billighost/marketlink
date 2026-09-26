@@ -3,7 +3,11 @@
    Strictly capped at ~20 high-value classes.
    ========================================================================== */
 
-/* Responsive page padding - reduced so pages move closer to sides */
+/* Responsive page padding - fluid and adaptable across viewports */
+:root {
+  --page-pad: clamp(0.75rem, 3.5vw, 1.25rem);
+}
+
 @media (min-width: 768px) {
   :root {
     --page-pad: 1.25rem;
@@ -192,3 +196,14 @@
 .noScroll {
   overflow: hidden;
 }
+
+/* Responsive Table Wrapper */
+.tableResponsive,
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  scrollbar-width: thin;
+}
+

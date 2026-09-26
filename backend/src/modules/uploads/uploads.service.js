@@ -212,6 +212,7 @@ export async function processAndSaveUpload({ buffer, contentType, ownerUserId, k
   }
 
   return {
+    url: saved.url,
     imageUrl: saved.url,
     publicId: saved.publicId,
     width,

@@ -8,6 +8,14 @@
   width: 100%;
   max-width: var(--container-form);
   margin: 0 auto;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: var(--space-4) var(--space-3) var(--space-6);
+    gap: var(--space-4);
+  }
 }
 
 .standalone {

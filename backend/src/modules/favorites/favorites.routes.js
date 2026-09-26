@@ -21,7 +21,7 @@ const routes = [
   {
     method: 'get',
     path: '/ids',
-    auth: 'customer',
+    auth: 'any',
     summary: 'Lightweight list of favorited product and farmer IDs',
     handler: async (req, res) => {
       const result = await getFavoriteIds(req.user.id);

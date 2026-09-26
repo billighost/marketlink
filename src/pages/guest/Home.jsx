@@ -11,18 +11,18 @@ import {
   Sparkles,
   Sprout,
   Store,
-  Calendar,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import useQuery from '@/hooks/useQuery';
 import { getPublicHome, getMarkets } from '@/api/catalog';
-import { formatPrice } from '@/utils/format';
+import { formatPrice, formatMarketSchedule } from '@/utils/format';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import Skeleton from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
+import Illustration from '@/components/domain/Illustration';
 import styles from './Home.module.css';
 
 const HOW_IT_WORKS = [
@@ -52,11 +52,90 @@ const HOW_IT_WORKS = [
   },
 ];
 
+function getMarketImage(market) {
+  if (market?.imageUrl) return market.imageUrl;
+  if (market?.image) return market.image;
+  const name = (market?.name || '').toLowerCase();
+  const slug = (market?.slug || '').toLowerCase();
+  if (name.includes('elm') || slug.includes('elm')) return '/images/market-morning.jpg';
+  if (name.includes('grove') || slug.includes('grove')) return '/images/market-riverside.jpg';
+  if (name.includes('hilltop') || slug.includes('hilltop')) return '/images/market-greenwich.jpg';
+  if (name.includes('central') || slug.includes('central')) return '/images/market-central.jpg';
+  if (name.includes('chelsea') || slug.includes('chelsea')) return '/images/market-chelsea.jpg';
+  if (name.includes('union') || slug.includes('union')) return '/images/market-unionsquare.jpg';
+  return '/images/market-central.jpg';
+}
+
+function getMarketScheduleBadge(market) {
+  if (Array.isArray(market?.schedule) && market.schedule.length > 0) {
+    const days = market.schedule.map((s) => (typeof s === 'string' ? s : s.day)).filter(Boolean);
+    if (days.length > 0) {
+      return `OPEN ${days.map((d) => d.toUpperCase()).join(' & ')}`;
+    }
+  }
+  if (market?.schedule?.days && Array.isArray(market.schedule.days)) {
+    return `OPEN ${market.schedule.days.map((d) => d.toUpperCase()).join(' & ')}`;
+  }
+  return 'OPEN WEEKENDS';
+}
+
+function getProductVisual(product) {
+  if (product?.imageUrl) return { type: 'img', src: product.imageUrl };
+  if (product?.image) return { type: 'img', src: product.image };
+  const name = (product?.name || '').toLowerCase();
+  if (name.includes('tomato')) return { type: 'img', src: '/images/product-tomatoes.jpg' };
+  if (name.includes('sourdough') || name.includes('bread') || name.includes('loaf')) {
+    return { type: 'img', src: '/images/product-sourdough.jpg' };
+  }
+  if (name.includes('lettuce') || name.includes('green') || name.includes('kale') || name.includes('chard')) {
+    return { type: 'img', src: '/images/product-lettuce.jpg' };
+  }
+  if (name.includes('strawberr') || name.includes('berry')) {
+    return { type: 'img', src: '/images/product-strawberries.jpg' };
+  }
+  if (name.includes('honey')) return { type: 'img', src: '/images/product-honey.jpg' };
+  if (name.includes('bouquet') || name.includes('flower')) return { type: 'illustration', name: 'flowers' };
+  if (name.includes('corn')) return { type: 'illustration', name: 'corn' };
+  if (name.includes('mushroom') || name.includes('lion') || name.includes('oyster')) {
+    return { type: 'illustration', name: 'mushrooms' };
+  }
+  if (name.includes('ricotta') || name.includes('cheese') || name.includes('dairy')) {
+    return { type: 'illustration', name: 'cheese-wedge' };
+  }
+  if (name.includes('egg') || name.includes('poultry')) return { type: 'illustration', name: 'egg-carton' };
+  if (name.includes('carrot')) return { type: 'illustration', name: 'crate-carrots' };
+  if (name.includes('beet')) return { type: 'illustration', name: 'beet-bunch' };
+  if (product?.art) return { type: 'illustration', name: product.art };
+  return { type: 'illustration', name: 'basket' };
+}
+
+function getFarmerVisual(farmer) {
+  if (farmer?.imageUrl) return { type: 'img', src: farmer.imageUrl };
+  const stall = (farmer?.stallName || '').toLowerCase();
+  if (stall.includes('willow') || stall.includes('poultry')) {
+    return { type: 'img', src: '/images/farmer-marcus.jpg', fallbackArt: 'egg-carton' };
+  }
+  if (stall.includes('oak') || stall.includes('mill') || stall.includes('bakery')) {
+    return { type: 'img', src: '/images/farmer-elena.jpg', fallbackArt: 'sourdough-boule' };
+  }
+  if (stall.includes('cedarbrook') || stall.includes('flower')) {
+    return { type: 'img', src: '/images/farmer-sarah.jpg', fallbackArt: 'flowers' };
+  }
+  if (stall.includes('riverbend')) {
+    return { type: 'img', src: '/images/farmer-david.jpg', fallbackArt: 'crate-carrots' };
+  }
+  if (stall.includes('maplecrest') || stall.includes('creamery')) {
+    return { type: 'img', src: '/images/farmer-priya.jpg', fallbackArt: 'cheese-wedge' };
+  }
+  if (farmer?.art) return { type: 'illustration', name: farmer.art };
+  return { type: 'illustration', name: 'stall' };
+}
+
 export function Home() {
-  useDocumentTitle('MarketLink ΓÇö Fresh from The Farm');
+  useDocumentTitle('MarketLink — Fresh from The Farm');
   const navigate = useNavigate();
 
-  const { data: homeData, loading: homeLoading, error: homeError } = useQuery('public_home', getPublicHome);
+  const { data: homeData, loading: homeLoading } = useQuery('public_home', getPublicHome);
   const { data: marketsData, loading: marketsLoading } = useQuery('guest_markets_home', () => getMarkets({ limit: 3 }));
 
   const { add } = useCart();
@@ -75,7 +154,7 @@ export function Home() {
 
   return (
     <div className={styles.homeContainer}>
-      {/* ΓöÇΓöÇΓöÇ 1. HERO SECTION (Unchanged Decorative Design) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── 1. HERO SECTION ────────────────────────────────────────── */}
       <section className={styles.heroSection}>
         <div className={styles.heroOverlay} />
 
@@ -85,13 +164,13 @@ export function Home() {
           </div>
 
           <h1 className={styles.heroTitle}>
-            Fresh From The<span className={styles.from}> Farm </span>.
+            Fresh From The<span className={styles.from}> Farm</span>.
             <br />
             Ready when you are.
           </h1>
 
           <p className={styles.heroLead}>
-            Discover whatΓÇÖs available at nearby markets, reserve your favorites and pick them up fresh at the market.
+            Discover what's available at nearby markets, reserve your favorites and pick them up fresh at the market.
           </p>
 
           <div className={styles.heroActions}>
@@ -106,7 +185,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇΓöÇ 2. WEEKEND GATHERINGS / MARKETS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── 2. WEEKEND GATHERINGS / MARKETS ────────────────────────── */}
       <section className={styles.marketsSection}>
         <div className="container">
           <div className={styles.sectionHeader}>
@@ -142,11 +221,17 @@ export function Home() {
               {markets.map((market) => (
                 <div key={market.id} className={styles.marketCard}>
                   <div className={styles.marketImgWrapper}>
-                    <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-beet)', fontFamily: 'var(--font-head)', fontSize: 'var(--text-h3)' }}>
-                      <Store size={32} strokeWidth={1.5} />
-                    </div>
+                    <img
+                      src={getMarketImage(market)}
+                      alt={market.name}
+                      className={styles.marketImg}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/images/market-central.jpg';
+                      }}
+                    />
                     <span className={`${styles.marketStatusBadge} ${styles.badgeToday}`}>
-                      {market.schedule?.days ? market.schedule.days.join(', ').toUpperCase() : 'OPEN WEEKENDS'}
+                      {getMarketScheduleBadge(market)}
                     </span>
                   </div>
 
@@ -160,12 +245,12 @@ export function Home() {
 
                     <p className={styles.marketSchedule}>
                       <Clock size={13} className={styles.iconInline} />
-                      <span>{market.schedule?.hours || 'Saturdays ΓÇó 8:00 AM ΓÇô 2:00 PM'}</span>
+                      <span>{formatMarketSchedule(market) || 'Saturdays · 8:00 AM – 2:00 PM'}</span>
                     </p>
 
                     <div className={styles.marketFooter}>
                       <span className={styles.vendorCount}>
-                        {market.stats?.farmerCount ? `${market.stats.farmerCount} Active Farmers` : 'Attending Farmers'}
+                        {market.farmerCount ? `${market.farmerCount} Active Farmers` : 'Attending Farmers'}
                       </span>
                       <Link to={`/markets/${market.id}`} className={styles.viewMarketLink}>
                         <span>View Market</span>
@@ -180,13 +265,13 @@ export function Home() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇΓöÇ 3. SEASONAL HARVEST / PRICE BOARD ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── 3. SEASONAL HARVEST / PRICE BOARD ─────────────────────── */}
       <section className={styles.productsSection}>
         <div className="container">
           <div className={styles.sectionHeader}>
             <div>
               <p className={styles.sectionEyebrow}>
-                {board?.market?.name ? `LIVE PRICE BOARD ┬╖ ${board.market.name.toUpperCase()}` : 'LIVE PRICE BOARD'}
+                {board?.market?.name ? `LIVE PRICE BOARD · ${board.market.name.toUpperCase()}` : 'LIVE PRICE BOARD'}
               </p>
               <h2 className={styles.sectionTitle}>Fresh From The Stalls</h2>
             </div>
@@ -218,12 +303,31 @@ export function Home() {
               {boardItems.slice(0, 8).map((product) => {
                 const isFav = isProductFavorite(product.id);
                 const isReserved = reservedIds.has(product.id);
+                const visual = getProductVisual(product);
 
                 return (
                   <div key={product.id} className={styles.productCard}>
                     <div className={styles.productImgWrapper}>
-                      <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-ink-soft)' }}>
-                        <Sprout size={28} strokeWidth={1.5} />
+                      {visual.type === 'img' ? (
+                        <img
+                          src={visual.src}
+                          alt={product.name}
+                          className={styles.productImg}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                            if (e.target.nextSibling) {
+                              e.target.nextSibling.style.display = 'flex';
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className={styles.productIllustrationWrap}>
+                          <Illustration name={visual.name} size="md" />
+                        </div>
+                      )}
+                      <div className={styles.productIllustrationWrap} style={{ display: 'none' }}>
+                        <Illustration name="basket" size="md" />
                       </div>
 
                       {/* Favorite Heart Button */}
@@ -253,7 +357,7 @@ export function Home() {
 
                     <div className={styles.productBody}>
                       <p className={styles.productFarmer}>
-                        {product.farmerName} {product.stallNumber ? `ΓÇó ${product.stallNumber}` : ''}
+                        {product.farmerName} {product.stallNumber ? `• ${product.stallNumber}` : ''}
                       </p>
                       <h3 className={styles.productTitle}>
                         <Link to={`/products/${product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
@@ -292,24 +396,8 @@ export function Home() {
             </div>
           )}
 
-          <div style={{ textAlign: 'center', marginTop: 'var(--space-6)' }}>
-            <Link
-              to={PATHS.PRODUCTS}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '11px 22px',
-                backgroundColor: 'var(--color-beet-tint)',
-                border: 'var(--border)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--color-beet)',
-                fontFamily: "var(--font-body, 'Inter', sans-serif)",
-                fontSize: 'var(--text-sm)',
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
-            >
+          <div className={styles.exploreHarvestRow}>
+            <Link to={PATHS.PRODUCTS} className={styles.exploreHarvestBtn}>
               <span>Explore All Seasonal Harvest</span>
               <ArrowRight size={15} />
             </Link>
@@ -317,7 +405,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇΓöÇ 4. THE GROWERS / MEET LOCAL FARMERS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── 4. THE GROWERS / MEET LOCAL FARMERS ─────────────────── */}
       <section className={styles.farmersSection}>
         <div className="container">
           <div className={styles.sectionHeader}>
@@ -349,37 +437,76 @@ export function Home() {
             />
           ) : (
             <div className={styles.farmersGrid}>
-              {farmers.map((farmer) => (
-                <div key={farmer.id} className={styles.farmerCard}>
-                  <div className={styles.farmerImgWrapper}>
-                    <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-beet)', fontFamily: 'var(--font-head)', fontSize: 'var(--text-h3)' }}>
-                      {farmer.stallName?.charAt(0) || 'F'}
+              {farmers.map((farmer) => {
+                const visual = getFarmerVisual(farmer);
+                const operatingDays = Array.isArray(farmer.operatingDays)
+                  ? farmer.operatingDays.map((d) => d.toUpperCase()).join(', ')
+                  : 'WEEKENDS';
+
+                return (
+                  <div key={farmer.id} className={styles.farmerCard}>
+                    <div className={styles.farmerImgWrapper}>
+                      {visual.type === 'img' ? (
+                        <img
+                          src={visual.src}
+                          alt={farmer.stallName}
+                          className={styles.farmerAvatarImg}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                            if (e.target.nextSibling) {
+                              e.target.nextSibling.style.display = 'flex';
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className={styles.farmerArtWrap}>
+                          <Illustration name={visual.name} size="md" />
+                        </div>
+                      )}
+                      <div className={styles.farmerArtWrap} style={{ display: 'none' }}>
+                        <Illustration name={visual.fallbackArt || 'stall'} size="md" />
+                      </div>
+                    </div>
+
+                    <div className={styles.farmerBody}>
+                      <div className={styles.farmerTopRow}>
+                        <h3 className={styles.farmerName}>{farmer.stallName}</h3>
+                        {farmer.isTopSeller && <span className={styles.topSellerBadge}>Top Seller</span>}
+                        {farmer.isNew && <span className={styles.newBadge}>New</span>}
+                      </div>
+
+                      <p className={styles.farmerFarm}>{farmer.specialty || 'Fresh regional harvest'}</p>
+
+                      <div className={styles.farmerMetaRow}>
+                        <span className={styles.farmerSpecialty}>
+                          {farmer.stallNumber ? `${farmer.stallNumber} • ` : ''}
+                          {operatingDays}
+                        </span>
+                        {farmer.ratingAvg > 0 && (
+                          <span className={styles.farmerRating}>
+                            ★ {Number(farmer.ratingAvg).toFixed(1)}
+                            {farmer.ratingCount ? ` (${farmer.ratingCount})` : ''}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className={styles.farmerFooter}>
+                        <Link to={`/farmers/${farmer.id}`} className={styles.viewStallLink}>
+                          <span>Visit Stall</span>
+                          <ArrowRight size={13} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-
-                  <div className={styles.farmerBody}>
-                    <h3 className={styles.farmerName}>{farmer.stallName}</h3>
-                    <p className={styles.farmerFarm}>{farmer.specialty || 'Fresh regional harvest'}</p>
-                    <span className={styles.farmerSpecialty}>
-                      {farmer.stallNumber ? `${farmer.stallNumber} ΓÇó ` : ''}
-                      {farmer.operatingDays ? farmer.operatingDays.join(', ').toUpperCase() : 'WEEKENDS'}
-                    </span>
-
-                    <div className={styles.farmerFooter}>
-                      <Link to={`/farmers/${farmer.id}`} className={styles.viewStallLink}>
-                        <span>Visit Stall</span>
-                        <ArrowRight size={13} />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </section>
 
-      {/* 5. HOW MARKETLINK WORKS */}
+      {/* ─── 5. HOW MARKETLINK WORKS ──────────────────────────────── */}
       <section className={styles.howItWorksSection}>
         <div className="container">
           <div className={styles.howHeader}>
@@ -410,7 +537,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* 6. CALL TO ACTION BANNER */}
+      {/* ─── 6. CALL TO ACTION BANNER ───────────────────────────────── */}
       <section className={styles.ctaBannerSection}>
         <div className="container">
           <div className={styles.ctaCard}>

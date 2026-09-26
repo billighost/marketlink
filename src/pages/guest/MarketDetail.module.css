@@ -205,6 +205,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .saveButton {
@@ -303,7 +304,7 @@
 
 .galleryMain {
   position: relative;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 11/ 10;
   border-radius: 14px;
   overflow: hidden;
   background-color: #f0ebe5;
@@ -344,28 +345,36 @@
 .galleryRightStack {
   display: flex;
   gap: 12px;
+  /* height: 20rem; */
+  
 }
 
 @media (min-width: 768px) {
   .galleryRightStack {
     flex-direction: column;
     gap: 16px;
+    height: 100%;
+  }
+
+  .gallerySubItem {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .gallerySubItem .galleryImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 
 .gallerySubItem {
   position: relative;
   flex: 1;
-  /* aspect-ratio:  / 10; */
-  /* height: 5rem; */
   border-radius: 14px;
   overflow: hidden;
   background-color: #f0ebe5;
   box-shadow: 0 4px 14px rgba(46, 43, 38, 0.05);
-}
-
-.gallerySubItem .galleryImg {
-  height: 15rem;
 }
 
 .gallerySubItem:hover .galleryImg {
@@ -386,6 +395,48 @@
   border-radius: 6px;
   pointer-events: none;
   z-index: 5;
+}
+
+.zoomableGalleryItem {
+  cursor: zoom-in;
+  position: relative;
+  outline: none;
+}
+
+.zoomableGalleryItem:focus-visible {
+  outline: 2px solid #541722;
+  outline-offset: 2px;
+}
+
+.zoomHoverBadge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: rgba(28, 24, 22, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.zoomableGalleryItem:hover .zoomHoverBadge,
+.zoomableGalleryItem:focus-visible .zoomHoverBadge {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* ─── INTERACTIVE CLICK-TO-ZOOM IMAGE STYLES ─────────────────────── */

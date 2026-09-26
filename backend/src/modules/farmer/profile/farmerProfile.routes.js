@@ -125,10 +125,10 @@ const routes = [
 
         if (req.body.address !== undefined) {
           updates.address = validateString(req.body.address, 'address', details, {
-            required: true,
-            min: 5,
+            required: false,
+            min: 0,
             max: 200,
-          });
+          }) || '';
         }
 
         if (req.body.stallNumber !== undefined) {

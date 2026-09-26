@@ -94,7 +94,7 @@
   left: 0;
   z-index: 1200;
   width: max-content;
-  min-width: 300px;
+  min-width: 280px;
   max-width: min(92vw, 380px);
   background-color: #ffffff;
   border: 1px solid rgba(46, 43, 38, 0.12);
@@ -111,6 +111,34 @@
 .dropdownMenuRight {
   left: auto;
   right: 0;
+}
+
+@media (max-width: 480px) {
+  .subLabel {
+    display: none;
+  }
+  .marketName {
+    max-width: 110px;
+    font-size: 0.78rem;
+  }
+  .triggerBtn {
+    padding: 4px 8px;
+    gap: 5px;
+  }
+  .iconBox {
+    width: 24px;
+    height: 24px;
+  }
+  .dropdownMenu {
+    min-width: 270px;
+    max-width: calc(100vw - 20px);
+  }
+  .dropdownMenu:not(.dropdownMenuRight) {
+    left: -4px;
+  }
+  .dropdownMenuRight {
+    right: -4px;
+  }
 }
 
 @keyframes menuFadeIn {

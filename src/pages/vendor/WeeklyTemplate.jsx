@@ -17,7 +17,13 @@ export function WeeklyTemplate({ onClose, onSaved }) {
       try {
         const res = await getWeeklyTemplate();
         if (isMounted) {
-          setItems(res?.data || []);
+          const list = (res?.data || []).map((it) => ({
+            ...it,
+            productName: it.productName || it.name || 'Produce Item',
+            enabled: Boolean(it.enabled ?? it.weekly?.enabled),
+            defaultQuantity: it.defaultQuantity ?? it.weekly?.defaultQty ?? 10,
+          }));
+          setItems(list);
         }
       } catch (err) {
         if (isMounted) setError(err?.message || 'Could not load weekly template.');
@@ -56,6 +62,7 @@ export function WeeklyTemplate({ onClose, onSaved }) {
         items.map((it) => ({
           productId: it.productId,
           enabled: Boolean(it.enabled),
+          defaultQty: Number(it.defaultQuantity || 0),
           defaultQuantity: Number(it.defaultQuantity || 0),
         }))
       );

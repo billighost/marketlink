@@ -153,7 +153,7 @@
 }
 
 .actions {
-  display: flex;
+  display: none; /* hidden on mobile — bottom nav handles cart & profile */
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
@@ -433,6 +433,7 @@
 
 @media (min-width: 1024px) {
   .desktopNav { display: flex; }
+  .actions { display: flex; } /* show cart + avatar on desktop */
   .header { height: 68px; }
   .marketBadgePill { max-width: 260px; }
 }
@@ -457,13 +458,16 @@
   .header { height: 60px; }
   .marketName { max-width: 120px; }
   .marketBadgePill { font-size: 0.73rem; padding: 4px 9px 4px 7px; }
-  .notifDropdown { right: -16px; }
+  .notifDropdown { right: -8px; max-width: calc(100vw - 24px); }
 }
 
 @media (max-width: 600px) {
-  .brand { display: none; }
   .marketBadgePill { max-width: 160px; }
-  .cartText { display: none; }
-  .cartButton { padding: 6px 10px; }
-  .container { gap: 8px; padding-inline: 14px; }
+  .container { gap: 6px; padding-inline: 12px; }
+  .notifDropdown { right: -6px; max-width: calc(100vw - 16px); }
+}
+
+@media (max-width: 380px) {
+  .brand { display: none; } /* hide logo on very small screens to maximise market selector space */
+  .marketBadgePill { max-width: 140px; }
 }

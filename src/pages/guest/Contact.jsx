@@ -26,10 +26,10 @@ import MapView from '@/components/domain/MapView';
 import styles from './Contact.module.css';
 
 const TOPICS = [
-  { id: 'order', label: 'Pre-Order Assistance', icon: '≡ƒôª' },
-  { id: 'farmer-help', label: 'Farmer / Producer Support', icon: '≡ƒî╛' },
-  { id: 'feedback', label: 'Market Feedback', icon: '≡ƒÆ¼' },
-  { id: 'other', label: 'General Inquiry / Other', icon: 'Γ£¿' },
+  { id: 'order', label: 'Pre-Order Assistance', icon: '📦' },
+  { id: 'farmer-help', label: 'Farmer / Producer Support', icon: '🌾' },
+  { id: 'feedback', label: 'Market Feedback', icon: '💬' },
+  { id: 'other', label: 'General Inquiry / Other', icon: '✨' },
 ];
 
 const MARKETS_LIST = [
@@ -82,7 +82,7 @@ const FAQ_DATA = [
 ];
 
 export function Contact() {
-  useDocumentTitle('Contact MarketLink ΓÇö Market Office & Support');
+  useDocumentTitle('Contact MarketLink — Market Office & Support');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -198,7 +198,7 @@ export function Contact() {
 
   return (
     <div className={styles.page}>
-      {/* ΓöÇΓöÇΓöÇ HERO HEADER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── HERO HEADER ───────────────────────────────────────── */}
       <section className={styles.heroSection}>
         <div className="container">
           <div className={styles.heroContent}>
@@ -209,7 +209,7 @@ export function Contact() {
               </span>
               <span className={styles.hoursBadgePill}>
                 <Clock size={12} />
-                Desk Open Saturdays 7:00 AM ΓÇô 2:30 PM
+                Desk Open Saturdays 7:00 AM – 2:30 PM
               </span>
             </div>
 
@@ -226,11 +226,11 @@ export function Contact() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇΓöÇ TWO-COLUMN MAIN WORKSPACE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── TWO-COLUMN MAIN WORKSPACE ─────────────────────────── */}
       <section className={styles.workspaceSection}>
         <div className="container">
           <div className={styles.workspaceGrid}>
-            {/* ΓöÇΓöÇ LEFT COLUMN: DIRECT CONTACTS & DESK INFO ΓöÇΓöÇ */}
+            {/* ── LEFT COLUMN: DIRECT CONTACTS & DESK INFO ── */}
             <div className={styles.leftCol}>
               {/* Primary Info Booth Card */}
               <div className={styles.infoBoothCard}>
@@ -345,7 +345,7 @@ export function Contact() {
               </div>
             </div>
 
-            {/* ΓöÇΓöÇ RIGHT COLUMN: INTERACTIVE MESSAGE FORM ΓöÇΓöÇ */}
+            {/* ── RIGHT COLUMN: INTERACTIVE MESSAGE FORM ── */}
             <div className={styles.rightCol}>
               <div className={styles.formCard}>
                 {submitted ? (
@@ -535,7 +535,7 @@ export function Contact() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇΓöÇ SATURDAY EMERGENCY CALLOUT BANNER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── SATURDAY EMERGENCY CALLOUT BANNER ──────────────────── */}
       <section className={styles.hotlineSection}>
         <div className="container">
           <div className={styles.hotlineCard}>
@@ -557,7 +557,7 @@ export function Contact() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇΓöÇ FREQUENTLY ASKED QUESTIONS SECTION ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── FREQUENTLY ASKED QUESTIONS SECTION ─────────────────── */}
       <section className={styles.faqSection}>
         <div className="container">
           <div className={styles.faqHeader}>

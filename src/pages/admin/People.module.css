@@ -132,8 +132,44 @@
 }
 
 /* Table */
-.tableWrap {
+.tableWrap,
+.tableWrapper {
+  width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 640px) {
+  .toolbar {
+    padding: 12px 14px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .searchRow {
+    width: 100%;
+  }
+
+  .searchBox {
+    flex: 1;
+  }
+
+  .searchInput {
+    width: 100%;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 12px 14px;
+  }
 }
 
 .table {

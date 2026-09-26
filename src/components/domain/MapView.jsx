@@ -112,12 +112,14 @@ export function MapView({
 
     validMarkers.forEach((marker) => {
       const isSelected = selectedId && marker.id === selectedId;
+      const isHighlighted = Boolean(marker.highlight);
+      const markerType = marker.markerType || 'market'; // 'market' | 'farmer' | 'pickup'
 
-      // Custom divIcon matching beet theme
+      // Custom divIcon with type-aware colors
       const customIcon = L.divIcon({
         className: 'marketlink-map-pin',
         html: `
-          <div class="marketlink-pin-badge ${isSelected ? 'selected' : ''}">
+          <div class="marketlink-pin-badge ${markerType} ${isSelected ? 'selected' : ''} ${isHighlighted ? 'highlighted' : ''}">
             <div class="marketlink-pin-inner"></div>
           </div>
         `,

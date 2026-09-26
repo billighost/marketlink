@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, ArrowRight, ShoppingBag } from 'lucide-react';
+import { Search, ArrowRight, ShoppingBag, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useOpenSheet } from '@/hooks/useOpenSheet';
 import { useFeed } from '@/hooks/useFeed';
@@ -132,6 +132,30 @@ export function Home() {
       )}
 
       {/* ΓöÇΓöÇ Curated & Endless Feed ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Smart Basket CTA (shown when no active pickup) ──────────── */}
+      {!activePickup && (
+        <section className={styles.smartBasketCta} aria-label="Smart Basket">
+          <div className={styles.smartBasketCtaContent}>
+            <div className={styles.smartBasketCtaIcon} aria-hidden="true">
+              <Sparkles size={20} />
+            </div>
+            <div className={styles.smartBasketCtaText}>
+              <strong className={styles.smartBasketCtaTitle}>Build a Smart Basket</strong>
+              <span className={styles.smartBasketCtaDesc}>Tell us your budget — we'll find the best from local farmers.</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={styles.smartBasketCtaBtn}
+            onClick={() => openSheet('/buyer/smart-basket')}
+            aria-label="Open Smart Basket builder"
+          >
+            <span>Build</span>
+            <ArrowRight size={14} aria-hidden="true" />
+          </button>
+        </section>
+      )}
+
       <div className={styles.feed}>
         {sections.map((section, idx) => (
           <React.Fragment key={section.id}>

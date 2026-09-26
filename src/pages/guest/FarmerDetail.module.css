@@ -356,20 +356,20 @@
 .productsGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 20px;
+  gap: 14px;
 }
 
-@media (min-width: 580px) {
+@media (min-width: 380px) {
   .productsGrid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: 14px;
   }
 }
 
-@media (min-width: 860px) {
+@media (min-width: 768px) {
   .productsGrid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 22px;
+    gap: 20px;
   }
 }
 
@@ -589,7 +589,7 @@
 }
 
 .checkIcon {
-  color: #27532b;
+  color: var(--color-beet, #7A2E3B);
   flex-shrink: 0;
 }
 

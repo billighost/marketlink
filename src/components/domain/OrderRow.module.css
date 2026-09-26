@@ -10,6 +10,13 @@
   transition: border-color var(--duration-fast) var(--ease-standard);
   user-select: none;
   min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: var(--space-3);
+  }
 }
 
 .card:hover {
@@ -41,6 +48,12 @@
   min-width: 0;
 }
 
+@media (max-width: 360px) {
+  .header {
+    flex-wrap: wrap;
+  }
+}
+
 .numberStatus {
   display: flex;
   align-items: center;
@@ -61,6 +74,13 @@
   font-weight: var(--weight-semibold);
   color: var(--color-ink);
   white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .orderNumber,
+  .total {
+    font-size: var(--text-sm);
+  }
 }
 
 .farmers {

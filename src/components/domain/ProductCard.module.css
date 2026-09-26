@@ -166,6 +166,22 @@
   margin-top: auto;
   min-height: var(--tap-min);
   min-width: 0;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 380px) {
+  .content {
+    padding: var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .name {
+    font-size: 0.85rem;
+  }
+
+  .price {
+    font-size: 0.85rem;
+  }
 }
 
 .list .footer {

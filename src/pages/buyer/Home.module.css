@@ -1,4 +1,4 @@
-﻿.page {
+.page {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -258,3 +258,82 @@
   height: 20px;
   width: 100%;
 }
+
+/* ── Smart Basket CTA card ──────────────────────────── */
+.smartBasketCta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: linear-gradient(135deg, var(--color-beet) 0%, #9B3A4A 100%);
+  border-radius: var(--radius-md);
+  margin: 0 var(--page-pad) var(--space-2);
+  max-width: var(--container-max);
+  margin-inline: auto;
+  width: calc(100% - 2 * var(--page-pad, 16px));
+  box-shadow: 0 2px 12px rgba(122, 46, 59, 0.25);
+}
+
+.smartBasketCtaContent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+}
+
+.smartBasketCtaIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.smartBasketCtaText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.smartBasketCtaTitle {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.smartBasketCtaDesc {
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,0.80);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.smartBasketCtaBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: var(--radius-full);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.smartBasketCtaBtn:hover { background: rgba(255,255,255,0.28); }
+

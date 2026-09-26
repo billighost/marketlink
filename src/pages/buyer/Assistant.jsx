@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, ArrowLeft } from 'lucide-react';
+import { Send, Sparkles, ArrowLeft, ShoppingBasket } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { sendAssistantMessage } from '@/api/assistant';
 import { getProductDetail } from '@/api/catalog';
 import { useAuth } from '@/context/AuthContext';
@@ -18,6 +19,7 @@ const DEFAULT_SUGGESTIONS = [
  */
 export function Assistant({ inSheet = true, onClose }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const displayName = user?.firstName || 'there';
 
   const [messages, setMessages] = useState([
@@ -69,8 +71,10 @@ export function Assistant({ inSheet = true, onClose }) {
 
       const res = await sendAssistantMessage(text, history);
 
+      let actionCards = [];
       let loadedProducts = [];
       if (res?.cards && Array.isArray(res.cards)) {
+        actionCards = res.cards.filter((c) => c.type === 'action');
         const productCards = res.cards.filter((c) => c.type === 'product' && c.id);
         const resolved = await Promise.all(
           productCards.map((c) => getProductDetail(c.id).catch(() => null))
@@ -85,6 +89,7 @@ export function Assistant({ inSheet = true, onClose }) {
           sender: 'assistant',
           text: res?.reply || "I'm here to help with market schedules, produce prices, and order tracking.",
           products: loadedProducts,
+          actionCards,
           time: 'Just now',
         },
       ]);
@@ -156,6 +161,29 @@ export function Assistant({ inSheet = true, onClose }) {
                 <div className={styles.productRow}>
                   {msg.products.map((p) => (
                     <ProductCard key={p.id} product={p} variant="compact" />
+                  ))}
+                </div>
+              )}
+              {/* Action cards — Smart Basket CTA */}
+              {msg.actionCards && msg.actionCards.length > 0 && (
+                <div className={styles.actionCards}>
+                  {msg.actionCards.map((card, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={styles.actionCardBtn}
+                      onClick={() => {
+                        if (card.action === 'open-smart-basket') {
+                          navigate('/buyer/smart-basket', {
+                            state: { smartBasket: card.params || {} },
+                          });
+                        }
+                      }}
+                      aria-label={card.label || 'Open Smart Basket'}
+                    >
+                      <ShoppingBasket size={14} aria-hidden="true" />
+                      {card.label || 'Build Smart Basket'}
+                    </button>
                   ))}
                 </div>
               )}

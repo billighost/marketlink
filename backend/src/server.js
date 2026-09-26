@@ -24,13 +24,7 @@ async function bootstrap() {
     const db = await connectDb();
     console.log(`[DB] Connected successfully.`);
 
-    // 2. Ensure collections with validators and indexes
-    console.log(`[DB] Verifying collections and indexes...`);
-    await createCollections(db);
-    await ensureIndexes(db);
-    console.log(`[DB] Collections and indexes verified.`);
-
-    // 3. Create Express application
+    // 2. Create Express application
     const app = createApp();
     server = http.createServer(app);
 
@@ -39,7 +33,25 @@ async function bootstrap() {
     server.headersTimeout = 31000; // slightly longer than keepAliveTimeout
     server.keepAliveTimeout = 30000; // 30s idle keep-alive
 
-    // 4. Non-blocking media cleanup job
+    // 3. Start HTTP listener immediately so dev server is instantly available
+    server.listen(env.PORT, () => {
+      console.log(`[SERVER] MarketLink API listening on http://localhost:${env.PORT}/api`);
+      console.log(`[SERVER] Health check ready at http://localhost:${env.PORT}/api/health`);
+    });
+
+    // 4. Ensure collections and indexes in background
+    (async () => {
+      try {
+        console.log(`[DB] Verifying collections and indexes in background...`);
+        await createCollections(db);
+        await ensureIndexes(db);
+        console.log(`[DB] Collections and indexes verified.`);
+      } catch (err) {
+        console.warn(`[DB] Collections/indexes verification notice:`, err.message);
+      }
+    })();
+
+    // 5. Non-blocking media cleanup job
     runMediaCleanup(db).catch((err) => {
       console.warn('[MEDIA CLEANUP] Background startup cleanup warning:', err.message);
     });
@@ -51,12 +63,6 @@ async function bootstrap() {
         });
       }, 6 * 60 * 60 * 1000);
     }
-
-    // 5. Start HTTP listener
-    server.listen(env.PORT, () => {
-      console.log(`[SERVER] MarketLink API listening on http://localhost:${env.PORT}/api`);
-      console.log(`[SERVER] Health check ready at http://localhost:${env.PORT}/api/health`);
-    });
   } catch (err) {
     console.error('[FATAL] Failed to start server:', err);
     process.exit(1);

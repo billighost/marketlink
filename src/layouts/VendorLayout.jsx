@@ -149,6 +149,16 @@ export default function VendorLayout() {
           </nav>
 
           <div className={styles.sidebarFooter}>
+            <Link
+              to={stallInfo?.id || stallInfo?._id ? `/farmers/${stallInfo.id || stallInfo._id}` : '/farmers'}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.switchLink}
+              title="View your public stall storefront"
+            >
+              <Store size={16} aria-hidden="true" />
+              <span>Public Storefront</span>
+            </Link>
             <Link to="/buyer" className={styles.switchLink}>
               <ExternalLink size={16} aria-hidden="true" />
               <span>Customer app</span>
@@ -168,9 +178,21 @@ export default function VendorLayout() {
               <span className={styles.mobileStallTitle}>{stallInfo?.stallName || 'My Stall'}</span>
               {isPending && <span className={styles.mobileStatusBadge}>Pending</span>}
             </div>
-            <Link to="/buyer" className={styles.mobileSwitchBtn} aria-label="Open Customer App">
-              <ExternalLink size={16} aria-hidden="true" />
-            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Link
+                to={stallInfo?.id || stallInfo?._id ? `/farmers/${stallInfo.id || stallInfo._id}` : '/farmers'}
+                target="_blank"
+                rel="noreferrer"
+                className={styles.mobileSwitchBtn}
+                aria-label="View Public Stall"
+                title="View Public Stall"
+              >
+                <Store size={16} aria-hidden="true" />
+              </Link>
+              <Link to="/buyer" className={styles.mobileSwitchBtn} aria-label="Open Customer App">
+                <ExternalLink size={16} aria-hidden="true" />
+              </Link>
+            </div>
           </header>
 
           {/* Page View */}

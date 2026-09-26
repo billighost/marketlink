@@ -86,7 +86,13 @@ export async function listFarmerOrders(farmerId, query = {}) {
   const filter = { farmerId: fId };
 
   if (query.status) {
-    filter.status = query.status;
+    if (query.status.includes(',')) {
+      filter.status = { $in: query.status.split(',').map((s) => s.trim()) };
+    } else if (query.status === 'cancelled') {
+      filter.status = { $in: ['cancelled', 'declined'] };
+    } else {
+      filter.status = query.status;
+    }
   }
 
   if (query.marketId && ObjectId.isValid(query.marketId)) {

@@ -37,15 +37,19 @@
 /* Search Row */
 .searchRow {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: var(--space-2);
   width: 100%;
 }
 
-@media (min-width: 480px) {
-  .searchRow {
-    flex-direction: row;
-    align-items: center;
+@media (max-width: 420px) {
+  .filterText {
+    display: none;
+  }
+
+  .filterButton {
+    padding: 0 var(--space-3) !important;
   }
 }
 
@@ -261,13 +265,34 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-3);
   width: 100%;
+}
+
+@media (max-width: 340px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (min-width: 768px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-5);
   }
 }
 

@@ -42,6 +42,7 @@ import { farmerOrdersRouter } from './modules/farmer/orders/farmerOrders.routes.
 import { farmerReviewsRouter } from './modules/farmer/reviews/farmerReviews.routes.js';
 import { farmerInsightsRouter } from './modules/farmer/insights/insights.routes.js';
 import { uploadsRouter } from './modules/uploads/uploads.routes.js';
+import { smartBasketRouter } from './modules/smart-basket/smartBasket.routes.js';
 
 import { adminOverviewRouter } from './modules/admin/overview/adminOverview.routes.js';
 import { adminPeopleRouter } from './modules/admin/people/people.routes.js';
@@ -149,6 +150,7 @@ export function createApp() {
   app.use('/api/notifications', notificationsRouter);
   app.use('/api/home', homeRouter);
   app.use('/api/assistant', assistantRouter);
+  app.use('/api/smart-basket', smartBasketRouter);
 
   // Farmer routes
   app.use('/api/farmer/profile', farmerProfileRouter);

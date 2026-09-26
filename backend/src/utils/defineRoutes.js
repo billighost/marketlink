@@ -101,10 +101,10 @@ export function defineRoutes(router, moduleName, routes, options = {}) {
       middlewares.push(requireAuth);
       middlewares.push(requireRole('customer'));
       if (roles.length === 0) roles = ['customer'];
-    } else if (auth === 'farmer') {
+    } else if (auth === 'farmer' || auth === 'vendor') {
       middlewares.push(requireAuth);
-      middlewares.push(requireRole('farmer'));
-      if (roles.length === 0) roles = ['farmer'];
+      middlewares.push(requireRole('farmer', 'vendor'));
+      if (roles.length === 0) roles = ['farmer', 'vendor'];
     } else if (auth === 'admin') {
       middlewares.push(requireAuth);
       middlewares.push(requireRole('admin'));

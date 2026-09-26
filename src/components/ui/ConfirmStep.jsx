@@ -25,8 +25,8 @@ export function ConfirmStep({
   const [fieldError, setFieldError] = useState('');
 
   const handleConfirm = () => {
-    if (requireReason && !reason.trim()) {
-      setFieldError('A reason is required.');
+    if (requireReason && reason.trim().length < 3) {
+      setFieldError('A reason of at least 3 characters is required.');
       return;
     }
     setFieldError('');

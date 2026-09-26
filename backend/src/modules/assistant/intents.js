@@ -294,10 +294,71 @@ export async function matchAndResolveIntent(entities, user) {
     }
   }
 
-  // 9. Graceful fallback
+  // 9. Smart Basket / budget intent
+  //    Triggers: "I have ₦X", "I need X for Saturday", "budget", "build basket", "smart basket"
+  const budgetMatch =
+    cleanText.includes('budget') ||
+    cleanText.includes('smart basket') ||
+    cleanText.includes('build basket') ||
+    cleanText.includes('build a basket') ||
+    /[₦#]?\s*\d[\d,]*/.test(cleanText) ||
+    (cleanText.includes('i have') && /\d/.test(cleanText)) ||
+    (cleanText.includes('i need') && (cleanText.includes('vegetable') || cleanText.includes('fruit') || cleanText.includes('egg') || cleanText.includes('produce')));
+
+  if (budgetMatch) {
+    // Extract budget amount if present
+    const budgetAmountMatch = cleanText.match(/[₦#]?\s*([\d,]+)/);
+    const budgetAmount = budgetAmountMatch
+      ? parseInt(budgetAmountMatch[1].replace(/,/g, ''), 10)
+      : null;
+
+    // Extract category keywords
+    const categoryKeywords = [];
+    if (cleanText.includes('vegetable') || cleanText.includes('veggie') || cleanText.includes('produce')) categoryKeywords.push('vegetables');
+    if (cleanText.includes('fruit')) categoryKeywords.push('fruits');
+    if (cleanText.includes('egg')) categoryKeywords.push('eggs');
+    if (cleanText.includes('dairy') || cleanText.includes('milk')) categoryKeywords.push('dairy');
+    if (cleanText.includes('bread') || cleanText.includes('bakery') || cleanText.includes('loaf')) categoryKeywords.push('bakery');
+
+    // Count available products matching categories
+    let productCount = 0;
+    try {
+      const slugsToCheck = categoryKeywords.length > 0 ? categoryKeywords : ['vegetables', 'fruits', 'eggs'];
+      productCount = await db.collection(COLLECTIONS.PRODUCTS).countDocuments({
+        categorySlug: { $in: slugsToCheck },
+        availability: { $in: ['in', 'low'] },
+        quantityAvailable: { $gt: 0 },
+        listed: { $ne: false },
+        archived: { $ne: true },
+      });
+    } catch (_e) {
+      // Silently ignore — still surface the basket CTA
+    }
+
+    const catLabel = categoryKeywords.length > 0 ? categoryKeywords.join(', ') : 'fresh produce';
+    const budgetLabel = budgetAmount && !isNaN(budgetAmount) ? `₦${budgetAmount.toLocaleString()}` : 'your budget';
+
+    return {
+      reply: productCount > 0
+        ? `I found ${productCount} ${catLabel} products available right now. I can build a personalised basket within ${budgetLabel} — just tap below to get started!`
+        : `I can help you build a Smart Basket within ${budgetLabel}. Tap below to tell me what you need and I'll find the best options from our local farmers.`,
+      cards: [{
+        type: 'action',
+        action: 'open-smart-basket',
+        label: 'Build Smart Basket',
+        params: {
+          budget: budgetAmount || null,
+          categories: categoryKeywords.length > 0 ? categoryKeywords : ['vegetables', 'fruits', 'eggs'],
+        },
+      }],
+      suggestions: ['Show me available vegetables', 'Who sells eggs?', "What's fresh on Saturday?"],
+    };
+  }
+
+  // 10. Graceful fallback
   return {
     reply: "I'm not quite sure about that one, but I'm here to help with market timings, farmer availability, fresh produce prices, and order tracking. Here are a few things you can ask:",
     cards: [],
-    suggestions: ['When is Elm Street Market open?', 'Who sells eggs?', "What's fresh on Saturday?"],
+    suggestions: ['Build a Smart Basket', 'When is Elm Street Market open?', 'Who sells eggs?'],
   };
 }

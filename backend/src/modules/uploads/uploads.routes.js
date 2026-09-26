@@ -5,7 +5,7 @@
  */
 
 import express, { Router } from 'express';
-import { requireApprovedFarmer } from '../../middleware/requireApprovedFarmer.js';
+import { requireNotSuspendedFarmer } from '../../middleware/requireApprovedFarmer.js';
 import { processAndSaveUpload } from './uploads.service.js';
 import { AppError } from '../../utils/errors.js';
 import { defineRoutes } from '../../utils/defineRoutes.js';
@@ -26,7 +26,7 @@ defineRoutes(
       method: 'post',
       path: '/image',
       auth: 'farmer',
-      middlewares: [requireApprovedFarmer, rawParser],
+      middlewares: [requireNotSuspendedFarmer, rawParser],
       limiter: 'upload',
       summary: 'Upload stall or product image with magic-byte validation',
       handler: async (req, res, next) => {

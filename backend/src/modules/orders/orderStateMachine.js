@@ -48,7 +48,8 @@ export async function transitionOrder(orderOrId, to, actor, options = {}) {
   const now = options.now || new Date();
 
   // Normalize actor properties
-  const actorRole = actor.role || actor.byRole;
+  let actorRole = actor.role || actor.byRole;
+  if (actorRole === 'vendor') actorRole = 'farmer';
   const actorId = (actor.id || actor.byUserId || '').toString();
   const reason = options.reason !== undefined ? options.reason : actor.reason;
 
@@ -74,7 +75,10 @@ export async function transitionOrder(orderOrId, to, actor, options = {}) {
       throw AppError.notFound('Order not found.');
     }
   } else if (actorRole === 'farmer') {
-    if (!order.farmerUserId || order.farmerUserId.toString() !== actorId) {
+    const isOwner =
+      (order.farmerUserId && order.farmerUserId.toString() === actorId) ||
+      (actor.farmerId && order.farmerId && order.farmerId.toString() === actor.farmerId.toString());
+    if (!isOwner) {
       throw AppError.notFound('Order not found.');
     }
   } else if (actorRole !== 'admin') {

@@ -29,6 +29,7 @@ const ALLOWED_FARMER_TAGS = ['seasonal', 'organic'];
  * @returns {object}
  */
 export function toFarmerProductDto(p) {
+  const qty = p.quantityAvailable ?? p.quantity ?? 0;
   return {
     id: p._id ? p._id.toString() : p.id,
     name: p.name,
@@ -36,13 +37,19 @@ export function toFarmerProductDto(p) {
     categorySlug: p.categorySlug,
     priceCents: p.priceCents,
     unit: p.unit,
-    quantityAvailable: p.quantityAvailable,
-    lowStockThreshold: p.lowStockThreshold,
+    quantity: qty,
+    quantityAvailable: qty,
+    lowStockThreshold: p.lowStockThreshold ?? 3,
     availability: p.availability,
     weekly: p.weekly || { enabled: false, defaultQty: 0 },
+    weeklyTemplate: {
+      enabled: Boolean(p.weekly?.enabled),
+      defaultQuantity: p.weekly?.defaultQty ?? 10,
+      defaultQty: p.weekly?.defaultQty ?? 10,
+    },
     imageUrl: p.imageUrl ?? null,
     imagePublicId: p.imagePublicId ?? null,
-    art: p.art,
+    art: p.art || 'basket',
     tags: Array.isArray(p.tags) ? p.tags : [],
     description: p.description || '',
     listed: Boolean(p.listed),
@@ -100,6 +107,7 @@ async function validateProductInput(body, isPatch = false, dbInstance) {
     'categoryId',
     'priceCents',
     'unit',
+    'quantity',
     'quantityAvailable',
     'lowStockThreshold',
     'description',
@@ -108,6 +116,7 @@ async function validateProductInput(body, isPatch = false, dbInstance) {
     'imageUrl',
     'imagePublicId',
     'weekly',
+    'weeklyTemplate',
   ]);
 
   if ('availability' in body) {
@@ -175,17 +184,18 @@ async function validateProductInput(body, isPatch = false, dbInstance) {
     cleaned.unit = body.unit;
   }
 
-  // 5. quantityAvailable
-  if ('quantityAvailable' in body) {
+  // 5. quantityAvailable / quantity
+  const rawQty = body.quantityAvailable !== undefined ? body.quantityAvailable : body.quantity;
+  if (rawQty !== undefined) {
     if (
-      typeof body.quantityAvailable !== 'number' ||
-      !Number.isInteger(body.quantityAvailable) ||
-      body.quantityAvailable < 0 ||
-      body.quantityAvailable > 10000
+      typeof rawQty !== 'number' ||
+      !Number.isInteger(rawQty) ||
+      rawQty < 0 ||
+      rawQty > 10000
     ) {
-      throw AppError.validation('Quantity available must be an integer between 0 and 10,000', { field: 'quantityAvailable' });
+      throw AppError.validation('Quantity available must be an integer between 0 and 10,000', { field: 'quantity' });
     }
-    cleaned.quantityAvailable = body.quantityAvailable;
+    cleaned.quantityAvailable = rawQty;
   } else if (!isPatch) {
     cleaned.quantityAvailable = 0;
   }
@@ -233,11 +243,13 @@ async function validateProductInput(body, isPatch = false, dbInstance) {
   }
 
   // 9. art
-  if ('art' in body || !isPatch) {
-    if (typeof body.art !== 'string' || !ALLOWED_ART_KEYS.includes(body.art)) {
+  if ('art' in body) {
+    if (body.art && (!ALLOWED_ART_KEYS.includes(body.art) || typeof body.art !== 'string')) {
       throw AppError.validation('Invalid art key', { field: 'art' });
     }
-    cleaned.art = body.art;
+    cleaned.art = body.art || 'basket';
+  } else if (!isPatch) {
+    cleaned.art = 'basket';
   }
 
   // 10. imageUrl & imagePublicId
@@ -255,21 +267,16 @@ async function validateProductInput(body, isPatch = false, dbInstance) {
     cleaned.imagePublicId = body.imagePublicId ? String(body.imagePublicId) : null;
   }
 
-  // 11. weekly
-  if ('weekly' in body) {
-    if (typeof body.weekly !== 'object' || body.weekly === null) {
+  // 11. weekly / weeklyTemplate
+  const rawWeekly = body.weekly !== undefined ? body.weekly : body.weeklyTemplate;
+  if (rawWeekly !== undefined) {
+    if (typeof rawWeekly !== 'object' || rawWeekly === null) {
       throw AppError.validation('Weekly configuration must be an object', { field: 'weekly' });
     }
-    const { enabled, defaultQty } = body.weekly;
-    if (typeof enabled !== 'boolean') {
-      throw AppError.validation('weekly.enabled must be a boolean', { field: 'weekly.enabled' });
-    }
-    if (
-      typeof defaultQty !== 'number' ||
-      !Number.isInteger(defaultQty) ||
-      defaultQty < 0 ||
-      defaultQty > 10000
-    ) {
+    const enabled = Boolean(rawWeekly.enabled);
+    const rawDefaultQty = rawWeekly.defaultQty !== undefined ? rawWeekly.defaultQty : rawWeekly.defaultQuantity;
+    const defaultQty = Number.isInteger(rawDefaultQty) ? rawDefaultQty : 0;
+    if (defaultQty < 0 || defaultQty > 10000) {
       throw AppError.validation('weekly.defaultQty must be an integer between 0 and 10,000', { field: 'weekly.defaultQty' });
     }
     cleaned.weekly = { enabled, defaultQty };
@@ -296,8 +303,9 @@ export async function listFarmerProducts(farmerId, query = {}) {
     archived: { $ne: true },
   };
 
-  if (query.status || query.availability) {
-    filter.availability = query.status || query.availability;
+  const avail = query.status || query.availability;
+  if (avail && avail !== 'all') {
+    filter.availability = avail;
   }
 
   if (query.categoryId) {
@@ -306,8 +314,9 @@ export async function listFarmerProducts(farmerId, query = {}) {
     }
   }
 
-  if (query.search && typeof query.search === 'string' && query.search.trim()) {
-    filter.nameLower = { $regex: escapeForPrefix(query.search.trim().toLowerCase()), $options: 'i' };
+  const searchTerm = (query.search || query.q || '').trim();
+  if (searchTerm) {
+    filter.nameLower = { $regex: escapeForPrefix(searchTerm.toLowerCase()), $options: 'i' };
   }
 
   let sort = { createdAt: -1, _id: -1 };

@@ -42,11 +42,16 @@ export async function getWeeklyTemplate(farmerId) {
 
   return products.map((p) => ({
     productId: p._id.toString(),
+    id: p._id.toString(),
     name: p.name,
+    productName: p.name,
     unit: p.unit,
     priceCents: p.priceCents,
     currentQty: p.quantityAvailable,
     availability: p.availability,
+    enabled: Boolean(p.weekly?.enabled),
+    defaultQuantity: p.weekly?.defaultQty ?? 10,
+    defaultQty: p.weekly?.defaultQty ?? 10,
     weekly: p.weekly || { enabled: false, defaultQty: 0 },
   }));
 }
@@ -55,7 +60,7 @@ export async function getWeeklyTemplate(farmerId) {
  * Updates weekly inventory templates for multiple products.
  *
  * @param {string|ObjectId} farmerId
- * @param {Array<{ productId: string, enabled: boolean, defaultQty: number }>} items
+ * @param {Array<{ productId: string, enabled: boolean, defaultQty?: number, defaultQuantity?: number }>} items
  * @returns {Promise<{ updatedCount: number }>}
  */
 export async function updateWeeklyTemplate(farmerId, items) {
@@ -73,18 +78,17 @@ export async function updateWeeklyTemplate(farmerId, items) {
     if (!item.productId || !ObjectId.isValid(item.productId)) {
       throw AppError.validation('Invalid productId in item', { field: 'productId' });
     }
-    if (typeof item.enabled !== 'boolean') {
-      throw AppError.validation('enabled must be a boolean', { field: 'enabled' });
-    }
-    if (
-      typeof item.defaultQty !== 'number' ||
-      !Number.isInteger(item.defaultQty) ||
-      item.defaultQty < 0 ||
-      item.defaultQty > 10000
-    ) {
+    const enabled = Boolean(item.enabled);
+    const rawQty = item.defaultQty !== undefined ? item.defaultQty : item.defaultQuantity;
+    const defaultQty = Number.isInteger(rawQty) ? rawQty : 0;
+    if (defaultQty < 0 || defaultQty > 10000) {
       throw AppError.validation('defaultQty must be an integer between 0 and 10000', { field: 'defaultQty' });
     }
-    validated.push(item);
+    validated.push({
+      productId: item.productId,
+      enabled,
+      defaultQty,
+    });
   }
 
   const ops = validated.map((it) => ({

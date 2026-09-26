@@ -160,10 +160,15 @@ export async function apiFetch(path, options = {}) {
 
   let encodedBody = undefined;
   if (body !== undefined) {
-    if (body instanceof FormData) {
+    if (typeof FormData !== 'undefined' && body instanceof FormData) {
       encodedBody = body;
       // Let browser set multipart boundary
       delete reqHeaders['Content-Type'];
+    } else if (
+      (typeof Blob !== 'undefined' && body instanceof Blob) ||
+      (typeof ArrayBuffer !== 'undefined' && (body instanceof ArrayBuffer || ArrayBuffer.isView(body)))
+    ) {
+      encodedBody = body;
     } else {
       reqHeaders['Content-Type'] = reqHeaders['Content-Type'] || 'application/json';
       encodedBody = typeof body === 'string' ? body : JSON.stringify(body);

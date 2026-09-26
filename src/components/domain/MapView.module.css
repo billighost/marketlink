@@ -97,6 +97,31 @@
   border-color: var(--color-canvas);
 }
 
+/* Farmer pin: green */
+:global(.marketlink-pin-badge.farmer) {
+  background-color: var(--color-herb);
+  width: 26px;
+  height: 26px;
+}
+
+/* Pickup point: wood/amber */
+:global(.marketlink-pin-badge.pickup) {
+  background-color: var(--color-wood);
+  width: 24px;
+  height: 24px;
+}
+
+/* Highlighted pin from Smart Basket: pulsing ring */
+:global(.marketlink-pin-badge.highlighted) {
+  box-shadow: 0 0 0 4px rgba(122, 46, 59, 0.25);
+  animation: markerPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes markerPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(122, 46, 59, 0.30); }
+  50% { box-shadow: 0 0 0 8px rgba(122, 46, 59, 0.10); }
+}
+
 :global(.marketlink-pin-inner) {
   transform: rotate(45deg);
   width: 10px;
@@ -104,6 +129,7 @@
   border-radius: 50%;
   background-color: var(--color-white);
 }
+
 
 :global(.marketlink-popup .leaflet-popup-content-wrapper) {
   border-radius: var(--radius-md);

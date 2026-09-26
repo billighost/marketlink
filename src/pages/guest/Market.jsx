@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search,
@@ -10,19 +10,34 @@ import {
   Clock,
   Store,
   X,
-  Sliders,
-  ChevronDown,
   ArrowRight,
   Star,
   Sparkles,
 } from 'lucide-react';
 import { getMarkets } from '@/api/catalog';
+import { formatMarketSchedule } from '@/utils/format';
 import MapView from '@/components/domain/MapView';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import styles from './Market.module.css';
 
+function getMarketImage(market) {
+  if (market?.imageUrl) return market.imageUrl;
+  if (market?.image) return market.image;
+  const name = (market?.name || '').toLowerCase();
+  const slug = (market?.slug || '').toLowerCase();
+  if (name.includes('elm') || slug.includes('elm')) return '/images/market-morning.jpg';
+  if (name.includes('grove') || slug.includes('grove')) return '/images/market-riverside.jpg';
+  if (name.includes('hilltop') || slug.includes('hilltop')) return '/images/market-greenwich.jpg';
+  if (name.includes('central') || slug.includes('central')) return '/images/market-central.jpg';
+  if (name.includes('chelsea') || slug.includes('chelsea')) return '/images/market-chelsea.jpg';
+  if (name.includes('union') || slug.includes('union')) return '/images/market-unionsquare.jpg';
+  if (name.includes('riverside') || slug.includes('riverside')) return '/images/market-riverside.jpg';
+  if (name.includes('wildflower') || slug.includes('wildflower')) return '/images/market-wildflower.jpg';
+  return '/images/market-central.jpg';
+}
+
 export function Market() {
-  useDocumentTitle('Explore Farmers Markets ΓÇö MarketLink');
+  useDocumentTitle('Explore Farmers Markets — MarketLink');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -33,7 +48,6 @@ export function Market() {
   const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('All Regions');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('All Markets');
   const [selectedMarketId, setSelectedMarketId] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(true);
@@ -65,32 +79,69 @@ export function Market() {
   }, []);
 
   const normalizedMarkets = useMemo(() => {
+    const todayShort = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+
     return rawMarkets.map((m) => {
       const id = m.id || m._id;
-      const daysStr = Array.isArray(m.days) ? m.days.join(', ') : m.day || 'Saturday';
+      const scheduleText = formatMarketSchedule(m) || 'Saturdays · 8:00 AM – 1:00 PM';
+      const scheduleDays = Array.isArray(m.schedule)
+        ? m.schedule.map((s) => (typeof s === 'string' ? s : s.day)).filter(Boolean)
+        : Array.isArray(m.days)
+        ? m.days
+        : [m.day || 'sat'];
+      const daysFormatted = scheduleDays
+        .map((d) => (typeof d === 'string' ? d.charAt(0).toUpperCase() + d.slice(1) : ''))
+        .filter(Boolean)
+        .join(', ') || 'Saturday';
+
+      const isWeekend = scheduleDays.some((d) =>
+        ['sat', 'sun', 'saturday', 'sunday'].includes(String(d).toLowerCase())
+      );
+      const isWeekday = scheduleDays.some((d) =>
+        ['mon', 'tue', 'wed', 'thu', 'fri', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(
+          String(d).toLowerCase()
+        )
+      );
+
+      const isOpenToday = scheduleDays.some((d) => String(d).toLowerCase().startsWith(todayShort));
+
+      const cats = ['All Markets'];
+      if (isWeekend) cats.push('Weekend');
+      if (isWeekday) cats.push('Weekday');
+      if (!isWeekend && !isWeekday) cats.push('Weekend');
+
+      const lat =
+        m.location?.lat != null ? m.location.lat : m.coordinates?.lat != null ? m.coordinates.lat : 40.735;
+      const lng =
+        m.location?.lng != null ? m.location.lng : m.coordinates?.lng != null ? m.coordinates.lng : -74.172;
+
+      const stallCount = m.farmerCount || (m.farmers ? m.farmers.length : 16);
+
       return {
         id,
         name: m.name,
-        image: m.image || '/images/market-unionsquare.jpg',
-        status: m.status === 'active' || m.status === 'open' ? 'Open Saturday' : m.status || 'Active',
-        statusType: 'open',
-        statusDetail: `${m.hours || '8:00 AM ΓÇô 1:00 PM'} ┬╖ ${daysStr}`,
+        image: getMarketImage(m),
+        isOpenNow: isOpenToday,
+        status: isOpenToday ? 'Open Today' : `Open ${daysFormatted}`,
+        statusType: isOpenToday ? 'open' : 'upcoming',
+        statusDetail: scheduleText,
         distance: m.distance || 'Local area',
         distanceMiles: m.distance || 'Market location',
-        location: m.address || 'Market Square',
+        location: m.address || m.city || 'Market Square',
         fullAddress: m.address || 'Market Square',
-        hours: m.hours || '8:00 AM ΓÇô 1:00 PM',
+        hours: scheduleText,
+        vendorsCount: `${stallCount} stalls`,
         vendors: m.farmerCount ? `${m.farmerCount} Farmers` : 'Local Farmers & Artisans',
-        rating: m.rating || 4.9,
+        rating: m.rating ? Number(m.rating).toFixed(1) : '4.9',
         reviewCount: m.reviewCount || 36,
-        day: daysStr,
-        categories: ['All Markets', daysStr.includes('Sat') || daysStr.includes('Sun') ? 'Weekend' : 'Weekday'],
+        day: daysFormatted,
+        categories: cats,
         description:
           m.description ||
-          `Community farmers market open ${daysStr}. Fresh produce and artisanal goods available for direct pre-order.`,
+          `Community farmers market open ${daysFormatted}. Fresh produce and artisanal goods available for direct pre-order.`,
         path: `/markets/${id}`,
-        lat: m.coordinates?.lat || 40.735,
-        lng: m.coordinates?.lng || -73.99,
+        lat,
+        lng,
       };
     });
   }, [rawMarkets]);
@@ -152,7 +203,7 @@ export function Market() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* ΓöÇΓöÇΓöÇ HEADER BAR ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── HEADER BAR ─────────────────────────────────────────── */}
       <div className={styles.headerBar}>
         <div className="container">
           <div className={styles.headerBarInner}>
@@ -203,10 +254,10 @@ export function Market() {
         </div>
       </div>
 
-      {/* ΓöÇΓöÇΓöÇ VIEW MODE: MAP VIEW ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ─── VIEW MODE: MAP VIEW ───────────────────────────────── */}
       {viewMode === 'map' ? (
         <div className={styles.mapViewContainer}>
-          {/* ΓöÇΓöÇ LEFT PANEL: INTERACTIVE SEARCH & MARKETS LIST ΓöÇΓöÇ */}
+          {/* LEFT PANEL: INTERACTIVE SEARCH & MARKETS LIST */}
           <aside className={styles.mapSidebar} aria-label="Market search and list">
             {/* Search Input */}
             <div className={styles.sidebarSearchWrap}>
@@ -270,25 +321,54 @@ export function Market() {
                         isSelected ? styles.mapMarketCardSelected : ''
                       } ${isHovered ? styles.mapMarketCardHovered : ''}`}
                     >
-                      <div className={styles.mapMarketCardImgWrap}>
-                        <img src={m.image} alt={m.name} className={styles.mapMarketCardImg} />
+                      <div className={styles.cardThumbWrap}>
+                        <img
+                          src={m.image}
+                          alt={m.name}
+                          className={styles.cardThumb}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/images/market-central.jpg';
+                          }}
+                        />
+                        <span className={styles.cardDistanceBadge}>{m.vendorsCount}</span>
                       </div>
-                      <div className={styles.mapMarketCardBody}>
-                        <div className={styles.cardHeaderRow}>
-                          <h3 className={styles.mapMarketName}>{m.name}</h3>
-                          <span className={styles.openNowBadge}>{m.status}</span>
+
+                      <div className={styles.cardDetails}>
+                        <div className={styles.cardMetaTop}>
+                          <span className={m.isOpenNow ? styles.badgeOpenNow : styles.badgeOpenTomorrow}>
+                            <span className={styles.badgeDot} />
+                            {m.status}
+                          </span>
+                          <span className={styles.cardRatingInline}>
+                            <Star size={11} fill="#D4850A" color="#D4850A" />
+                            <span>{m.rating}</span>
+                          </span>
                         </div>
-                        <p className={styles.mapMarketLocation}>
-                          <MapPin size={11} className={styles.pinSmall} />
+
+                        <h3 className={styles.cardTitle}>{m.name}</h3>
+
+                        <p className={styles.cardAddress}>
+                          <MapPin size={11} />
                           <span>{m.location}</span>
                         </p>
-                        <div className={styles.cardFooterRow}>
-                          <span className={styles.cardSchedule}>
-                            <Clock size={11} /> {m.hours}
+
+                        <div className={styles.cardMetaBottom}>
+                          <span className={styles.hoursTag}>
+                            <Clock size={11} />
+                            <span>{m.hours}</span>
                           </span>
-                          <span className={styles.cardRating}>
-                            <Star size={11} fill="#D4850A" color="#D4850A" /> {m.rating}
-                          </span>
+                        </div>
+
+                        <div className={styles.cardActionsRow}>
+                          <Link
+                            to={m.path}
+                            onClick={(e) => e.stopPropagation()}
+                            className={styles.cardViewLink}
+                          >
+                            <span>View Market Guide</span>
+                            <ArrowRight size={12} />
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -314,13 +394,14 @@ export function Market() {
             </div>
           </aside>
 
-          {/* ΓöÇΓöÇ RIGHT PANEL: REAL LEAFLET MAP VIEW ΓöÇΓöÇ */}
-          <section className={styles.mapCanvasArea} aria-label="Interactive market map" style={{ position: 'relative', width: '100%', height: '100%', minHeight: '520px' }}>
+          {/* RIGHT PANEL: REAL LEAFLET MAP VIEW */}
+          <section className={styles.mapCanvasArea} aria-label="Interactive market map">
             <MapView
               markers={mapMarkers}
               selectedId={selectedMarketId}
-              onSelect={(id) => {
-                setSelectedMarketId(id);
+              onSelect={(target) => {
+                const targetId = typeof target === 'object' && target ? target.id : target;
+                setSelectedMarketId(targetId);
                 setIsPopupOpen(true);
               }}
               height="100%"
@@ -330,7 +411,7 @@ export function Market() {
               ariaLabel="Map of farmers markets"
             />
 
-            {/* ΓöÇΓöÇΓöÇ FLOATING DETAIL CARD (BOTTOM RIGHT) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+            {/* FLOATING DETAIL CARD (BOTTOM RIGHT) */}
             {isPopupOpen && activeMarket && (
               <div className={styles.floatingMarketCard}>
                 <div className={styles.floatingImgWrap}>
@@ -338,19 +419,28 @@ export function Market() {
                     src={activeMarket.image}
                     alt={activeMarket.name}
                     className={styles.floatingCoverImg}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/images/market-central.jpg';
+                    }}
                   />
                   <div className={styles.floatingImgOverlay}>
-                    <span className={styles.floatingStatusBadge}>
+                    <span
+                      className={`${styles.floatingStatusBadge} ${
+                        !activeMarket.isOpenNow ? styles.floatingStatusBadgeUpcoming : ''
+                      }`}
+                    >
                       <span className={styles.floatingStatusDot} />
-                      {activeMarket.statusDetail}
+                      {activeMarket.status}
                     </span>
                     <button
                       type="button"
                       onClick={() => setIsPopupOpen(false)}
                       className={styles.floatingCloseBtn}
                       aria-label="Close preview"
+                      title="Close preview"
                     >
-                      <X size={14} />
+                      <X size={15} />
                     </button>
                   </div>
                 </div>
@@ -359,36 +449,30 @@ export function Market() {
                   <div className={styles.floatingTitleRow}>
                     <h2 className={styles.floatingTitle}>{activeMarket.name}</h2>
                     <div className={styles.floatingRating}>
-                      <Star size={13} fill="#D4850A" color="#D4850A" />
+                      <Star size={12} fill="#ea580c" color="#ea580c" />
                       <strong>{activeMarket.rating}</strong>
                     </div>
                   </div>
 
                   <p className={styles.floatingLocation}>
-                    <MapPin size={12} className={styles.floatingPinIcon} />
+                    <MapPin size={13} className={styles.floatingPinIcon} />
                     <span>{activeMarket.location}</span>
                   </p>
 
-                  <p className={styles.floatingDesc}>{activeMarket.description}</p>
-
-                  <div className={styles.floatingStatsGrid}>
-                    <div className={styles.floatingStatBox}>
-                      <span className={styles.floatingStatLabel}>Schedule</span>
-                      <strong className={styles.floatingStatValue}>
-                        {activeMarket.hours}
-                      </strong>
+                  <div className={styles.floatingInfoSection}>
+                    <div className={styles.floatingInfoRow}>
+                      <Clock size={13} className={styles.floatingInfoIcon} />
+                      <span className={styles.floatingInfoText}>{activeMarket.hours}</span>
                     </div>
-                    <div className={styles.floatingStatBox}>
-                      <span className={styles.floatingStatLabel}>Market Day</span>
-                      <strong className={styles.floatingStatValue}>
-                        {activeMarket.day}
-                      </strong>
+                    <div className={styles.floatingInfoRow}>
+                      <Store size={13} className={styles.floatingInfoIcon} />
+                      <span className={styles.floatingInfoText}>{activeMarket.vendorsCount} Verified Stalls</span>
                     </div>
                   </div>
 
                   <div className={styles.floatingActionsRow}>
                     <Link to={activeMarket.path} className={styles.viewFullMarketBtn}>
-                      <span>View Full Market Page</span>
+                      <span>View Full Market Guide</span>
                       <ArrowRight size={14} />
                     </Link>
 
@@ -413,7 +497,7 @@ export function Market() {
           </section>
         </div>
       ) : (
-        /* ΓöÇΓöÇΓöÇ VIEW MODE: GRID / LIST VIEW ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+        /* ─── VIEW MODE: GRID / LIST VIEW ────────────────────────── */
         <div className="container" style={{ paddingBlock: '28px 60px' }}>
           <div className={styles.listFilterBar}>
             <div className={styles.listSearchInputWrap}>
@@ -458,7 +542,15 @@ export function Market() {
               return (
                 <article key={m.id} className={styles.marketGridCard}>
                   <div className={styles.cardImageContainer}>
-                    <img src={m.image} alt={m.name} className={styles.gridCardImg} />
+                    <img
+                      src={m.image}
+                      alt={m.name}
+                      className={styles.gridCardImg}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/images/market-central.jpg';
+                      }}
+                    />
                     <span className={styles.gridStatusOpen}>
                       <span className={styles.badgeDot} />
                       {m.status}

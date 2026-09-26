@@ -1,4 +1,4 @@
-﻿
+
 /* =========================================================
    MARKETLINK ΓÇö PROFESSIONAL TOP BAR
    ========================================================= */
@@ -172,14 +172,20 @@
 .actionsGroup {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
-  min-width: max-content;
+  /* removed min-width: max-content — it prevented shrinking on mid-width screens */
 }
 
 @media (min-width: 900px) {
   .actionsGroup {
-    gap: 7px;
+    gap: 6px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .actionsGroup {
+    gap: 8px;
   }
 }
 
@@ -267,10 +273,10 @@
 .iconBtn {
   position: relative;
 
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
 
   display: inline-flex;
   align-items: center;
@@ -292,6 +298,15 @@
     background-color 160ms ease,
     border-color 160ms ease,
     transform 160ms ease;
+}
+
+@media (min-width: 1024px) {
+  .iconBtn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .iconBtn:hover {
@@ -344,10 +359,10 @@
    ========================================================= */
 
 .profileBtn {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
 
   display: inline-flex;
   align-items: center;
@@ -369,6 +384,15 @@
     background-color 160ms ease,
     transform 160ms ease,
     box-shadow 160ms ease;
+}
+
+@media (min-width: 1024px) {
+  .profileBtn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .profileBtn:hover {
@@ -395,10 +419,10 @@
    ========================================================= */
 
 .menuButton {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
 
   display: inline-flex;
   align-items: center;
@@ -436,6 +460,7 @@
   outline-offset: 2px;
 }
 
+/* Show hamburger only on mobile (<768px) */
 @media (min-width: 768px) {
   .menuButton {
     display: none;
@@ -456,9 +481,10 @@
 
   z-index: var(--z-dropdown, 1100);
 
-  padding: 20px;
+  padding: 20px 20px calc(32px + env(safe-area-inset-bottom, 0px));
 
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 
   background: rgba(255, 252, 250, 0.98);
 
@@ -591,84 +617,59 @@
 }
 
 /* =========================================================
-   TABLET
+   TABLET (768–950px): desktop nav is visible but space is tight
    ========================================================= */
 
 @media (min-width: 768px) and (max-width: 950px) {
-  .logoText {
-    font-size: 1rem;
-  }
-
   .navLink {
-    padding-inline: 9px;
+    padding-inline: 8px;
     font-size: 0.79rem;
   }
 
   .actionsGroup {
-    gap: 4px;
+    gap: 2px;
+  }
+
+  /* Slightly reduce icon hit targets to reclaim space */
+  .iconBtn,
+  .profileBtn,
+  .menuButton {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
   }
 }
 
 /* =========================================================
-   SMALL MOBILE
+   SMALL MOBILE (<768px)
    ========================================================= */
 
 .bookmarkBtn {
   /* inherits iconBtn */
 }
 
+/* Hide bookmark on small phones to save space */
 @media (max-width: 540px) {
   .bookmarkBtn {
     display: none;
   }
 }
 
+/* Responsive compact MarketDropdown on small screens */
+@media (max-width: 400px) {
+  .actionsGroup {
+    gap: 3px;
+  }
+}
+
 @media (max-width: 420px) {
   .header {
-    height: 62px;
+    height: 60px;
   }
 
   .barInner {
     padding: 0 10px;
-    gap: 6px;
-  }
-
-  .logoBadge {
-    width: 32px;
-    height: 32px;
-  }
-
-  .logoImg {
-    width: 21px;
-    height: 21px;
-  }
-
-  .logoText {
-    font-size: 1rem;
-  }
-
-  .actionsGroup {
-    gap: 4px;
-  }
-
-  .iconBtn,
-  .profileBtn,
-  .menuButton {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-  }
-
-  .drawer {
-    top: 62px;
-    padding: 16px 14px;
-  }
-}
-
-@media (max-width: 360px) {
-  .barInner {
-    padding: 0 8px;
     gap: 4px;
   }
 
@@ -676,6 +677,32 @@
     gap: 2px;
   }
 
+  .iconBtn,
+  .profileBtn,
+  .menuButton {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .drawer {
+    top: 60px;
+    padding: 16px 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .barInner {
+    padding: 0 8px;
+    gap: 2px;
+  }
+
+  .actionsGroup {
+    gap: 1px;
+  }
+
+  /* Hide profile button on very tiny screens – use drawer profile link instead */
   .profileBtn {
     display: none;
   }
