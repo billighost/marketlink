@@ -8,14 +8,17 @@ import QuantityStepper from '@/components/ui/QuantityStepper';
 import EmptyState from '@/components/ui/EmptyState';
 import Illustration from '@/components/domain/Illustration';
 import OrderConfirmed from '@/pages/buyer/OrderConfirmed';
+import Page from '@/components/layout/Page';
+import PageTitle from '@/components/layout/PageTitle';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './Cart.module.css';
 
 /**
- * Customer Shopping Cart modal sheet.
+ * Customer Shopping Cart / Basket page.
  * Connected to live backend cart quote and atomic checkout.
  * Groups items by farmer stall, shows pickup slot options, and submits pre-orders.
  */
-export function Cart({ inSheet = true, onClose }) {
+export function Cart() {
   const {
     items,
     count,
@@ -40,6 +43,8 @@ export function Cart({ inSheet = true, onClose }) {
   const [swipedProductId, setSwipedProductId] = useState(null);
 
   const touchStartXRef = useRef(0);
+
+  useDocumentTitle('Basket · MarketLink');
 
   const handleTouchStart = (e) => {
     touchStartXRef.current = e.touches[0].clientX;
@@ -99,7 +104,7 @@ export function Cart({ inSheet = true, onClose }) {
     }
   };
 
-  // If order was just placed, show confirmation inside this sheet
+  // If order was just placed, show confirmation
   if (placedOrder) {
     return (
       <OrderConfirmed
@@ -108,8 +113,6 @@ export function Cart({ inSheet = true, onClose }) {
         pickupSlot={placedOrder.pickupSlot}
         marketName={placedOrder.marketName}
         farmerNames={placedOrder.farmerNames}
-        onClose={onClose}
-        inSheet={inSheet}
       />
     );
   }
@@ -117,224 +120,235 @@ export function Cart({ inSheet = true, onClose }) {
   // If cart is empty
   if (count === 0) {
     return (
-      <div className={styles.emptyContainer}>
-        <EmptyState
-          illustration="basket"
-          title="Your cart is empty"
-          text="Browse what's fresh this week."
-          actionLabel="Browse the market"
-          onAction={() => {
-            onClose?.();
-            navigate('/buyer/products');
-          }}
+      <Page width="detail">
+        <PageTitle
+          title="Your basket"
+          backTo="/buyer/products"
+          backLabel="Keep browsing"
         />
-      </div>
+        <div className={styles.emptyContainer}>
+          <EmptyState
+            illustration="basket"
+            title="Your cart is empty"
+            text="Browse what's fresh this week."
+            actionLabel="Browse the market"
+            onAction={() => navigate('/buyer/products')}
+          />
+        </div>
+      </Page>
     );
   }
 
   const groups = quote?.groups || [];
 
   return (
-    <div className={styles.container}>
-      {quoteError && (
-        <div className={styles.groupIssuesBanner} role="alert">
-          <AlertTriangle size={16} aria-hidden="true" />
-          <span style={{ flex: 1 }}>{quoteError.message || 'Unable to update cart pricing.'}</span>
-          <button
-            type="button"
-            onClick={refreshQuote}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            aria-label="Retry cart quote"
-          >
-            <RefreshCw size={14} />
-          </button>
-        </div>
-      )}
-
-      {/* Items Grouped by Farmer Stall */}
-      <div className={styles.groupsList}>
-        {groups.map((group) => {
-          const { farmer, lines = [], subtotalCents: groupSubtotal, slots = [], issues = [], farmerId, selectedSlot } = group;
-          const isSlotSelected = (slot) =>
-            selectedSlot?.start === slot.start ||
-            items.find((i) => i.farmerId === farmerId)?.slotStart === slot.start;
-
-          return (
-            <section
-              key={farmerId}
-              className={styles.farmerGroup}
-              aria-label={`Items from ${farmer?.stallName || 'Farmer'}`}
+    <Page width="detail">
+      <PageTitle
+        title="Your basket"
+        backTo="/buyer/products"
+        backLabel="Keep browsing"
+      />
+      <div className={styles.container}>
+        {quoteError && (
+          <div className={styles.groupIssuesBanner} role="alert">
+            <AlertTriangle size={16} aria-hidden="true" />
+            <span style={{ flex: 1 }}>{quoteError.message || 'Unable to update cart pricing.'}</span>
+            <button
+              type="button"
+              onClick={refreshQuote}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              aria-label="Retry cart quote"
             >
-              <div className={styles.stallHeader}>
-                <div className={styles.stallInfo}>
-                  <h4 className={styles.stallName}>{farmer?.stallName || 'Local Farmer'}</h4>
-                  {farmer?.stallNumber && <span className={styles.stallNumber}>{farmer.stallNumber}</span>}
-                </div>
-                <span className={styles.stallSubtotal}>{formatPrice(groupSubtotal)}</span>
-              </div>
+              <RefreshCw size={14} />
+            </button>
+          </div>
+        )}
 
-              {issues.length > 0 && (
-                <div className={styles.groupIssuesBanner}>
-                  <AlertTriangle size={16} aria-hidden="true" />
-                  <span>{issues.map((i) => i.message).join(' ')}</span>
-                </div>
-              )}
+        {/* Items Grouped by Farmer Stall */}
+        <div className={styles.groupsList}>
+          {groups.map((group) => {
+            const { farmer, lines = [], subtotalCents: groupSubtotal, slots = [], issues = [], farmerId, selectedSlot } = group;
+            const isSlotSelected = (slot) =>
+              selectedSlot?.start === slot.start ||
+              items.find((i) => i.farmerId === farmerId)?.slotStart === slot.start;
 
-              {/* Pickup Slot Selection for this stall */}
-              {slots.length > 0 && (
-                <div className={styles.pickupSection} style={{ border: 'none', borderRadius: 0, borderBottom: '1px solid var(--color-border)' }}>
-                  <div className={styles.sectionHeader}>
-                    <Clock size={16} className={styles.sectionIcon} aria-hidden="true" />
-                    <h3 className={styles.sectionTitle}>Pickup time for {farmer?.stallName}</h3>
+            return (
+              <section
+                key={farmerId}
+                className={styles.farmerGroup}
+                aria-label={`Items from ${farmer?.stallName || 'Farmer'}`}
+              >
+                <div className={styles.stallHeader}>
+                  <div className={styles.stallInfo}>
+                    <h3 className={styles.stallName}>{farmer?.stallName || 'Local Farmer'}</h3>
+                    {farmer?.stallNumber && <span className={styles.stallNumber}>{farmer.stallNumber}</span>}
                   </div>
-                  <div className={styles.slotsGrid}>
-                    {slots.slice(0, 4).map((slot) => {
-                      const selected = isSlotSelected(slot);
-                      return (
-                        <button
-                          key={slot.start}
-                          type="button"
-                          disabled={!slot.isOpen}
-                          className={`${styles.slotButton} ${selected ? styles.slotSelected : ''} ${!slot.isOpen ? styles.slotClosed : ''}`}
-                          onClick={() => setSlot(farmerId, slot.start)}
-                          aria-pressed={selected}
-                        >
-                          {slot.label} {!slot.isOpen ? '(Closed)' : ''}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <span className={styles.stallSubtotal}>{formatPrice(groupSubtotal)}</span>
                 </div>
-              )}
 
-              {/* Product rows for this stall */}
-              <div className={styles.itemsList}>
-                {lines.map((line) => {
-                  const isSwiped = swipedProductId === line.productId;
-                  const maxQty = line.quantityAvailable > 0 ? line.quantityAvailable : 99;
+                {issues.length > 0 && (
+                  <div className={styles.groupIssuesBanner}>
+                    <AlertTriangle size={16} aria-hidden="true" />
+                    <span>{issues.map((i) => i.message).join(' ')}</span>
+                  </div>
+                )}
 
-                  return (
-                    <div key={line.productId} className={styles.rowContainer}>
-                      {isSwiped && (
-                        <button
-                          type="button"
-                          className={styles.swipeAction}
-                          onClick={() => handleRemove(line.productId, line.name, line.quantity, farmerId)}
-                          aria-label={`Confirm remove ${line.name}`}
-                        >
-                          Remove
-                        </button>
-                      )}
-                      <div
-                        className={`${styles.itemRow} ${isSwiped ? styles.swiped : ''}`}
-                        onTouchStart={handleTouchStart}
-                        onTouchMove={(e) => handleTouchMove(e, line.productId)}
-                      >
-                        <div className={styles.itemVisual}>
-                          <Illustration name={line.art || 'basket'} size="sm" />
-                        </div>
+                {/* Pickup Slot Selection for this stall */}
+                {slots.length > 0 && (
+                  <div className={styles.pickupSection} style={{ border: 'none', borderRadius: 0, borderBottom: '1px solid var(--color-border)' }}>
+                    <div className={styles.sectionHeader}>
+                      <Clock size={16} className={styles.sectionIcon} aria-hidden="true" />
+                      <h4 className={styles.sectionTitle}>Pickup time for {farmer?.stallName}</h4>
+                    </div>
+                    <div className={styles.slotsGrid}>
+                      {slots.slice(0, 4).map((slot) => {
+                        const selected = isSlotSelected(slot);
+                        return (
+                          <button
+                            key={slot.start}
+                            type="button"
+                            disabled={!slot.isOpen}
+                            className={`${styles.slotButton} ${selected ? styles.slotSelected : ''} ${!slot.isOpen ? styles.slotClosed : ''}`}
+                            onClick={() => setSlot(farmerId, slot.start)}
+                            aria-pressed={selected}
+                          >
+                            {slot.label} {!slot.isOpen ? '(Closed)' : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
-                        <div className={styles.itemDetails}>
-                          <span className={styles.itemName}>{line.name}</span>
-                          <span className={styles.itemPrice}>
-                            {formatPrice(line.unitPriceCents)} / {line.unit}
-                          </span>
-                          {line.issues?.map((iss) => (
-                            <span key={iss.code} className={styles.lineIssue}>
-                              {iss.message}
-                            </span>
-                          ))}
-                        </div>
+                {/* Product rows for this stall */}
+                <div className={styles.itemsList}>
+                  {lines.map((line) => {
+                    const isSwiped = swipedProductId === line.productId;
+                    const maxQty = line.quantityAvailable > 0 ? line.quantityAvailable : 99;
 
-                        <div className={styles.itemActions}>
-                          <QuantityStepper
-                            value={line.quantity}
-                            onChange={(newQty) => setQuantity(line.productId, newQty)}
-                            min={0}
-                            max={maxQty}
-                            productName={line.name}
-                            compact
-                          />
+                    return (
+                      <div key={line.productId} className={styles.rowContainer}>
+                        {isSwiped && (
                           <button
                             type="button"
-                            className={styles.removeButton}
+                            className={styles.swipeAction}
                             onClick={() => handleRemove(line.productId, line.name, line.quantity, farmerId)}
-                            aria-label={`Remove ${line.name} from basket`}
+                            aria-label={`Confirm remove ${line.name}`}
                           >
-                            <Trash2 size={16} aria-hidden="true" />
+                            Remove
                           </button>
+                        )}
+                        <div
+                          className={`${styles.itemRow} ${isSwiped ? styles.swiped : ''}`}
+                          onTouchStart={handleTouchStart}
+                          onTouchMove={(e) => handleTouchMove(e, line.productId)}
+                        >
+                          <div className={styles.itemVisual}>
+                            <Illustration name={line.art || 'basket'} size="sm" />
+                          </div>
+
+                          <div className={styles.itemDetails}>
+                            <span className={styles.itemName}>{line.name}</span>
+                            <span className={styles.itemPrice}>
+                              {formatPrice(line.unitPriceCents)} / {line.unit}
+                            </span>
+                            {line.issues?.map((iss) => (
+                              <span key={iss.code} className={styles.lineIssue}>
+                                {iss.message}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className={styles.itemActions}>
+                            <QuantityStepper
+                              value={line.quantity}
+                              onChange={(newQty) => setQuantity(line.productId, newQty)}
+                              min={0}
+                              max={maxQty}
+                              productName={line.name}
+                              compact
+                            />
+                            <button
+                              type="button"
+                              className={styles.removeButton}
+                              onClick={() => handleRemove(line.productId, line.name, line.quantity, farmerId)}
+                              aria-label={`Remove ${line.name} from basket`}
+                            >
+                              <Trash2 size={16} aria-hidden="true" />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          );
-        })}
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        {/* Note to Farmers */}
+        <div className={styles.noteSection}>
+          <label htmlFor="order-note" className={styles.noteLabel}>
+            Note for farmers (optional)
+          </label>
+          <textarea
+            id="order-note"
+            className={styles.noteInput}
+            rows={2}
+            maxLength={200}
+            placeholder="E.g., Please pack ripe tomatoes on top, extra paper bag..."
+            value={orderNote}
+            onChange={(e) => setOrderNote(e.target.value)}
+          />
+        </div>
+
+        {/* Order Payment Summary */}
+        <section className={styles.summarySection} aria-label="Order summary">
+          <div className={styles.summaryRow}>
+            <span className={styles.summaryLabel}>Subtotal</span>
+            <span key={`subtotal-${subtotalCents}`} className={`${styles.summaryValue} ${styles.totalValueCrossfade}`}>
+              {formatPrice(quote?.totalCents ?? subtotalCents)}
+            </span>
+          </div>
+          <div className={styles.summaryRow}>
+            <span className={styles.summaryLabel}>Market fee</span>
+            <span className={styles.freeBadge}>Free</span>
+          </div>
+          <div className={`${styles.summaryRow} ${styles.totalRow}`}>
+            <span className={styles.totalLabel}>Total to pay</span>
+            <span key={`total-${subtotalCents}`} className={`${styles.totalValue} ${styles.totalValueCrossfade}`}>
+              {formatPrice(quote?.totalCents ?? subtotalCents)}
+            </span>
+          </div>
+
+          <div className={styles.payNotice}>
+            <Info size={16} className={styles.noticeIcon} aria-hidden="true" />
+            <span>You pay at each stall when picking up. Cash or card accepted.</span>
+          </div>
+        </section>
+
+        {/* Sticky Bottom Action */}
+        <footer className={styles.stickyFooter}>
+          <button
+            type="button"
+            className={styles.placeOrderButton}
+            disabled={!quote?.canCheckout || submitting || loadingQuote}
+            onClick={handlePlaceOrder}
+          >
+            <span key={`btn-${subtotalCents}`} className={styles.totalValueCrossfade}>
+              {submitting
+                ? 'Placing pre-order...'
+                : loadingQuote
+                ? 'Updating basket...'
+                : !quote?.canCheckout
+                ? 'Select pickup time to order'
+                : `Place pre-order · ${formatPrice(quote?.totalCents ?? subtotalCents)}`}
+            </span>
+          </button>
+        </footer>
       </div>
-
-      {/* Note to Farmers */}
-      <div className={styles.noteSection}>
-        <label htmlFor="order-note" className={styles.noteLabel}>
-          Note for farmers (optional)
-        </label>
-        <textarea
-          id="order-note"
-          className={styles.noteInput}
-          rows={2}
-          maxLength={200}
-          placeholder="E.g., Please pack ripe tomatoes on top, extra paper bag..."
-          value={orderNote}
-          onChange={(e) => setOrderNote(e.target.value)}
-        />
-      </div>
-
-      {/* Order Payment Summary */}
-      <section className={styles.summarySection} aria-label="Order summary">
-        <div className={styles.summaryRow}>
-          <span className={styles.summaryLabel}>Subtotal</span>
-          <span key={`subtotal-${subtotalCents}`} className={`${styles.summaryValue} ${styles.totalValueCrossfade}`}>
-            {formatPrice(quote?.totalCents ?? subtotalCents)}
-          </span>
-        </div>
-        <div className={styles.summaryRow}>
-          <span className={styles.summaryLabel}>Market fee</span>
-          <span className={styles.freeBadge}>Free</span>
-        </div>
-        <div className={`${styles.summaryRow} ${styles.totalRow}`}>
-          <span className={styles.totalLabel}>Total to pay</span>
-          <span key={`total-${subtotalCents}`} className={`${styles.totalValue} ${styles.totalValueCrossfade}`}>
-            {formatPrice(quote?.totalCents ?? subtotalCents)}
-          </span>
-        </div>
-
-        <div className={styles.payNotice}>
-          <Info size={16} className={styles.noticeIcon} aria-hidden="true" />
-          <span>You pay at each stall when picking up. Cash or card accepted.</span>
-        </div>
-      </section>
-
-      {/* Sticky Bottom Action */}
-      <footer className={styles.stickyFooter}>
-        <button
-          type="button"
-          className={styles.placeOrderButton}
-          disabled={!quote?.canCheckout || submitting || loadingQuote}
-          onClick={handlePlaceOrder}
-        >
-          <span key={`btn-${subtotalCents}`} className={styles.totalValueCrossfade}>
-            {submitting
-              ? 'Placing pre-order...'
-              : loadingQuote
-              ? 'Updating basket...'
-              : !quote?.canCheckout
-              ? 'Select pickup time to order'
-              : `Place pre-order ┬╖ ${formatPrice(quote?.totalCents ?? subtotalCents)}`}
-          </span>
-        </button>
-      </footer>
-    </div>
+    </Page>
   );
 }
 

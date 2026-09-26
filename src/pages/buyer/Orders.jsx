@@ -89,7 +89,7 @@ export function Orders() {
               <OrderRow
                 key={order.id}
                 order={order}
-                onReorder={() => navigate('/buyer/cart')}
+                onReorder={() => navigate('/buyer/basket')}
               />
             ))}
             {nextCursor && (

@@ -86,10 +86,33 @@ export async function listFarmers({ q, category, market, day, sort = 'rating', c
     });
   }
 
+  const fIds = farmers.map((f) => f._id);
+  const stockCounts = fIds.length > 0
+    ? await db
+        .collection(COLLECTIONS.PRODUCTS)
+        .aggregate([
+          { $match: { farmerId: { $in: fIds }, listed: true } },
+          {
+            $group: {
+              _id: '$farmerId',
+              low: { $sum: { $cond: [{ $eq: ['$availability', 'low'] }, 1, 0] } },
+              out: { $sum: { $cond: [{ $eq: ['$availability', 'out'] }, 1, 0] } },
+            },
+          },
+        ])
+        .toArray()
+    : [];
+  const stockMap = new Map(stockCounts.map((s) => [s._id.toString(), s]));
+
   const marketLookup = new Map(markets.map((m) => [m._id.toString(), m]));
   const data = farmers.map((f) => {
     const fMarkets = (f.marketIds || []).map((id) => marketLookup.get(id.toString())).filter(Boolean);
-    return toFarmerCard(f, { markets: fMarkets });
+    const counts = stockMap.get(f._id.toString());
+    return toFarmerCard(f, {
+      markets: fMarkets,
+      lowStockCount: counts?.low ?? 0,
+      soldOutCount: counts?.out ?? 0,
+    });
   });
 
   return {
@@ -117,7 +140,7 @@ export async function getFarmerDetail(id) {
     throw AppError.notFound("We couldn't find that farmer.");
   }
 
-  const [markets, breakdownDocs, productCount] = await Promise.all([
+  const [markets, breakdownDocs, productCount, stockCounts] = await Promise.all([
     db
       .collection(COLLECTIONS.MARKETS)
       .find({ _id: { $in: farmer.marketIds || [] }, status: 'active' }, { projection: { _id: 1, name: 1 } })
@@ -130,6 +153,19 @@ export async function getFarmerDetail(id) {
       ])
       .toArray(),
     db.collection(COLLECTIONS.PRODUCTS).countDocuments({ farmerId: fId, listed: true }),
+    db
+      .collection(COLLECTIONS.PRODUCTS)
+      .aggregate([
+        { $match: { farmerId: fId, listed: true } },
+        {
+          $group: {
+            _id: '$farmerId',
+            low: { $sum: { $cond: [{ $eq: ['$availability', 'low'] }, 1, 0] } },
+            out: { $sum: { $cond: [{ $eq: ['$availability', 'out'] }, 1, 0] } },
+          },
+        },
+      ])
+      .toArray(),
   ]);
 
   const ratingBreakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
@@ -143,6 +179,8 @@ export async function getFarmerDetail(id) {
     markets,
     ratingBreakdown,
     productCount,
+    lowStockCount: stockCounts[0]?.low ?? 0,
+    soldOutCount: stockCounts[0]?.out ?? 0,
   });
 }
 

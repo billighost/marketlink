@@ -53,6 +53,7 @@ export function toOrderSummary(order, { now = new Date(), tz = 'America/New_York
     itemsPreview,
     canModify: Boolean(canModify),
     reviewed: Boolean(order.reviewed),
+    pickupCode: order.pickupCode || null,
   };
 }
 

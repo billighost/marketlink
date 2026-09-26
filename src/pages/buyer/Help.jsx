@@ -1,5 +1,8 @@
 import React from 'react';
 import { ChevronDown, Mail, MapPin } from 'lucide-react';
+import Page from '@/components/layout/Page';
+import PageTitle from '@/components/layout/PageTitle';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './Help.module.css';
 
 const FAQS = [
@@ -26,44 +29,53 @@ const FAQS = [
 ];
 
 /**
- * Help and FAQ sheet for Customer profile.
+ * Help and FAQ page for Customer profile.
  */
-export function Help({ inSheet = true, onClose }) {
-  return (
-    <div className={styles.container}>
-      <div className={styles.faqList}>
-        {FAQS.map((faq, idx) => (
-          <details key={idx} className={styles.faqItem}>
-            <summary className={styles.summary}>
-              <span className={styles.question}>{faq.q}</span>
-              <ChevronDown size={18} className={styles.chevron} aria-hidden="true" />
-            </summary>
-            <div className={styles.answer}>
-              <p>{faq.a}</p>
-            </div>
-          </details>
-        ))}
-      </div>
+export function Help() {
+  useDocumentTitle('Help & FAQ · MarketLink');
 
-      <div className={styles.contactCard}>
-        <h3 className={styles.contactTitle}>Still have questions?</h3>
-        <p className={styles.contactDesc}>
-          Our market coordinators are happy to assist before, during, or after Saturday market.
-        </p>
-        <div className={styles.contactInfo}>
-          <div className={styles.contactRow}>
-            <Mail size={16} className={styles.contactIcon} aria-hidden="true" />
-            <a href="mailto:support@marketlink.org" className={styles.contactLink}>
-              support@marketlink.org
-            </a>
-          </div>
-          <div className={styles.contactRow}>
-            <MapPin size={16} className={styles.contactIcon} aria-hidden="true" />
-            <span>Market Info Booth · Near Main Entrance</span>
+  return (
+    <Page width="read">
+      <PageTitle
+        title="Help & FAQ"
+        backTo="/buyer/profile"
+        backLabel="Back to you"
+      />
+      <div className={styles.container}>
+        <div className={styles.faqList}>
+          {FAQS.map((faq, idx) => (
+            <details key={idx} className={styles.faqItem}>
+              <summary className={styles.summary}>
+                <span className={styles.question}>{faq.q}</span>
+                <ChevronDown size={18} className={styles.chevron} aria-hidden="true" />
+              </summary>
+              <div className={styles.answer}>
+                <p>{faq.a}</p>
+              </div>
+            </details>
+          ))}
+        </div>
+
+        <div className={styles.contactCard}>
+          <h3 className={styles.contactTitle}>Still have questions?</h3>
+          <p className={styles.contactDesc}>
+            Our market coordinators are happy to assist before, during, or after Saturday market.
+          </p>
+          <div className={styles.contactInfo}>
+            <div className={styles.contactRow}>
+              <Mail size={16} className={styles.contactIcon} aria-hidden="true" />
+              <a href="mailto:support@marketlink.org" className={styles.contactLink}>
+                support@marketlink.org
+              </a>
+            </div>
+            <div className={styles.contactRow}>
+              <MapPin size={16} className={styles.contactIcon} aria-hidden="true" />
+              <span>Market Info Booth · Near Main Entrance</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Page>
   );
 }
 

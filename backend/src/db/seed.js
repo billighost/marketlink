@@ -22,6 +22,7 @@ import {
   addMinutes,
   toMinutesFromMidnight,
 } from '../utils/time.js';
+import { generatePickupCode } from '../utils/pickupCode.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -832,6 +833,7 @@ export async function runSeed(force = false, targetDb = null) {
       reviewed: false,
       slotKey: `${farmer._id.toString()}|${pickupStart.toISOString()}`,
       idempotencyKey: 'idemp-' + orderNumber.toLowerCase(),
+      pickupCode: generatePickupCode(),
       createdAt: timeline[0].at,
       updatedAt: timeline[timeline.length - 1].at,
     };

@@ -12,7 +12,7 @@ import { toObjectId } from '../../utils/ids.js';
 import { AppError } from '../../utils/errors.js';
 import { toProductCard, toFarmerCard, toMarketCard } from '../../utils/shapes.js';
 import { encodeCursor, decodeCursor } from '../../utils/cursor.js';
-import { getNextSlotsForAllFarmers, zonedTimeToUtc } from '../../utils/slots.js';
+import { getNextSlotsForAllFarmers, zonedTimeToUtc, computeMarketClock } from '../../utils/slots.js';
 import { FEED_TEMPLATES } from './feed.templates.js';
 
 // Cache for recent batch item IDs: key = `${userId}:${seed}:${batch}` -> Set<id>
@@ -491,6 +491,7 @@ export async function getFeedMeta(user, now = new Date()) {
     return {
       greetingName,
       homeMarket: null,
+      clock: computeMarketClock(null, now),
       nextOpening: null,
       nextCutoffAt: null,
       line: 'Welcome to MarketLink!',
@@ -498,7 +499,8 @@ export async function getFeedMeta(user, now = new Date()) {
   }
 
   const tz = homeMarket.timezone || 'America/New_York';
-  const marketCard = toMarketCard(homeMarket);
+  const marketCard = toMarketCard(homeMarket, { now });
+  const clock = computeMarketClock(homeMarket, now);
 
   // Compute next opening from market schedule
   let nextOpening = null;
@@ -554,6 +556,7 @@ export async function getFeedMeta(user, now = new Date()) {
   return {
     greetingName,
     homeMarket: marketCard,
+    clock,
     nextOpening,
     nextCutoffAt,
     line,

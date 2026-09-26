@@ -4,7 +4,9 @@
  */
 
 import { Router } from 'express';
-import { isValidObjectId } from '../../utils/ids.js';
+import { isValidObjectId, toObjectId } from '../../utils/ids.js';
+import { getDb } from '../../db/client.js';
+import { COLLECTIONS } from '../../db/collections.js';
 import {
   rejectUnknownFields,
   validateInteger,
@@ -28,17 +30,66 @@ defineRoutes(
       summary: 'Calculate live pricing, availability, and pickup slot validation for cart items',
       body: 'cartQuote',
       handler: async (req, res) => {
-        rejectUnknownFields(req.body, ['groups']);
+        rejectUnknownFields(req.body, ['groups', 'items']);
 
         const details = [];
 
-        if (!req.body || !Array.isArray(req.body.groups)) {
-          throw AppError.validation([{ field: 'groups', message: 'groups must be an array.' }]);
+        if (!req.body || (!Array.isArray(req.body.groups) && !Array.isArray(req.body.items))) {
+          throw AppError.validation([{ field: 'groups', message: 'groups or items must be an array.' }]);
         }
 
-        const { groups } = req.body;
+        let groups = req.body.groups;
 
-        if (groups.length < 1 || groups.length > 10) {
+        if (!groups && Array.isArray(req.body.items)) {
+          const rawItems = req.body.items;
+          if (rawItems.length < 1 || rawItems.length > 50) {
+            throw AppError.validation([
+              { field: 'items', message: 'items must contain between 1 and 50 items.' },
+            ]);
+          }
+
+          const productIds = [];
+          for (let i = 0; i < rawItems.length; i++) {
+            const it = rawItems[i];
+            if (!it || typeof it !== 'object' || Array.isArray(it)) {
+              details.push({ field: `items[${i}]`, message: 'item must be an object.' });
+              continue;
+            }
+            rejectUnknownFields(it, ['productId', 'quantity', 'expectedPriceCents']);
+            if (!it.productId || !isValidObjectId(it.productId)) {
+              details.push({ field: `items[${i}].productId`, message: 'productId must be a valid identifier.' });
+            } else {
+              productIds.push(toObjectId(it.productId));
+            }
+            validateInteger(it.quantity, `items[${i}].quantity`, details, { required: true, min: 1, max: 20 });
+          }
+          assertValid(details);
+
+          const db = getDb();
+          const prods = await db.collection(COLLECTIONS.PRODUCTS).find({ _id: { $in: productIds } }).toArray();
+          const prodFarmerMap = new Map(prods.map((p) => [p._id.toString(), p.farmerId.toString()]));
+
+          const farmerGroupMap = new Map();
+          for (const it of rawItems) {
+            const fId = prodFarmerMap.get(it.productId.toString());
+            if (!fId) continue;
+            if (!farmerGroupMap.has(fId)) {
+              farmerGroupMap.set(fId, []);
+            }
+            farmerGroupMap.get(fId).push({
+              productId: it.productId,
+              quantity: it.quantity,
+              expectedPriceCents: it.expectedPriceCents,
+            });
+          }
+
+          groups = Array.from(farmerGroupMap.entries()).map(([farmerId, groupItems]) => ({
+            farmerId,
+            items: groupItems,
+          }));
+        }
+
+        if (!Array.isArray(groups) || groups.length < 1 || groups.length > 10) {
           throw AppError.validation([
             { field: 'groups', message: 'groups must contain between 1 and 10 vendor groups.' },
           ]);

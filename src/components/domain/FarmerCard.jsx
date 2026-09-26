@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Illustration from '@/components/domain/Illustration';
 import styles from './FarmerCard.module.css';
 
@@ -17,12 +17,7 @@ export function FarmerCard({
   variant = 'row',
   className = '',
 }) {
-  const location = useLocation();
-
   if (!farmer) return null;
-
-  const farmerSheetPath = `/buyer/farmers/${farmer.id}`;
-  const linkState = { background: location.state?.background || location };
 
   return (
     <article
@@ -30,8 +25,7 @@ export function FarmerCard({
       aria-label={`${farmer.stallName}, ${farmer.specialty}`}
     >
       <Link
-        to={farmerSheetPath}
-        state={linkState}
+        to={`/buyer/stalls/${farmer.id}`}
         className={styles.stretchedLink}
         tabIndex={0}
         aria-label={`View stall ${farmer.stallName}`}

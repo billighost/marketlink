@@ -52,7 +52,7 @@ export function Footer({ withWave = false }) {
             <h4 className={styles.colTitle}>Support</h4>
             <ul className={styles.linkList} role="list">
               <li>
-                <Link to={PATHS.BUYER_PROFILE_HELP || '/buyer/profile/help'} className={styles.footerLink}>
+                <Link to={PATHS.BUYER_HELP || '/buyer/help'} className={styles.footerLink}>
                   Help Center
                 </Link>
               </li>

@@ -32,56 +32,55 @@ export async function runCustomerSuite() {
 
     results.push({ test: 'Feed & Greeting', status: 'PASS', details: `${feedCards.length} feed cards loaded` });
 
-    // ── 3.3 Product Sheet & Pre-order Add ────────────────────────────
-    console.log('Testing 3.3: Product Detail Sheet & Cart Addition ...');
+    // ── 3.3 Product Page & Pre-order Add ─────────────────────────────
+    console.log('Testing 3.3: Product Detail Page & Basket Addition ...');
     const firstProduct = await page.$('a[href*="/buyer/products/"]');
     if (!firstProduct) throw new Error('No clickable product found on feed');
+    const productHref = await firstProduct.getAttribute('href');
     await firstProduct.click();
 
-    // Verify BottomSheet opens
-    await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
-    console.log('  ✓ Product Detail BottomSheet opened');
+    // Verify URL changed to real page
+    await page.waitForURL(`**${productHref}`, { timeout: 8000 });
+    console.log(`  ✓ Navigated to dedicated Product Detail page: ${page.url()}`);
 
     // Check dynamic title
-    const sheetTitle = await page.title();
-    console.log(`  ✓ Sheet dynamic title: "${sheetTitle}"`);
+    const productTitle = await page.title();
+    console.log(`  ✓ Page dynamic document title: "${productTitle}"`);
 
     // Verify price formatting ($X.XX)
-    const sheetPrice = await page.$('[role="dialog"] [class*="price"]');
-    if (sheetPrice) {
-      const pText = await sheetPrice.textContent();
+    const pagePrice = await page.$('[class*="price"]');
+    if (pagePrice) {
+      const pText = await pagePrice.textContent();
       console.log(`  ✓ Product price formatted: "${pText.trim()}"`);
       if (!pText.match(/\$\d+\.\d{2}/)) {
-        throw new Error(`Invalid price format in sheet: "${pText}"`);
+        throw new Error(`Invalid price format on page: "${pText}"`);
       }
     }
 
     // Click "Pre-order for pickup" / Add button
-    const addBtn = await page.waitForSelector('[role="dialog"] button:has-text("Pre-order"), [role="dialog"] button:has-text("Add")', { timeout: 8000 });
+    const addBtn = await page.waitForSelector('button:has-text("Pre-order"), button:has-text("Add")', { timeout: 8000 });
     await addBtn.click();
     console.log('  ✓ Tapped "Add to pre-order" button');
     await page.waitForTimeout(600);
 
-    // Close the sheet
-    const closeProductBtn = await page.$('[role="dialog"] button[aria-label="Close sheet"]');
-    if (closeProductBtn) {
-      await closeProductBtn.click();
-      await page.waitForTimeout(400);
-      console.log('  ✓ Product sheet closed');
-    }
+    // Test Back button navigation
+    await page.goBack();
+    await page.waitForURL('**/buyer', { timeout: 8000 });
+    console.log('  ✓ Back button returned to /buyer feed');
 
-    results.push({ test: 'Product Sheet & Add to Cart', status: 'PASS', details: 'Added to cart and verified price format' });
+    results.push({ test: 'Product Page & Add to Basket', status: 'PASS', details: 'Navigated to real page, added item, and Back returned to feed' });
 
-    // ── 3.4 Cart Sheet & Live Server Quote ───────────────────────────
-    console.log('Testing 3.4: Cart Sheet, Server Quote & Pickup Selection ...');
-    // Open cart via BottomNav Cart tab
-    const cartNavBtn = await page.waitForSelector('nav[aria-label="Main navigation"] button:has-text("Cart")', { timeout: 6000 });
-    await cartNavBtn.click();
-    await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
+    // ── 3.4 Basket Page & Live Server Quote ──────────────────────────
+    console.log('Testing 3.4: Basket Page, Server Quote & Pickup Selection ...');
+    // Open basket via BottomNav Basket tab
+    const basketNavBtn = await page.waitForSelector('nav[aria-label="Main navigation"] button:has-text("Basket")', { timeout: 6000 });
+    await basketNavBtn.click();
+    await page.waitForURL('**/buyer/basket', { timeout: 8000 });
+    console.log(`  ✓ Navigated to canonical basket page: ${page.url()}`);
 
     // Verify server quote loaded
     await page.waitForSelector('[class*="farmerGroup"]', { timeout: 8000 });
-    console.log('  ✓ Cart server quote POST /cart/quote loaded vendor groups');
+    console.log('  ✓ Basket server quote POST /cart/quote loaded vendor groups');
 
     // Check pickup slot chips
     const slotChips = await page.$$('button[class*="slotButton"]');
@@ -102,55 +101,59 @@ export async function runCustomerSuite() {
       console.log('  Executing atomic checkout (POST /orders/checkout) ...');
       await checkoutBtn.click();
 
-      // Wait for Order Confirmation step in-sheet
-      await page.waitForSelector(':has-text("Order placed"), :has-text("Confirmed"), :has-text("Pre-order confirmed"), [class*="confirmedTitle"]', { timeout: 10000 });
-      console.log('  ✓ Order confirmed in-sheet successfully!');
+      // Wait for Order Confirmation page
+      await page.waitForSelector(':has-text("Pre-order placed"), :has-text("Order placed"), :has-text("Confirmed")', { timeout: 10000 });
+      console.log('  ✓ Order confirmed page rendered successfully!');
     }
 
-    // Close cart sheet
-    const closeCartBtn = await page.$('[role="dialog"] button[aria-label="Close sheet"]');
-    if (closeCartBtn) {
-      await closeCartBtn.click();
-      await page.waitForTimeout(400);
-    }
+    results.push({ test: 'Basket & Atomic Checkout', status: 'PASS', details: 'Live quote verified on /buyer/basket, checkout executed' });
 
-    results.push({ test: 'Cart & Atomic Checkout', status: 'PASS', details: 'Live quote verified, checkout executed' });
-
-    // ── 3.5 Orders List & Order Detail Sheet ─────────────────────────
-    console.log('Testing 3.5: Orders List & Order Detail with MapView ...');
+    // ── 3.5 Orders List & Order Detail Page ──────────────────────────
+    console.log('Testing 3.5: Orders List & Order Detail Page with MapView ...');
     const ordersNavBtn = await page.waitForSelector('nav[aria-label="Main navigation"] button:has-text("Orders")', { timeout: 6000 });
     await ordersNavBtn.click();
+    await page.waitForURL('**/buyer/orders', { timeout: 8000 });
 
     // Verify Orders tab loaded
     await page.waitForSelector('article a[href*="/buyer/orders/"], [class*="orderCard"], [class*="orderRow"], article', { timeout: 8000 });
     const orderRows = await page.$$('article a[href*="/buyer/orders/"], [class*="orderCard"], [class*="orderRow"], article');
     console.log(`  ✓ Found ${orderRows.length} active/past order rows`);
 
-    // Click on the top order to open Order Detail sheet
-    const firstOrder = await page.$('article a[href*="/buyer/orders/"], [class*="orderCard"] a, [class*="orderRow"] a');
+    // Click on the top order to open Order Detail page
+    const firstOrder = await page.$('article a[href*="/buyer/orders/"]');
     if (firstOrder) {
+      const orderHref = await firstOrder.getAttribute('href');
       await firstOrder.click();
-      await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
-      console.log('  ✓ Order Detail BottomSheet opened');
+      await page.waitForURL(`**${orderHref}`, { timeout: 8000 });
+      console.log(`  ✓ Navigated to dedicated Order Detail page: ${page.url()}`);
 
       // Check Leaflet MapView on Order Detail
-      await page.waitForSelector('[role="dialog"] .leaflet-container', { timeout: 8000 });
+      await page.waitForSelector('.leaflet-container', { timeout: 8000 });
       console.log('  ✓ Order pickup card Leaflet MapView mounted');
 
-      // Close Order Detail sheet
-      const closeOrderBtn = await page.$('[role="dialog"] button[aria-label="Close sheet"]');
-      if (closeOrderBtn) {
-        await closeOrderBtn.click();
-        await page.waitForTimeout(400);
-      }
+      // Navigate back
+      await page.goBack();
+      await page.waitForURL('**/buyer/orders', { timeout: 8000 });
+      console.log('  ✓ Back button returned to orders index');
     }
 
-    results.push({ test: 'Orders & Order Detail Map', status: 'PASS', details: 'Active orders listed, detail sheet has Leaflet map' });
+    results.push({ test: 'Orders & Order Detail Map', status: 'PASS', details: 'Active orders listed, detail page has Leaflet map' });
 
-    // ── 3.6 Search & Browse ──────────────────────────────────────────
-    console.log('Testing 3.6: Browse & Live Search ...');
+    // ── 3.6 Search & Browse with Filter Sheet ────────────────────────
+    console.log('Testing 3.6: Browse, Live Search & Filter Sheet ...');
     const browseNavBtn = await page.waitForSelector('nav[aria-label="Main navigation"] button:has-text("Browse")', { timeout: 6000 });
     await browseNavBtn.click();
+    await page.waitForURL('**/buyer/products', { timeout: 8000 });
+
+    // Test filter sheet actually opens (verifying Task 8 bugfix)
+    const filterBtn = await page.waitForSelector('button[class*="filterButton"], button:has-text("Filters")', { timeout: 6000 });
+    await filterBtn.click();
+    await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
+    console.log('  ✓ Filter BottomSheet opens successfully (open prop bug verified fixed)');
+
+    // Close filter sheet with Escape key
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
 
     await page.waitForSelector('input[type="search"], input[placeholder*="Search"]', { timeout: 8000 });
     const browseSearchInput = await page.$('input[type="search"], input[placeholder*="Search"]');
@@ -163,30 +166,30 @@ export async function runCustomerSuite() {
       console.log(`  ✓ Search results rendered: ${searchCards.length} items`);
     }
 
-    results.push({ test: 'Browse & Live Search', status: 'PASS', details: 'Browse catalog and search functional' });
+    results.push({ test: 'Browse & Live Search', status: 'PASS', details: 'Browse catalog, filter sheet opens, and search functional' });
 
-    // ── 3.7 AI Assistant Sheet ───────────────────────────────────────
-    console.log('Testing 3.7: AI Assistant Sheet ...');
-    // Return to Market home tab
-    const marketNavBtn = await page.waitForSelector('nav[aria-label="Main navigation"] button:has-text("Market")', { timeout: 6000 });
-    await marketNavBtn.click();
-    await page.waitForSelector('h1, [class*="greeting"]', { timeout: 8000 });
+    // ── 3.7 AI Assistant Page ────────────────────────────────────────
+    console.log('Testing 3.7: AI Assistant Page ...');
+    // Return to Today tab
+    const todayNavBtn = await page.waitForSelector('nav[aria-label="Main navigation"] button:has-text("Today")', { timeout: 6000 });
+    await todayNavBtn.click();
+    await page.waitForURL('**/buyer', { timeout: 8000 });
 
     // Click "Ask MarketLink" assistant trigger button
     const assistantTrigger = await page.waitForSelector('button:has-text("Ask MarketLink")', { timeout: 8000 });
     await assistantTrigger.click();
-    await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
-    console.log('  ✓ AI Assistant BottomSheet opened');
+    await page.waitForURL('**/buyer/assistant', { timeout: 8000 });
+    console.log(`  ✓ AI Assistant rendered as standalone page: ${page.url()}`);
 
     // Click suggestion chip or send message
-    const suggestionBtn = await page.$('[role="dialog"] button[class*="suggestionChip"]');
+    const suggestionBtn = await page.$('button[class*="suggestionChip"]');
     if (suggestionBtn) {
       const chipText = await suggestionBtn.textContent();
       console.log(`  ✓ Clicking suggestion chip: "${chipText.trim()}"`);
       await suggestionBtn.click();
     } else {
-      const assistantInput = await page.$('[role="dialog"] input[placeholder*="Ask"]');
-      const sendBtn = await page.$('[role="dialog"] button[type="submit"]');
+      const assistantInput = await page.$('input[placeholder*="Ask"]');
+      const sendBtn = await page.$('button[type="submit"]');
       if (assistantInput && sendBtn) {
         await assistantInput.fill('What fresh apples are available?');
         await sendBtn.click();
@@ -194,50 +197,60 @@ export async function runCustomerSuite() {
     }
 
     // Wait for reply bubble from POST /assistant/message
-    await page.waitForSelector('[role="dialog"] [class*="assistantBubble"], [role="dialog"] [class*="bubble"]:last-child', { timeout: 12000 });
+    await page.waitForSelector('[class*="assistantBubble"], [class*="bubble"]:last-child', { timeout: 12000 });
     console.log('  ✓ Assistant response received and rendered');
 
-    // Close assistant sheet
-    const closeAssistantBtn = await page.$('[role="dialog"] button[aria-label="Close sheet"]');
-    if (closeAssistantBtn) {
-      await closeAssistantBtn.click();
-      await page.waitForTimeout(400);
-    }
+    // Go back
+    await page.goBack();
+    await page.waitForURL('**/buyer', { timeout: 8000 });
 
-    results.push({ test: 'AI Assistant', status: 'PASS', details: 'POST /assistant/message functional' });
+    results.push({ test: 'AI Assistant', status: 'PASS', details: 'Assistant page and streaming functional' });
 
-    // ── 3.8 Customer Profile & Sub-sheets ────────────────────────────
-    console.log('Testing 3.8: Profile, Details & Notifications Sheets ...');
+    // ── 3.8 Customer Profile & Pages ─────────────────────────────────
+    console.log('Testing 3.8: Profile, Details & Notifications Pages ...');
     const youNavBtn = await page.waitForSelector('nav[aria-label="Main navigation"] button:has-text("You")', { timeout: 6000 });
     await youNavBtn.click();
-    await page.waitForSelector('h1, [class*="userName"]', { timeout: 8000 });
+    await page.waitForURL('**/buyer/profile', { timeout: 8000 });
     console.log('  ✓ Profile page loaded');
 
-    // Open Personal details sub-sheet
+    // Open Personal details page
     const detailsRow = await page.waitForSelector('button:has-text("Personal details")', { timeout: 6000 });
     await detailsRow.click();
-    await page.waitForSelector('[role="dialog"] input#name, [role="dialog"] input[id="name"]', { timeout: 8000 });
-    console.log('  ✓ Personal details sub-sheet opened with user data');
+    await page.waitForURL('**/buyer/profile/details', { timeout: 8000 });
+    await page.waitForSelector('input#name, input[id="name"]', { timeout: 8000 });
+    console.log('  ✓ Personal details rendered as standalone page with user data');
 
-    const closeDetailsBtn = await page.$('[role="dialog"] button[aria-label="Close sheet"]');
-    if (closeDetailsBtn) {
-      await closeDetailsBtn.click();
-      await page.waitForTimeout(400);
-    }
+    // Go back to profile
+    await page.goBack();
+    await page.waitForURL('**/buyer/profile', { timeout: 8000 });
 
-    // Open Notifications sub-sheet
+    // Open Notifications page
     const notificationsRow = await page.waitForSelector('button:has-text("Notifications")', { timeout: 6000 });
     await notificationsRow.click();
-    await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
-    console.log('  ✓ Notifications sub-sheet opened with preferences');
+    await page.waitForURL('**/buyer/profile/notifications', { timeout: 8000 });
+    console.log('  ✓ Notifications page rendered as standalone page');
 
-    const closeNotifBtn = await page.$('[role="dialog"] button[aria-label="Close sheet"]');
-    if (closeNotifBtn) {
-      await closeNotifBtn.click();
-      await page.waitForTimeout(400);
-    }
+    // Go back to profile
+    await page.goBack();
+    await page.waitForURL('**/buyer/profile', { timeout: 8000 });
 
-    results.push({ test: 'Profile & Sub-sheets', status: 'PASS', details: 'Personal details and notifications sheets verified' });
+    results.push({ test: 'Profile & Sub-pages', status: 'PASS', details: 'Personal details and notifications pages verified' });
+
+    // ── 3.9 Redirect Assertions ──────────────────────────────────────
+    console.log('Testing 3.9: Old URL Redirects ...');
+    await page.goto(`${BASE_URL}/buyer/cart`);
+    await page.waitForURL('**/buyer/basket', { timeout: 8000 });
+    console.log('  ✓ /buyer/cart redirects to /buyer/basket');
+
+    await page.goto(`${BASE_URL}/buyer/favorites`);
+    await page.waitForURL('**/buyer/saved', { timeout: 8000 });
+    console.log('  ✓ /buyer/favorites redirects to /buyer/saved');
+
+    await page.goto(`${BASE_URL}/buyer/farmers`);
+    await page.waitForURL('**/buyer/stalls', { timeout: 8000 });
+    console.log('  ✓ /buyer/farmers redirects to /buyer/stalls');
+
+    results.push({ test: 'Redirects', status: 'PASS', details: 'All legacy URLs redirect correctly' });
 
   } catch (err) {
     console.error('❌ CUSTOMER SUITE ERROR:', err);

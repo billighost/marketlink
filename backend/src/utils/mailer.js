@@ -52,7 +52,10 @@ let activeTransporter = null;
  */
 export function createGmailTransporter() {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use STARTTLS on port 587 (port 465 SSL is blocked on many networks/ISPs)
+    requireTLS: true,
     auth: {
       user: env.GMAIL_USER,
       pass: env.GMAIL_APP_PASSWORD,
@@ -62,8 +65,8 @@ export function createGmailTransporter() {
     maxMessages: 100,         // Recycle connections after 100 sends
     rateDelta: 1000,
     rateLimit: 5,             // Max 5 messages/sec through this pool
-    connectionTimeout: 10000, // 10s connection timeout
-    socketTimeout: 10000,     // 10s socket timeout
+    connectionTimeout: 15000, // 15s connection timeout
+    socketTimeout: 15000,     // 15s socket timeout
   });
 }
 
@@ -146,8 +149,14 @@ export async function verifyMailerConnection() {
     console.log(`[MAILER] Verified Gmail SMTP for ${maskEmail(env.GMAIL_USER)} (pass: ${maskSecret(env.GMAIL_APP_PASSWORD)})`);
     return true;
   } catch (err) {
-    isMisconfigured = true;
-    console.error(`[MAILER] SMTP Authentication Failed for ${maskEmail(env.GMAIL_USER)} (pass: ${maskSecret(env.GMAIL_APP_PASSWORD)}):`, err.message);
+    const errStr = (err.message || '').toLowerCase();
+    const code = (err.responseCode || err.code || '').toString();
+    if (code === '534' || code === '535' || errStr.includes('5.7.8') || errStr.includes('5.7.9') || errStr.includes('not accepted')) {
+      isMisconfigured = true;
+      console.error(`[MAILER] SMTP Authentication Failed for ${maskEmail(env.GMAIL_USER)} (pass: ${maskSecret(env.GMAIL_APP_PASSWORD)}):`, err.message);
+    } else {
+      console.warn(`[MAILER] SMTP Connection Warning for ${maskEmail(env.GMAIL_USER)}:`, err.message);
+    }
     return false;
   }
 }

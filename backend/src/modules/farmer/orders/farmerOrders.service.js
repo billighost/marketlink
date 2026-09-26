@@ -59,6 +59,7 @@ export function toFarmerOrderDto(order, customerMap) {
     cutoffAt: order.cutoffAt instanceof Date ? order.cutoffAt.toISOString() : order.cutoffAt,
     cancelReason: order.cancelReason || null,
     note: order.note || '',
+    pickupCode: order.pickupCode || null,
     createdAt: order.createdAt instanceof Date ? order.createdAt.toISOString() : order.createdAt,
     updatedAt: order.updatedAt instanceof Date ? order.updatedAt.toISOString() : order.updatedAt,
   };

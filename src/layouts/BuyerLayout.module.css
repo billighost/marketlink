@@ -1,7 +1,12 @@
 /* BuyerLayout — Customer application frame */
 
 .appShell {
-  --stack-nav: var(--bottom-nav-height);
+  /* Buyer-scoped token overrides. Descendants of this element resolve these names
+     to the neutral values; vendor, admin and guest keep the warm originals. */
+  --color-border:    var(--color-hairline);
+  --color-bg-muted:  var(--color-white);
+
+  --stack-nav:  var(--bottom-nav-height);
   --stack-cart: 0px;
   --stack-bottom: calc(var(--stack-nav) + var(--stack-cart) + env(safe-area-inset-bottom, 0px));
 
@@ -11,7 +16,6 @@
   background-color: var(--color-white);
   color: var(--color-ink);
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
   overscroll-behavior-y: none;
   position: relative;
 }

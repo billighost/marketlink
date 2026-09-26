@@ -1,0 +1,211 @@
+/* ==========================================================================
+   Scene illustration system styling
+   Canvas 640x400 · Horizon y=252 · Vanishing point (400, 252)
+   Strictly token-based, zero hex colors, depth via layer opacity.
+   ========================================================================== */
+
+.scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  fill: none;
+  stroke: var(--color-ink-soft);
+  stroke-width: var(--illus-stroke);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.md {
+  max-width: var(--scene-max-w);
+}
+
+.lg {
+  max-width: var(--scene-max-w);
+}
+
+@media (min-width: 768px) {
+  .lg {
+    max-width: var(--scene-max-w-lg);
+  }
+}
+
+/* Depth via layer opacity */
+.scene [data-layer="far-hills"] {
+  opacity: 0.35;
+}
+
+.scene [data-layer="forest-band"] {
+  opacity: 0.45;
+}
+
+.scene [data-layer="mid-trees"] {
+  opacity: 0.70;
+}
+
+/* Line classes — stroke ramp */
+.birdLine {
+  stroke: var(--color-ink-faint);
+  stroke-width: 1.25;
+}
+
+.farLine {
+  stroke: var(--color-ink-soft);
+  stroke-width: 1.5;
+}
+
+.forestLine {
+  stroke: var(--color-herb);
+  stroke-width: 1.5;
+}
+
+.foliageLine {
+  stroke: var(--color-herb);
+  stroke-width: 1.75;
+}
+
+.trunk {
+  stroke: var(--color-ink-soft);
+  stroke-width: 1.75;
+  fill: var(--color-canvas);
+}
+
+.horizon {
+  stroke: var(--color-hairline);
+  stroke-width: 1.5;
+}
+
+.roadLine {
+  stroke: var(--color-ink-soft);
+  stroke-width: 1.5;
+}
+
+.rut {
+  stroke: var(--color-wood-line);
+  stroke-width: 1.25;
+}
+
+.woodLine {
+  stroke: var(--color-wood);
+  stroke-width: 1.75;
+}
+
+.figureLine {
+  stroke: var(--color-ink-soft);
+  stroke-width: 2;
+}
+
+.nearLine {
+  stroke: var(--color-ink);
+  stroke-width: 2;
+}
+
+.hairline {
+  stroke: var(--color-hairline);
+  stroke-width: 1;
+}
+
+/* Fill classes */
+.fillCanvasSoft {
+  fill: var(--color-canvas-soft);
+  stroke: none;
+}
+
+.fillForest {
+  fill: var(--color-herb-bg);
+  stroke: var(--color-herb);
+  stroke-width: 1.5;
+}
+
+.fillFoliage {
+  fill: var(--color-herb-bg);
+  stroke: var(--color-herb);
+  stroke-width: 1.75;
+}
+
+.fillCanvas {
+  fill: var(--color-canvas);
+  stroke: var(--color-ink-soft);
+  stroke-width: 1.5;
+}
+
+.fillWhite {
+  fill: var(--color-white);
+  stroke: var(--color-ink-soft);
+  stroke-width: 1.5;
+}
+
+.fillCloth {
+  fill: var(--color-canvas-soft);
+  stroke: var(--color-wood);
+  stroke-width: 1.5;
+}
+
+.fillWood {
+  fill: var(--color-canvas);
+  stroke: var(--color-wood);
+  stroke-width: 1.75;
+}
+
+.fillShadow {
+  fill: var(--color-hairline);
+  stroke: none;
+}
+
+/* Saturated accents — at most one per scene */
+.accentBeet {
+  stroke: var(--color-beet);
+  stroke-width: 2;
+  fill: none;
+}
+
+.accentCarrot {
+  stroke: var(--color-carrot);
+  stroke-width: 2;
+  fill: none;
+}
+
+.accentBeetFill {
+  fill: var(--color-beet);
+  stroke: var(--color-beet);
+  stroke-width: 1.5;
+}
+
+.accentCarrotFill {
+  fill: var(--color-carrot);
+  stroke: var(--color-carrot);
+  stroke-width: 1.5;
+}
+
+/* Text */
+.chalkText {
+  font-family: var(--font-body);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-xs);
+  fill: var(--color-ink-soft);
+  stroke: none;
+}
+
+/* Motion */
+@keyframes drift {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(12px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.drift {
+  animation: drift 12s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene *,
+  .scene {
+    animation: none !important;
+    transition: none !important;
+  }
+}

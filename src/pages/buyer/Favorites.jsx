@@ -112,8 +112,8 @@ export function Favorites() {
               illustration="closed-stall"
               title="No favorite farmers yet"
               text="Follow your favourite stalls to stay up to date with seasonal harvests and weekly offerings."
-              actionLabel="View all farmers"
-              onAction={() => navigate('/buyer/farmers')}
+              actionLabel="View all stalls"
+              onAction={() => navigate('/buyer/stalls')}
             />
           )}
         </div>

@@ -87,7 +87,7 @@ export function GlobalSearchModal({ isOpen, onClose }) {
             title: f.stallName,
             subtitle: f.specialty || 'Grower & Producer',
             detail: f.stallNumber ? `Stall ${f.stallNumber}` : 'Local Stall',
-            path: `/buyer/farmers/${f.id}`,
+            path: `/buyer/stalls/${f.id}`,
           });
         });
 

@@ -172,8 +172,9 @@ Cards, tables, inputs, and layout frames **must use hairline borders (`--border`
 ## 7. Layout & Responsive Geometry
 
 ### Containers
-- Main Content: `--container-max: 1120px;` (`.container`)
-- Reading / Forms: `--container-narrow: 720px;` (`.containerNarrow`)
+- Main Content: `--container-max: 1400px;` (`.container`)
+- Tablet Content Column: `--container-tablet: 48rem;` (768px)
+- Reading / Forms: `--container-narrow: 840px;` (`.containerNarrow`)
 - Auth / Dialogs: `--container-form: 440px;`
 
 ### Breakpoints
@@ -257,9 +258,29 @@ Only the four literal media query breakpoints are permitted:
 - **Do**: Provide exactly one primary action button guiding the user what to do next.
 
 ### 10. `PageHeader`
-- **Purpose**: Top landmark of every inner page, containing the single `h1`.
+- **Purpose**: Top landmark of every inner page, containing the single `h1` (used in vendor/admin/guest).
 - **Props**: `title`, `subtitle`, `backTo`, `action`.
 - **Do**: Place the page's single `h1` inside this component.
+
+### 11. `Page` (Buyer redesign primitive)
+- **Purpose**: Buyer page container. Owns content width, page gutter, and vertical rhythm. Every buyer page is wrapped in exactly one `Page`.
+- **Props**: `width` (`'wide'` | `'detail'` | `'read'`), `children`, `className`, `...rest`.
+- **Do**: Use `'wide'` for index/feed pages (1200px), `'detail'` for produce/stall/order detail (960px), `'read'` for forms/settings/help (720px).
+
+### 12. `PageTitle` (Buyer redesign primitive)
+- **Purpose**: The single `<h1>` block for a buyer page with strict density budget.
+- **Props**: `title` (string, sentence case), `context` (ReactNode, one muted line), `backTo` (string), `backLabel` (string, default "Back"), `actions` (ReactNode, desktop only), `className`.
+- **Do**: Provide at most ONE muted context line under the title. Never two lines of context.
+
+### 13. `Section` (Buyer redesign primitive)
+- **Purpose**: Titled block inside a buyer page with `<h2>` and optional right-aligned action.
+- **Props**: `title` (string, sentence case), `subtitle` (string), `action` (ReactNode, e.g. text link), `children`, `className`, `...rest`.
+- **Do**: Use Idiqlat 400 for `title`. Action buttons/links must be `--color-ink` (not beet).
+
+### 14. `MarketClock` (Buyer redesign primitive)
+- **Purpose**: Presentational market-day clock displaying live open/closed status and hairline progress track.
+- **Props**: `marketName` (string), `openNow` (boolean), `windowLabel` (string), `nextOpenLabel` (string), `closesAtLabel` (string), `progress` (number, 0-1).
+- **Do**: Display open status with `--color-success` (herb) and closed status with muted text. Include accessible progress bar when `openNow` is true.
 
 ---
 
@@ -591,14 +612,14 @@ In the signed-in Customer experience, any detail destination (a product, a farme
 ### 1. Responsive Layout System
 - **Viewport Philosophy**: Mobile-first architecture tested continuously across 13 distinct viewport sizes: `320px`, `360px`, `390px`, `430px`, `600px`, `768px`, `820px`, `1024px`, `1180px`, `1280px`, `1440px`, `1920px`, and landscape mobile `844x390px`.
 - **Container Max-Widths**:
-  - Main app content: `--container-max: 1120px`
-  - Reading / Narrow content: `--container-narrow: 720px`
-  - Tablet centered content column: `--container-tablet: 40rem (640px)`
+  - Main app content: `--container-max: 1400px`
+  - Reading / Narrow content: `--container-narrow: 840px`
+  - Tablet centered content column: `--container-tablet: 48rem (768px)`
   - Authentication cards: `--container-form: 440px`
   - Modal sheets / Drawers: `--drawer-width: 28rem (448px)`
 - **Column Budgets per Breakpoint**:
   - **Phone (< 768px)**: Strict 1-column layout for forms, feeds, and settings; 2 columns allowed exclusively for compact product grids.
-  - **Tablet (768px – 1023px)**: Exactly 2 columns (or 3 columns for dense product catalogs). Centered 40rem column for forms and editorial feeds.
+  - **Tablet (768px – 1023px)**: Exactly 2 columns (or 3 columns for dense product catalogs). Centered 48rem column for forms and editorial feeds.
   - **Desktop (>= 1024px)**: Strict ceiling of 3 columns (or 4 columns in product catalogs). Never exceed 3 columns in dashboards or editorial content.
 
 ### 2. The Breakpoint Model
@@ -608,7 +629,7 @@ MarketLink enforces strictly four standard breakpoints across all media queries:
    - Order thumbnails and secondary metadata collapse on narrow mobile.
 2. `@media (min-width: 768px)`:
    - Bottom sheets transition to right-side drawers (`--drawer-width: 28rem`) or centered modal dialogs.
-   - Centered tablet column (`--container-tablet: 40rem`) prevents excessive line length on reading pages.
+   - Centered tablet column (`--container-tablet: 48rem`) prevents excessive line length on reading pages.
    - Multi-column grids activate (2-column layouts).
 3. `@media (min-width: 1024px)`:
    - Mobile `BottomNav` completely hides (`display: none`).
@@ -670,5 +691,49 @@ The following patterns are strictly forbidden as they directly cause responsiven
 5. **Sub-44px Interactive Touch Targets**: Never render an icon button, link, tab, or chip with `height` or `width` less than `44px` (`var(--tap-min)`). For small visual icons (e.g., 20px close cross or heart), pad the outer hit area to at least 44x44px.
 6. **Background Interaction During Modal Sheets**: When a modal sheet or dialog is open, the background app root MUST have `inert` applied, and underlying page chrome (such as top navigation or floating bars) must be occluded or hidden to prevent overlapping click traps.
 7. **Decorative Gradients & Heavy Shadows**: Never use CSS linear gradients, radial gradients, or heavy multi-layer box shadows. Use hairline borders (`1px solid var(--color-border)`) and generous whitespace for calm, elegant visual hierarchy.
+
+---
+
+## 20. Buyer Redesign Additions
+
+### 1. Neutral Hairlines vs. Wood Lines
+In the original design system, `--color-border` resolved globally to `--color-wood-line: #E3D3B8` (a warm tan). At high interface density, this tinted every card border, outline, and divider beige, eroding the crisp paper-clean aesthetic.
+The redesign introduces neutral hairlines:
+- `--color-hairline: rgba(46, 43, 38, 0.10);` — Default card borders, dividers, and outlines.
+- `--color-hairline-soft: rgba(46, 43, 38, 0.06);` — Subtle internal list dividers.
+- `--color-border-warm: var(--color-wood-line);` — Opt-in line reserved exclusively for authentic wood moments (crate slats, market-day rules).
+
+### 2. Buyer-Scoped Token Override
+Instead of globally mutating tokens and risking regression across Vendor, Admin, or Guest portals, the Customer shell (`BuyerLayout.module.css`) scopes custom property overrides to `.appShell`:
+```css
+.appShell {
+  --color-border:   var(--color-hairline);
+  --color-bg-muted: var(--color-white);
+}
+```
+Because CSS variables cascade, all descendant elements in the buyer tree automatically resolve `--color-border` as the neutral hairline and eliminate canvas section bands, while other roles remain 100% faithful to their warm baselines.
+
+### 3. Dedicated Buyer Content Widths
+To accommodate responsive index grids, detail pages, and reading layouts:
+- `--container-buyer: 1200px;` — Catalog index and feed pages.
+- `--container-buyer-detail: 960px;` — Produce, stall, order, and market detail views.
+- `--container-buyer-read: 720px;` — Help, forms, and account settings.
+
+### 4. Scene Illustration Dimensions
+Full-scene SVG illustrations follow a 16:10 aspect ratio bounded by:
+- `--scene-max-w: 30rem;` (480px) on mobile viewports.
+- `--scene-max-w-lg: 34rem;` (544px) at 768px and up.
+
+### 5. Shell Geometry
+- `--topbar-h: 56px;` — Customer top navigation bar on viewports `< 1024px`.
+- `--topbar-h-desk: 68px;` — Customer top navigation bar on viewports `>= 1024px`.
+- `--rail-w: 272px;` — Desktop filter rail for browse views.
+
+### 6. The Strict Accent Budget (Two per Screen)
+On any given Customer screen, at most two elements may be rendered in `--color-primary` (beet `#7A2E3B`):
+1. The single primary action button (e.g., "Add to basket", "Reserve", or floating basket pill).
+2. The active navigation indicator (active tab in `BottomNav` or active link in `BuyerTopBar`).
+All other elements (headings, secondary buttons, badges, chips, prices, body links) must use ink, neutral hairlines, or semantic state colors (herb for open/success, carrot for low-stock). `--color-beet-tint` is a near-white background surface and does not consume the accent budget.
+
 
 

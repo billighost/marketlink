@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { formatPrice } from '@/utils/format';
 import Illustration from '@/components/domain/Illustration';
 import AddToCartButton from '@/components/domain/AddToCartButton';
@@ -21,7 +21,6 @@ export function ProductCard({
   variant = 'compact',
   className = '',
 }) {
-  const location = useLocation();
   const [imgError, setImgError] = React.useState(false);
 
   if (!product) return null;
@@ -32,8 +31,6 @@ export function ProductCard({
   const isLowStock = rawAvailability === 'low';
   const displayPrice = product.priceCents != null ? product.priceCents : product.price;
 
-  const productSheetPath = `/buyer/products/${product.id}`;
-  const linkState = { background: location.state?.background || location };
   const aspectAttr = variant === 'feature' ? '16/10' : '4/3';
 
   return (
@@ -41,10 +38,9 @@ export function ProductCard({
       className={`${styles.card} ${styles[variant] || styles.compact} ${isSoldOut ? styles.soldOutCard : ''} ${className}`}
       aria-label={`${product.name}, ${formatPrice(displayPrice)} per ${product.unit}`}
     >
-      {/* Clickable link to product sheet covering image tile and title */}
+      {/* Clickable link to product page covering image tile and title */}
       <Link
-        to={productSheetPath}
-        state={linkState}
+        to={`/buyer/products/${product.id}`}
         className={styles.stretchedLink}
         tabIndex={0}
         aria-label={`${product.name} from ${farmer?.stallName || 'Farmer'}`}

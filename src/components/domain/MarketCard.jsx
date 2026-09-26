@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { MapPin, Clock, Users, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import Badge from '@/components/ui/Badge';
@@ -15,7 +15,6 @@ export function MarketCard({
   onSelect,
   className = '',
 }) {
-  const location = useLocation();
   const { user, isAuthenticated, selectedMarketId, switchMarket } = useAuth();
 
   if (!market) return null;
@@ -23,8 +22,7 @@ export function MarketCard({
   const currentId = user?.homeMarketId || selectedMarketId;
   const isCurrentMarket = currentId ? currentId === market.id : market.id === 'market-elm';
 
-  const marketSheetPath = isAuthenticated ? `/buyer/markets/${market.id}` : `/markets/${market.id}`;
-  const linkState = { background: location.state?.background || location };
+  const marketPath = isAuthenticated ? `/buyer/markets/${market.id}` : `/markets/${market.id}`;
 
   const handleSelect = (e) => {
     e.preventDefault();
@@ -41,8 +39,7 @@ export function MarketCard({
       aria-label={`${market.name}, ${market.address}`}
     >
       <Link
-        to={marketSheetPath}
-        state={linkState}
+        to={marketPath}
         className={styles.stretchedLink}
         tabIndex={0}
         aria-label={`View details for ${market.name}`}

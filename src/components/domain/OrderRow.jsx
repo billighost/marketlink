@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { RotateCcw } from 'lucide-react';
 import { formatPrice } from '@/utils/format';
 import { useCart } from '@/context/CartContext';
@@ -42,13 +42,9 @@ export function OrderRow({
   onReorder,
   className = '',
 }) {
-  const location = useLocation();
   const { add } = useCart();
 
   if (!order) return null;
-
-  const orderSheetPath = `/buyer/orders/${order.id}`;
-  const linkState = { background: location.state?.background || location };
 
   const statusLabel = toStatusLabel(order.status);
   const isPast = statusLabel === 'Completed' || statusLabel === 'Cancelled';
@@ -88,8 +84,7 @@ export function OrderRow({
       aria-label={`Order ${order.orderNumber || order.number}, ${statusLabel}, ${formatPrice(displayTotal)}`}
     >
       <Link
-        to={orderSheetPath}
-        state={linkState}
+        to={`/buyer/orders/${order.id}`}
         className={styles.stretchedLink}
         tabIndex={0}
         aria-label={`View order ${order.orderNumber || order.number}`}

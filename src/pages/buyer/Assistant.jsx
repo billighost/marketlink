@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, ArrowLeft } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { streamAssistantMessage } from '@/api/assistant';
 import { getProductDetail } from '@/api/catalog';
 import { useAuth } from '@/context/AuthContext';
 import ProductCard from '@/components/domain/ProductCard';
+import Page from '@/components/layout/Page';
+import PageTitle from '@/components/layout/PageTitle';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './Assistant.module.css';
 
 const DEFAULT_SUGGESTIONS = [
@@ -13,12 +16,14 @@ const DEFAULT_SUGGESTIONS = [
 ];
 
 /**
- * Assistant chat sheet ("Ask MarketLink").
+ * Assistant chat page ("Ask MarketLink").
  * Connected to live backend POST /assistant/message with fast token streaming.
  */
-export function Assistant({ inSheet = true, onClose }) {
+export function Assistant() {
   const { user } = useAuth();
   const displayName = user?.firstName || 'there';
+
+  useDocumentTitle('Ask MarketLink · MarketLink');
 
   const [messages, setMessages] = useState([
     {
@@ -69,98 +74,87 @@ export function Assistant({ inSheet = true, onClose }) {
       time: 'Just now',
     };
 
-    const assistantMsgId = `assistant-${Date.now()}`;
-    const assistantPlaceholder = {
+    const assistantMsgId = `asst-${Date.now()}`;
+    const initialAssistantMessage = {
       id: assistantMsgId,
       sender: 'assistant',
-      text: '', // Empty text initially triggers typing dots inside the bubble
-      streaming: true,
+      text: '',
       time: 'Just now',
+      streaming: true,
+      products: [],
     };
 
-    const newMessages = [...messages, userMessage, assistantPlaceholder];
-    setMessages(newMessages);
+    setMessages((prev) => [...prev, userMessage, initialAssistantMessage]);
     setInputValue('');
     setIsTyping(true);
 
-    try {
-      // Build lightweight recent history (last 4 turns)
-      const history = messages
-        .filter((m) => m.id !== 'msg-welcome' && m.text)
-        .slice(-4)
-        .map((m) => ({
-          role: m.sender === 'user' ? 'user' : 'assistant',
-          content: m.text,
-        }));
+    let accumulatedText = '';
 
-      let accumulatedText = '';
-      const res = await streamAssistantMessage(text, history, {
-        signal: abortController.signal,
-        onChunk: (chunk) => {
-          accumulatedText += chunk;
+    try {
+      await streamAssistantMessage(
+        text,
+        (token) => {
+          accumulatedText += token;
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === assistantMsgId ? { ...msg, text: accumulatedText } : msg
             )
           );
         },
-      });
+        abortController.signal
+      );
 
-      // Load product cards if returned
-      let loadedProducts = [];
-      const cards = res?.cards || [];
-      if (Array.isArray(cards)) {
-        const productCards = cards.filter((c) => c.type === 'product' && c.id);
-        const resolved = await Promise.all(
-          productCards.map((c) => getProductDetail(c.id).catch(() => null))
+      // Extract referenced product tags like [product:id]
+      const productMatches = [...accumulatedText.matchAll(/\[product:([a-zA-Z0-9_-]+)\]/g)];
+      if (productMatches.length > 0) {
+        const productIds = [...new Set(productMatches.map((m) => m[1]))];
+        const loadedProducts = await Promise.all(
+          productIds.map(async (pId) => {
+            try {
+              return await getProductDetail(pId, abortController.signal);
+            } catch {
+              return null;
+            }
+          })
         );
-        loadedProducts = resolved.filter(Boolean);
+        const validProducts = loadedProducts.filter(Boolean);
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMsgId ? { ...msg, products: validProducts } : msg
+          )
+        );
       }
 
-      const finalText = res?.reply || accumulatedText || "I'm here to help with market schedules, produce prices, and order tracking.";
-
+      // Remove streaming flag
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === assistantMsgId
-            ? {
-                ...msg,
-                text: finalText,
-                streaming: false,
-                products: loadedProducts,
-              }
-            : msg
+          msg.id === assistantMsgId ? { ...msg, streaming: false } : msg
         )
       );
 
-      if (res?.suggestions && Array.isArray(res.suggestions) && res.suggestions.length > 0) {
-        setSuggestions(res.suggestions);
-      }
+      // Rotate suggestions after response
+      setSuggestions([
+        'Where is organic honey?',
+        'Tell me about Riverbend Farm',
+        'Can I pay with card?',
+      ]);
     } catch (err) {
-      if (err.name === 'AbortError') {
-        return; // User navigated away or started a new query
+      if (err.name !== 'AbortError') {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMsgId
+              ? {
+                  ...msg,
+                  text: 'Sorry, I had trouble reaching the market. Please ask again.',
+                  streaming: false,
+                }
+              : msg
+          )
+        );
       }
-
-      let errorText = "I'm having a little trouble looking that up right now, but I'm here to help with market schedules, produce prices, and order tracking.";
-      if (err.status === 503 || err.code === 'ASSISTANT_BUSY') {
-        errorText = "The assistant is busy. Try again in a moment.";
-      } else if (!navigator.onLine || err.message?.includes('Failed to fetch')) {
-        errorText = "Unable to connect. Please check your internet connection.";
-      }
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === assistantMsgId
-            ? {
-                ...msg,
-                text: errorText,
-                streaming: false,
-              }
-            : msg
-        )
-      );
     } finally {
       setIsTyping(false);
-      activeAbortControllerRef.current = null;
     }
   };
 
@@ -170,106 +164,91 @@ export function Assistant({ inSheet = true, onClose }) {
   };
 
   return (
-    <div className={`${styles.container} ${!inSheet ? styles.standalone : ''}`}>
-      {/* Standalone fallback header */}
-      {!inSheet && (
-        <div className={styles.fallbackHeader}>
-          <button type="button" className={styles.backButton} onClick={onClose}>
-            <ArrowLeft size={20} aria-hidden="true" />
-            <span>Back to market</span>
-          </button>
-        </div>
-      )}
-
-      {/* Sheet Title */}
-      <div className={styles.sheetHeader}>
-        <div className={styles.titleGroup}>
-          <div className={styles.sparkleCircle}>
-            <Sparkles size={20} className={styles.sparkleIcon} aria-hidden="true" />
+    <Page width="read">
+      <PageTitle
+        title="Ask MarketLink"
+        context="Your Saturday market guide"
+        backTo="/buyer"
+        backLabel="Back to today"
+      />
+      <div className={styles.container}>
+        {/* Messages Scroll Area */}
+        <div className={styles.messagesArea} role="log" aria-live="polite">
+          <div className={styles.dateSeparator} aria-hidden="true">
+            <span>Today</span>
           </div>
-          <div>
-            <h2 className={styles.title}>Ask MarketLink</h2>
-            <span className={styles.subtitle}>Your Saturday market guide</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Messages Scroll Area */}
-      <div className={styles.messagesArea} role="log" aria-live="polite">
-        <div className={styles.dateSeparator} aria-hidden="true">
-          <span>Today</span>
-        </div>
-
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`${styles.messageWrapper} ${msg.sender === 'user' ? styles.userWrapper : styles.assistantWrapper}`}
-          >
+          {messages.map((msg) => (
             <div
-              className={`${styles.bubble} ${msg.sender === 'user' ? styles.userBubble : styles.assistantBubble}`}
+              key={msg.id}
+              className={`${styles.messageWrapper} ${msg.sender === 'user' ? styles.userWrapper : styles.assistantWrapper}`}
             >
-              {msg.streaming && !msg.text ? (
-                <div className={styles.typingBubble}>
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                </div>
-              ) : (
-                <p className={styles.messageText}>{msg.text}</p>
-              )}
-              {msg.products && msg.products.length > 0 && (
-                <div className={styles.productRow}>
-                  {msg.products.map((p) => (
-                    <ProductCard key={p.id} product={p} variant="compact" />
-                  ))}
-                </div>
-              )}
+              <div
+                className={`${styles.bubble} ${msg.sender === 'user' ? styles.userBubble : styles.assistantBubble}`}
+              >
+                {msg.streaming && !msg.text ? (
+                  <div className={styles.typingBubble}>
+                    <span className={styles.dot} />
+                    <span className={styles.dot} />
+                    <span className={styles.dot} />
+                  </div>
+                ) : (
+                  <p className={styles.messageText}>{msg.text}</p>
+                )}
+                {msg.products && msg.products.length > 0 && (
+                  <div className={styles.productRow}>
+                    {msg.products.map((p) => (
+                      <ProductCard key={p.id} product={p} variant="compact" />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className={styles.timestamp}>{msg.time}</span>
             </div>
-            <span className={styles.timestamp}>{msg.time}</span>
-          </div>
-        ))}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Suggested prompts row */}
-      {suggestions.length > 0 && (
-        <div className={styles.suggestionsRow} aria-label="Suggested questions">
-          {suggestions.map((suggestion, idx) => (
-            <button
-              key={idx}
-              type="button"
-              className={styles.suggestionChip}
-              onClick={() => handleSendMessage(suggestion)}
-            >
-              {suggestion}
-            </button>
           ))}
-        </div>
-      )}
 
-      {/* Bottom Message Input Bar */}
-      <form className={styles.inputBar} onSubmit={handleSubmit}>
-        <input
-          type="text"
-          className={styles.textInput}
-          placeholder="Ask about stalls, items, or pickup..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          enterKeyHint="send"
-          aria-label="Type your message"
-          maxLength={300}
-        />
-        <button
-          type="submit"
-          className={styles.sendButton}
-          disabled={!inputValue.trim() || isTyping}
-          aria-label="Send message"
-        >
-          <Send size={18} aria-hidden="true" />
-        </button>
-      </form>
-    </div>
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Suggested prompts row */}
+        {suggestions.length > 0 && (
+          <div className={styles.suggestionsRow} aria-label="Suggested questions">
+            {suggestions.map((suggestion, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className={styles.suggestionChip}
+                onClick={() => handleSendMessage(suggestion)}
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Bottom Message Input Bar */}
+        <form className={styles.inputBar} onSubmit={handleSubmit}>
+          <input
+            type="text"
+            className={styles.textInput}
+            placeholder="Ask about stalls, items, or pickup..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            enterKeyHint="send"
+            aria-label="Type your message"
+            maxLength={300}
+          />
+          <button
+            type="submit"
+            className={styles.sendButton}
+            disabled={!inputValue.trim() || isTyping}
+            aria-label="Send message"
+          >
+            <Send size={18} aria-hidden="true" />
+          </button>
+        </form>
+      </div>
+    </Page>
   );
 }
 

@@ -114,7 +114,7 @@ export function Profile() {
           <ListRow
             icon={HelpCircle}
             label="How MarketLink works & FAQ"
-            onClick={() => openSheet('/buyer/profile/help')}
+            onClick={() => openSheet('/buyer/help')}
           />
           <ListRow
             icon={FileText}

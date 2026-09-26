@@ -355,7 +355,7 @@ export function Products() {
 
       {/* ΓöÇΓöÇ Filter BottomSheet ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
       <BottomSheet
-        isOpen={isFilterSheetOpen}
+        open={isFilterSheetOpen}
         onClose={() => setIsFilterSheetOpen(false)}
         title="Filter Products"
         size="tall"

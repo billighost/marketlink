@@ -104,7 +104,7 @@ const routes = [
       // Generate verification token and send branded confirmation email (best-effort)
       const rawVerificationToken = generateRandomToken(32);
       await createEmailVerificationToken(user._id, rawVerificationToken);
-      const verifyLink = `${env.APP_BASE_URL}/verify-email?token=${rawVerificationToken}`;
+      const verifyLink = `${env.getClientBaseUrl(req)}/verify-email?token=${rawVerificationToken}`;
 
       mailer.sendVerificationEmail(user, verifyLink).catch((err) => {
         console.warn('[REGISTER] Failed to dispatch customer verification email:', err.message);
@@ -176,7 +176,7 @@ const routes = [
       // Generate verification token and send branded confirmation email (best-effort)
       const rawVerificationToken = generateRandomToken(32);
       await createEmailVerificationToken(user._id, rawVerificationToken);
-      const verifyLink = `${env.APP_BASE_URL}/verify-email?token=${rawVerificationToken}`;
+      const verifyLink = `${env.getClientBaseUrl(req)}/verify-email?token=${rawVerificationToken}`;
 
       mailer.sendVerificationEmail(user, verifyLink).catch((err) => {
         console.warn('[REGISTER] Failed to dispatch farmer verification email:', err.message);
@@ -424,7 +424,7 @@ const routes = [
       if (user) {
         const rawResetToken = generateRandomToken(32);
         await createPasswordResetToken(user._id, rawResetToken);
-        const resetLink = `${env.APP_BASE_URL}/reset-password?token=${rawResetToken}`;
+        const resetLink = `${env.getClientBaseUrl(req)}/reset-password?token=${rawResetToken}`;
         await mailer.sendPasswordReset(user.email, resetLink);
       }
 
@@ -562,7 +562,7 @@ const routes = [
 
         const rawVerificationToken = generateRandomToken(32);
         await createEmailVerificationToken(user._id, rawVerificationToken);
-        const verifyLink = `${env.APP_BASE_URL}/verify-email?token=${rawVerificationToken}`;
+        const verifyLink = `${env.getClientBaseUrl(req)}/verify-email?token=${rawVerificationToken}`;
 
         await mailer.sendVerificationEmail(user, verifyLink).catch((err) => {
           console.warn('[AUTH] Resend verification email warning:', err.message);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, Link, Navigate, useParams } from 'react-router-dom';
 import { PATHS } from './paths';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -53,23 +53,30 @@ import BuyerMarkets from '@/pages/buyer/Markets';
 import BuyerFarmers from '@/pages/buyer/Farmers';
 import BuyerReviews from '@/pages/buyer/Reviews';
 
-// Buyer Sheet Views (Modal details & sub-screens)
+// Buyer Detail / Flow Pages
 import BuyerProductDetail from '@/pages/buyer/ProductDetail';
 import BuyerFarmerDetail from '@/pages/buyer/FarmerDetail';
 import BuyerMarketDetail from '@/pages/buyer/MarketDetail';
 import BuyerCart from '@/pages/buyer/Cart';
+import BuyerCheckout from '@/pages/buyer/Checkout';
 import BuyerOrderConfirmed from '@/pages/buyer/OrderConfirmed';
 import BuyerOrderDetail from '@/pages/buyer/OrderDetail';
 import BuyerAssistant from '@/pages/buyer/Assistant';
 import BuyerProfileDetails from '@/pages/buyer/ProfileDetails';
 import BuyerSavedMarkets from '@/pages/buyer/SavedMarkets';
 import BuyerProfileNotifications from '@/pages/buyer/ProfileNotifications';
+import BuyerNotificationPrefs from '@/pages/buyer/NotificationPrefs';
 import BuyerHelp from '@/pages/buyer/Help';
+import BuyerNotFound from '@/pages/buyer/NotFound';
 
-// Sheet wrapper component
-import SheetRoute from '@/components/layout/SheetRoute';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+
+/** Preserves :id when redirecting the old /buyer/farmers/:id URL to /buyer/stalls/:id. */
+function RedirectFarmerToStall() {
+  const { id } = useParams();
+  return <Navigate to={`/buyer/stalls/${id}`} replace />;
+}
 
 /**
  * Temporary placeholder for authenticated areas accessed via preview buttons
@@ -93,209 +100,128 @@ function PreviewPlaceholder({ roleName }) {
 }
 
 /**
- * Main application router using the background location pattern for modal bottom sheets.
+ * Main application router. Every destination is a real page.
  */
 export function AppRoutes() {
-  const location = useLocation();
-  const background = location.state && location.state.background;
-
   return (
-    <>
-      {/* ── Base Routes Block (remains mounted under modal sheets) ──────── */}
-      <Routes location={background || location}>
-        {/* ── Vendor (Producer) Routes ───────────────────────────── */}
-        <Route
-          path="/vendor"
-          element={
-            <ProtectedRoute allowedRoles={['farmer', 'vendor']}>
-              <VendorLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<VendorOverview />} />
-          <Route path="stock" element={<VendorStock />} />
-          <Route path="orders" element={<VendorOrders />} />
-          <Route path="insights" element={<VendorInsights />} />
-          <Route path="reviews" element={<VendorReviews />} />
-          <Route path="settings" element={<VendorMyStall />} />
-        </Route>
+    <Routes>
+      {/* ── Vendor (Producer) Routes ───────────────────────────── */}
+      <Route
+        path="/vendor"
+        element={
+          <ProtectedRoute allowedRoles={['farmer', 'vendor']}>
+            <VendorLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<VendorOverview />} />
+        <Route path="stock" element={<VendorStock />} />
+        <Route path="orders" element={<VendorOrders />} />
+        <Route path="insights" element={<VendorInsights />} />
+        <Route path="reviews" element={<VendorReviews />} />
+        <Route path="settings" element={<VendorMyStall />} />
+      </Route>
 
-        {/* ── Admin Routes ──────────────────────────────────────── */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<AdminOverview />} />
-          <Route path="people" element={<AdminPeople />} />
-          <Route path="markets" element={<AdminMarkets />} />
-          <Route path="moderation" element={<AdminModeration />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="settings" element={<AdminSettings />} />
-        </Route>
+      {/* ── Admin Routes ──────────────────────────────────────── */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminOverview />} />
+        <Route path="people" element={<AdminPeople />} />
+        <Route path="markets" element={<AdminMarkets />} />
+        <Route path="moderation" element={<AdminModeration />} />
+        <Route path="reports" element={<AdminReports />} />
+        <Route path="settings" element={<AdminSettings />} />
+      </Route>
 
-        {/* ── Customer (Buyer) Routes ────────────────────────────── */}
-        <Route
-          path="/buyer"
-          element={
-            <ProtectedRoute allowedRoles={['customer', 'buyer']}>
-              <BuyerLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* Main page tabs */}
-          <Route index element={<BuyerHome />} />
-          <Route path="products" element={<BuyerProducts />} />
-          <Route path="orders" element={<BuyerOrders />} />
-          <Route path="favorites" element={<BuyerFavorites />} />
-          <Route path="profile" element={<BuyerProfile />} />
-          <Route path="markets" element={<BuyerMarkets />} />
-          <Route path="farmers" element={<BuyerFarmers />} />
-          <Route path="reviews" element={<BuyerReviews />} />
+      {/* ── Customer (Buyer) Routes — every destination is a real page ──── */}
+      <Route
+        path="/buyer"
+        element={
+          <ProtectedRoute allowedRoles={['customer', 'buyer']}>
+            <BuyerLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* Today */}
+        <Route index element={<BuyerHome />} />
 
-          {/* Direct URLs and browser refreshes open in the SheetRoute frame */}
-          <Route path="products/:id" element={<SheetRoute size="tall"><BuyerProductDetail /></SheetRoute>} />
-          <Route path="farmers/:id" element={<SheetRoute size="tall"><BuyerFarmerDetail /></SheetRoute>} />
-          <Route path="markets/:id" element={<SheetRoute size="tall"><BuyerMarketDetail /></SheetRoute>} />
-          <Route path="cart" element={<SheetRoute size="tall"><BuyerCart /></SheetRoute>} />
-          <Route path="order-confirmed" element={<SheetRoute size="peek"><BuyerOrderConfirmed /></SheetRoute>} />
-          <Route path="orders/:id" element={<SheetRoute size="tall"><BuyerOrderDetail /></SheetRoute>} />
-          <Route path="assistant" element={<SheetRoute size="full"><BuyerAssistant /></SheetRoute>} />
-          <Route path="notifications" element={<SheetRoute size="tall" title="Notifications"><BuyerProfileNotifications /></SheetRoute>} />
-          <Route path="profile/details" element={<SheetRoute size="tall"><BuyerProfileDetails /></SheetRoute>} />
-          <Route path="profile/markets" element={<SheetRoute size="tall"><BuyerSavedMarkets /></SheetRoute>} />
-          <Route path="profile/notifications" element={<SheetRoute size="tall"><BuyerProfileNotifications /></SheetRoute>} />
-          <Route path="profile/help" element={<SheetRoute size="tall"><BuyerHelp /></SheetRoute>} />
-        </Route>
+        {/* Browse produce */}
+        <Route path="products"            element={<BuyerProducts />} />
+        <Route path="products/:id"        element={<BuyerProductDetail />} />
 
-        {/* ── Guest (Unauthenticated) Routes ─────────────────────── */}
-        <Route element={<GuestLayout />}>
-          <Route path={PATHS.HOME}            element={<GuestHome />} />
-          <Route path={PATHS.MARKETS}         element={<Market />} />
-          <Route path={PATHS.MARKET_DETAIL}    element={<MarketDetail />} />
-          <Route path={PATHS.FARMERS}          element={<Farmers />} />
-          <Route path={PATHS.FARMER_DETAIL}   element={<FarmerDetail />} />
-          <Route path={PATHS.PRODUCTS}        element={<Products />} />
-          <Route path={PATHS.PRODUCT_DETAIL}   element={<ProductDetail />} />
-          <Route path={PATHS.ABOUT}           element={<About />} />
-          <Route path={PATHS.CONTACT}         element={<Contact />} />
-          <Route path={PATHS.LOGIN}           element={<Login />} />
-          <Route path={PATHS.REGISTER}        element={<Register />} />
-          <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
-          <Route path={PATHS.RESET_PASSWORD}  element={<ResetPassword />} />
-          <Route path={PATHS.VERIFY_EMAIL}    element={<VerifyEmail />} />
-          <Route path={PATHS.UNAUTHORIZED}    element={<Unauthorized />} />
+        {/* Stalls — canonical. /buyer/farmers* redirects in. */}
+        <Route path="stalls"              element={<BuyerFarmers />} />
+        <Route path="stalls/:id"          element={<BuyerFarmerDetail />} />
 
-          {/* 404 Catch-all */}
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
+        {/* Markets */}
+        <Route path="markets"             element={<BuyerMarkets />} />
+        <Route path="markets/:id"         element={<BuyerMarketDetail />} />
 
-      {/* ── Sheet Overlays Block (rendered above background location) ──── */}
-      {background && (
-        <Routes>
-          <Route
-            path="/buyer/products/:id"
-            element={
-              <SheetRoute size="tall">
-                <BuyerProductDetail />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/farmers/:id"
-            element={
-              <SheetRoute size="tall">
-                <BuyerFarmerDetail />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/markets/:id"
-            element={
-              <SheetRoute size="tall">
-                <BuyerMarketDetail />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/cart"
-            element={
-              <SheetRoute size="tall">
-                <BuyerCart />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/order-confirmed"
-            element={
-              <SheetRoute size="peek">
-                <BuyerOrderConfirmed />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/orders/:id"
-            element={
-              <SheetRoute size="tall">
-                <BuyerOrderDetail />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/assistant"
-            element={
-              <SheetRoute size="full">
-                <BuyerAssistant />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/profile/details"
-            element={
-              <SheetRoute size="tall" title="Personal details">
-                <BuyerProfileDetails />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/profile/markets"
-            element={
-              <SheetRoute size="tall" title="Saved markets">
-                <BuyerSavedMarkets />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/notifications"
-            element={
-              <SheetRoute size="tall" title="Notifications">
-                <BuyerProfileNotifications />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/profile/notifications"
-            element={
-              <SheetRoute size="tall" title="Notification preferences">
-                <BuyerProfileNotifications />
-              </SheetRoute>
-            }
-          />
-          <Route
-            path="/buyer/profile/help"
-            element={
-              <SheetRoute size="tall" title="Help & FAQ">
-                <BuyerHelp />
-              </SheetRoute>
-            }
-          />
-        </Routes>
-      )}
-    </>
+        {/* Basket and checkout — canonical. /buyer/cart redirects in. */}
+        <Route path="basket"              element={<BuyerCart />} />
+        <Route path="checkout"            element={<BuyerCheckout />} />
+
+        {/* Orders */}
+        <Route path="orders"              element={<BuyerOrders />} />
+        <Route path="orders/:id"          element={<BuyerOrderDetail />} />
+        <Route path="orders/:id/confirmed" element={<BuyerOrderConfirmed />} />
+
+        {/* Saved — canonical. /buyer/favorites redirects in. */}
+        <Route path="saved"               element={<BuyerFavorites />} />
+
+        {/* Assistant, notifications, help */}
+        <Route path="assistant"           element={<BuyerAssistant />} />
+        <Route path="notifications"       element={<BuyerProfileNotifications />} />
+        <Route path="help"                element={<BuyerHelp />} />
+
+        {/* You */}
+        <Route path="profile"             element={<BuyerProfile />} />
+        <Route path="profile/details"     element={<BuyerProfileDetails />} />
+        <Route path="profile/markets"     element={<BuyerSavedMarkets />} />
+        <Route path="profile/notifications" element={<BuyerNotificationPrefs />} />
+        <Route path="profile/reviews"     element={<BuyerReviews />} />
+
+        {/* ── Redirects: every old URL still resolves ──────────────────── */}
+        <Route path="farmers"             element={<Navigate to="/buyer/stalls" replace />} />
+        <Route path="farmers/:id"         element={<RedirectFarmerToStall />} />
+        <Route path="cart"                element={<Navigate to="/buyer/basket" replace />} />
+        <Route path="favorites"           element={<Navigate to="/buyer/saved" replace />} />
+        <Route path="reviews"             element={<Navigate to="/buyer/profile/reviews" replace />} />
+        <Route path="profile/help"        element={<Navigate to="/buyer/help" replace />} />
+        <Route path="order-confirmed"     element={<Navigate to="/buyer/orders" replace />} />
+
+        {/* Buyer 404 */}
+        <Route path="*"                   element={<BuyerNotFound />} />
+      </Route>
+
+      {/* ── Guest (Unauthenticated) Routes ─────────────────────── */}
+      <Route element={<GuestLayout />}>
+        <Route path={PATHS.HOME}            element={<GuestHome />} />
+        <Route path={PATHS.MARKETS}         element={<Market />} />
+        <Route path={PATHS.MARKET_DETAIL}    element={<MarketDetail />} />
+        <Route path={PATHS.FARMERS}          element={<Farmers />} />
+        <Route path={PATHS.FARMER_DETAIL}   element={<FarmerDetail />} />
+        <Route path={PATHS.PRODUCTS}        element={<Products />} />
+        <Route path={PATHS.PRODUCT_DETAIL}   element={<ProductDetail />} />
+        <Route path={PATHS.ABOUT}           element={<About />} />
+        <Route path={PATHS.CONTACT}         element={<Contact />} />
+        <Route path={PATHS.LOGIN}           element={<Login />} />
+        <Route path={PATHS.REGISTER}        element={<Register />} />
+        <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
+        <Route path={PATHS.RESET_PASSWORD}  element={<ResetPassword />} />
+        <Route path={PATHS.VERIFY_EMAIL}    element={<VerifyEmail />} />
+        <Route path={PATHS.UNAUTHORIZED}    element={<Unauthorized />} />
+
+        {/* 404 Catch-all */}
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
   );
 }
 

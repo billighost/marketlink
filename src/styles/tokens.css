@@ -173,4 +173,26 @@
   --card-w-farmer:      clamp(10rem, 7rem + 10vw, 13rem);  /* farmer card in rows */
   --card-min:           10rem;                           /* minimum intrinsic card track */
   --duration-add:       450ms;                           /* add-to-cart fly animation */
+
+  /* ---------- Buyer redesign: neutral hairlines ---------- */
+  /* --color-border resolved to --color-wood-line (#E3D3B8), a TAN. At UI density that
+     tinted every card and divider beige. These give a neutral hairline instead. The buyer
+     shell re-scopes --color-border to --color-hairline; other roles are untouched. */
+  --color-hairline:       rgba(46, 43, 38, 0.10);  /* default card/divider/outline */
+  --color-hairline-soft:  rgba(46, 43, 38, 0.06);  /* internal list dividers */
+  --color-border-warm:    var(--color-wood-line);  /* opt-in: market-wood moments only */
+
+  /* ---------- Buyer redesign: content widths ---------- */
+  --container-buyer:        1200px;  /* index and feed pages */
+  --container-buyer-detail: 960px;   /* produce, stall, order, market detail */
+  --container-buyer-read:   720px;   /* help, forms, settings */
+
+  /* ---------- Buyer redesign: scene illustrations ---------- */
+  --scene-max-w:    30rem;   /* 480px — mobile */
+  --scene-max-w-lg: 34rem;   /* 544px — 768px and up */
+
+  /* ---------- Buyer redesign: shell geometry ---------- */
+  --topbar-h:       56px;    /* buyer top bar, under 1024 */
+  --topbar-h-desk:  68px;    /* buyer top bar, 1024 and up */
+  --rail-w:         272px;   /* desktop filter rail (stage 6) */
 }

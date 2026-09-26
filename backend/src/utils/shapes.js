@@ -4,6 +4,7 @@
  */
 
 import { fromGeoPoint, directionsUrls } from './geo.js';
+import { computeMarketClock, toOperatingDayNumbers, computeOpenToday } from './slots.js';
 
 /**
  * Formats full customer name as first name + last initial (e.g. "George Adams" -> "George A.").
@@ -102,11 +103,18 @@ export function toProductDetail(p, { markets = [], farmerCutoff, nextPickupSlots
  * @param {object} f
  * @param {object} [opts]
  * @param {Array<object>} [opts.markets=[]]
+ * @param {number} [opts.lowStockCount]
+ * @param {number} [opts.soldOutCount]
+ * @param {Date} [opts.now=new Date()]
  * @returns {object}
  */
-export function toFarmerCard(f, { markets = [] } = {}) {
+export function toFarmerCard(f, { markets = [], lowStockCount, soldOutCount, now = new Date() } = {}) {
   const bannerUrl = f.bannerUrl ?? f.imageUrl ?? null;
   const logoUrl = f.logoUrl ?? null;
+  const operatingDayNumbers = toOperatingDayNumbers(f.operatingDays);
+  const defaultTz = markets[0]?.timezone || 'America/New_York';
+  const openToday = f.listingEnabled !== false && computeOpenToday(operatingDayNumbers, defaultTz, now);
+
   return {
     id: f._id ? f._id.toString() : f.id,
     stallName: f.stallName,
@@ -119,6 +127,10 @@ export function toFarmerCard(f, { markets = [] } = {}) {
     ratingAvg: f.ratingAvg ?? 0,
     ratingCount: f.ratingCount ?? 0,
     operatingDays: Array.isArray(f.operatingDays) ? f.operatingDays : [],
+    operatingDayNumbers,
+    openToday,
+    lowStockCount: typeof lowStockCount === 'number' ? lowStockCount : (f.lowStockCount ?? 0),
+    soldOutCount: typeof soldOutCount === 'number' ? soldOutCount : (f.soldOutCount ?? 0),
     markets: markets.map((m) => ({
       id: m._id ? m._id.toString() : m.id,
       name: m.name,
@@ -136,10 +148,13 @@ export function toFarmerCard(f, { markets = [] } = {}) {
  * @param {Array<object>} [opts.markets=[]]
  * @param {object} [opts.ratingBreakdown={}]
  * @param {number} [opts.productCount=0]
+ * @param {number} [opts.lowStockCount]
+ * @param {number} [opts.soldOutCount]
+ * @param {Date} [opts.now]
  * @returns {object}
  */
-export function toFarmerDetail(f, { markets = [], ratingBreakdown = {}, productCount = 0 } = {}) {
-  const card = toFarmerCard(f, { markets });
+export function toFarmerDetail(f, { markets = [], ratingBreakdown = {}, productCount = 0, lowStockCount, soldOutCount, now } = {}) {
+  const card = toFarmerCard(f, { markets, lowStockCount, soldOutCount, now });
   const loc = fromGeoPoint(f.location) || { lat: 0, lng: 0 };
 
   return {
@@ -169,9 +184,11 @@ export function toFarmerDetail(f, { markets = [], ratingBreakdown = {}, productC
  * @param {object} [opts]
  * @param {number} [opts.distanceMeters]
  * @param {object} [opts.nextOpening]
+ * @param {object} [opts.clock]
+ * @param {Date} [opts.now]
  * @returns {object}
  */
-export function toMarketCard(m, { distanceMeters, nextOpening } = {}) {
+export function toMarketCard(m, { distanceMeters, nextOpening, clock, now } = {}) {
   const loc = fromGeoPoint(m.location) || { lat: 0, lng: 0 };
   const card = {
     id: m._id ? m._id.toString() : m.id,
@@ -194,6 +211,8 @@ export function toMarketCard(m, { distanceMeters, nextOpening } = {}) {
   if (opening) {
     card.nextOpening = opening;
   }
+
+  card.clock = clock || m.clock || computeMarketClock(m, now || new Date());
 
   return card;
 }

@@ -88,7 +88,7 @@ export function ProductDetail() {
       message: `Added ${quantity} ${product.name} to your basket`,
       type: 'success',
       action: 'View Basket',
-      onAction: () => navigate('/buyer/cart'),
+      onAction: () => navigate('/buyer/basket'),
     });
   };
 
