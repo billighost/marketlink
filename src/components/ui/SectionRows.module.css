@@ -1,0 +1,23 @@
+.group {
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  margin: 0 0 var(--space-2) var(--space-1);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  letter-spacing: var(--tracking-normal);
+}
+
+.panel {
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.panel > :not(:last-child) {
+  border-bottom: 1px solid var(--color-hairline-soft);
+}

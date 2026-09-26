@@ -4,7 +4,7 @@
   background-color: var(--color-white);
   min-height: 100vh;
   /* Extra bottom padding on mobile for the sticky add bar + bottom nav */
-  padding-bottom: calc(var(--tap-min) + var(--space-8) + var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--tap-min) + var(--space-8) + var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 768px) {
@@ -128,7 +128,7 @@
 }
 
 .favorited {
-  color: var(--color-beet);
+  color: var(--color-ink);
 }
 
 /* Right column */
@@ -356,7 +356,7 @@
 /* Mobile Sticky Add Bar (< 768px) */
 .mobileStickyBar {
   position: fixed;
-  bottom: calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   background-color: var(--color-white);

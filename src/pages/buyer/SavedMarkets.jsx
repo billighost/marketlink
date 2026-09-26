@@ -1,66 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { Check, MapPin, Store } from 'lucide-react';
-import { getMarkets } from '@/api/catalog';
-import { setHomeMarket } from '@/api/me';
+import { Link } from 'react-router-dom';
+import { MapPin, Navigation, Plus, Store } from 'lucide-react';
+import { getSavedMarkets, saveMarket, unsaveMarket, setHomeMarket } from '@/api/me';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import Page from '@/components/layout/Page';
 import PageTitle from '@/components/layout/PageTitle';
+import MarketClock from '@/components/layout/MarketClock';
+import DayDots from '@/components/domain/DayDots';
+import EmptyState from '@/components/ui/EmptyState';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './SavedMarkets.module.css';
 
-/**
- * Saved Markets page for Customer profile.
- * Connected to live backend GET /markets and PUT /users/me/home-market/:id.
- */
 export function SavedMarkets() {
   const { user, refreshUser } = useAuth();
   const { showToast } = useToast();
 
   useDocumentTitle('Saved markets · MarketLink');
 
-  const [marketList, setMarketList] = useState([]);
+  const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState(null);
 
-  const currentHomeMarketId = user?.homeMarketId || user?.homeMarket?._id || user?.homeMarket?.id;
+  const homeMarketId = user?.homeMarketId || user?.homeMarket?._id || user?.homeMarket?.id;
+
+  const fetchMarkets = async () => {
+    setLoading(true);
+    try {
+      const data = await getSavedMarkets();
+      setMarkets(Array.isArray(data) ? data : data?.items || data?.data || []);
+    } catch {
+      setMarkets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let active = true;
-    setLoading(true);
-    getMarkets()
-      .then((data) => {
-        if (active) {
-          setMarketList(Array.isArray(data) ? data : data?.items || []);
-        }
-      })
-      .catch(() => {
-        if (active) setMarketList([]);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
+    fetchMarkets();
   }, []);
 
-  const handleSelect = async (marketId, marketName) => {
-    setUpdatingId(marketId);
+  const handleSetHome = async (marketId, marketName) => {
     try {
       await setHomeMarket(marketId);
       await refreshUser();
-      showToast({
-        message: `${marketName} set as primary market`,
-        type: 'success',
-      });
+      showToast({ message: `${marketName} set as primary home market.` });
     } catch (err) {
+      showToast(err?.message || 'Could not update primary home market.');
+    }
+  };
+
+  const handleRemove = async (marketId, marketName) => {
+    const prev = markets;
+    setMarkets((list) => list.filter((m) => (m.id || m._id) !== marketId));
+
+    try {
+      await unsaveMarket(marketId);
       showToast({
-        message: err.message || 'Unable to update primary market',
-        type: 'danger',
+        message: 'Removed from saved markets',
+        action: 'Undo',
+        onAction: async () => {
+          try {
+            await saveMarket(marketId);
+            setMarkets(prev);
+          } catch {
+            showToast('Could not restore market.');
+          }
+        },
       });
-    } finally {
-      setUpdatingId(null);
+    } catch {
+      setMarkets(prev);
+      showToast('Could not remove market.');
     }
   };
 
@@ -68,68 +77,108 @@ export function SavedMarkets() {
     <Page width="read">
       <PageTitle
         title="Saved markets"
+        context="Your preferred market locations for route-friendly pickup."
         backTo="/buyer/profile"
         backLabel="Back to you"
       />
+
       <div className={styles.container}>
         <p className={styles.intro}>
-          Choose your primary market. Your home feed and available Saturday pre-orders will reflect the stalls attending this location.
+          Save the markets you visit regularly. One is your primary home market, used for default schedules and local recommendations.
         </p>
 
-        <div className={styles.list}>
-          {loading ? (
-            <>
-              <div style={{ height: 90, background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-lg)' }} />
-              <div style={{ height: 90, background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-lg)' }} />
-            </>
-          ) : (
-            marketList.map((market) => {
-              const isSelected = market.id === currentHomeMarketId || market._id === currentHomeMarketId;
-              const isUpdating = updatingId === (market.id || market._id);
+        {loading ? (
+          <div className={styles.list}>
+            <div style={{ height: 110, background: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-lg)' }} />
+          </div>
+        ) : markets.length > 0 ? (
+          <div className={styles.list}>
+            {markets.map((market) => {
+              const mId = market.id || market._id;
+              const isHome = mId === homeMarketId;
+              const directionsUrl =
+                market.directionsUrls?.google ||
+                `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(market.address || market.name)}`;
 
               return (
-                <div
-                  key={market.id || market._id}
-                  className={`${styles.marketCard} ${isSelected ? styles.selectedCard : ''}`}
-                >
-                  <div className={styles.iconWrap}>
-                    <Store size={22} className={styles.storeIcon} aria-hidden="true" />
-                  </div>
+                <article key={mId} className={styles.marketRow} aria-label={market.name}>
+                  <div className={styles.marketMain}>
+                    <div className={styles.headerRow}>
+                      <div className={styles.nameGroup}>
+                        <Link to={`/buyer/markets/${mId}`} className={styles.marketName}>
+                          {market.name}
+                        </Link>
+                        {isHome && <span className={styles.homeBadge}>Home market</span>}
+                      </div>
 
-                  <div className={styles.details}>
-                    <div className={styles.nameRow}>
-                      <h3 className={styles.name}>{market.name}</h3>
-                      {isSelected && (
-                        <span className={styles.currentBadge}>Primary</span>
-                      )}
+                      <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.directionsLink}
+                        aria-label={`Get directions to ${market.name}`}
+                      >
+                        <Navigation size={12} aria-hidden="true" />
+                        <span>Get directions</span>
+                      </a>
                     </div>
+
+                    <MarketClock
+                      marketName={market.name}
+                      openNow={market.openNow}
+                      windowLabel={market.windowLabel || market.hours || 'Saturday 8:00–13:00'}
+                      nextOpenLabel={market.nextOpenLabel}
+                      closesAtLabel={market.closesAtLabel || '13:00'}
+                      progress={market.progress || 0}
+                    />
+
                     <div className={styles.addressRow}>
-                      <MapPin size={14} className={styles.metaIcon} aria-hidden="true" />
-                      <span>{market.address}</span>
+                      {market.address && (
+                        <span>
+                          <MapPin size={12} className={styles.metaIcon} aria-hidden="true" /> {market.address}
+                        </span>
+                      )}
+                      <DayDots days={market.operatingDays || [6]} size="sm" />
                     </div>
-                    <span className={styles.schedule}>
-                      {market.days?.join(', ') || market.day || 'Saturday'} · {market.hours || '8 am – 1 pm'}
-                    </span>
                   </div>
 
-                  <button
-                    type="button"
-                    className={`${styles.selectButton} ${isSelected ? styles.selectedButton : ''}`}
-                    onClick={() => handleSelect(market.id || market._id, market.name)}
-                    disabled={isSelected || isUpdating}
-                    aria-label={`Select ${market.name} as primary market`}
-                  >
-                    {isSelected ? (
-                      <Check size={18} aria-hidden="true" />
-                    ) : (
-                      <span>{isUpdating ? 'Saving...' : 'Select'}</span>
+                  <div className={styles.actionsRow}>
+                    {!isHome && (
+                      <button
+                        type="button"
+                        className={styles.setHomeBtn}
+                        onClick={() => handleSetHome(mId, market.name)}
+                      >
+                        Set as home market
+                      </button>
                     )}
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      className={styles.removeBtn}
+                      onClick={() => handleRemove(mId, market.name)}
+                      aria-label={`Remove ${market.name} from saved`}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </article>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            scene="nothing-saved"
+            title="No saved markets yet"
+            text="Save markets to receive schedule reminders and route-friendly directions."
+            actionLabel="Browse all markets"
+            actionTo="/buyer/markets"
+          />
+        )}
+
+        <Link to="/buyer/markets" className={styles.addMarketLink}>
+          <Plus size={16} aria-hidden="true" />
+          <span>Add a market</span>
+        </Link>
       </div>
     </Page>
   );

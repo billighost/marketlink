@@ -1,409 +1,133 @@
-.page {
+/* Markets Index — Page C (/buyer/markets) */
+
+.container {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: var(--container-max, 1400px);
-  margin: 0 auto;
   gap: var(--space-6);
-  padding: var(--space-6) var(--space-4) var(--space-10);
 }
 
-/* ---------- Header ---------- */
-
-.header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.titleRow {
+.topBar {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
   flex-wrap: wrap;
+  gap: var(--space-4);
 }
 
-.title {
-  font-family: var(--font-head);
-  font-size: var(--text-h1);
-  font-weight: var(--weight-head);
-  color: var(--color-ink);
-  letter-spacing: var(--tracking-head);
-  margin: 0;
-}
-
-.subtitle {
-  font-size: var(--text-body);
-  color: var(--color-text-muted);
-  max-width: var(--measure-narrow);
-  margin: calc(-1 * var(--space-2)) 0 0;
-}
-
-/* ---------- Filters ---------- */
-
-.filters {
+.controlsWrap {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  width: 100%;
 }
 
-.daysScroll {
+.segmentedWrap {
+  align-self: flex-start;
+}
+
+/* Day chip row: non-wrapping, scrolls horizontally */
+.dayChips {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   overflow-x: auto;
-  scrollbar-width: none;
+  white-space: nowrap;
+  padding-bottom: var(--space-2);
   -webkit-overflow-scrolling: touch;
-  padding-block: var(--space-1);
+  scrollbar-width: none;
 }
 
-.daysScroll::-webkit-scrollbar {
+.dayChips::-webkit-scrollbar {
   display: none;
 }
 
-.filterDivider {
-  flex-shrink: 0;
-  width: 1px;
-  height: var(--space-4);
-  background-color: var(--color-border);
-  margin-inline: var(--space-1);
-}
-
-.locationBtn {
-  flex-shrink: 0;
+.chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  height: var(--tap-min);
-  padding-inline: var(--space-3);
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
   border-radius: var(--radius-full);
-  border: var(--border-input);
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  white-space: nowrap;
+  line-height: 1;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
   transition: border-color var(--duration-fast) var(--ease-standard),
-              color var(--duration-fast) var(--ease-standard),
-              background-color var(--duration-fast) var(--ease-standard);
+              background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
 }
 
-.locationBtn:hover:not(:disabled) {
-  border-color: var(--color-border-input-hover);
+.chip:hover {
+  border-color: var(--color-ink-soft);
 }
 
-.locationBtn:disabled {
-  color: var(--color-text-muted);
-  cursor: default;
+.chip:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
-.locationActive {
-  border-color: var(--color-primary);
-  background-color: var(--color-beet-tint);
-  color: var(--color-primary);
+/* Active chip is ink-filled, NEVER beet */
+.activeChip {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-white);
 }
 
-.spin {
-  animation: spin 1s linear infinite;
+.activeChip:hover {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-white);
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.geoNote {
-  font-size: var(--text-sm);
-  color: var(--color-warning-text);
-  background-color: var(--color-warning-bg);
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
-  width: fit-content;
-}
-
-/* ---------- Results meta ---------- */
-
-.resultsMeta {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  margin: calc(-1 * var(--space-3)) 0 0;
-}
-
-/* ---------- List / grid ---------- */
-
-.listContainer {
-  display: flex;
-  flex-direction: column;
-}
-
-.skeletonStack {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 8px;
-}
-
-.grid {
+/* List view: 1 column under 768; 2 columns at 768+ */
+.listGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
-@media (min-width: 640px) {
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+@media (min-width: 768px) {
+  .listGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
   }
 }
 
-/* ---------- Map view ---------- */
-
-.mapContainer {
+/* Map view */
+.mapViewWrap {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
-.mapContainer > :first-child {
+.mapWrapper {
+  width: 100%;
+  height: 26.25rem; /* 420px */
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  border: var(--border);
-}
-
-/* ─── Interactive Map View (extended styles for future map implementation) ─── */
-.mapLayout {
   position: relative;
+  background-color: var(--color-canvas);
+}
+
+.selectedCardWrap {
+  max-width: 37.5rem; /* 600px */
   width: 100%;
-  margin-top: 8px;
 }
 
-.mapFrame {
-  position: relative;
-  width: 100%;
-  height: 520px;
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid #ebdcd5;
-  box-shadow: 0 8px 30px rgba(46, 43, 38, 0.08);
-}
-
-.mapSvg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.pinLayer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.mapPinBtn {
-  position: absolute;
-  transform: translate(-50%, -50%);
+.skeletonCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--card-padding);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  pointer-events: auto;
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 2;
-}
-
-.mapPinBtn:hover {
-  transform: translate(-50%, -55%) scale(1.08);
-  z-index: 10;
-}
-
-.pinInner {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #541722;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(84, 23, 34, 0.35);
-  border: 2px solid #ffffff;
-  transition: all 150ms ease;
-}
-
-.mapPinActive .pinInner {
-  background-color: #27532b;
-  transform: scale(1.15);
-  box-shadow: 0 6px 16px rgba(39, 83, 43, 0.4);
-}
-
-.pinLabel {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #24201c;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(6px);
-  padding: 2px 8px;
-  border-radius: 6px;
-  border: 1px solid #ebdcd5;
-  white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.pinPulseEffect {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: rgba(39, 83, 43, 0.25);
-  animation: mapPulse 2s infinite;
-  pointer-events: none;
-}
-
-@keyframes mapPulse {
-  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-}
-
-/* Floating Selected Market Card */
-.floatingMarketCard {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  max-width: 440px;
-  background-color: #ffffff;
-  border: 1px solid #ebdcd5;
-  border-radius: 16px;
-  padding: 18px 20px;
-  box-shadow: 0 16px 36px -6px rgba(46, 43, 38, 0.18);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 20;
-}
-
-.floatingHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.floatingTitleWrap {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.floatingName {
-  font-family: Georgia, 'Playfair Display', serif;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #4a1521;
-  margin: 0;
-}
-
-.floatingAddress {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.78rem;
-  color: #6a6155;
-  margin: 0;
-}
-
-.floatingPinIcon {
-  color: #8c3f20;
-  flex-shrink: 0;
-}
-
-.directionsBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  background-color: #faf5f2;
-  border: 1px solid #ebdcd5;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #541722;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 150ms ease;
-}
-
-.directionsBtn:hover {
-  background-color: #541722;
-  color: #ffffff;
-}
-
-.floatingMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.floatingMetaItem {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.76rem;
-  color: #595147;
-}
-
-.floatingActionRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.viewMarketBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 9px 12px;
-  background-color: #f7ebe4;
-  color: #541722;
-  border: 1px solid #e8d0c4;
-  border-radius: 8px;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: all 140ms ease;
-}
-
-.viewMarketBtn:hover {
-  background-color: #faede6;
-  border-color: #541722;
-}
-
-.setPrimaryBtn {
-  flex: 1;
-  padding: 9px 14px;
-  background-color: #541722;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 150ms ease;
-}
-
-.setPrimaryBtn:hover {
-  background-color: #3e0e16;
+  gap: var(--space-3);
+  background-color: var(--color-white);
 }

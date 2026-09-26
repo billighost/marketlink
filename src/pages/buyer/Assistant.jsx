@@ -1,43 +1,61 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
-import { streamAssistantMessage } from '@/api/assistant';
-import { getProductDetail } from '@/api/catalog';
-import { useAuth } from '@/context/AuthContext';
-import ProductCard from '@/components/domain/ProductCard';
+import { Link } from 'react-router-dom';
+import { Send, Store, Leaf, Receipt, MapPin } from 'lucide-react';
+import { streamAssistantMessage, sendAssistantMessage } from '@/api/assistant';
 import Page from '@/components/layout/Page';
 import PageTitle from '@/components/layout/PageTitle';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './Assistant.module.css';
 
-const DEFAULT_SUGGESTIONS = [
-  "What's fresh on Saturday?",
-  "Who sells eggs?",
-  "When does Elm Street close?",
+const SUGGESTED_PROMPTS = [
+  'What time does the market open?',
+  'Who has eggs this Saturday?',
+  'When can I collect order MK-2049?',
 ];
 
-/**
- * Assistant chat page ("Ask MarketLink").
- * Connected to live backend POST /assistant/message with fast token streaming.
- */
-export function Assistant() {
-  const { user } = useAuth();
-  const displayName = user?.firstName || 'there';
+function getChipIcon(type) {
+  switch (type) {
+    case 'stall':
+    case 'farmer':
+      return Store;
+    case 'produce':
+    case 'product':
+      return Leaf;
+    case 'order':
+      return Receipt;
+    case 'market':
+    default:
+      return MapPin;
+  }
+}
 
+function getChipPath(type, id) {
+  switch (type) {
+    case 'stall':
+    case 'farmer':
+      return `/buyer/stalls/${id}`;
+    case 'produce':
+    case 'product':
+      return `/buyer/products/${id}`;
+    case 'order':
+      return `/buyer/orders/${id}`;
+    case 'market':
+    default:
+      return `/buyer/markets/${id}`;
+  }
+}
+
+export function Assistant() {
   useDocumentTitle('Ask MarketLink · MarketLink');
 
-  const [messages, setMessages] = useState([
-    {
-      id: 'msg-welcome',
-      sender: 'assistant',
-      text: `Good day, ${displayName}. I'm here to help you shop this Saturday. Ask me what's fresh, where to find specific harvests, or about market hours.`,
-      time: 'Just now',
-    },
-  ]);
-  const [suggestions, setSuggestions] = useState(DEFAULT_SUGGESTIONS);
+  const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [lastFailedText, setLastFailedText] = useState(null);
+
   const messagesEndRef = useRef(null);
-  const activeAbortControllerRef = useRef(null);
+  const inputRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -47,109 +65,137 @@ export function Assistant() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Clean up any ongoing streaming request on unmount
   useEffect(() => {
     return () => {
-      if (activeAbortControllerRef.current) {
-        activeAbortControllerRef.current.abort();
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, []);
 
-  const handleSendMessage = async (textToSend) => {
-    const text = (textToSend || inputValue).trim();
+  const handleSend = async (rawText) => {
+    const text = (rawText || inputValue).trim();
     if (!text || isTyping) return;
 
-    // Abort previous in-flight request if any
-    if (activeAbortControllerRef.current) {
-      activeAbortControllerRef.current.abort();
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
-    const abortController = new AbortController();
-    activeAbortControllerRef.current = abortController;
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
-    const userMessage = {
-      id: `user-${Date.now()}`,
+    const userMsg = {
+      id: `usr-${Date.now()}`,
       sender: 'user',
       text,
-      time: 'Just now',
     };
 
-    const assistantMsgId = `asst-${Date.now()}`;
-    const initialAssistantMessage = {
-      id: assistantMsgId,
+    const asstMsgId = `asst-${Date.now()}`;
+    const initialAsstMsg = {
+      id: asstMsgId,
       sender: 'assistant',
       text: '',
-      time: 'Just now',
+      chips: [],
       streaming: true,
-      products: [],
     };
 
-    setMessages((prev) => [...prev, userMessage, initialAssistantMessage]);
+    setMessages((prev) => [...prev, userMsg, initialAsstMsg]);
     setInputValue('');
     setIsTyping(true);
+    setLastFailedText(null);
+
+    // Build history for backend
+    const historyPayload = messages
+      .filter((m) => !m.error)
+      .map((m) => ({
+        role: m.sender === 'user' ? 'user' : 'model',
+        text: m.text,
+      }));
 
     let accumulatedText = '';
 
     try {
-      await streamAssistantMessage(
-        text,
-        (token) => {
-          accumulatedText += token;
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMsgId ? { ...msg, text: accumulatedText } : msg
-            )
-          );
-        },
-        abortController.signal
-      );
-
-      // Extract referenced product tags like [product:id]
-      const productMatches = [...accumulatedText.matchAll(/\[product:([a-zA-Z0-9_-]+)\]/g)];
-      if (productMatches.length > 0) {
-        const productIds = [...new Set(productMatches.map((m) => m[1]))];
-        const loadedProducts = await Promise.all(
-          productIds.map(async (pId) => {
-            try {
-              return await getProductDetail(pId, abortController.signal);
-            } catch {
-              return null;
-            }
-          })
+      // Try streaming with fallback to sendAssistantMessage
+      let res;
+      try {
+        res = await streamAssistantMessage(
+          text,
+          historyPayload,
+          {
+            onChunk: (chunk) => {
+              accumulatedText += chunk;
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === asstMsgId ? { ...m, text: accumulatedText } : m
+                )
+              );
+            },
+            signal: controller.signal,
+          }
         );
-        const validProducts = loadedProducts.filter(Boolean);
-
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMsgId ? { ...msg, products: validProducts } : msg
-          )
-        );
+      } catch {
+        res = await sendAssistantMessage(text, historyPayload, controller.signal);
       }
 
-      // Remove streaming flag
+      const replyText = res?.reply || accumulatedText || 'I have checked the market schedule and stock for you.';
+      const cards = res?.cards || [];
+
+      // Build navigation chips from structured cards or parsed mentions
+      const chips = [];
+      cards.forEach((c) => {
+        const type = c.type === 'farmer' ? 'stall' : c.type;
+        chips.push({
+          type,
+          id: c.id,
+          label: c.name || c.title || c.stallName || `View ${type}`,
+          path: getChipPath(type, c.id),
+        });
+      });
+
+      // Also parse any [product:id], [stall:id], [farmer:id], [market:id] in reply
+      const entityRegex = /\[(product|farmer|stall|market|order):([a-zA-Z0-9_-]+)\]/g;
+      let match;
+      while ((match = entityRegex.exec(replyText)) !== null) {
+        const rawType = match[1];
+        const id = match[2];
+        const type = rawType === 'farmer' ? 'stall' : rawType;
+        if (!chips.some((ch) => ch.id === id)) {
+          chips.push({
+            type,
+            id,
+            label: `View ${type}`,
+            path: getChipPath(type, id),
+          });
+        }
+      }
+
+      // Clean stripped text if any tokens remained
+      const cleanReply = replyText.replace(/\[(product|farmer|stall|market|order):([a-zA-Z0-9_-]+)\]/g, '').trim();
+
       setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === assistantMsgId ? { ...msg, streaming: false } : msg
+        prev.map((m) =>
+          m.id === asstMsgId
+            ? {
+                ...m,
+                text: cleanReply,
+                chips,
+                streaming: false,
+              }
+            : m
         )
       );
-
-      // Rotate suggestions after response
-      setSuggestions([
-        'Where is organic honey?',
-        'Tell me about Riverbend Farm',
-        'Can I pay with card?',
-      ]);
     } catch (err) {
       if (err.name !== 'AbortError') {
+        setLastFailedText(text);
         setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMsgId
+          prev.map((m) =>
+            m.id === asstMsgId
               ? {
-                  ...msg,
-                  text: 'Sorry, I had trouble reaching the market. Please ask again.',
+                  ...m,
+                  error: true,
+                  text: 'I could not reach the market data just now.',
                   streaming: false,
                 }
-              : msg
+              : m
           )
         );
       }
@@ -158,93 +204,133 @@ export function Assistant() {
     }
   };
 
+  const handleRetry = () => {
+    if (lastFailedText) {
+      handleSend(lastFailedText);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleSendMessage();
+    handleSend();
   };
+
+  const hasUserMessages = messages.some((m) => m.sender === 'user');
 
   return (
     <Page width="read">
       <PageTitle
         title="Ask MarketLink"
-        context="Your Saturday market guide"
+        context="Market times, what is in stock, where a stall is."
         backTo="/buyer"
         backLabel="Back to today"
       />
+
       <div className={styles.container}>
-        {/* Messages Scroll Area */}
         <div className={styles.messagesArea} role="log" aria-live="polite">
-          <div className={styles.dateSeparator} aria-hidden="true">
-            <span>Today</span>
+          {/* Welcome Message */}
+          <div className={`${styles.messageWrapper} ${styles.assistantWrapper}`}>
+            <div className={`${styles.bubble} ${styles.assistantBubble}`}>
+              <p className={styles.messageText}>
+                Hello. I can answer questions about market opening times, what produce is in stock, or where to find specific stalls.
+              </p>
+            </div>
           </div>
 
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`${styles.messageWrapper} ${msg.sender === 'user' ? styles.userWrapper : styles.assistantWrapper}`}
-            >
-              <div
-                className={`${styles.bubble} ${msg.sender === 'user' ? styles.userBubble : styles.assistantBubble}`}
-              >
-                {msg.streaming && !msg.text ? (
-                  <div className={styles.typingBubble}>
-                    <span className={styles.dot} />
-                    <span className={styles.dot} />
-                    <span className={styles.dot} />
+          {/* Suggested Prompts when conversation is fresh */}
+          {!hasUserMessages && (
+            <div className={styles.suggestionsBlock}>
+              <h2 className={styles.suggestionsHeading}>Try asking</h2>
+              <div className={styles.suggestionsList}>
+                {SUGGESTED_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    className={styles.promptBtn}
+                    onClick={() => handleSend(prompt)}
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Conversation history */}
+          {messages.map((msg) => {
+            const isUser = msg.sender === 'user';
+
+            if (msg.error) {
+              return (
+                <div key={msg.id} className={`${styles.messageWrapper} ${styles.assistantWrapper}`}>
+                  <div className={styles.failureBubble}>
+                    <p className={styles.failureText}>{msg.text}</p>
+                    <button type="button" className={styles.retryBtn} onClick={handleRetry}>
+                      Retry
+                    </button>
                   </div>
-                ) : (
-                  <p className={styles.messageText}>{msg.text}</p>
-                )}
-                {msg.products && msg.products.length > 0 && (
-                  <div className={styles.productRow}>
-                    {msg.products.map((p) => (
-                      <ProductCard key={p.id} product={p} variant="compact" />
-                    ))}
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={msg.id}
+                className={`${styles.messageWrapper} ${isUser ? styles.userWrapper : styles.assistantWrapper}`}
+              >
+                <div className={`${styles.bubble} ${isUser ? styles.userBubble : styles.assistantBubble}`}>
+                  {msg.streaming && !msg.text ? (
+                    <div className={styles.typingBubble} aria-label="Thinking">
+                      <span className={styles.dot} />
+                      <span className={styles.dot} />
+                      <span className={styles.dot} />
+                    </div>
+                  ) : (
+                    <p className={styles.messageText}>{msg.text}</p>
+                  )}
+                </div>
+
+                {/* Navigation Chips under assistant messages */}
+                {!isUser && msg.chips && msg.chips.length > 0 && (
+                  <div className={styles.chipsRow} aria-label="Related links">
+                    {msg.chips.map((chip) => {
+                      const Icon = getChipIcon(chip.type);
+                      return (
+                        <Link key={chip.path} to={chip.path} className={styles.chipLink}>
+                          <Icon size={12} aria-hidden="true" />
+                          <span>{chip.label}</span>
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>
-              <span className={styles.timestamp}>{msg.time}</span>
-            </div>
-          ))}
+            );
+          })}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggested prompts row */}
-        {suggestions.length > 0 && (
-          <div className={styles.suggestionsRow} aria-label="Suggested questions">
-            {suggestions.map((suggestion, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className={styles.suggestionChip}
-                onClick={() => handleSendMessage(suggestion)}
-              >
-                {suggestion}
-              </button>
-            ))}
+        {/* Sticky Composer */}
+        <form className={styles.composerForm} onSubmit={handleSubmit}>
+          <div className={styles.inputWrapper}>
+            <input
+              ref={inputRef}
+              type="text"
+              className={styles.input}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Ask about the market…"
+              disabled={isTyping}
+            />
           </div>
-        )}
-
-        {/* Bottom Message Input Bar */}
-        <form className={styles.inputBar} onSubmit={handleSubmit}>
-          <input
-            type="text"
-            className={styles.textInput}
-            placeholder="Ask about stalls, items, or pickup..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            enterKeyHint="send"
-            aria-label="Type your message"
-            maxLength={300}
-          />
           <button
             type="submit"
-            className={styles.sendButton}
+            className={styles.sendBtn}
             disabled={!inputValue.trim() || isTyping}
-            aria-label="Send message"
           >
-            <Send size={18} aria-hidden="true" />
+            <span>Send</span>
+            <Send size={14} strokeWidth={2} aria-hidden="true" />
           </button>
         </form>
       </div>

@@ -1,106 +1,127 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Clock, Users, Check } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import Badge from '@/components/ui/Badge';
-import Illustration from '@/components/domain/Illustration';
-import { formatMarketSchedule } from '@/utils/format';
+import DayDots from '@/components/domain/DayDots';
 import styles from './MarketCard.module.css';
 
 /**
- * Market card showing details, schedule, distance, and selection state.
+ * MarketCard rewritten as a full-width row card, not a tile.
+ * Shows:
+ *  - Market name (Idiqlat h3)
+ *  - One-line open state from clock
+ *  - Meta line (city · distance · stall count)
+ *  - DayDots
+ *
+ * @param {object}   market
+ * @param {Function} onSelect
+ * @param {boolean}  isSelected
+ * @param {string}   className
  */
 export function MarketCard({
   market,
   onSelect,
+  isSelected = false,
   className = '',
 }) {
-  const { user, isAuthenticated, selectedMarketId, switchMarket } = useAuth();
-
   if (!market) return null;
 
-  const currentId = user?.homeMarketId || selectedMarketId;
-  const isCurrentMarket = currentId ? currentId === market.id : market.id === 'market-elm';
+  const clock = market.clock;
+  const isOpen = Boolean(clock?.openNow);
 
-  const marketPath = isAuthenticated ? `/buyer/markets/${market.id}` : `/markets/${market.id}`;
+  // Derive city from city property or address
+  const city =
+    market.city ||
+    (market.address && market.address.includes(',')
+      ? market.address.split(',')[1]?.trim()
+      : market.address) ||
+    '';
 
-  const handleSelect = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (switchMarket) {
-      switchMarket(market.id);
+  const distance =
+    market.distance ||
+    (typeof market.distanceKm === 'number'
+      ? `${market.distanceKm.toFixed(1)} km`
+      : null);
+
+  const farmerCount = market.farmerCount ?? market.stallCount ?? market.attendingCount ?? null;
+  const stallCountText =
+    farmerCount != null
+      ? `${farmerCount} ${farmerCount === 1 ? 'stall' : 'stalls'}`
+      : null;
+
+  const metaParts = [city, distance, stallCountText].filter(Boolean);
+
+  const days =
+    market.operatingDayNumbers ||
+    (Array.isArray(market.schedule) ? market.schedule.map((s) => s.day) : []);
+
+  const handleClick = (e) => {
+    if (onSelect) {
+      onSelect(market);
     }
-    onSelect?.(market);
   };
 
   return (
     <article
-      className={`${styles.card} ${isCurrentMarket ? styles.selectedCard : ''} ${className}`}
-      aria-label={`${market.name}, ${market.address}`}
+      className={`${styles.card} ${isSelected ? styles.selectedCard : ''} ${className}`}
+      aria-label={`${market.name}${city ? `, ${city}` : ''}`}
+      onClick={handleClick}
     >
       <Link
-        to={marketPath}
+        to={`/buyer/markets/${market.id}`}
         className={styles.stretchedLink}
         tabIndex={0}
-        aria-label={`View details for ${market.name}`}
+        aria-label={`View ${market.name}`}
       />
 
       <div className={styles.header}>
-        <div className={styles.iconWrapper}>
-          <Illustration name="stall" size="md" />
-        </div>
-        <div className={styles.titleInfo}>
-          <div className={styles.titleRow}>
-            <h3 className={styles.name}>{market.name}</h3>
-            {isCurrentMarket && (
-              <Badge variant="success" size="sm">Your market</Badge>
-            )}
-          </div>
-          <p className={styles.address}>
-            <MapPin size={14} className={styles.metaIcon} aria-hidden="true" />
-            <span>{market.address}</span>
-            {market.distance && (
-              <>
-                <span className={styles.dot} aria-hidden="true">·</span>
-                <span>{market.distance}</span>
-              </>
-            )}
-          </p>
-        </div>
+        <h3 className={styles.name}>{market.name}</h3>
       </div>
 
-      <div className={styles.details}>
-        <div className={styles.detailItem}>
-          <Clock size={14} className={styles.metaIcon} aria-hidden="true" />
-          <span>{formatMarketSchedule(market)}</span>
-        </div>
-        {market.farmerCount && (
-          <div className={styles.detailItem}>
-            <Users size={14} className={styles.metaIcon} aria-hidden="true" />
-            <span>{market.farmerCount} local Farmers</span>
-          </div>
+      {/* One-line open state from clock */}
+      <div className={styles.statusLine}>
+        {isOpen ? (
+          <>
+            <span className={styles.statusDotOpen} aria-hidden="true">●</span>
+            <span className={styles.statusOpen}>open now</span>
+            {clock?.closesAtLabel && (
+              <>
+                <span className={styles.sep} aria-hidden="true">·</span>
+                <span className={styles.statusMuted}>closes {clock.closesAtLabel}</span>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <span className={styles.statusDotClosed} aria-hidden="true">●</span>
+            {clock?.windowLabel && <span className={styles.statusMuted}>{clock.windowLabel}</span>}
+            {clock?.windowLabel && clock?.nextOpenLabel && (
+              <span className={styles.sep} aria-hidden="true">·</span>
+            )}
+            {clock?.nextOpenLabel && (
+              <span className={styles.statusMuted}>{clock.nextOpenLabel}</span>
+            )}
+            {!clock?.windowLabel && !clock?.nextOpenLabel && (
+              <span className={styles.statusMuted}>Check schedule</span>
+            )}
+          </>
         )}
       </div>
 
-      {onSelect && (
-        <div className={styles.footer}>
-          <button
-            type="button"
-            className={`${styles.selectButton} ${isCurrentMarket ? styles.selectedButton : ''}`}
-            onClick={handleSelect}
-            disabled={isCurrentMarket}
-          >
-            {isCurrentMarket ? (
-              <>
-                <Check size={16} strokeWidth={2} aria-hidden="true" />
-                <span>Selected</span>
-              </>
-            ) : (
-              <span>Shop this market</span>
-            )}
-          </button>
+      {/* Meta line: city · distance · stall count */}
+      {metaParts.length > 0 && (
+        <div className={styles.metaLine}>
+          {metaParts.map((part, idx) => (
+            <React.Fragment key={idx}>
+              {idx > 0 && <span className={styles.sep} aria-hidden="true">·</span>}
+              <span>{part}</span>
+            </React.Fragment>
+          ))}
         </div>
       )}
+
+      {/* Seven day-dots */}
+      <div className={styles.daysWrapper}>
+        <DayDots days={days} size="sm" />
+      </div>
     </article>
   );
 }

@@ -23,25 +23,28 @@ export function MarketClock({
   progress = 0,
 }) {
   const pct = Math.max(0, Math.min(1, progress)) * 100;
+  const hasSchedule = openNow || Boolean(windowLabel) || Boolean(nextOpenLabel);
 
   return (
     <div className={styles.clock}>
       <p className={styles.line}>
         <span className={styles.market}>{marketName}</span>
-        <span className={styles.sep} aria-hidden="true">·</span>
-        {openNow ? (
+        {hasSchedule && (
           <>
-            <span className={styles.open}>open now</span>
             <span className={styles.sep} aria-hidden="true">·</span>
-            <span className={styles.muted}>closes {closesAtLabel}</span>
-          </>
-        ) : (
-          <>
-            <span className={styles.muted}>{windowLabel}</span>
-            {nextOpenLabel && (
+            {openNow ? (
               <>
+                <span className={styles.open}>open now</span>
                 <span className={styles.sep} aria-hidden="true">·</span>
-                <span className={styles.muted}>{nextOpenLabel}</span>
+                <span className={styles.muted}>closes {closesAtLabel}</span>
+              </>
+            ) : (
+              <>
+                {windowLabel && <span className={styles.muted}>{windowLabel}</span>}
+                {windowLabel && nextOpenLabel && (
+                  <span className={styles.sep} aria-hidden="true">·</span>
+                )}
+                {nextOpenLabel && <span className={styles.muted}>{nextOpenLabel}</span>}
               </>
             )}
           </>

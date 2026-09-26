@@ -1,0 +1,130 @@
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.step {
+  display: flex;
+  gap: var(--space-4);
+  position: relative;
+  min-height: var(--space-12);
+}
+
+.step:last-child {
+  min-height: auto;
+}
+
+.markerCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 0.625rem; /* 10px */
+  position: relative;
+  padding-top: var(--space-1);
+}
+
+.dot {
+  width: 0.625rem; /* 10px */
+  height: 0.625rem;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  z-index: 1;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.reached .dot {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.current .dot {
+  outline: 2px solid var(--color-hairline);
+  outline-offset: 3px;
+}
+
+.rail {
+  position: absolute;
+  top: calc(0.625rem + var(--space-1));
+  bottom: 0;
+  width: 2px;
+  background: var(--color-hairline);
+}
+
+.segmentDone .rail {
+  background: var(--color-ink);
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-6);
+  flex: 1;
+}
+
+.step:last-child .stepContent {
+  padding-bottom: 0;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--lh-ui);
+}
+
+.reached .label {
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.unreached .label {
+  font-weight: var(--weight-regular);
+  color: var(--color-ink-faint);
+}
+
+.timestamp {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-ui);
+}
+
+.unreached .timestamp {
+  color: var(--color-ink-faint);
+}
+
+/* Cancelled single block */
+.cancelledBlock {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.cancelledText {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.cancelledReason {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}

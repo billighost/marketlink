@@ -105,7 +105,7 @@ export function BuyerTopBar() {
 
           <button
             type="button"
-            onClick={() => navigate('/buyer/products')}
+            onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
             className={styles.searchButton}
             aria-label="Search the market"
           >
