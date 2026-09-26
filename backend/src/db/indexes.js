@@ -407,6 +407,44 @@ export async function ensureIndexes(db) {
     { name: 'idx_mediaUploads_attachedTo_created' }
   );
 
+  // ── 19. Email Verifications ──
+  await db.collection(COLLECTIONS.EMAIL_VERIFICATIONS).createIndex(
+    { tokenHash: 1 },
+    { unique: true, name: 'idx_emailVerifications_tokenHash_unique' }
+  );
+  await db.collection(COLLECTIONS.EMAIL_VERIFICATIONS).createIndex(
+    { expiresAt: 1 },
+    { expireAfterSeconds: 0, name: 'idx_emailVerifications_ttl_expiresAt' }
+  );
+  await db.collection(COLLECTIONS.EMAIL_VERIFICATIONS).createIndex(
+    { userId: 1, createdAt: -1 },
+    { name: 'idx_emailVerifications_userId_createdAt' }
+  );
+
+  // ── 20. Email Log ──
+  await db.collection(COLLECTIONS.EMAIL_LOG).createIndex(
+    { tag: 1, createdAt: -1 },
+    { name: 'idx_emailLog_tag_createdAt' }
+  );
+  await db.collection(COLLECTIONS.EMAIL_LOG).createIndex(
+    { status: 1, createdAt: -1 },
+    { name: 'idx_emailLog_status_createdAt' }
+  );
+  await db.collection(COLLECTIONS.EMAIL_LOG).createIndex(
+    { createdAt: -1 },
+    { name: 'idx_emailLog_createdAt' }
+  );
+
+  // ── 21. Image Gen Jobs ──
+  await db.collection(COLLECTIONS.IMAGE_GEN_JOBS).createIndex(
+    { entityType: 1, status: 1 },
+    { name: 'idx_imageGenJobs_entityType_status' }
+  );
+  await db.collection(COLLECTIONS.IMAGE_GEN_JOBS).createIndex(
+    { entityType: 1, entityId: 1 },
+    { unique: true, name: 'idx_imageGenJobs_entityType_entityId_unique' }
+  );
+
   indexStatus = 'ready';
   } catch (err) {
     indexStatus = 'error';

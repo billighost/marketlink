@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin,
@@ -290,6 +290,16 @@ export function MarketDetail() {
               {activeTab === 'overview' && (
                 <div className={styles.tabPane}>
                   <div className={styles.contentCard}>
+                    {market.bannerUrl && (
+                      <div style={{ borderRadius: 8, overflow: 'hidden', marginBottom: 16, aspectRatio: '16/9' }}>
+                        <img
+                          src={market.bannerUrl}
+                          alt={market.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
                     <h2 className={styles.cardHeading}>About {market.name}</h2>
                     <p className={styles.aboutText}>
                       {market.description ||

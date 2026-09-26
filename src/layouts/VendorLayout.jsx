@@ -17,6 +17,7 @@ import { getFarmerOrders, getFarmerProfile } from '@/api/farmer';
 import { useVisibleInterval } from '@/hooks/useVisibleInterval';
 import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
+import VerifyEmailBanner from '@/components/layout/VerifyEmailBanner';
 import styles from './VendorLayout.module.css';
 
 export const VendorContext = createContext({
@@ -162,6 +163,7 @@ export default function VendorLayout() {
 
         {/* Main Content Area */}
         <div className={styles.mainWrapper}>
+          <VerifyEmailBanner />
           {/* Mobile Top Bar (< 1024px) */}
           <header className={styles.mobileTopBar}>
             <div className={styles.mobileStallInfo}>

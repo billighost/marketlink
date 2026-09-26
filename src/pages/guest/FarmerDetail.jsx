@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -149,7 +149,7 @@ export function FarmerDetail() {
       {/* ΓöÇΓöÇΓöÇ HERO COVER BANNER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
       <div className={styles.heroBannerWrap}>
         <img
-          src={farmer.coverImage || '/images/riverbend-farm.jpg'}
+          src={farmer.bannerUrl || farmer.coverImage || '/images/riverbend-farm.jpg'}
           alt={farmTitle}
           className={styles.heroCoverImg}
         />
@@ -186,7 +186,7 @@ export function FarmerDetail() {
           <div className={styles.profileHeaderInner}>
             <div className={styles.profileAvatarWrap}>
               <img
-                src={farmer.avatar || '/images/farmer-elena.jpg'}
+                src={farmer.logoUrl || farmer.avatar || '/images/farmer-elena.jpg'}
                 alt={growerName}
                 className={styles.profileAvatarImg}
               />

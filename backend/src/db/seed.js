@@ -164,7 +164,12 @@ export async function runSeed(force = false, targetDb = null) {
     },
   ];
 
-  const markets = marketDefs.map((m) => ({ _id: new ObjectId(), ...m }));
+  const markets = marketDefs.map((m) => ({
+    _id: new ObjectId(),
+    bannerUrl: null,
+    bannerPublicId: null,
+    ...m,
+  }));
   await db.collection(COLLECTIONS.MARKETS).insertMany(markets);
   const elmMarket = markets[0];
   const riverMarket = markets[1];
@@ -188,6 +193,8 @@ export async function runSeed(force = false, targetDb = null) {
     homeMarketId: elmMarket._id,
     savedMarketIds: [elmMarket._id],
     notificationPrefs: { orderUpdates: true, readyAlerts: true, weeklyPicks: true, restockAlerts: true },
+    emailVerified: true,
+    emailVerifiedAt: now,
     createdAt: now,
     updatedAt: now,
     lastLoginAt: now,
@@ -296,6 +303,8 @@ export async function runSeed(force = false, targetDb = null) {
       weeklyPicks: true,
       restockAlerts: false,
     },
+    emailVerified: true,
+    emailVerifiedAt: now,
     createdAt: now,
     updatedAt: now,
     lastLoginAt: now,
@@ -559,6 +568,8 @@ export async function runSeed(force = false, targetDb = null) {
         weeklyPicks: false,
         restockAlerts: true,
       },
+      emailVerified: true,
+      emailVerifiedAt: now,
       createdAt: now,
       updatedAt: now,
       lastLoginAt: now,
@@ -593,6 +604,10 @@ export async function runSeed(force = false, targetDb = null) {
       art: f.art,
       imageUrl: null,
       imagePublicId: null,
+      logoUrl: null,
+      logoPublicId: null,
+      bannerUrl: null,
+      bannerPublicId: null,
       slotOverrides: [],
       maxOrdersPerSlot: 30,
       listingEnabled: f.status === 'active',

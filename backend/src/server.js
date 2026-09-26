@@ -12,6 +12,7 @@ import { createCollections } from './db/collections.js';
 import { createApp } from './app.js';
 import { maskUri } from './utils/maskUri.js';
 import { runMediaCleanup } from '../scripts/media-cleanup.js';
+import { verifyMailerConnection } from './utils/mailer.js';
 
 let server;
 
@@ -29,6 +30,9 @@ async function bootstrap() {
     await createCollections(db);
     await ensureIndexes(db);
     console.log(`[DB] Collections and indexes verified.`);
+
+    // 2b. Verify Gmail SMTP credentials
+    await verifyMailerConnection();
 
     // 3. Create Express application
     const app = createApp();

@@ -769,8 +769,33 @@ export function Register() {
                 </div>
                 <h2 className={styles.successHeading}>Welcome to MarketLink, {activeName || 'Friend'}!</h2>
                 <span className={styles.successBadgePill}>
-                  ✓ Verified {role === 'customer' ? 'Customer' : 'Producer'} Account
+                  ✓ Account Created · Confirmation Email Sent
                 </span>
+
+                <div
+                  style={{
+                    margin: 'var(--space-4) 0',
+                    padding: 'var(--space-3) var(--space-4)',
+                    backgroundColor: '#fef7e0',
+                    border: '1px solid #f9e2af',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: 'var(--text-sm)',
+                    color: '#744210',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 'var(--space-2)',
+                  }}
+                >
+                  <Mail size={18} style={{ flexShrink: 0, marginTop: '2px', color: '#b7791f' }} />
+                  <div>
+                    <strong>Check your email:</strong> We've sent a confirmation link to{' '}
+                    <strong>{role === 'customer' ? customerData.email : farmerData.email}</strong>.
+                    {role === 'farmer'
+                      ? ' Producer stall approval requires a verified email address.'
+                      : ' Click the link to complete your email verification.'}
+                  </div>
+                </div>
 
                 <p className={styles.successMessage}>
                   {role === 'customer'

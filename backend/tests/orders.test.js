@@ -265,6 +265,11 @@ describe('Customer Orders Suite (T3.071 - T3.110)', () => {
   });
 
   it('T3.078: PATCH /api/orders/:id adding new products is rejected (422)', async () => {
+    await db.collection(COLLECTIONS.ORDERS).updateOne(
+      { _id: testOrderGeorge._id },
+      { $set: { cutoffAt: new Date(Date.now() + 86400000), status: 'placed' } }
+    );
+
     const res = await request(`/api/orders/${testOrderGeorge._id}`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },

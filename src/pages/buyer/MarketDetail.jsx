@@ -23,6 +23,7 @@ export function MarketDetail({ inSheet = true, onClose }) {
   const { id } = useParams();
   const { user, refreshUser } = useAuth();
   const [savingAction, setSavingAction] = useState(false);
+  const [bannerError, setBannerError] = useState(false);
 
   const { data: market, loading, error } = useQuery(
     ['market-detail', id],
@@ -123,6 +124,19 @@ export function MarketDetail({ inSheet = true, onClose }) {
             <ArrowLeft size={20} aria-hidden="true" />
             <span>Back to markets</span>
           </Link>
+        </div>
+      )}
+
+      {/* Market Banner Visual */}
+      {market.bannerUrl && !bannerError && (
+        <div className={styles.bannerWrapper} data-aspect="16/9">
+          <img
+            src={market.bannerUrl}
+            alt={`${market.name} banner`}
+            loading="lazy"
+            className={styles.bannerImg}
+            onError={() => setBannerError(true)}
+          />
         </div>
       )}
 

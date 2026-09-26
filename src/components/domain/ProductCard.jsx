@@ -22,6 +22,7 @@ export function ProductCard({
   className = '',
 }) {
   const location = useLocation();
+  const [imgError, setImgError] = React.useState(false);
 
   if (!product) return null;
 
@@ -54,12 +55,22 @@ export function ProductCard({
         className={`${styles.imageTile} ${variant === 'feature' ? styles.imageTileFeature : ''}`}
         data-aspect={aspectAttr}
       >
-        <div className={styles.illustrationWrapper}>
-          <Illustration
-            name={product.art || 'basket'}
-            size={variant === 'feature' ? 'lg' : 'md'}
+        {product.imageUrl && !imgError ? (
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            loading="lazy"
+            className={styles.photo}
+            onError={() => setImgError(true)}
           />
-        </div>
+        ) : (
+          <div className={styles.illustrationWrapper}>
+            <Illustration
+              name={product.art || 'basket'}
+              size={variant === 'feature' ? 'lg' : 'md'}
+            />
+          </div>
+        )}
 
         {/* Stock badge: shown only if out or low */}
         {isSoldOut && (

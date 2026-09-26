@@ -66,6 +66,8 @@ export async function runMinimalSeed(force = false, targetDb = null) {
     facilities: ['parking', 'restrooms', 'wheelchair-accessible', 'atm'],
     status: 'active',
     farmerCount: 0,
+    bannerUrl: null,
+    bannerPublicId: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -105,6 +107,8 @@ export async function runMinimalSeed(force = false, targetDb = null) {
     notificationPrefs: { orderUpdates: true, readyAlerts: true, weeklyPicks: true, restockAlerts: true },
     failedLogins: 0,
     lockUntil: null,
+    emailVerified: true,
+    emailVerifiedAt: now,
     createdAt: now,
     updatedAt: now,
     lastLoginAt: now,

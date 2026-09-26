@@ -73,3 +73,20 @@ export async function resetPassword({ token, newPassword, confirmPassword }) {
   });
   return res.data;
 }
+
+export async function verifyEmail(token) {
+  const res = await apiFetch('/auth/verify-email', {
+    method: 'POST',
+    body: { token },
+  });
+  return res.data;
+}
+
+export async function resendVerification(email) {
+  const res = await apiFetch('/auth/resend-verification', {
+    method: 'POST',
+    body: { email },
+  });
+  return res.data;
+}
+

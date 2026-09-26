@@ -21,7 +21,9 @@
     "export:json": "node scripts/export-json.js",
     "profile:report": "node scripts/profile-report.js",
     "smoke": "powershell -ExecutionPolicy Bypass -File scripts/smoke.ps1",
-    "prove:api": "node scripts/prove-api.js"
+    "prove:api": "node scripts/prove-api.js",
+    "test:gemini": "node scripts/test-gemini.js",
+    "test:email": "node scripts/test-real-email.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -33,6 +35,7 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.13.0"
+    "mongodb": "^6.13.0",
+    "nodemailer": "^10.0.10"
   }
 }

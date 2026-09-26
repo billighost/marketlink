@@ -97,6 +97,13 @@
   padding: var(--space-2);
 }
 
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 /* Stock badge */
 .badgeWrapper {
   position: absolute;

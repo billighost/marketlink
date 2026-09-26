@@ -102,6 +102,30 @@ if (storageDriver === 'local') {
   }
 }
 
+// ── Gemini Assistant Configuration ──
+const assistantEnabled = process.env.ASSISTANT_ENABLED !== 'false';
+const geminiApiKeysRaw = process.env.GEMINI_API_KEYS || '';
+const geminiApiKeys = geminiApiKeysRaw
+  .split(',')
+  .map((k) => k.trim())
+  .filter(Boolean);
+
+if (assistantEnabled && isProduction && geminiApiKeys.length === 0) {
+  throw new Error('[Config Error] GEMINI_API_KEYS must contain at least one API key when ASSISTANT_ENABLED is true.');
+}
+
+for (const key of geminiApiKeys) {
+  if (key.length < 20) {
+    throw new Error('[Config Error] Each key in GEMINI_API_KEYS must be at least 20 characters.');
+  }
+}
+
+const geminiModel = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+const geminiFallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-flash-lite-latest';
+const geminiRpmPerKey = parseInt(process.env.GEMINI_RPM_PER_KEY || '10', 10);
+const geminiTimeoutMs = parseInt(process.env.GEMINI_TIMEOUT_MS || '12000', 10);
+const assistantMaxTokens = parseInt(process.env.ASSISTANT_MAX_TOKENS || '400', 10);
+
 export const env = {
   NODE_ENV: nodeEnv,
   PORT: port,
@@ -121,7 +145,19 @@ export const env = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
   CLOUDINARY_FOLDER: cloudinaryFolder,
   UPLOAD_DIR: uploadDir,
+  ASSISTANT_ENABLED: assistantEnabled,
+  GEMINI_API_KEYS: geminiApiKeys,
+  GEMINI_MODEL: geminiModel,
+  GEMINI_FALLBACK_MODEL: geminiFallbackModel,
+  GEMINI_RPM_PER_KEY: geminiRpmPerKey,
+  GEMINI_TIMEOUT_MS: geminiTimeoutMs,
+  ASSISTANT_MAX_TOKENS: assistantMaxTokens,
+  GMAIL_USER: process.env.GMAIL_USER || '',
+  GMAIL_APP_PASSWORD: (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, ''),
+  EMAIL_FROM: process.env.EMAIL_FROM || (process.env.GMAIL_USER ? `MarketLink <${process.env.GMAIL_USER}>` : 'MarketLink <noreply@marketlink.test>'),
+  GMAIL_DAILY_LIMIT: parseInt(process.env.GMAIL_DAILY_LIMIT || '450', 10),
   isProduction,
   isTest,
   isDevelopment,
 };
+
