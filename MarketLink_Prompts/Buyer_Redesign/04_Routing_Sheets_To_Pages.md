@@ -1,0 +1,732 @@
+# Stage 4 · Routing — turn twelve overlays into real pages
+
+You are working on **MarketLink**, an existing React + Vite app. Stages 1–3 of a Customer-side
+redesign are done: white-first tokens, the buyer app shell, four layout primitives, ten scene
+illustrations, and the backend fields the new pages need.
+
+This stage is the **structural heart of the redesign**. Twelve Customer destinations are
+currently bottom-sheet overlays. You convert them into real pages with real URLs, add redirects
+so no link breaks, and fix a bug that means one filter sheet never opens at all.
+
+**You will not restyle any page in this stage.** Pages will look like their old sheet contents
+dropped onto a page — awkward but working. Stages 5–9 rebuild each one properly. Your job is the
+skeleton, and the app must still work end to end when you finish.
+
+This is the highest-risk stage in the pack. Go slowly, convert one route at a time, and load the
+app after each one.
+
+---
+
+# PART 1 · Project context
+
+## 1.1 What MarketLink is
+
+A platform connecting local farmers-market **Farmers** with **Customers**. A Farmer runs a
+**stall** at a **market** open on specific days. A Customer browses what is available,
+**reserves** items, picks a pickup slot, then **collects in person at the stall and pays in
+cash**. No payment gateway. No delivery.
+
+## 1.2 Stack
+
+React 18.3, Vite 6, `react-router-dom` **6.28**. CSS Modules only. Alias `@` maps to `src`.
+Frontend port 3000, proxying `/api` to 4000. No new dependencies.
+
+## 1.3 The files you will work in
+
+```
+src/routes/AppRoutes.jsx                  the router                    (MAJOR REWRITE)
+src/routes/paths.js                       route constants               (EXTEND)
+src/layouts/BuyerLayout.jsx               reads isSheetPath              (SIMPLIFY)
+src/components/layout/SheetRoute.jsx      sheet route wrapper            (DELETE at the end)
+src/hooks/useOpenSheet.js                 opens sheets over a background  (REPLACE)
+src/components/layout/BottomNav.jsx       basket item opens a sheet       (EDIT)
+src/components/layout/CartBar.jsx         opens the cart sheet            (EDIT)
+src/components/layout/BuyerTopBar.jsx     handleOpenCart opens a sheet    (EDIT)
+src/components/domain/ProductCard.jsx     links with background state     (EDIT)
+src/components/domain/FarmerCard.jsx      same                            (EDIT)
+src/components/domain/MarketCard.jsx      same                            (EDIT)
+src/components/domain/OrderRow.jsx        same                            (EDIT)
+src/pages/buyer/*.jsx                     12 pages receive inSheet props  (EDIT MINIMALLY)
+src/pages/buyer/Products.jsx:358          the isOpen bug                  (FIX)
+tests/03_customer.mjs                     asserts sheet behaviour         (UPDATE)
+```
+
+## 1.4 How it works today — read this carefully before touching anything
+
+`AppRoutes.jsx` uses the **background location pattern**. A link carries
+`state={{ background: location }}`. The router renders the base `<Routes>` using
+`background || location`, and then, **if `background` exists**, renders a second `<Routes>` block
+of overlay routes on top. Twelve buyer routes are registered in *both* blocks, so a direct URL
+visit or a page refresh still renders them — inside a `<SheetRoute>` frame.
+
+`SheetRoute` wraps its child in `<BottomSheet>`, computes a title from the pathname, closes via
+`navigate(-1)` (or a fallback path), and clones the child with `inSheet: true` and an `onClose`
+prop.
+
+`BuyerLayout` computes `isSheetPath` from a list of pathname prefixes and hides the top bar,
+basket pill and bottom nav whenever a sheet is open.
+
+`useOpenSheet()` returns `openSheet(path)`, which navigates with `background` state, replacing
+rather than stacking if a sheet is already open.
+
+**The twelve sheet destinations:**
+
+| Route | Sheet size | Becomes |
+|---|---|---|
+| `/buyer/products/:id` | tall | page |
+| `/buyer/farmers/:id` | tall | page at `/buyer/stalls/:id` |
+| `/buyer/markets/:id` | tall | page |
+| `/buyer/cart` | tall | page at `/buyer/basket` |
+| `/buyer/order-confirmed` | peek | page at `/buyer/orders/:id/confirmed` |
+| `/buyer/orders/:id` | tall | page |
+| `/buyer/assistant` | full | page |
+| `/buyer/notifications` | tall | page |
+| `/buyer/profile/details` | tall | page |
+| `/buyer/profile/markets` | tall | page |
+| `/buyer/profile/notifications` | tall | page |
+| `/buyer/profile/help` | tall | page at `/buyer/help` |
+
+## 1.5 Off-limits
+
+- `src/pages/vendor/**`, `src/pages/admin/**`, `src/pages/guest/**` and their layouts
+- `backend/**`
+- `package.json`
+- **`src/components/ui/BottomSheet.jsx` stays.** It is still used by vendor and admin pages, and
+  by the buyer filter panel and sign-out confirm. Do not delete or change its props.
+- **Do not restyle anything.** No new CSS in this stage beyond what is needed to stop a page
+  being visually broken, and say so if you add any.
+
+---
+
+# PART 2 · Why pages, not sheets
+
+## 2.1 The problem
+
+A `BottomSheet` becomes a **448px right-hand drawer** at 768px and up (`--drawer-width: 28rem`).
+A produce page, a stall profile, a basket and an order timeline are all being rendered into a
+448px slot on a 1440px screen. That single fact is why the app does not feel like a marketplace.
+
+Beyond looks, overlays cost real behaviour:
+
+- A shared link opens a sheet floating over whatever page the router guesses
+- Browser Back sometimes closes a sheet and sometimes leaves the app
+- Refresh on a sheet route re-renders the sheet with no page behind it
+- Two `<Routes>` trees mean every route is declared twice and they drift apart
+- `inSheet` props fork the layout of twelve pages into two code paths each
+
+## 2.2 The test for whether something may be an overlay
+
+An overlay is correct only when **all four** are true:
+
+1. It is **transient** — open, one decision, closed.
+2. Losing it costs nothing. No data entered, nothing to return to.
+3. It should **not** be linkable, refreshable or in browser history.
+4. The page behind stays meaningful and you return exactly where you were.
+
+## 2.3 The only surviving overlays
+
+| Surface | Form | Where it lives after this stage |
+|---|---|---|
+| Filter + sort panel | `BottomSheet` under 1024, inline rail at 1024+ | Browse page local state (stage 6) |
+| Command palette | centred dialog | stage 9 |
+| Sign-out confirmation | small `BottomSheet` | Profile page local state (already is) |
+| Toasts | bottom stack | `ToastContext`, unchanged |
+| Market switcher | dropdown menu | `MarketDropdown`, unchanged |
+
+Every one of those is local component state. **None of them is a route.** After this stage there
+is no such thing as a "sheet route" in MarketLink.
+
+---
+
+# PART 3 · Your tasks
+
+Do these in order. **Load the app in the browser after every single task.**
+
+## Task 1 · Extend `src/routes/paths.js`
+
+Add the new constants. **Keep every existing constant** — other code imports them.
+
+```js
+  // Buyer redesign: canonical paths
+  BUYER_STALLS:            '/buyer/stalls',
+  BUYER_STALL_DETAIL:      '/buyer/stalls/:id',
+  BUYER_BASKET:            '/buyer/basket',
+  BUYER_CHECKOUT:          '/buyer/checkout',
+  BUYER_ORDER_CONFIRMED_ID:'/buyer/orders/:id/confirmed',
+  BUYER_SAVED:             '/buyer/saved',
+  BUYER_HELP:              '/buyer/help',
+  BUYER_PROFILE_REVIEWS:   '/buyer/profile/reviews',
+```
+
+## Task 2 · Rewrite the buyer route block in `AppRoutes.jsx`
+
+Delete the **entire second `<Routes>` block** (the `{background && (...)}` overlay tree) and the
+`const background = location.state && location.state.background;` line. Then replace the buyer
+route block with this. Type it as written.
+
+```jsx
+        {/* ── Customer (Buyer) Routes — every destination is a real page ──── */}
+        <Route
+          path="/buyer"
+          element={
+            <ProtectedRoute allowedRoles={['customer', 'buyer']}>
+              <BuyerLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* Today */}
+          <Route index element={<BuyerHome />} />
+
+          {/* Browse produce */}
+          <Route path="products"            element={<BuyerProducts />} />
+          <Route path="products/:id"        element={<BuyerProductDetail />} />
+
+          {/* Stalls — canonical. /buyer/farmers* redirects in. */}
+          <Route path="stalls"              element={<BuyerFarmers />} />
+          <Route path="stalls/:id"          element={<BuyerFarmerDetail />} />
+
+          {/* Markets */}
+          <Route path="markets"             element={<BuyerMarkets />} />
+          <Route path="markets/:id"         element={<BuyerMarketDetail />} />
+
+          {/* Basket and checkout — canonical. /buyer/cart redirects in. */}
+          <Route path="basket"              element={<BuyerCart />} />
+          <Route path="checkout"            element={<BuyerCheckout />} />
+
+          {/* Orders */}
+          <Route path="orders"              element={<BuyerOrders />} />
+          <Route path="orders/:id"          element={<BuyerOrderDetail />} />
+          <Route path="orders/:id/confirmed" element={<BuyerOrderConfirmed />} />
+
+          {/* Saved — canonical. /buyer/favorites redirects in. */}
+          <Route path="saved"               element={<BuyerFavorites />} />
+
+          {/* Assistant, notifications, help */}
+          <Route path="assistant"           element={<BuyerAssistant />} />
+          <Route path="notifications"       element={<BuyerProfileNotifications />} />
+          <Route path="help"                element={<BuyerHelp />} />
+
+          {/* You */}
+          <Route path="profile"             element={<BuyerProfile />} />
+          <Route path="profile/details"     element={<BuyerProfileDetails />} />
+          <Route path="profile/markets"     element={<BuyerSavedMarkets />} />
+          <Route path="profile/notifications" element={<BuyerNotificationPrefs />} />
+          <Route path="profile/reviews"     element={<BuyerReviews />} />
+
+          {/* ── Redirects: every old URL still resolves ──────────────────── */}
+          <Route path="farmers"             element={<Navigate to="/buyer/stalls" replace />} />
+          <Route path="farmers/:id"         element={<RedirectFarmerToStall />} />
+          <Route path="cart"                element={<Navigate to="/buyer/basket" replace />} />
+          <Route path="favorites"           element={<Navigate to="/buyer/saved" replace />} />
+          <Route path="reviews"             element={<Navigate to="/buyer/profile/reviews" replace />} />
+          <Route path="profile/help"        element={<Navigate to="/buyer/help" replace />} />
+          <Route path="order-confirmed"     element={<Navigate to="/buyer/orders" replace />} />
+
+          {/* Buyer 404 */}
+          <Route path="*"                   element={<BuyerNotFound />} />
+        </Route>
+```
+
+Three things that block are asking for:
+
+### 2a · `RedirectFarmerToStall`
+
+A param-preserving redirect. `<Navigate>` cannot interpolate a param, so write a tiny component
+in `AppRoutes.jsx`:
+
+```jsx
+/** Preserves :id when redirecting the old /buyer/farmers/:id URL to /buyer/stalls/:id. */
+function RedirectFarmerToStall() {
+  const { id } = useParams();
+  return <Navigate to={`/buyer/stalls/${id}`} replace />;
+}
+```
+
+Import `Navigate` and `useParams` from `react-router-dom`.
+
+### 2b · Two pages that do not exist yet
+
+`BuyerCheckout` and `BuyerNotFound`. Create them as **minimal working stubs** — real pages, real
+content, no styling ambition. Stage 8 builds checkout properly.
+
+`src/pages/buyer/Checkout.jsx`:
+
+```jsx
+import React from 'react';
+import { Link } from 'react-router-dom';
+import Page from '@/components/layout/Page';
+import PageTitle from '@/components/layout/PageTitle';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+
+/**
+ * Review pickup and place the pre-order. Stage 4 stub — Stage 8 builds this properly.
+ * Payment is settled in cash at the stall, so this page never collects payment details.
+ */
+export function Checkout() {
+  useDocumentTitle('Review pickup · MarketLink');
+  return (
+    <Page width="detail">
+      <PageTitle
+        title="Review pickup"
+        context="Choose when you will collect from each stall."
+        backTo="/buyer/basket"
+        backLabel="Back to basket"
+      />
+      <p>Checkout is built in a later stage.</p>
+      <Link to="/buyer/basket">Back to basket</Link>
+    </Page>
+  );
+}
+
+export default Checkout;
+```
+
+`src/pages/buyer/NotFound.jsx` — same shape, using `<EmptyState scene="lost-path" />` from
+Stage 2, title `"That page is not on the map"`, text
+`"The link may be old, or the stall may have moved."`, action `"Back to today"` to `/buyer`.
+
+### 2c · `BuyerNotificationPrefs` and `BuyerProfileNotifications`
+
+Today **one** component, `ProfileNotifications.jsx`, serves two routes —
+`/buyer/notifications` (the inbox) and `/buyer/profile/notifications` (the preferences). That
+was tolerable when both were sheets with different titles. As pages it is wrong: one is a list of
+events, the other is a settings form.
+
+For this stage: point `/buyer/notifications` at the existing component, and create
+`src/pages/buyer/NotificationPrefs.jsx` as a stub for the preferences route. Stage 9 splits the
+logic properly. Note the split clearly in your report.
+
+## Task 3 · Replace `useOpenSheet`
+
+Twelve pages and four cards import `useOpenSheet`. Rather than editing every call site, keep the
+hook's **name and shape** and change what it does — `openSheet(path)` becomes a plain navigation.
+
+Rewrite `src/hooks/useOpenSheet.js`:
+
+```js
+import { useNavigate } from 'react-router-dom';
+import { useCallback } from 'react';
+
+/**
+ * Navigate to a buyer destination.
+ *
+ * Kept under its original name so the ~16 existing call sites need no edit, but every
+ * destination is now a real page: no background location, no overlay, no history games.
+ * New code should call useNavigate() directly. This hook is a compatibility shim and
+ * the later stages remove its call sites one page at a time.
+ */
+export function useOpenSheet() {
+  const navigate = useNavigate();
+
+  const openSheet = useCallback((path, options = {}) => {
+    navigate(path, { replace: Boolean(options.replace) });
+  }, [navigate]);
+
+  const closeSheet = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
+
+  return { openSheet, closeSheet };
+}
+
+export default useOpenSheet;
+```
+
+Also map the old paths to the new ones at every call site. Search and fix:
+
+```bash
+grep -rn "openSheet(" src/
+grep -rn "/buyer/cart\|/buyer/farmers\|/buyer/favorites\|/buyer/profile/help\|/buyer/order-confirmed" src/
+```
+
+Change each to the canonical path. The redirects in Task 2 are a safety net for **external**
+links, not an excuse to leave stale internal ones.
+
+## Task 4 · Strip `background` state from every link
+
+Four cards attach `state={{ background: ... }}` to their links. Remove it.
+
+In `ProductCard.jsx`, `FarmerCard.jsx`, `MarketCard.jsx`, `OrderRow.jsx`:
+
+```jsx
+/* before */
+const linkState = { background: location.state?.background || location };
+<Link to={productSheetPath} state={linkState} ... />
+
+/* after */
+<Link to={`/buyer/products/${product.id}`} ... />
+```
+
+Remove the now-unused `useLocation` import from each. Update `FarmerCard` to link to
+`/buyer/stalls/:id`.
+
+```bash
+grep -rn "background:" src/components src/pages/buyer src/layouts
+```
+
+Must come back empty when you are done.
+
+## Task 5 · Simplify `BuyerLayout`
+
+`isSheetPath`, `isSheetOpen` and every `{!isSheetOpen && ...}` guard can go — nothing is ever a
+sheet route now. The chrome always renders.
+
+Keep: the skip link, `AnnouncementBar`, `BuyerTopBar`, `<main><Outlet/></main>`, `CartBar`,
+`BottomNav`, the `data-cart-visible` attribute, and the scroll-position ref effect — but simplify
+that effect, since `location.state?.background` no longer exists.
+
+`isCartVisible` becomes `count > 0 && location.pathname !== '/buyer/basket'`.
+
+## Task 6 · Point basket entry points at the page
+
+Three places open the cart as a sheet. Each becomes a plain link or navigate to `/buyer/basket`.
+
+- `BottomNav.jsx` — the `basket` item: delete the special-case branch in `handleClick` that
+  navigates with `background` state. It becomes an ordinary nav item like the other four, with
+  `path: '/buyer/basket'`.
+- `CartBar.jsx` — `handleClick` becomes `navigate('/buyer/basket')`. The
+  `if (location.state?.background) return null;` guard goes. The
+  `location.pathname === '/buyer/cart'` guard becomes `'/buyer/basket'`.
+- `BuyerTopBar.jsx` — `handleOpenCart` becomes `navigate('/buyer/basket')`, or better, make the
+  basket button a `<Link to="/buyer/basket">`. Keep `data-cart-target-desktop`, the add-to-basket
+  fly animation targets it.
+
+Also update the desktop nav link `to` values, which Stage 1 left pointing at the old paths:
+Today `/buyer`, Browse `/buyer/products`, Stalls `/buyer/stalls`, Markets `/buyer/markets`,
+Orders `/buyer/orders`.
+
+## Task 7 · Remove `inSheet` from the twelve pages
+
+Each converted page currently receives `inSheet: true` and `onClose` from `SheetRoute` and
+branches on them. Minimum viable de-sheeting, per page:
+
+1. Delete `inSheet` and `onClose` from the props signature.
+2. Delete every `inSheet ?` conditional — keep the **page** branch, drop the sheet branch.
+3. Delete any close button that existed only to dismiss the sheet.
+4. Wrap the content in `<Page width="...">` and give it a `<PageTitle>` with the right `backTo`:
+
+| Page | `Page width` | `backTo` |
+|---|---|---|
+| ProductDetail | `detail` | `/buyer/products`, "Back to browse" |
+| FarmerDetail | `detail` | `/buyer/stalls`, "Back to stalls" |
+| MarketDetail | `detail` | `/buyer/markets`, "Back to markets" |
+| Cart (basket) | `detail` | `/buyer/products`, "Keep browsing" |
+| OrderDetail | `detail` | `/buyer/orders`, "Back to orders" |
+| OrderConfirmed | `detail` | none |
+| Assistant | `read` | `/buyer`, "Back to today" |
+| Notifications | `read` | `/buyer`, "Back to today" |
+| ProfileDetails | `read` | `/buyer/profile`, "Back to you" |
+| SavedMarkets | `read` | `/buyer/profile`, "Back to you" |
+| NotificationPrefs | `read` | `/buyer/profile`, "Back to you" |
+| Help | `read` | `/buyer/profile`, "Back to you" |
+
+5. Add `useDocumentTitle('<Page name> · MarketLink')` — `SheetRoute` used to set the title and
+   that behaviour must not be lost.
+
+**Nothing else.** Do not reorganise the content, do not restyle, do not "improve" the layout.
+Later stages rebuild every one of these.
+
+## Task 8 · Fix the `isOpen` bug
+
+`src/pages/buyer/Products.jsx:358` renders:
+
+```jsx
+<BottomSheet isOpen={isFilterSheetOpen} ... >
+```
+
+`BottomSheet` destructures **`open`**, not `isOpen`. The buyer filter sheet has never opened.
+Change it to `open={isFilterSheetOpen}`.
+
+The same bug exists at ~20 call sites under `src/pages/vendor/` and `src/pages/admin/`:
+
+```bash
+grep -rn "isOpen=" src/
+```
+
+Those are **out of scope** — do not fix them. List every one in your report under "Found but not
+fixed" with file and line so a later pass can handle them. Resist the urge.
+
+## Task 9 · Delete `SheetRoute`
+
+Once nothing imports it:
+
+```bash
+grep -rn "SheetRoute" src/
+```
+
+When that is empty, delete `src/components/layout/SheetRoute.jsx`. If it is not empty, you missed
+a call site — find it.
+
+## Task 10 · Update the tests
+
+`tests/03_customer.mjs` asserts sheet behaviour — it will fail. Update it to the new reality:
+
+- Replace "click card, sheet appears" with "click card, **URL changes** and page renders"
+- Add: paste each detail URL into a fresh page load and assert the page renders standalone
+- Add: assert Back from a detail page lands on the index it came from
+- Add: assert each old URL redirects — `/buyer/cart` to `/buyer/basket`,
+  `/buyer/farmers/:id` to `/buyer/stalls/:id`, `/buyer/favorites` to `/buyer/saved`
+- Add: assert the filter sheet on Browse **actually opens** now
+
+Never weaken an assertion to make it pass.
+
+---
+
+# PART 4 · Your skills for this stage
+
+### Skill 1 · Convert one route, then load the app
+
+Twelve conversions in one pass produces a white screen and no way to tell which change caused it.
+One route, reload, click it, then the next. This is slower to type and much faster to finish.
+
+### Skill 2 · Rename the behaviour, keep the identifier
+
+`useOpenSheet` keeps its name and signature while its body becomes a plain navigate. Sixteen
+call sites need no edit and the app keeps working mid-refactor. Rename identifiers in a later,
+separate pass — never in the same commit as a behaviour change.
+
+### Skill 3 · Param-preserving redirects need a component
+
+`<Navigate to="/buyer/stalls/:id">` navigates to the literal string `:id`. A three-line component
+using `useParams` is the only correct way. Watch for this in any redirect with a segment.
+
+### Skill 4 · Redirect, never delete a URL
+
+Old URLs live in bookmarks, in the tests, in your own notes, and in the demo video script. Every
+renamed path gets a `<Navigate replace>`. `replace` matters — without it, Back bounces the user
+into a redirect loop.
+
+### Skill 5 · Grep is your completion check
+
+```bash
+grep -rn "background:"  src/components src/pages/buyer src/layouts   # → empty
+grep -rn "SheetRoute"   src/                                        # → empty
+grep -rn "inSheet"      src/pages/buyer                             # → empty
+grep -rn "/buyer/cart"  src/                                        # → only the redirect route
+```
+
+A refactor is finished when the greps are empty, not when it looks finished.
+
+### Skill 6 · Refresh is the real test
+
+Clicking through works even with broken routing, because the client already holds the state. The
+honest test is **paste the URL into a new tab**. Do it for all twelve.
+
+### Skill 7 · Leave out-of-scope bugs alone, but write them down
+
+You will find the `isOpen` bug in twenty vendor and admin files. Fixing them here means this
+stage can no longer be reviewed or reverted independently. Record them; leave them.
+
+---
+
+# PART 5 · Hard rules — never do these
+
+1. **Never restyle anything.** No new CSS except the minimum to stop a page being unreadable,
+   and declare every line you add.
+2. **Never delete `BottomSheet`** or change its props. Vendor and admin depend on it.
+3. **Never leave an old URL returning a 404.** Every rename gets a `<Navigate replace>`.
+4. **Never use `<Navigate>` for a path with a param.** Write the component.
+5. **Never reorganise the content of a converted page.** Keep its markup; change its frame.
+6. **Never fix the `isOpen` bug outside `src/pages/buyer/Products.jsx`.**
+7. **Never weaken or delete a test** to make the suite pass.
+8. **Never touch vendor, admin or guest pages or layouts.**
+9. **Never add a dependency.**
+10. **Never keep the second `<Routes>` block** "just in case". Delete it. Two route trees is the
+    bug you are removing.
+11. **Never report PASS without having pasted all twelve URLs into a fresh tab.**
+
+---
+
+# PART 6 · Definition of done
+
+- [ ] `paths.js` has the eight new constants; every old one still present
+- [ ] The `{background && <Routes>}` overlay block is **gone**
+- [ ] All twelve destinations render as pages with a `<Page>` + `<PageTitle>` frame
+- [ ] `/buyer/checkout` and the buyer 404 exist as working stubs
+- [ ] All seven redirects work, `/buyer/farmers/:id` preserving its id
+- [ ] `useOpenSheet` is a plain navigate; every call site uses canonical paths
+- [ ] `grep -rn "background:" src/components src/pages/buyer src/layouts` is empty
+- [ ] `grep -rn "SheetRoute" src/` is empty and the file is deleted
+- [ ] `grep -rn "inSheet" src/pages/buyer` is empty
+- [ ] `BuyerLayout` has no `isSheetPath` / `isSheetOpen`; chrome always renders
+- [ ] Basket opens as a page from bottom nav, basket pill and top bar
+- [ ] Every page sets its own document title
+- [ ] `Products.jsx` filter sheet **opens** — verified by clicking it
+- [ ] `tests/03_customer.mjs` updated and passing, with the new refresh and redirect assertions
+- [ ] Vendor, admin and guest render exactly as before
+
+---
+
+# PART 7 · Verification gate
+
+### A1 · Build
+
+```bash
+npm run build
+```
+
+Last 15 lines. Zero errors, zero new warnings.
+
+### A2 · Runtime
+
+```bash
+npm run dev
+```
+
+Zero console errors on every buyer page. Report any React Router warning verbatim — a
+"No routes matched" warning means a redirect is wrong.
+
+### A3 · The greps
+
+```bash
+grep -rn "background:" src/components src/pages/buyer src/layouts
+grep -rn "SheetRoute" src/
+grep -rn "inSheet" src/pages/buyer
+grep -rn "/buyer/cart\|/buyer/favorites\|/buyer/order-confirmed\|/buyer/profile/help" src/
+grep -rn "/buyer/farmers" src/
+```
+
+Paste all five. The first three must be empty. The last two must show **only** the redirect route
+declarations in `AppRoutes.jsx`.
+
+### D1 · The refresh test — all twelve, in a fresh tab
+
+For **each** URL below: open a **new browser tab**, paste it, press Enter. The page must render
+standalone with the buyer chrome around it, no overlay, no redirect to `/buyer`.
+
+```
+/buyer/products/<real-id>
+/buyer/stalls/<real-id>
+/buyer/markets/<real-id>
+/buyer/basket
+/buyer/checkout
+/buyer/orders/<real-id>
+/buyer/orders/<real-id>/confirmed
+/buyer/assistant
+/buyer/notifications
+/buyer/profile/details
+/buyer/profile/markets
+/buyer/profile/notifications
+/buyer/profile/reviews
+/buyer/help
+/buyer/saved
+/buyer/stalls
+/buyer/nonsense-page          → buyer 404 with the lost-path scene
+```
+
+Table of URL, rendered (yes/no), document title, console errors.
+
+### D2 · The redirect test
+
+Paste each old URL in a fresh tab and record where it lands:
+
+```
+/buyer/farmers          → /buyer/stalls
+/buyer/farmers/<id>     → /buyer/stalls/<same id>
+/buyer/cart             → /buyer/basket
+/buyer/favorites        → /buyer/saved
+/buyer/reviews          → /buyer/profile/reviews
+/buyer/profile/help     → /buyer/help
+/buyer/order-confirmed  → /buyer/orders
+```
+
+Then press **Back** from each landing page and confirm you do **not** bounce into a redirect
+loop — that is what `replace` prevents.
+
+### D3 · Back-button walk
+
+From `/buyer`: Browse → a produce page → its stall → the stall's market → basket. Then press
+Back five times. Each step must land on the previous page, not skip and not loop. Record the
+sequence.
+
+### D4 · The filter sheet
+
+On `/buyer/products`, click the filters control. **The sheet must open.** Screenshot or state it
+explicitly. Then `Esc` closes it and focus returns to the filters button.
+
+### D5 · End-to-end loop
+
+Signed in as `george@example.com / market123`, with backend running:
+
+1. `/buyer` loads
+2. Browse, filter, clear
+3. Open a produce page by click, and by pasted URL
+4. Add to basket, count updates
+5. `/buyer/basket` — change a quantity, remove an item
+6. `/buyer/checkout` stub renders
+7. `/buyer/orders` → an order → the order page
+8. Favourite a produce item and a stall, both appear under `/buyer/saved`
+9. Assistant answers a question
+10. Notifications, mark all read
+
+Record pass/fail per step.
+
+### B1 · Responsive sweep
+
+At **360, 390, 768, 1024, 1440**, on the twelve converted pages:
+
+```js
+const { layoutCheck } = await import('/src/dev/layoutCheck.js');
+console.table(layoutCheck());
+```
+
+Findings are **expected** at this stage — these pages are unstyled sheet contents on a page.
+Record them all as a baseline for stages 5–9, and fix only: horizontal overflow, overlapping
+fixed elements, and sub-44px touch targets. Leave the cosmetic findings and list them.
+
+### Tests
+
+```bash
+node tests/run_all.mjs
+```
+
+Paste the full summary. All four suites must pass.
+
+### Cross-role regression
+
+Load `/vendor`, `/admin`, `/`. Confirm unchanged, or name what differs.
+
+---
+
+# PART 8 · Report format
+
+```
+Stage 4 status: PASS | FAIL
+
+## What I changed
+- <file> — <one line>
+
+## Route table
+| old | new | redirect added | renders on refresh |
+|-----|-----|----------------|--------------------|
+| ... | ... | yes/no         | yes/no             |
+
+## Gate results
+A1 build:           <output>
+A2 runtime:         <output, incl. any router warnings verbatim>
+A3 greps:           <all five>
+D1 refresh (17 URLs): <table>
+D2 redirects:       <table + back-button result>
+D3 back walk:       <sequence>
+D4 filter sheet:    <result>
+D5 end-to-end:      <10 steps>
+B1 layoutCheck:     <baseline findings, and which you fixed>
+Tests:              <run_all.mjs summary>
+Cross-role:         <unchanged / differences>
+
+## Notification split
+<how you handled /buyer/notifications vs /buyer/profile/notifications>
+
+## CSS I added
+<every line, with justification — or "none">
+
+## Found but not fixed
+- isOpen bug, out of scope: <file:line for each of the ~20 vendor/admin sites>
+- <anything else>
+
+## NOT verified
+- <anything unproven, and why>
+```
+
+If any gate fails, **fix it and re-run that gate.** Claiming PASS without having pasted the
+twelve URLs into a fresh tab is a FAIL — the refresh test is the whole point of this stage.

@@ -1,0 +1,956 @@
+# Stage 2 · The Scene illustration system — full-scene SVG artwork
+
+You are working on **MarketLink**, an existing React + Vite app, mid-way through a redesign of
+the signed-in Customer (buyer) experience. **Stage 1 is already done** — the white-first token
+layer, the buyer app shell and four layout primitives exist.
+
+This stage builds the single most visible upgrade in the redesign: **ten hand-drawn, full-scene
+SVG illustrations** that replace the tiny icon doodles currently used for empty states, plus the
+component that renders them and a new `EmptyState` built on top.
+
+Read this whole prompt before writing code. Then plan, then build, then **look at what you built**
+and fix it before reporting.
+
+---
+
+# PART 1 · Project context
+
+## 1.1 What MarketLink is
+
+A platform connecting local farmers-market **Farmers** with **Customers**.
+Tagline: *"Farm Fresh Just a Click Away."*
+
+A Farmer runs a **stall** at a **market** open on specific days in specific time windows. The
+Farmer publishes weekly stock. A Customer browses what is available, **reserves** items, picks a
+pickup slot, then **collects in person at the stall and pays there in cash**.
+
+There is **no payment gateway and no delivery, ever.** Nothing you draw may imply either — no
+credit cards, no delivery vans, no couriers, no parcels with shipping labels.
+
+## 1.2 Stack
+
+- React 18.3, Vite 6, `react-router-dom` 6.28
+- **CSS Modules only** — `*.module.css` beside each component
+- **No new dependencies.** No SVG library, no animation library, no icon pack beyond the
+  `lucide-react` already installed. You hand-write every path.
+- Alias `@` maps to `src`
+- Frontend port **3000**
+
+## 1.3 What already exists
+
+### `src/components/domain/Illustration.jsx` — leave this alone
+
+A 713-line component holding ~35 **icon-scale** drawings on an `80x80` viewBox: `basket-tomatoes`,
+`crate-carrots`, `beet-bunch`, `leafy-greens`, `sourdough-boule`, `honey-jar`, `egg-carton`,
+`closed-stall`, `basket`, and so on. Rendered at 32–96px inside product cards.
+
+**These stay exactly as they are.** They are the right tool for a card thumbnail. Scenes are a
+different, additional component. Do not delete, move, rename or "upgrade" `Illustration`.
+
+Its CSS module gives you the class vocabulary to imitate — read
+`src/components/domain/Illustration.module.css` to see how `fillCarrot`, `fillHerb`, `woodLine`,
+`subtleLine` are defined against tokens. Your scene CSS follows the same idea at larger scale.
+
+### Tokens available to you (from Stage 1)
+
+```css
+--color-white         #FFFFFF    page + sky
+--color-canvas        #F5EFE3    warm fill — crates, structures
+--color-canvas-soft   #FAF7F0    palest fill — far hills
+--color-ink           #2E2B26    darkest lines, foreground only
+--color-ink-soft      #6B6259    default stroke for figures and outlines
+--color-ink-faint     #9A9088    faintest ticks
+--color-wood          #B08655    stall frames, fence posts, crate slats
+--color-wood-line     #E3D3B8    warm hairline
+--color-beet          #7A2E3B    ONE saturated accent per scene
+--color-beet-tint     #F7EEF0
+--color-carrot        #E07A2C    ONE saturated accent per scene
+--color-carrot-bg     #FCEADA
+--color-herb          #5C7048    foliage stroke
+--color-herb-bg       #EAEFE2    foliage fill
+--illus-stroke        1.5px
+
+--scene-max-w         30rem   /* 480px, mobile */
+--scene-max-w-lg      34rem   /* 544px, 768+ */
+```
+
+### `src/components/ui/EmptyState.jsx` — you replace its internals
+
+Currently: `<Illustration name size="lg" />` + `h3` + `p` + `Button`. You will rewire it to use
+scenes, keeping its prop shape backward-compatible so no existing page breaks.
+
+Current props: `illustration`, `title`, `text`, `actionLabel`, `onAction`, `actionTo`, `className`.
+
+## 1.4 Off-limits
+
+- `src/pages/**` — **you edit no page in this stage** except creating one dev-only contact sheet
+  (Task 5), which you delete again at the end of the stage
+- `src/components/domain/Illustration.jsx` and its CSS — untouched
+- `backend/**` — nothing
+- `package.json` — **no dependencies**
+- `src/pages/vendor/**`, `admin/**`, `guest/**`
+
+---
+
+# PART 2 · The scene specification
+
+## 2.1 Geometry
+
+```jsx
+<svg viewBox="0 0 640 400" preserveAspectRatio="xMidYMid meet">
+```
+
+**640 x 400, a 16:10 landscape.** Every scene uses these exact dimensions so they are
+interchangeable. Rendered `width: 100%; height: auto`, capped at `--scene-max-w` (480px), rising
+to `--scene-max-w-lg` (544px) at 768px and up.
+
+**Horizon sits at y = 252** in every scene. The vanishing point is at **x = 400, y = 252**.
+Committing to one horizon across all ten scenes is what makes them read as one world.
+
+## 2.2 The nine depth layers
+
+Each layer is a `<g data-layer="...">`. **The order is the art.** Back to front:
+
+| # | `data-layer` | Contains | Opacity | Stroke |
+|---|---|---|---|---|
+| 1 | `sky` | Birds as two-stroke ticks. Nothing else — the sky is page white. | 1 | 1.25 |
+| 2 | `far-hills` | Two or three rounded humps, `--color-canvas-soft` fill | **0.35** | 1.5 |
+| 3 | `forest-band` | A continuous band of canopy blobs across the horizon, `--color-herb-bg` | **0.45** | 1.5 |
+| 4 | `mid-trees` | 2–4 individual trees with visible tapered trunks | **0.70** | 1.75 |
+| 5 | `ground` | One horizon hairline. The ground is page white. | 1 | 1.5 |
+| 6 | `road` | Two converging edge curves, fill between, two wheel ruts | 1 | 1.5 |
+| 7 | `structures` | Stalls, fences, poles, carts, signposts — `--color-wood` | 1 | 1.75 |
+| 8 | `figures` | People and animals, `--color-ink-soft`, **no faces** | 1 | 2 |
+| 9 | `foreground` | Grass tufts, a crate, a dropped apple — `--color-ink` | 1 | 2 |
+
+Not every scene needs all nine. A scene with no road omits layer 6. **Never reorder them.**
+
+## 2.3 Depth by opacity, never by gradient
+
+Gradients are banned project-wide. Atmospheric perspective is achieved with **layer opacity plus
+stroke width** instead — and it works better, because it stays crisp at any size and needs no
+`<defs>`:
+
+```css
+.scene [data-layer="far-hills"]   { opacity: 0.35; }
+.scene [data-layer="forest-band"] { opacity: 0.45; }
+.scene [data-layer="mid-trees"]   { opacity: 0.70; }
+```
+
+Combine with the stroke-width ramp in the table above — 1.25 far, 2 near. Far things are pale
+and thin. Near things are dark and heavy. That is the entire depth trick.
+
+## 2.4 One saturated accent per scene. One.
+
+Every scene is ink, white, pale herb and wood — **except for exactly one element** in
+`--color-beet` or `--color-carrot`. The awning stripe. The walker tote. The chalk heart. One.
+
+That single spot of colour in an otherwise monochrome drawing is the difference between "looks
+designed" and "looks decorated". If you are tempted to add a second, you are wrong.
+
+## 2.5 Richness target: 120–220 elements per scene
+
+Under 80 elements a scene reads as clip art. Reach the target with **structure, not noise**:
+
+| Instead of | Draw |
+|---|---|
+| One circle for a tree canopy | **3–6 overlapping rounded blobs**, slightly different sizes |
+| A `<rect>` trunk | A `<path>` that **tapers** — wider at the base |
+| Evenly spaced fence posts | Posts whose **gaps shrink toward the horizon**, and whose tops rise |
+| A circle wheel | A circle **plus 6–8 spokes plus a hub** |
+| A straight bunting line | A **slack catenary curve** with alternating triangles hanging from it |
+| A plain box crate | **Slats, end-posts and a visible inner edge** |
+| A scatter of dots for grass | **3-stroke tufts** at irregular intervals, taller in front |
+| A straight road | Two converging edges **plus two wheel-rut curves** inside them |
+| A flat shadow | A single hairline ellipse under each standing object |
+
+Also: never make anything perfectly symmetrical or perfectly evenly spaced. Nudge every
+repeated element by a few units. Hand-drawn means slightly irregular.
+
+## 2.6 Figures
+
+People are `--color-ink-soft` at stroke 2, seen from **behind or in profile**, and have **no
+faces** — a head is a circle, full stop. No eyes, no mouths, no hair detail. This is what keeps
+them looking like considered illustration rather than a cartoon, and it sidesteps every
+representation problem at once. Bodies are simple: a tapered torso path, two leg strokes with a
+knee bend, one arm stroke. Give them a tiny hairline ellipse shadow.
+
+## 2.7 Motion
+
+**At most one** very slow ambient animation per scene, and only if it genuinely adds calm — a
+12s bird drift, a 9s bunting sway. Implement with CSS on a layer, never with JS.
+
+Wrap it unconditionally:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .scene *,
+  .scene {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+```
+
+(`!important` is normally banned in this project. Inside a `prefers-reduced-motion` block it is
+the correct tool — it must beat everything. This is the only exception in the codebase.)
+
+## 2.8 Accessibility
+
+- Decorative scene (the default): `aria-hidden="true"`, no `<title>`
+- Meaningful scene: `role="img"` + `aria-labelledby` pointing at a `<title>` with a real
+  description, e.g. "A person walking a country road toward a market stall"
+
+`EmptyState` always pairs a scene with a real `<h3>` and `<p>`, so in that context the scene is
+**decorative** — the text carries the meaning. Default to `aria-hidden`.
+
+---
+
+# PART 3 · Your tasks
+
+## Task 1 · Create the Scene component shell
+
+New folder `src/components/domain/Scene/` with three files.
+
+### `src/components/domain/Scene/Scene.jsx`
+
+```jsx
+import React, { useId } from 'react';
+import { SCENES } from './scenes.jsx';
+import styles from './Scene.module.css';
+
+/**
+ * Full-scene SVG illustration for buyer empty, closed and error states.
+ *
+ * Every scene is drawn on a 640x400 canvas with the horizon at y=252 and the
+ * vanishing point at (400, 252), so all ten read as one world. Depth comes from
+ * layer opacity and stroke width, never from gradients.
+ *
+ * @param {string}  name    key from SCENES, e.g. 'walk-to-market'
+ * @param {'md'|'lg'} size  md = --scene-max-w, lg = --scene-max-w-lg
+ * @param {string}  title   when given, the scene becomes role="img" with this label.
+ *                          Omit inside EmptyState, where adjacent text carries the meaning.
+ */
+export function Scene({ name = 'walk-to-market', size = 'md', title, className = '', ...rest }) {
+  const titleId = useId();
+  const draw = SCENES[name] || SCENES['walk-to-market'];
+  const labelled = Boolean(title);
+
+  return (
+    <svg
+      viewBox="0 0 640 400"
+      preserveAspectRatio="xMidYMid meet"
+      className={`${styles.scene} ${styles[size] || styles.md} ${className}`}
+      role={labelled ? 'img' : undefined}
+      aria-hidden={labelled ? undefined : 'true'}
+      aria-labelledby={labelled ? titleId : undefined}
+      focusable="false"
+      {...rest}
+    >
+      {labelled && <title id={titleId}>{title}</title>}
+      {draw(styles)}
+    </svg>
+  );
+}
+
+export default Scene;
+```
+
+### `src/components/domain/Scene/Scene.module.css`
+
+Defines the size classes, the layer opacities, and the full class vocabulary every scene draws
+with. **Write this once; every scene reuses it.** Required classes:
+
+```
+Sizes:        .md  .lg
+Layers:       [data-layer="far-hills"] .35 · [data-layer="forest-band"] .45 · [data-layer="mid-trees"] .70
+Lines:        .birdLine  .farLine  .forestLine  .foliageLine  .trunk  .horizon
+              .roadLine  .rut  .woodLine  .figureLine  .nearLine  .hairline
+Fills:        .fillCanvasSoft  .fillForest  .fillFoliage  .fillCanvas  .fillWhite
+              .fillCloth  .fillWood  .fillShadow
+Accent:       .accentBeet  .accentCarrot      ← exactly one per scene
+Text:         .chalkText  (Inter 500, small, ink-soft, stroke none)
+Motion:       .drift (optional) + the prefers-reduced-motion block
+```
+
+Base rules for the root:
+
+```css
+.scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  fill: none;
+  stroke: var(--color-ink-soft);
+  stroke-width: var(--illus-stroke);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.md { max-width: var(--scene-max-w); }
+.lg { max-width: var(--scene-max-w); }
+
+@media (min-width: 768px) {
+  .lg { max-width: var(--scene-max-w-lg); }
+}
+```
+
+Stroke-width ramp — apply per class, not per element:
+
+```css
+.birdLine   { stroke: var(--color-ink-faint); stroke-width: 1.25; }
+.farLine    { stroke: var(--color-ink-soft);  stroke-width: 1.5; }
+.forestLine { stroke: var(--color-herb);      stroke-width: 1.5; }
+.foliageLine{ stroke: var(--color-herb);      stroke-width: 1.75; }
+.trunk      { stroke: var(--color-ink-soft);  stroke-width: 1.75; fill: var(--color-canvas); }
+.horizon    { stroke: var(--color-hairline);  stroke-width: 1.5; }
+.roadLine   { stroke: var(--color-ink-soft);  stroke-width: 1.5; }
+.rut        { stroke: var(--color-wood-line); stroke-width: 1.25; }
+.woodLine   { stroke: var(--color-wood);      stroke-width: 1.75; }
+.figureLine { stroke: var(--color-ink-soft);  stroke-width: 2; }
+.nearLine   { stroke: var(--color-ink);       stroke-width: 2; }
+.hairline   { stroke: var(--color-hairline);  stroke-width: 1; }
+```
+
+### `src/components/domain/Scene/scenes.jsx`
+
+A plain object mapping each name to a function `(s) => <>...</>` where `s` is the styles object.
+Keeping the drawings in their own file stops `Scene.jsx` from becoming another 700-line monster
+and lets you work on one scene at a time.
+
+```jsx
+import React from 'react';
+
+/**
+ * Scene drawings. Each entry is (styles) => JSX fragment.
+ * Canvas 640x400 · horizon y=252 · vanishing point (400, 252).
+ * Layer order is fixed: sky, far-hills, forest-band, mid-trees, ground,
+ * road, structures, figures, foreground.
+ */
+export const SCENES = {
+  'walk-to-market': (s) => (<>...</>),
+  'empty-basket': (s) => (<>...</>),
+  // ...ten total
+};
+
+export default SCENES;
+```
+
+## Task 2 · Study the reference scene, then build the other nine like it
+
+Below is **`walk-to-market`, complete and to scale.** Type it in exactly as your first scene.
+It is your template: it demonstrates all nine layers, the opacity ramp, the tapered trunks, the
+perspective fence, the converging road with ruts, the faceless figure, the single accent, and the
+element density you are aiming at.
+
+```jsx
+  // A person with a tote walking a rutted country road toward a striped market stall.
+  // Layers: sky · far-hills · forest-band · mid-trees · ground · road · structures · figures · foreground
+  'walk-to-market': (s) => (
+    <>
+      {/* ── 1 · SKY ─────────────────────────────────────────────── */}
+      <g data-layer="sky" className={s.drift}>
+        <path d="M112 64 L121 57 L130 64" className={s.birdLine} />
+        <path d="M146 49 L154 43 L162 49" className={s.birdLine} />
+        <path d="M174 72 L181 67 L188 72" className={s.birdLine} />
+        <path d="M498 54 L505 48 L512 54" className={s.birdLine} />
+        <path d="M520 66 L526 61 L532 66" className={s.birdLine} />
+      </g>
+
+      {/* ── 2 · FAR HILLS ───────────────────────────────────────── */}
+      <g data-layer="far-hills">
+        <path d="M-12 252 C 42 212 128 200 198 226 C 248 245 288 252 322 252 Z" className={s.fillCanvasSoft} />
+        <path d="M286 252 C 348 214 436 204 508 228 C 566 247 612 252 652 252 Z" className={s.fillCanvasSoft} />
+        <path d="M112 252 C 158 224 226 218 286 240" className={s.farLine} />
+        <path d="M352 244 C 402 222 458 218 504 232" className={s.farLine} />
+      </g>
+
+      {/* ── 3 · FOREST BAND ─────────────────────────────────────── */}
+      <g data-layer="forest-band">
+        <path
+          d="M-10 252
+             C 8 226 34 218 50 230 C 62 210 92 206 106 224
+             C 122 204 152 206 162 226 C 178 208 206 210 216 230
+             C 232 212 258 214 268 232 C 284 214 310 216 320 234
+             C 336 216 362 216 372 234 C 388 214 414 214 426 232
+             C 442 210 470 212 482 230 C 498 208 526 210 538 228
+             C 552 208 582 206 594 226 C 608 214 632 218 650 236
+             L 650 252 Z"
+          className={s.fillForest}
+        />
+        <path d="M22 252 L22 234" className={s.forestLine} />
+        <path d="M86 252 L86 228" className={s.forestLine} />
+        <path d="M148 252 L148 230" className={s.forestLine} />
+        <path d="M206 252 L206 234" className={s.forestLine} />
+        <path d="M262 252 L262 236" className={s.forestLine} />
+        <path d="M318 252 L318 238" className={s.forestLine} />
+        <path d="M370 252 L370 238" className={s.forestLine} />
+        <path d="M428 252 L428 236" className={s.forestLine} />
+        <path d="M482 252 L482 234" className={s.forestLine} />
+        <path d="M540 252 L540 232" className={s.forestLine} />
+        <path d="M598 252 L598 230" className={s.forestLine} />
+      </g>
+
+      {/* ── 4 · MID TREES ───────────────────────────────────────── */}
+      <g data-layer="mid-trees">
+        {/* Left tree: tapered trunk + five overlapping canopy blobs */}
+        <path d="M60 262 L64 214 L70 214 L76 262 Z" className={s.trunk} />
+        <path d="M64 228 L48 214" className={s.foliageLine} />
+        <path d="M70 232 L86 216" className={s.foliageLine} />
+        <ellipse cx="46" cy="204" rx="22" ry="17" className={s.fillFoliage} />
+        <ellipse cx="78" cy="196" rx="25" ry="19" className={s.fillFoliage} />
+        <ellipse cx="60" cy="182" rx="21" ry="16" className={s.fillFoliage} />
+        <ellipse cx="94" cy="212" rx="18" ry="14" className={s.fillFoliage} />
+        <ellipse cx="38" cy="220" rx="16" ry="12" className={s.fillFoliage} />
+
+        {/* Right pair, slightly smaller = further back */}
+        <path d="M568 258 L571 220 L576 220 L580 258 Z" className={s.trunk} />
+        <ellipse cx="558" cy="212" rx="19" ry="15" className={s.fillFoliage} />
+        <ellipse cx="584" cy="204" rx="21" ry="16" className={s.fillFoliage} />
+        <ellipse cx="570" cy="192" rx="17" ry="13" className={s.fillFoliage} />
+
+        <path d="M618 256 L621 224 L626 224 L629 256 Z" className={s.trunk} />
+        <ellipse cx="612" cy="216" rx="16" ry="12" className={s.fillFoliage} />
+        <ellipse cx="632" cy="210" rx="17" ry="13" className={s.fillFoliage} />
+      </g>
+
+      {/* ── 5 · GROUND ──────────────────────────────────────────── */}
+      <g data-layer="ground">
+        <line x1="0" y1="252" x2="640" y2="252" className={s.horizon} />
+        <path d="M0 268 C 90 262 190 266 268 262" className={s.hairline} />
+        <path d="M352 260 C 448 266 552 262 640 268" className={s.hairline} />
+      </g>
+
+      {/* ── 6 · ROAD ────────────────────────────────────────────── */}
+      <g data-layer="road">
+        <path
+          d="M28 400 C 140 372 292 330 392 308 L 486 308 C 452 330 374 366 302 400 Z"
+          className={s.fillCanvasSoft}
+        />
+        <path d="M28 400 C 140 372 292 330 392 308" className={s.roadLine} />
+        <path d="M302 400 C 374 366 452 330 486 308" className={s.roadLine} />
+        {/* wheel ruts converging on the vanishing point */}
+        <path d="M118 400 C 212 368 332 330 406 310" className={s.rut} />
+        <path d="M226 400 C 296 366 394 330 450 310" className={s.rut} />
+        {/* loose stones, irregular */}
+        <circle cx="168" cy="374" r="2.5" className={s.hairline} />
+        <circle cx="243" cy="352" r="2" className={s.hairline} />
+        <circle cx="316" cy="336" r="2.5" className={s.hairline} />
+        <circle cx="381" cy="322" r="1.75" className={s.hairline} />
+      </g>
+
+      {/* ── 7 · STRUCTURES ──────────────────────────────────────── */}
+      <g data-layer="structures">
+        {/* Fence, left, receding: gaps shrink and tops rise toward the horizon */}
+        <path d="M6 344 L6 296" className={s.woodLine} />
+        <path d="M48 338 L48 292" className={s.woodLine} />
+        <path d="M86 330 L86 288" className={s.woodLine} />
+        <path d="M120 322 L120 284" className={s.woodLine} />
+        <path d="M150 314 L150 281" className={s.woodLine} />
+        <path d="M176 306 L176 278" className={s.woodLine} />
+        <path d="M198 300 L198 276" className={s.woodLine} />
+        <path d="M216 294 L216 274" className={s.woodLine} />
+        <path d="M4 306 C 80 296 158 286 218 280" className={s.woodLine} />
+        <path d="M4 326 C 80 314 158 300 218 290" className={s.woodLine} />
+
+        {/* Market stall, right of centre. Base y=306, awning top y=172 */}
+        <path d="M414 306 L414 200" className={s.woodLine} />
+        <path d="M596 306 L596 200" className={s.woodLine} />
+        {/* awning: slack canopy + scalloped hem */}
+        <path d="M402 196 C 470 168 542 168 610 196 L 610 206 C 542 180 470 180 402 206 Z" className={s.fillWhite} />
+        {/* the ONE saturated accent: three awning stripes */}
+        <path d="M444 180 C 446 190 446 196 444 202" className={s.accentBeet} />
+        <path d="M506 174 C 508 186 508 192 506 198" className={s.accentBeet} />
+        <path d="M568 180 C 570 190 570 196 568 202" className={s.accentBeet} />
+        {/* hem scallops */}
+        <path d="M402 206 C 412 214 424 214 434 206" className={s.woodLine} />
+        <path d="M434 202 C 444 210 456 210 466 202" className={s.woodLine} />
+        <path d="M466 200 C 476 208 488 208 498 200" className={s.woodLine} />
+        <path d="M498 200 C 508 208 520 208 530 200" className={s.woodLine} />
+        <path d="M530 202 C 540 210 552 210 562 202" className={s.woodLine} />
+        <path d="M562 204 C 572 212 584 212 594 204" className={s.woodLine} />
+        {/* counter + cloth */}
+        <path d="M420 262 L592 262 L592 274 L420 274 Z" className={s.fillWood} />
+        <path d="M424 274 C 448 292 490 292 514 274" className={s.fillCloth} />
+        <path d="M514 274 C 538 290 570 290 588 274" className={s.fillCloth} />
+        {/* crates on the counter: slats and end-posts */}
+        <path d="M436 240 L482 240 L482 262 L436 262 Z" className={s.fillCanvas} />
+        <line x1="436" y1="248" x2="482" y2="248" className={s.woodLine} />
+        <line x1="436" y1="255" x2="482" y2="255" className={s.woodLine} />
+        <line x1="442" y1="240" x2="442" y2="262" className={s.hairline} />
+        <line x1="476" y1="240" x2="476" y2="262" className={s.hairline} />
+        <path d="M498 244 L540 244 L540 262 L498 262 Z" className={s.fillCanvas} />
+        <line x1="498" y1="251" x2="540" y2="251" className={s.woodLine} />
+        <line x1="504" y1="244" x2="504" y2="262" className={s.hairline} />
+        {/* produce mounded in the crates */}
+        <circle cx="448" cy="236" r="6" className={s.fillFoliage} />
+        <circle cx="462" cy="234" r="6.5" className={s.fillFoliage} />
+        <circle cx="474" cy="237" r="5.5" className={s.fillFoliage} />
+        <circle cx="510" cy="240" r="5.5" className={s.fillCanvas} />
+        <circle cx="524" cy="239" r="6" className={s.fillCanvas} />
+        {/* chalkboard leaning against the stall leg */}
+        <path d="M600 274 L628 270 L632 306 L604 306 Z" className={s.fillCanvas} />
+        <line x1="607" y1="282" x2="626" y2="280" className={s.hairline} />
+        <line x1="607" y1="290" x2="622" y2="288" className={s.hairline} />
+        {/* signpost by the road */}
+        <path d="M258 306 L258 246" className={s.woodLine} />
+        <path d="M258 252 L296 248 L296 262 L258 266 Z" className={s.fillWhite} />
+      </g>
+
+      {/* ── 8 · FIGURES ─────────────────────────────────────────── */}
+      <g data-layer="figures">
+        {/* Walker, seen from behind. Base y=344, head top y=276. No face. */}
+        <ellipse cx="300" cy="346" rx="16" ry="3" className={s.fillShadow} />
+        <circle cx="300" cy="284" r="8" className={s.figureLine} />
+        <path d="M300 292 C 292 300 290 314 292 328 L 310 328 C 312 314 310 300 300 292 Z" className={s.figureLine} />
+        <path d="M293 328 L290 344" className={s.figureLine} />
+        <path d="M308 328 L312 344" className={s.figureLine} />
+        <path d="M292 300 L282 320" className={s.figureLine} />
+        <path d="M310 300 L320 318" className={s.figureLine} />
+        {/* tote in the right hand */}
+        <path d="M318 318 L332 318 L334 336 L316 336 Z" className={s.fillCanvas} />
+        <path d="M320 318 C 322 310 330 310 332 318" className={s.figureLine} />
+        <path d="M322 324 L328 324" className={s.hairline} />
+
+        {/* Dog, in profile, ahead on the road */}
+        <ellipse cx="238" cy="356" rx="13" ry="2.5" className={s.fillShadow} />
+        <path d="M228 352 C 228 342 248 342 248 352" className={s.figureLine} />
+        <circle cx="252" cy="342" r="5.5" className={s.figureLine} />
+        <path d="M250 337 L247 332" className={s.figureLine} />
+        <path d="M255 337 L258 332" className={s.figureLine} />
+        <path d="M230 352 L229 358" className={s.figureLine} />
+        <path d="M244 352 L245 358" className={s.figureLine} />
+        <path d="M228 346 C 222 342 220 336 222 332" className={s.figureLine} />
+      </g>
+
+      {/* ── 9 · FOREGROUND ──────────────────────────────────────── */}
+      <g data-layer="foreground">
+        {/* grass tufts: three strokes each, irregular spacing, taller in front */}
+        <path d="M14 390 L18 372 M20 390 L22 376 M26 390 L24 374" className={s.nearLine} />
+        <path d="M52 396 L56 374 M58 396 L60 380 M64 396 L62 376" className={s.nearLine} />
+        <path d="M96 388 L99 370 M102 388 L104 376" className={s.nearLine} />
+        <path d="M566 392 L570 368 M572 392 L575 374 M578 392 L576 370" className={s.nearLine} />
+        <path d="M604 398 L608 376 M610 398 L613 382 M616 398 L614 374" className={s.nearLine} />
+        <path d="M528 384 L531 368 M534 384 L536 372" className={s.nearLine} />
+
+        {/* Crate, bottom left, nearest object: slats, end-posts, inner edge */}
+        <path d="M356 356 L430 356 L430 396 L356 396 Z" className={s.fillCanvas} />
+        <line x1="356" y1="368" x2="430" y2="368" className={s.nearLine} />
+        <line x1="356" y1="382" x2="430" y2="382" className={s.nearLine} />
+        <path d="M356 356 L366 356 L366 396 L356 396 Z" className={s.fillWood} />
+        <path d="M420 356 L430 356 L430 396 L420 396 Z" className={s.fillWood} />
+        <path d="M382 356 L404 356 L404 361 L382 361 Z" className={s.fillWhite} />
+        <path d="M366 356 C 380 348 406 348 420 356" className={s.hairline} />
+
+        {/* A dropped apple beside the crate */}
+        <circle cx="444" cy="388" r="8" className={s.fillCanvas} />
+        <path d="M444 380 C 446 374 452 372 454 374" className={s.nearLine} />
+      </g>
+    </>
+  ),
+```
+
+Count: that is roughly **120 elements**. Every other scene must reach at least that.
+
+## Task 3 · Build the remaining nine scenes
+
+Same canvas, same horizon, same layer order, same class vocabulary, same one-accent rule.
+
+| `name` | Used by | What it must show |
+|---|---|---|
+| `walk-to-market` | Browse: no results | **Given above.** Type it in first. |
+| `empty-basket` | Basket empty | An **empty** wicker basket on a trestle table in the foreground — weave ribs, visible inner base, handle. A folded cloth beside it. The market recedes behind: two stall silhouettes, forest band. Accent: a single beet ribbon tied to the handle. |
+| `no-orders-yet` | Orders empty | Two figures at a stall counter, a paper bag passing between them. Crates stacked at the side. Awning above. Accent: the bag. |
+| `nothing-saved` | Saved empty | A chalkboard propped on a crate in the foreground with a **heart drawn in chalk** on it. Three pears beside the crate. Stall and forest behind. Accent: the chalk heart in beet. |
+| `market-closed` | Market shut today | A stall with its awning **rolled and tied**, crates stacked and empty, a small hanging sign, an empty road, a bare tree. Long shadows drawn as single hairline ellipses. Accent: the sign. Draw this one **quieter** — fewer foreground objects, more empty road. |
+| `stall-empty` | Stall has no stock | A bare trestle table with a cloth draped over one end, a farmer figure behind it stacking empty crates. Awning above. Accent: the cloth stripe. |
+| `no-notifications` | Notifications empty | A wooden noticeboard on two posts with **one blank pinned note**, three birds sitting on a wire above it, forest band behind. Accent: the pin. |
+| `lost-path` | Buyer 404 | A signpost at a **fork in the road** — two road paths diverging — arms pointing opposite ways, forest either side, a walker from behind reading a map. Accent: the map. |
+| `offline-field` | Network error | An open field, a telephone pole with **one loose hanging wire**, the market small and distant near the horizon, tall grass in the foreground. Accent: nothing saturated at all — this one scene may use **zero** accents; it should feel flat and quiet. |
+| `first-review` | Reviews empty | A handwritten note and a pencil lying on a crate in the foreground, **five chalk stars** above it on a small board. Accent: one filled star in carrot. |
+
+For each one: **draw it, render it, look at it, fix it.** See Task 5.
+
+## Task 4 · Rewire `EmptyState`
+
+Rewrite `src/components/ui/EmptyState.jsx` to render a scene, keeping full backward
+compatibility so no existing page breaks before stages 5–9 update them.
+
+```jsx
+import React from 'react';
+import Scene from '@/components/domain/Scene/Scene';
+import Button from '@/components/ui/Button';
+import styles from './EmptyState.module.css';
+
+/**
+ * Buyer empty state: a full scene illustration, a short title, one line of guidance,
+ * and at most one action.
+ *
+ * The scene is decorative — the title and text carry the meaning — so it renders
+ * aria-hidden and the heading is what a screen reader announces.
+ *
+ * @param {string} scene         key from SCENES, e.g. 'empty-basket'
+ * @param {string} illustration  DEPRECATED. Legacy Illustration name; mapped to a scene.
+ * @param {string} title         h3, sentence case, states the fact plainly
+ * @param {string} text          one line of guidance, max ~90 characters
+ * @param {string} actionLabel   optional single action
+ */
+export function EmptyState({
+  scene,
+  illustration,
+  title,
+  text,
+  actionLabel,
+  onAction,
+  actionTo,
+  size = 'md',
+  className = '',
+}) {
+  const sceneName = scene || LEGACY_SCENE_MAP[illustration] || 'walk-to-market';
+
+  return (
+    <div className={`${styles.empty} ${className}`}>
+      <Scene name={sceneName} size={size} className={styles.scene} />
+      {title && <h3 className={styles.title}>{title}</h3>}
+      {text && <p className={styles.text}>{text}</p>}
+      {actionLabel && (
+        <Button variant="primary" size="md" onClick={onAction} to={actionTo}>
+          {actionLabel}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/** Old Illustration names that pages still pass, mapped to their nearest scene. */
+const LEGACY_SCENE_MAP = {
+  basket: 'empty-basket',
+  'basket-tomatoes': 'walk-to-market',
+  'empty-crate-soldout': 'stall-empty',
+  'closed-stall': 'market-closed',
+  'basket-door': 'walk-to-market',
+  crate: 'stall-empty',
+  stall: 'market-closed',
+};
+
+export default EmptyState;
+```
+
+`EmptyState.module.css`: centred column, `gap: var(--space-5)`,
+`padding: var(--space-10) var(--space-4) var(--space-12)`. `.scene` gets
+`margin-inline: auto` and `margin-bottom: var(--space-2)`. `.title` is Idiqlat at `--text-h3`,
+weight `--weight-head`. `.text` is `--text-body`, `--color-ink-soft`, `max-width:
+var(--measure-narrow)`.
+
+**The Button is the one beet element in an empty state.** Nothing else in it may be beet.
+
+Also create `src/components/ui/ErrorState.jsx`'s scene equivalent — update it to accept a
+`scene` prop defaulting to `offline-field`, same pattern, keeping its existing props working.
+
+## Task 5 · The contact sheet — render everything and look at it
+
+**This is the most important task in the stage.** Nobody can draw ten scenes blind.
+
+Create a temporary dev-only page `src/pages/buyer/__Scenes.jsx` and add a route
+`/buyer/__scenes` inside the existing buyer route block in `src/routes/AppRoutes.jsx`. It renders
+**all ten scenes** stacked, each with its name as a caption, plus every `EmptyState` variant.
+
+```jsx
+import React from 'react';
+import Scene from '@/components/domain/Scene/Scene';
+import { SCENES } from '@/components/domain/Scene/scenes.jsx';
+
+/** DEV ONLY contact sheet. Delete this file and its route before finishing Stage 2. */
+export default function ScenesContactSheet() {
+  return (
+    <div style={{ padding: '2rem', display: 'grid', gap: '4rem' }}>
+      {Object.keys(SCENES).map((name) => (
+        <figure key={name} style={{ margin: 0 }}>
+          <Scene name={name} size="lg" />
+          <figcaption style={{ fontSize: '13px', color: '#6B6259', marginTop: '.5rem' }}>{name}</figcaption>
+        </figure>
+      ))}
+    </div>
+  );
+}
+```
+
+Then, **for every single scene**, open `/buyer/__scenes` and check it against this list:
+
+- [ ] Nothing floats — every object sits on a ground line or on another object
+- [ ] The horizon is at y=252 and objects that should be behind it **are** behind it
+- [ ] Nearer objects are **larger, darker and thicker-stroked** than far ones
+- [ ] No path self-intersects in a way that shows a fill leaking outside its outline
+- [ ] The forest band spans the full width with no gap at x=0 or x=640
+- [ ] Exactly **one** saturated accent (zero for `offline-field`)
+- [ ] It reads correctly at **240px wide** (shrink the browser) — if detail turns to mud, remove
+      detail rather than making strokes heavier
+- [ ] It reads correctly at **544px wide** — if it looks sparse, add elements
+- [ ] No text inside the scene except where the spec asks for it
+- [ ] Element count is at least 120
+
+Iterate until every scene passes. **Then delete `__Scenes.jsx` and remove its route** — it must
+not ship. Paste screenshots or a careful description of each scene into your report.
+
+---
+
+# PART 4 · Your skills for this stage
+
+### Skill 1 · Draw back to front, in layer order, and never mix
+
+Write layer 1 completely, then layer 2. Do not go back and insert a tree into `sky`. SVG paints
+in document order, so layer order **is** z-order — the discipline is the rendering.
+
+### Skill 2 · Canopies from overlapping blobs, not one circle
+
+```jsx
+{/* wrong: reads as a lollipop */}
+<circle cx="60" cy="196" r="30" className={s.fillFoliage} />
+
+{/* right: reads as a tree */}
+<ellipse cx="46" cy="204" rx="22" ry="17" className={s.fillFoliage} />
+<ellipse cx="78" cy="196" rx="25" ry="19" className={s.fillFoliage} />
+<ellipse cx="60" cy="182" rx="21" ry="16" className={s.fillFoliage} />
+<ellipse cx="94" cy="212" rx="18" ry="14" className={s.fillFoliage} />
+<ellipse cx="38" cy="220" rx="16" ry="12" className={s.fillFoliage} />
+```
+
+Three to six blobs, each a different size, each offset. The overlapping outlines are what create
+the crown silhouette.
+
+### Skill 3 · Taper everything vertical
+
+A trunk, a fence post, a pole is never a `<rect>`. Four points, wider at the base:
+
+```jsx
+<path d="M60 262 L64 214 L70 214 L76 262 Z" className={s.trunk} />
+```
+
+Two units of taper is enough to read as organic.
+
+### Skill 4 · Perspective is spacing, not just size
+
+Receding fence posts need **three** things changing together: gaps shrink, tops rise, heights
+shrink. Look at the reference fence — post gaps go 42, 38, 34, 30, 26, 22, 18 and tops go
+296, 292, 288, 284, 281, 278, 276. Getting only size right looks wrong; getting spacing right
+is what sells it.
+
+### Skill 5 · Converge on the vanishing point, always (400, 252)
+
+Every road edge, every rut, every fence rail, every rooftop line must, if extended, pass through
+(400, 252). When a line looks wrong, check where it points.
+
+### Skill 6 · Break every symmetry by a few units
+
+`cx="448"`, `cx="462"`, `cx="474"` — not 445, 460, 475. Radius 6, 6.5, 5.5 — not 6, 6, 6.
+Regular spacing reads as machine-made. Irregular reads as hand-drawn. This is nearly free and it
+is most of the charm.
+
+### Skill 7 · Hairline ellipse shadows anchor objects
+
+One `<ellipse rx="16" ry="3" className={s.fillShadow}>` under each standing object stops it
+floating, and costs one element. `.fillShadow` is `fill: var(--color-hairline); stroke: none`.
+
+### Skill 8 · When it looks bad at small size, remove detail
+
+The instinct is to thicken strokes. That makes it worse — it turns into a blob. Instead delete
+the smallest elements. A scene that reads at 240px wide and 544px wide is a scene with the right
+amount of detail at the right scale.
+
+### Skill 9 · Comment each layer with a box rule
+
+```jsx
+{/* ── 7 · STRUCTURES ──────────────────────────────────────── */}
+```
+
+You will be scrolling through 1500 lines of coordinates. Navigable comments are not decoration,
+they are how you find the tree you need to move.
+
+---
+
+# PART 5 · Hard rules — never do these
+
+1. **Never touch `src/components/domain/Illustration.jsx`** or its CSS. It stays.
+2. **Never use `<defs>`, `<linearGradient>`, `<radialGradient>`, `<filter>`, `<mask>` or
+   `<clipPath>`.** Gradients are banned and filters kill performance. Depth is opacity.
+3. **Never use a raw colour in a scene.** Every fill and stroke comes from a class in
+   `Scene.module.css` that resolves to a token.
+4. **Never put more than one saturated accent in a scene.**
+5. **Never draw a face.** A head is a circle. No eyes, no mouth, no hair strands.
+6. **Never move the horizon off y=252** or the vanishing point off (400, 252).
+7. **Never reorder or rename the nine layers.**
+8. **Never embed a raster image, a base64 data URI, or reference an external asset.**
+9. **Never add an animation other than one optional ambient drift per scene**, and never without
+   the `prefers-reduced-motion` guard.
+10. **Never draw anything implying payment or delivery** — no cards, no coins changing hands in
+    a transaction pose, no vans, no parcels, no shipping labels. (Cash at pickup is the model, so
+    a paper bag being handed over is fine; a card reader is not.)
+11. **Never add a dependency.**
+12. **Never ship the contact sheet.** Delete `__Scenes.jsx` and its route before reporting.
+13. **Never report a scene as done without having rendered it and looked at it.**
+14. **Never edit a page under `src/pages/buyer/`** other than creating and then deleting
+    `__Scenes.jsx`.
+
+---
+
+# PART 6 · Definition of done
+
+- [ ] `src/components/domain/Scene/Scene.jsx` exists, both exports, JSDoc
+- [ ] `Scene.module.css` defines every class in the vocabulary list, all token-based
+- [ ] `scenes.jsx` holds **all ten** scenes, each on 640x400 with horizon at 252
+- [ ] Every scene has **at least 120 elements** — state the count per scene in your report
+- [ ] Every scene has **exactly one** saturated accent (`offline-field` has zero)
+- [ ] Every scene uses the nine layers in order with the correct opacities
+- [ ] `EmptyState` renders scenes, with `LEGACY_SCENE_MAP` so old `illustration` props still work
+- [ ] `ErrorState` accepts `scene`, defaults to `offline-field`
+- [ ] Every scene verified visually at **240px and 544px** wide
+- [ ] `prefers-reduced-motion` block present and tested (toggle it in DevTools Rendering panel)
+- [ ] Contact sheet page **and its route** deleted
+- [ ] Every existing buyer page that uses `EmptyState` still renders — check `/buyer`,
+      `/buyer/products` with a nonsense search, `/buyer/favorites`, `/buyer/orders`
+- [ ] `Illustration.jsx` untouched — `git diff` on it is empty
+
+---
+
+# PART 7 · Verification gate
+
+**Nothing is done until it is proven by running something.** "Should work" is a failure.
+
+### A1 · Build
+
+```bash
+npm run build
+```
+
+Last 15 lines. Zero errors, zero new warnings. Also report the **bundle size delta** — ten
+scenes of inline SVG add weight, and it must be honest. If any scene chunk is over 60KB
+un-gzipped, say so.
+
+### A2 · Runtime
+
+```bash
+npm run dev
+```
+
+Visit `/buyer`, `/buyer/products?search=zzzzzzz`, `/buyer/favorites`, `/buyer/orders`.
+Each must show a scene-based empty state. Zero console errors.
+
+### A3 · Token purity
+
+```bash
+grep -rnE "#[0-9a-fA-F]{3,8}" src/components/domain/Scene src/components/ui/EmptyState.module.css src/components/ui/ErrorState.module.css
+```
+
+Must be empty.
+
+### A4 · Forbidden SVG and CSS
+
+```bash
+grep -rnE "linearGradient|radialGradient|<defs|<filter|<mask|<clipPath|url\(#" src/components/domain/Scene
+grep -rnE "linear-gradient|radial-gradient|backdrop-filter" src/components/domain/Scene
+grep -rn "!important" src/components/domain/Scene
+```
+
+The first two must be empty. The third may contain **only** lines inside the
+`prefers-reduced-motion` block — paste them and confirm.
+
+### A5 · No new dependencies
+
+```bash
+git diff package.json
+```
+
+Empty.
+
+### A6 · Illustration untouched
+
+```bash
+git diff --stat src/components/domain/Illustration.jsx src/components/domain/Illustration.module.css
+```
+
+Empty.
+
+### A7 · Contact sheet removed
+
+```bash
+grep -rn "__scenes\|__Scenes" src
+```
+
+Must be empty.
+
+### Element counts
+
+For each of the ten scenes, count the drawing elements and report a table:
+
+```bash
+# rough count per scene — adjust the awk range per scene block
+grep -c "className={s\." src/components/domain/Scene/scenes.jsx
+```
+
+Report per-scene counts. **Every scene at or above 120.** A scene below 120 is not finished —
+go back and add structure, not noise.
+
+### Visual proof
+
+For each scene, at **240px**, **390px** and **544px** rendered width, confirm and report:
+nothing floats, depth reads correctly, no fill leaks, forest band spans full width, one accent.
+Screenshots strongly preferred. If you cannot screenshot, describe each scene in two sentences
+and state explicitly that you rendered and inspected it.
+
+### Reduced motion
+
+DevTools → Rendering → *Emulate CSS prefers-reduced-motion: reduce*. Confirm every scene is
+completely static. Report the result.
+
+### B1 · Responsive sweep
+
+At **360, 390, 768, 1024, 1440** on `/buyer/products?search=zzzzzzz` (an empty state with a
+scene visible):
+
+```js
+const { layoutCheck } = await import('/src/dev/layoutCheck.js');
+console.table(layoutCheck());
+```
+
+**Zero findings.** Scenes are a common source of `[data-aspect]` distortion findings — if one
+appears, the fix is `width: 100%; height: auto` plus `preserveAspectRatio`, never a fixed height.
+
+---
+
+# PART 8 · Report format
+
+```
+Stage 2 status: PASS | FAIL
+
+## What I changed
+- <file> — <one line>
+
+## Scene table
+| name | elements | layers used | accent | verified at 240/390/544 |
+|------|----------|-------------|--------|--------------------------|
+| walk-to-market | 121 | 1-9 | beet awning stripes | yes / yes / yes |
+| ... (all ten)  |     |     |                     |                 |
+
+## Gate results
+A1 build + bundle delta: <output>
+A2 runtime console:      <output>
+A3 token purity:         <output>
+A4 forbidden SVG/CSS:    <output>
+A5 dependencies:         <output>
+A6 Illustration diff:    <output>
+A7 contact sheet gone:   <output>
+Reduced motion:          <result>
+B1 layoutCheck:          <table>
+
+## Visual proof
+<screenshots, or two sentences per scene plus explicit confirmation you rendered each>
+
+## Found but not fixed
+- <out-of-scope issues, file:line>
+
+## NOT verified
+- <anything unproven, and why>
+```
+
+If a gate fails, **fix it and re-run that gate.** A scene under 120 elements, or with two
+accents, or that you did not actually look at, is a FAIL — say so rather than claiming PASS.
