@@ -1,9 +1,1 @@
-/**
- * Public and Customer Announcements API
- */
-import { apiFetch } from './client';
-
-export async function getAnnouncements(signal) {
-  const res = await apiFetch('/announcements', { signal });
-  return res.data;
-}
+import { apiFetch } from './client';export async function getAnnouncements(signal) {  const res = await apiFetch('/announcements', { signal });  return res.data;}

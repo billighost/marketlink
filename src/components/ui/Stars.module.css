@@ -1,29 +1,1 @@
-/* Stars — rating display */
-.stars {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.filled {
-  color: var(--color-ink);
-}
-
-.empty {
-  color: var(--color-wood-line);
-}
-
-.starLabel {
-  display: flex;
-  cursor: pointer;
-  min-width: var(--tap-min);
-  min-height: var(--tap-min);
-  align-items: center;
-  justify-content: center;
-}
-
-.starLabel:focus-within {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-  border-radius: var(--radius-sm);
-}
+.stars {  display: inline-flex;  align-items: center;  gap: var(--space-1);}.filled {  color: var(--color-ink);}.empty {  color: var(--color-wood-line);}.starLabel {  display: flex;  cursor: pointer;  min-width: var(--tap-min);  min-height: var(--tap-min);  align-items: center;  justify-content: center;}.starLabel:focus-within {  outline: var(--focus-ring);  outline-offset: var(--focus-offset);  border-radius: var(--radius-sm);}

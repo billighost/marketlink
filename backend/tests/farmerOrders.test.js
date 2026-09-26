@@ -1,344 +1,1 @@
-/**
- * Farmer Orders Test Suite (T4.101 - T4.140)
- */
-
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
-import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
-import { COLLECTIONS } from '../src/db/collections.js';
-
-describe('Farmer Orders and Pick List Suite (T4.101 - T4.140)', () => {
-  let db;
-  let farmerToken = '';
-  let farmerDoc = null;
-  let farmer2Token = '';
-  let farmer2Doc = null;
-  let customerToken = '';
-  let customerDoc = null;
-
-  before(async () => {
-    const env = await setupTestEnvironment();
-    db = env.db;
-
-    // Active farmer 1 (Riverbend Farm)
-    const farmerRes = await loginUser('riverbend@example.com', 'market123');
-    farmerToken = farmerRes.accessToken;
-    farmerDoc = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: new ObjectId(farmerRes.user.id) });
-
-    // Active farmer 2 (Oak & Mill Bakery)
-    const farmer2Res = await loginUser('oakmill@example.com', 'market123');
-    farmer2Token = farmer2Res.accessToken;
-    farmer2Doc = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: new ObjectId(farmer2Res.user.id) });
-
-    // Customer (George)
-    const custRes = await loginUser('george@example.com', 'market123');
-    customerToken = custRes.accessToken;
-    customerDoc = await db.collection(COLLECTIONS.USERS).findOne({ _id: new ObjectId(custRes.user.id) });
-  });
-
-  after(async () => {
-    await db.collection(COLLECTIONS.ORDERS).deleteMany({
-      orderNumber: { $regex: '^(TEST-|PICK-)' },
-    });
-    await teardownTestEnvironment();
-  });
-
-  it('T4.101: GET /api/farmer/orders lists orders with status filtering and counts meta', async () => {
-    const res = await request('/api/farmer/orders', {
-      headers: { Authorization: `Bearer ${farmerToken}` },
-    });
-    assert.equal(res.status, 200);
-    const body = await res.json();
-
-    assert.ok(Array.isArray(body.data));
-    assert.ok(body.meta?.counts);
-    assert.ok(typeof body.meta.counts.placed === 'number');
-    assert.ok(typeof body.meta.counts.accepted === 'number');
-    assert.ok(typeof body.meta.counts.ready === 'number');
-    assert.ok(typeof body.meta.counts.completed === 'number');
-
-    // Filter by status
-    const placedRes = await request('/api/farmer/orders?status=placed', {
-      headers: { Authorization: `Bearer ${farmerToken}` },
-    });
-    assert.equal(placedRes.status, 200);
-    const placedBody = await placedRes.json();
-    for (const ord of placedBody.data) {
-      assert.equal(ord.status, 'placed');
-    }
-  });
-
-  it('T4.102: Customer phone visible only when order status is accepted, ready, or completed', async () => {
-    // 1. Check order in 'placed' status: customerPhone must be null
-    let placedOrder = await db.collection(COLLECTIONS.ORDERS).findOne({
-      farmerId: farmerDoc._id,
-      status: 'placed',
-    });
-
-    if (!placedOrder) {
-      // Create a test placed order
-      placedOrder = {
-        _id: new ObjectId(),
-        orderNumber: `TEST-ORD-PHONE-${Date.now()}`,
-        checkoutId: new ObjectId(),
-        customerId: customerDoc._id,
-        customerName: customerDoc.name,
-        farmerId: farmerDoc._id,
-        farmerUserId: farmerDoc.userId,
-        marketId: farmerDoc.marketIds[0],
-        items: [{ productId: new ObjectId(), name: 'Carrots', quantity: 2, priceCents: 200 }],
-        subtotalCents: 400,
-        totalCents: 400,
-        status: 'placed',
-        pickup: { start: '2026-10-10T10:00:00Z', end: '2026-10-10T12:00:00Z' },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      await db.collection(COLLECTIONS.ORDERS).insertOne(placedOrder);
-    }
-
-    const placedRes = await request(`/api/farmer/orders/${placedOrder._id.toString()}`, {
-      headers: { Authorization: `Bearer ${farmerToken}` },
-    });
-    assert.equal(placedRes.status, 200);
-    const placedBody = await placedRes.json();
-    assert.equal(placedBody.data.customerPhone, null, 'Customer phone must be hidden when order is placed');
-
-    // 2. Accept the order
-    const acceptRes = await request(`/api/farmer/orders/${placedOrder._id.toString()}/accept`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${farmerToken}` },
-    });
-    assert.equal(acceptRes.status, 200);
-    const acceptBody = await acceptRes.json();
-    assert.equal(acceptBody.data.status, 'accepted');
-    assert.ok(acceptBody.data.customerPhone, 'Customer phone must be visible once order is accepted');
-  });
-
-  it('T4.103: Tenant isolation: Farmer B receives 404 on Farmer A\'s order', async () => {
-    const orderA = await db.collection(COLLECTIONS.ORDERS).findOne({ farmerId: farmerDoc._id });
-    assert.ok(orderA);
-
-    const getRes = await request(`/api/farmer/orders/${orderA._id.toString()}`, {
-      headers: { Authorization: `Bearer ${farmer2Token}` },
-    });
-    assert.equal(getRes.status, 404);
-
-    const acceptRes = await request(`/api/farmer/orders/${orderA._id.toString()}/accept`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${farmer2Token}` },
-    });
-    assert.equal(acceptRes.status, 404);
-  });
-
-  it('T4.104: Complete order lifecycle transitions: accept -> ready -> complete', async () => {
-    // Insert fresh placed order
-    const prod = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmerDoc._id });
-    assert.ok(prod);
-
-    const orderId = new ObjectId();
-    await db.collection(COLLECTIONS.ORDERS).insertOne({
-      _id: orderId,
-      orderNumber: `TEST-LIFECYCLE-${Date.now()}`,
-      checkoutId: new ObjectId(),
-      customerId: customerDoc._id,
-      customerName: customerDoc.name,
-      farmerId: farmerDoc._id,
-      farmerUserId: farmerDoc.userId,
-      farmerName: farmerDoc.stallName,
-      marketId: farmerDoc.marketIds[0],
-      items: [{ productId: prod._id, name: prod.name, quantity: 2, priceCents: 300, lineTotalCents: 600 }],
-      subtotalCents: 600,
-      totalCents: 600,
-      status: 'placed',
-      pickup: { start: '2026-10-15T09:00:00Z', end: '2026-10-15T11:00:00Z' },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    // 1. Accept
-    const acceptRes = await request(`/api/farmer/orders/${orderId.toString()}/accept`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${farmerToken}` },
-    });
-    assert.equal(acceptRes.status, 200);
-
-    // Verify customer notification: order_accepted
-    const notifAccepted = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({
-      userId: customerDoc._id,
-      type: 'order_accepted',
-      'data.orderId': orderId.toString(),
-    });
-    assert.ok(notifAccepted, 'Customer should receive order_accepted notification');
-
-    // 2. Ready
-    const readyRes = await request(`/api/farmer/orders/${orderId.toString()}/ready`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${farmerToken}` },
-    });
-    assert.equal(readyRes.status, 200);
-
-    // Verify customer notification: order_ready
-    const notifReady = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({
-      userId: customerDoc._id,
-      type: 'order_ready',
-      'data.orderId': orderId.toString(),
-    });
-    assert.ok(notifReady, 'Customer should receive order_ready notification');
-
-    // 3. Complete
-    const completeRes = await request(`/api/farmer/orders/${orderId.toString()}/complete`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${farmerToken}` },
-    });
-    assert.equal(completeRes.status, 200);
-
-    // Verify customer notification: order_completed
-    const notifCompleted = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({
-      userId: customerDoc._id,
-      type: 'order_completed',
-      'data.orderId': orderId.toString(),
-    });
-    assert.ok(notifCompleted, 'Customer should receive order_completed notification');
-
-    // 4. Invalid transition after completion returns 409 INVALID_TRANSITION
-    const invalidRes = await request(`/api/farmer/orders/${orderId.toString()}/accept`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${farmerToken}` },
-    });
-    assert.equal(invalidRes.status, 409);
-  });
-
-  it('T4.105: Decline requires a reason (3..200) and restores inventory', async () => {
-    const prod = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmerDoc._id });
-    assert.ok(prod);
-    const initialQty = prod.quantityAvailable;
-
-    const orderId = new ObjectId();
-    await db.collection(COLLECTIONS.ORDERS).insertOne({
-      _id: orderId,
-      orderNumber: `TEST-DECLINE-${Date.now()}`,
-      checkoutId: new ObjectId(),
-      customerId: customerDoc._id,
-      customerName: customerDoc.name,
-      farmerId: farmerDoc._id,
-      farmerUserId: farmerDoc.userId,
-      farmerName: farmerDoc.stallName,
-      marketId: farmerDoc.marketIds[0],
-      items: [{ productId: prod._id, name: prod.name, quantity: 3, priceCents: 300, lineTotalCents: 900 }],
-      subtotalCents: 900,
-      totalCents: 900,
-      status: 'placed',
-      pickup: { start: '2026-10-18T09:00:00Z', end: '2026-10-18T11:00:00Z' },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    // Decline without reason -> 422
-    const noReasonRes = await request(`/api/farmer/orders/${orderId.toString()}/decline`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${farmerToken}` },
-      body: {},
-    });
-    assert.equal(noReasonRes.status, 422);
-
-    // Decline with valid reason -> 200
-    const declineRes = await request(`/api/farmer/orders/${orderId.toString()}/decline`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${farmerToken}` },
-      body: { reason: 'Crop damage due to heavy rain' },
-    });
-    assert.equal(declineRes.status, 200);
-
-    // Check inventory restored
-    const prodAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: prod._id });
-    assert.equal(prodAfter.quantityAvailable, initialQty + 3);
-
-    // Verify customer notification: order_declined
-    const notifDeclined = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({
-      userId: customerDoc._id,
-      type: 'order_declined',
-      'data.orderId': orderId.toString(),
-    });
-    assert.ok(notifDeclined);
-  });
-
-  it('T4.106: GET /api/farmer/orders/pick-list aggregates quantities by product and slot', async () => {
-    const targetDate = '2026-11-20';
-    await db.collection(COLLECTIONS.ORDERS).deleteMany({
-      farmerId: farmerDoc._id,
-      'pickup.start': { $regex: `^${targetDate}` },
-    });
-
-    // Insert 2 orders for targetDate
-    const p1 = new ObjectId();
-    const p2 = new ObjectId();
-
-    await db.collection(COLLECTIONS.ORDERS).insertMany([
-      {
-        orderNumber: `PICK-01-${Date.now()}`,
-        checkoutId: new ObjectId(),
-        customerId: customerDoc._id,
-        customerName: 'Alice Smith',
-        farmerId: farmerDoc._id,
-        farmerUserId: farmerDoc.userId,
-        marketId: farmerDoc.marketIds[0],
-        status: 'placed',
-        pickup: {
-          start: `${targetDate}T08:00:00Z`,
-          end: `${targetDate}T10:00:00Z`,
-        },
-        items: [
-          { productId: p1, name: 'Red Apples', unit: 'lb', quantity: 4 },
-          { productId: p2, name: 'Honey Pot', unit: 'jar', quantity: 2 },
-        ],
-        subtotalCents: 1000,
-        totalCents: 1000,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        orderNumber: `PICK-02-${Date.now()}`,
-        checkoutId: new ObjectId(),
-        customerId: customerDoc._id,
-        customerName: 'Bob Jones',
-        farmerId: farmerDoc._id,
-        farmerUserId: farmerDoc.userId,
-        marketId: farmerDoc.marketIds[0],
-        status: 'accepted',
-        pickup: {
-          start: `${targetDate}T08:00:00Z`,
-          end: `${targetDate}T10:00:00Z`,
-        },
-        items: [
-          { productId: p1, name: 'Red Apples', unit: 'lb', quantity: 6 },
-        ],
-        subtotalCents: 600,
-        totalCents: 600,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]);
-
-    const res = await request(`/api/farmer/orders/pick-list?date=${targetDate}`, {
-      headers: { Authorization: `Bearer ${farmerToken}` },
-    });
-    assert.equal(res.status, 200);
-    const body = await res.json();
-
-    assert.equal(body.data.date, targetDate);
-    const appleSummary = body.data.products.find((p) => p.name === 'Red Apples');
-    assert.ok(appleSummary);
-    assert.equal(appleSummary.quantity, 10, 'Red Apples total should be 4 + 6 = 10');
-
-    const honeySummary = body.data.products.find((p) => p.name === 'Honey Pot');
-    assert.ok(honeySummary);
-    assert.equal(honeySummary.quantity, 2);
-
-    assert.ok(body.data.slots.length >= 1);
-    const slot = body.data.slots.find((s) => s.start.startsWith(targetDate));
-    assert.ok(slot);
-    assert.equal(slot.orders.length, 2);
-  });
-});
+import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { ObjectId } from 'mongodb';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { COLLECTIONS } from '../src/db/collections.js';describe('Farmer Orders and Pick List Suite (T4.101 - T4.140)', () => {  let db;  let farmerToken = '';  let farmerDoc = null;  let farmer2Token = '';  let farmer2Doc = null;  let customerToken = '';  let customerDoc = null;  before(async () => {    const env = await setupTestEnvironment();    db = env.db;    const farmerRes = await loginUser('riverbend@example.com', 'market123');    farmerToken = farmerRes.accessToken;    farmerDoc = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: new ObjectId(farmerRes.user.id) });    const farmer2Res = await loginUser('oakmill@example.com', 'market123');    farmer2Token = farmer2Res.accessToken;    farmer2Doc = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: new ObjectId(farmer2Res.user.id) });    const custRes = await loginUser('george@example.com', 'market123');    customerToken = custRes.accessToken;    customerDoc = await db.collection(COLLECTIONS.USERS).findOne({ _id: new ObjectId(custRes.user.id) });  });  after(async () => {    await db.collection(COLLECTIONS.ORDERS).deleteMany({      orderNumber: { $regex: '^(TEST-|PICK-)' },    });    await teardownTestEnvironment();  });  it('T4.101: GET /api/farmer/orders lists orders with status filtering and counts meta', async () => {    const res = await request('/api/farmer/orders', {      headers: { Authorization: `Bearer ${farmerToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.ok(body.meta?.counts);    assert.ok(typeof body.meta.counts.placed === 'number');    assert.ok(typeof body.meta.counts.accepted === 'number');    assert.ok(typeof body.meta.counts.ready === 'number');    assert.ok(typeof body.meta.counts.completed === 'number');    const placedRes = await request('/api/farmer/orders?status=placed', {      headers: { Authorization: `Bearer ${farmerToken}` },    });    assert.equal(placedRes.status, 200);    const placedBody = await placedRes.json();    for (const ord of placedBody.data) {      assert.equal(ord.status, 'placed');    }  });  it('T4.102: Customer phone visible only when order status is accepted, ready, or completed', async () => {    let placedOrder = await db.collection(COLLECTIONS.ORDERS).findOne({      farmerId: farmerDoc._id,      status: 'placed',    });    if (!placedOrder) {      placedOrder = {        _id: new ObjectId(),        orderNumber: `TEST-ORD-PHONE-${Date.now()}`,        checkoutId: new ObjectId(),        customerId: customerDoc._id,        customerName: customerDoc.name,        farmerId: farmerDoc._id,        farmerUserId: farmerDoc.userId,        marketId: farmerDoc.marketIds[0],        items: [{ productId: new ObjectId(), name: 'Carrots', quantity: 2, priceCents: 200 }],        subtotalCents: 400,        totalCents: 400,        status: 'placed',        pickup: { start: '2026-10-10T10:00:00Z', end: '2026-10-10T12:00:00Z' },        createdAt: new Date(),        updatedAt: new Date(),      };      await db.collection(COLLECTIONS.ORDERS).insertOne(placedOrder);    }    const placedRes = await request(`/api/farmer/orders/${placedOrder._id.toString()}`, {      headers: { Authorization: `Bearer ${farmerToken}` },    });    assert.equal(placedRes.status, 200);    const placedBody = await placedRes.json();    assert.equal(placedBody.data.customerPhone, null, 'Customer phone must be hidden when order is placed');    const acceptRes = await request(`/api/farmer/orders/${placedOrder._id.toString()}/accept`, {      method: 'POST',      headers: { Authorization: `Bearer ${farmerToken}` },    });    assert.equal(acceptRes.status, 200);    const acceptBody = await acceptRes.json();    assert.equal(acceptBody.data.status, 'accepted');    assert.ok(acceptBody.data.customerPhone, 'Customer phone must be visible once order is accepted');  });  it('T4.103: Tenant isolation: Farmer B receives 404 on Farmer A\'s order', async () => {    const orderA = await db.collection(COLLECTIONS.ORDERS).findOne({ farmerId: farmerDoc._id });    assert.ok(orderA);    const getRes = await request(`/api/farmer/orders/${orderA._id.toString()}`, {      headers: { Authorization: `Bearer ${farmer2Token}` },    });    assert.equal(getRes.status, 404);    const acceptRes = await request(`/api/farmer/orders/${orderA._id.toString()}/accept`, {      method: 'POST',      headers: { Authorization: `Bearer ${farmer2Token}` },    });    assert.equal(acceptRes.status, 404);  });  it('T4.104: Complete order lifecycle transitions: accept -> ready -> complete', async () => {    const prod = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmerDoc._id });    assert.ok(prod);    const orderId = new ObjectId();    await db.collection(COLLECTIONS.ORDERS).insertOne({      _id: orderId,      orderNumber: `TEST-LIFECYCLE-${Date.now()}`,      checkoutId: new ObjectId(),      customerId: customerDoc._id,      customerName: customerDoc.name,      farmerId: farmerDoc._id,      farmerUserId: farmerDoc.userId,      farmerName: farmerDoc.stallName,      marketId: farmerDoc.marketIds[0],      items: [{ productId: prod._id, name: prod.name, quantity: 2, priceCents: 300, lineTotalCents: 600 }],      subtotalCents: 600,      totalCents: 600,      status: 'placed',      pickup: { start: '2026-10-15T09:00:00Z', end: '2026-10-15T11:00:00Z' },      createdAt: new Date(),      updatedAt: new Date(),    });    const acceptRes = await request(`/api/farmer/orders/${orderId.toString()}/accept`, {      method: 'POST',      headers: { Authorization: `Bearer ${farmerToken}` },    });    assert.equal(acceptRes.status, 200);    const notifAccepted = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({      userId: customerDoc._id,      type: 'order_accepted',      'data.orderId': orderId.toString(),    });    assert.ok(notifAccepted, 'Customer should receive order_accepted notification');    const readyRes = await request(`/api/farmer/orders/${orderId.toString()}/ready`, {      method: 'POST',      headers: { Authorization: `Bearer ${farmerToken}` },    });    assert.equal(readyRes.status, 200);    const notifReady = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({      userId: customerDoc._id,      type: 'order_ready',      'data.orderId': orderId.toString(),    });    assert.ok(notifReady, 'Customer should receive order_ready notification');    const completeRes = await request(`/api/farmer/orders/${orderId.toString()}/complete`, {      method: 'POST',      headers: { Authorization: `Bearer ${farmerToken}` },    });    assert.equal(completeRes.status, 200);    const notifCompleted = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({      userId: customerDoc._id,      type: 'order_completed',      'data.orderId': orderId.toString(),    });    assert.ok(notifCompleted, 'Customer should receive order_completed notification');    const invalidRes = await request(`/api/farmer/orders/${orderId.toString()}/accept`, {      method: 'POST',      headers: { Authorization: `Bearer ${farmerToken}` },    });    assert.equal(invalidRes.status, 409);  });  it('T4.105: Decline requires a reason (3..200) and restores inventory', async () => {    const prod = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: farmerDoc._id });    assert.ok(prod);    const initialQty = prod.quantityAvailable;    const orderId = new ObjectId();    await db.collection(COLLECTIONS.ORDERS).insertOne({      _id: orderId,      orderNumber: `TEST-DECLINE-${Date.now()}`,      checkoutId: new ObjectId(),      customerId: customerDoc._id,      customerName: customerDoc.name,      farmerId: farmerDoc._id,      farmerUserId: farmerDoc.userId,      farmerName: farmerDoc.stallName,      marketId: farmerDoc.marketIds[0],      items: [{ productId: prod._id, name: prod.name, quantity: 3, priceCents: 300, lineTotalCents: 900 }],      subtotalCents: 900,      totalCents: 900,      status: 'placed',      pickup: { start: '2026-10-18T09:00:00Z', end: '2026-10-18T11:00:00Z' },      createdAt: new Date(),      updatedAt: new Date(),    });    const noReasonRes = await request(`/api/farmer/orders/${orderId.toString()}/decline`, {      method: 'POST',      headers: { Authorization: `Bearer ${farmerToken}` },      body: {},    });    assert.equal(noReasonRes.status, 422);    const declineRes = await request(`/api/farmer/orders/${orderId.toString()}/decline`, {      method: 'POST',      headers: { Authorization: `Bearer ${farmerToken}` },      body: { reason: 'Crop damage due to heavy rain' },    });    assert.equal(declineRes.status, 200);    const prodAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: prod._id });    assert.equal(prodAfter.quantityAvailable, initialQty + 3);    const notifDeclined = await db.collection(COLLECTIONS.NOTIFICATIONS).findOne({      userId: customerDoc._id,      type: 'order_declined',      'data.orderId': orderId.toString(),    });    assert.ok(notifDeclined);  });  it('T4.106: GET /api/farmer/orders/pick-list aggregates quantities by product and slot', async () => {    const targetDate = '2026-11-20';    await db.collection(COLLECTIONS.ORDERS).deleteMany({      farmerId: farmerDoc._id,      'pickup.start': { $regex: `^${targetDate}` },    });    const p1 = new ObjectId();    const p2 = new ObjectId();    await db.collection(COLLECTIONS.ORDERS).insertMany([      {        orderNumber: `PICK-01-${Date.now()}`,        checkoutId: new ObjectId(),        customerId: customerDoc._id,        customerName: 'Alice Smith',        farmerId: farmerDoc._id,        farmerUserId: farmerDoc.userId,        marketId: farmerDoc.marketIds[0],        status: 'placed',        pickup: {          start: `${targetDate}T08:00:00Z`,          end: `${targetDate}T10:00:00Z`,        },        items: [          { productId: p1, name: 'Red Apples', unit: 'lb', quantity: 4 },          { productId: p2, name: 'Honey Pot', unit: 'jar', quantity: 2 },        ],        subtotalCents: 1000,        totalCents: 1000,        createdAt: new Date(),        updatedAt: new Date(),      },      {        orderNumber: `PICK-02-${Date.now()}`,        checkoutId: new ObjectId(),        customerId: customerDoc._id,        customerName: 'Bob Jones',        farmerId: farmerDoc._id,        farmerUserId: farmerDoc.userId,        marketId: farmerDoc.marketIds[0],        status: 'accepted',        pickup: {          start: `${targetDate}T08:00:00Z`,          end: `${targetDate}T10:00:00Z`,        },        items: [          { productId: p1, name: 'Red Apples', unit: 'lb', quantity: 6 },        ],        subtotalCents: 600,        totalCents: 600,        createdAt: new Date(),        updatedAt: new Date(),      },    ]);    const res = await request(`/api/farmer/orders/pick-list?date=${targetDate}`, {      headers: { Authorization: `Bearer ${farmerToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.equal(body.data.date, targetDate);    const appleSummary = body.data.products.find((p) => p.name === 'Red Apples');    assert.ok(appleSummary);    assert.equal(appleSummary.quantity, 10, 'Red Apples total should be 4 + 6 = 10');    const honeySummary = body.data.products.find((p) => p.name === 'Honey Pot');    assert.ok(honeySummary);    assert.equal(honeySummary.quantity, 2);    assert.ok(body.data.slots.length >= 1);    const slot = body.data.slots.find((s) => s.start.startsWith(targetDate));    assert.ok(slot);    assert.equal(slot.orders.length, 2);  });});

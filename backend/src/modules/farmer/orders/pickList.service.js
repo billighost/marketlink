@@ -1,92 +1,1 @@
-/**
- * Farmer pick list aggregation service.
- * Aggregates harvest and packing quantities across active orders for a specific market date.
- */
-
-import { ObjectId } from 'mongodb';
-import { getDb } from '../../../db/client.js';
-import { COLLECTIONS } from '../../../db/collections.js';
-import { toObjectId } from '../../../utils/ids.js';
-import { formatCustomerName } from '../../../utils/shapes.js';
-import { AppError } from '../../../utils/errors.js';
-
-/**
- * Generates an aggregated harvest and packing pick-list for a farmer on a specific date.
- *
- * @param {string|ObjectId} farmerId
- * @param {string} dateStr - 'YYYY-MM-DD'
- * @returns {Promise<object>}
- */
-export async function getPickList(farmerId, dateStr) {
-  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    throw AppError.validation('Valid date in YYYY-MM-DD format is required', { field: 'date' });
-  }
-
-  const db = getDb();
-  const fId = toObjectId(farmerId);
-
-  // Active orders that require fulfillment: placed, accepted, ready
-  const orders = await db
-    .collection(COLLECTIONS.ORDERS)
-    .find({
-      farmerId: fId,
-      status: { $in: ['placed', 'accepted', 'ready'] },
-      'pickup.start': { $regex: `^${dateStr}` },
-    })
-    .sort({ 'pickup.start': 1, orderNumber: 1 })
-    .toArray();
-
-  // 1. Aggregate total quantities per product
-  const productTotals = new Map();
-  for (const o of orders) {
-    if (!Array.isArray(o.items)) continue;
-    for (const it of o.items) {
-      const pid = it.productId ? it.productId.toString() : '';
-      if (!productTotals.has(pid)) {
-        productTotals.set(pid, {
-          productId: pid,
-          name: it.name,
-          unit: it.unit || 'each',
-          quantity: 0,
-        });
-      }
-      productTotals.get(pid).quantity += it.quantity;
-    }
-  }
-
-  const products = Array.from(productTotals.values()).sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
-
-  // 2. Group orders by slot
-  const slotMap = new Map();
-  for (const o of orders) {
-    const slotKey = `${o.pickup.start}|${o.pickup.end}`;
-    if (!slotMap.has(slotKey)) {
-      slotMap.set(slotKey, {
-        start: o.pickup.start instanceof Date ? o.pickup.start.toISOString() : o.pickup.start,
-        end: o.pickup.end instanceof Date ? o.pickup.end.toISOString() : o.pickup.end,
-        orders: [],
-      });
-    }
-
-    slotMap.get(slotKey).orders.push({
-      orderNumber: o.orderNumber,
-      customerName: formatCustomerName(o.customerName),
-      items: (o.items || []).map((it) => ({
-        name: it.name,
-        quantity: it.quantity,
-      })),
-    });
-  }
-
-  const slots = Array.from(slotMap.values()).sort((a, b) =>
-    a.start.localeCompare(b.start)
-  );
-
-  return {
-    date: dateStr,
-    products,
-    slots,
-  };
-}
+import { ObjectId } from 'mongodb';import { getDb } from '../../../db/client.js';import { COLLECTIONS } from '../../../db/collections.js';import { toObjectId } from '../../../utils/ids.js';import { formatCustomerName } from '../../../utils/shapes.js';import { AppError } from '../../../utils/errors.js';export async function getPickList(farmerId, dateStr) {  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {    throw AppError.validation('Valid date in YYYY-MM-DD format is required', { field: 'date' });  }  const db = getDb();  const fId = toObjectId(farmerId);  const orders = await db    .collection(COLLECTIONS.ORDERS)    .find({      farmerId: fId,      status: { $in: ['placed', 'accepted', 'ready'] },      'pickup.start': { $regex: `^${dateStr}` },    })    .sort({ 'pickup.start': 1, orderNumber: 1 })    .toArray();  const productTotals = new Map();  for (const o of orders) {    if (!Array.isArray(o.items)) continue;    for (const it of o.items) {      const pid = it.productId ? it.productId.toString() : '';      if (!productTotals.has(pid)) {        productTotals.set(pid, {          productId: pid,          name: it.name,          unit: it.unit || 'each',          quantity: 0,        });      }      productTotals.get(pid).quantity += it.quantity;    }  }  const products = Array.from(productTotals.values()).sort((a, b) =>    a.name.localeCompare(b.name)  );  const slotMap = new Map();  for (const o of orders) {    const slotKey = `${o.pickup.start}|${o.pickup.end}`;    if (!slotMap.has(slotKey)) {      slotMap.set(slotKey, {        start: o.pickup.start instanceof Date ? o.pickup.start.toISOString() : o.pickup.start,        end: o.pickup.end instanceof Date ? o.pickup.end.toISOString() : o.pickup.end,        orders: [],      });    }    slotMap.get(slotKey).orders.push({      orderNumber: o.orderNumber,      customerName: formatCustomerName(o.customerName),      items: (o.items || []).map((it) => ({        name: it.name,        quantity: it.quantity,      })),    });  }  const slots = Array.from(slotMap.values()).sort((a, b) =>    a.start.localeCompare(b.start)  );  return {    date: dateStr,    products,    slots,  };}

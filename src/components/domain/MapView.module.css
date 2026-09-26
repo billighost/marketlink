@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+.mapWrapper {  position: relative;  width: 100%;  max-width: 100%;  box-sizing: border-box;  border-radius: var(--radius-lg);  border: var(--border);  overflow: hidden;  background-color: var(--color-canvas);}.mapContainer {  width: 100%;  height: 100%;  outline: none;}.mapContainer:focus-visible {  outline: var(--focus-ring);  outline-offset: -2px;}.fallback {  width: 100%;  height: 100%;  min-height: 200px;  display: flex;  flex-direction: column;  align-items: center;  justify-content: center;  padding: var(--space-4);  text-align: center;  color: var(--color-ink-soft);  gap: var(--space-2);}.directionsOverlay {  position: absolute;  top: var(--space-3);  right: var(--space-3);  z-index: 1000;  display: flex;  gap: var(--space-2);}.directionsButton {  display: inline-flex;  align-items: center;  gap: var(--space-2);  padding: var(--space-2) var(--space-3);  background-color: var(--color-white);  color: var(--color-beet);  font-family: var(--font-body);  font-size: var(--text-xs);  font-weight: var(--weight-medium);  border: var(--border);  border-radius: var(--radius-full);  text-decoration: none;  min-height: var(--tap-min);  box-shadow: var(--shadow-menu);  transition: background-color var(--duration-fast) var(--ease-standard);}.directionsButton:hover {  background-color: var(--color-beet-tint);}:global(.marketlink-map-pin) {  display: flex;  align-items: center;  justify-content: center;  cursor: pointer;  background: transparent;  border: none;}:global(.marketlink-pin-badge) {  width: 32px;  height: 32px;  border-radius: 50% 50% 50% 0;  transform: rotate(-45deg);  background-color: var(--color-beet);  display: flex;  align-items: center;  justify-content: center;  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);  border: 2px solid var(--color-white);  transition: transform var(--duration-fast) var(--ease-standard);}:global(.marketlink-pin-badge.selected) {  background-color: var(--color-beet-dark);  transform: rotate(-45deg) scale(1.15);  border-color: var(--color-canvas);}:global(.marketlink-pin-inner) {  transform: rotate(45deg);  width: 10px;  height: 10px;  border-radius: 50%;  background-color: var(--color-white);}:global(.marketlink-popup .leaflet-popup-content-wrapper) {  border-radius: var(--radius-md);  padding: var(--space-2);  border: var(--border);  box-shadow: var(--shadow-menu);  font-family: var(--font-body);}:global(.marketlink-popup .leaflet-popup-content) {  margin: var(--space-2);  font-size: var(--text-sm);  color: var(--color-ink);  line-height: 1.4;}:global(.marketlink-popup-title) {  font-weight: var(--weight-semibold);  margin-bottom: var(--space-1);}
+=======
 /* MapView CSS Module adhering strictly to tokens */
 
 .mapWrapper {
@@ -97,6 +100,31 @@
   border-color: var(--color-canvas);
 }
 
+/* Farmer pin: green */
+:global(.marketlink-pin-badge.farmer) {
+  background-color: var(--color-herb);
+  width: 26px;
+  height: 26px;
+}
+
+/* Pickup point: wood/amber */
+:global(.marketlink-pin-badge.pickup) {
+  background-color: var(--color-wood);
+  width: 24px;
+  height: 24px;
+}
+
+/* Highlighted pin from Smart Basket: pulsing ring */
+:global(.marketlink-pin-badge.highlighted) {
+  box-shadow: 0 0 0 4px rgba(122, 46, 59, 0.25);
+  animation: markerPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes markerPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(122, 46, 59, 0.30); }
+  50% { box-shadow: 0 0 0 8px rgba(122, 46, 59, 0.10); }
+}
+
 :global(.marketlink-pin-inner) {
   transform: rotate(45deg);
   width: 10px;
@@ -104,6 +132,7 @@
   border-radius: 50%;
   background-color: var(--color-white);
 }
+
 
 :global(.marketlink-popup .leaflet-popup-content-wrapper) {
   border-radius: var(--radius-md);
@@ -124,3 +153,4 @@
   font-weight: var(--weight-semibold);
   margin-bottom: var(--space-1);
 }
+>>>>>>> bc73418815cde522512fe21a2af884eee3163165

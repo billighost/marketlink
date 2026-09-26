@@ -1,113 +1,1 @@
-import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { PATHS } from '@/routes/paths';
-import useDocumentTitle from '@/hooks/useDocumentTitle';
-import PageHeader from '@/components/layout/PageHeader';
-import FormField from '@/components/ui/FormField';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import Illustration from '@/components/domain/Illustration';
-import { forgotPassword } from '@/api/auth';
-import styles from './ForgotPassword.module.css';
-
-/**
- * ForgotPassword page with email validation and sent confirmation state.
- */
-export function ForgotPassword() {
-  useDocumentTitle('Reset Password · MarketLink');
-
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const emailRef = useRef(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      setError('Please enter your email address.');
-      emailRef.current?.focus();
-      return;
-    }
-    if (!email.includes('@') || !email.includes('.')) {
-      setError('Please enter a valid email address.');
-      emailRef.current?.focus();
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-    try {
-      await forgotPassword(email.trim().toLowerCase());
-    } catch {
-      // API returns 200 regardless to prevent email enumeration, but handle network error gracefully
-    } finally {
-      setLoading(false);
-      setSent(true);
-    }
-  };
-
-  return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <PageHeader
-          title="Reset your password"
-          subtitle={!sent ? "Enter your email address and we'll send a note to restore your account." : undefined}
-          backTo={PATHS.LOGIN}
-          backLabel="Sign in"
-          className={styles.header}
-        />
-
-        <Card className={styles.card}>
-          {sent ? (
-            /* Sent confirmation state */
-            <div className={styles.sentState}>
-              <div className={styles.illustrationMoment} aria-hidden="true">
-                <Illustration name="paper-bag-pears" size="lg" />
-              </div>
-              <h2 className={styles.sentTitle}>Check your inbox</h2>
-              <p className={styles.sentText}>
-                If that email is registered on Elm Street, a note is on its way with instructions to set a new password.
-              </p>
-              <Link to={PATHS.LOGIN} className={styles.backLink}>
-                Back to sign in
-              </Link>
-            </div>
-          ) : (
-            /* Email submission form */
-            <form onSubmit={handleSubmit} noValidate className={styles.form}>
-              <FormField
-                ref={emailRef}
-                label="Email address"
-                id="reset-email"
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError('');
-                }}
-                error={error}
-                autoComplete="email"
-                required
-              />
-
-              <div className={styles.submitRow}>
-                <Button type="submit" variant="primary" size="md" className={styles.submitButton}>
-                  Send reset link
-                </Button>
-              </div>
-
-              <div className={styles.backRow}>
-                <Link to={PATHS.LOGIN} className={styles.backLink}>
-                  Back to sign in
-                </Link>
-              </div>
-            </form>
-          )}
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-export default ForgotPassword;
+import React, { useState, useRef } from 'react';import { Link } from 'react-router-dom';import { PATHS } from '@/routes/paths';import useDocumentTitle from '@/hooks/useDocumentTitle';import PageHeader from '@/components/layout/PageHeader';import FormField from '@/components/ui/FormField';import Button from '@/components/ui/Button';import Card from '@/components/ui/Card';import Illustration from '@/components/domain/Illustration';import { forgotPassword } from '@/api/auth';import styles from './ForgotPassword.module.css';export function ForgotPassword() {  useDocumentTitle('Reset Password · MarketLink');  const [email, setEmail] = useState('');  const [error, setError] = useState('');  const [loading, setLoading] = useState(false);  const [sent, setSent] = useState(false);  const emailRef = useRef(null);  const handleSubmit = async (e) => {    e.preventDefault();    if (!email.trim()) {      setError('Please enter your email address.');      emailRef.current?.focus();      return;    }    if (!email.includes('@') || !email.includes('.')) {      setError('Please enter a valid email address.');      emailRef.current?.focus();      return;    }    setError('');    setLoading(true);    try {      await forgotPassword(email.trim().toLowerCase());    } catch {    } finally {      setLoading(false);      setSent(true);    }  };  return (    <div className={styles.page}>      <div className={styles.container}>        <PageHeader          title="Reset your password"          subtitle={!sent ? "Enter your email address and we'll send a note to restore your account." : undefined}          backTo={PATHS.LOGIN}          backLabel="Sign in"          className={styles.header}        />        <Card className={styles.card}>          {sent ? (            <div className={styles.sentState}>              <div className={styles.illustrationMoment} aria-hidden="true">                <Illustration name="paper-bag-pears" size="lg" />              </div>              <h2 className={styles.sentTitle}>Check your inbox</h2>              <p className={styles.sentText}>                If that email is registered on Elm Street, a note is on its way with instructions to set a new password.              </p>              <Link to={PATHS.LOGIN} className={styles.backLink}>                Back to sign in              </Link>            </div>          ) : (            <form onSubmit={handleSubmit} noValidate className={styles.form}>              <FormField                ref={emailRef}                label="Email address"                id="reset-email"                type="email"                value={email}                onChange={(e) => {                  setEmail(e.target.value);                  if (error) setError('');                }}                error={error}                autoComplete="email"                required              />              <div className={styles.submitRow}>                <Button type="submit" variant="primary" size="md" className={styles.submitButton}>                  Send reset link                </Button>              </div>              <div className={styles.backRow}>                <Link to={PATHS.LOGIN} className={styles.backLink}>                  Back to sign in                </Link>              </div>            </form>          )}        </Card>      </div>    </div>  );}export default ForgotPassword;

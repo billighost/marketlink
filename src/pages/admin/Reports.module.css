@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+.container {  display: flex;  flex-direction: column;  gap: var(--space-6);  padding-bottom: var(--space-12);}.header {  display: flex;  align-items: center;  justify-content: space-between;  gap: var(--space-4);  flex-wrap: wrap;}.title {  font-family: var(--font-display);  font-size: 1.75rem;  font-weight: 600;  color: var(--color-ink);  margin: 0;}.rangePills {  display: flex;  background: var(--color-surface-sunken);  border: 1px solid var(--color-border);  border-radius: var(--radius-pill);  padding: 2px;}.rangePill {  border: none;  background: transparent;  padding: var(--space-1) var(--space-3);  font-size: 0.8125rem;  font-weight: 500;  color: var(--color-ink-muted);  border-radius: var(--radius-pill);  cursor: pointer;}.rangePillActive {  background: var(--color-surface);  color: var(--color-ink);  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);  font-weight: 600;}.metricsGrid {  display: grid;  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));  gap: var(--space-4);}.metricCard {  background: var(--color-surface);  border: 1px solid var(--color-border);  border-radius: var(--radius-lg);  padding: var(--space-4) var(--space-5);}.metricLabel {  font-size: 0.8125rem;  color: var(--color-ink-muted);  text-transform: uppercase;  letter-spacing: 0.05em;  margin-bottom: var(--space-1);}.metricValue {  font-size: 1.75rem;  font-weight: 700;  color: var(--color-ink);}.chartCard {  background: var(--color-surface);  border: 1px solid var(--color-border);  border-radius: var(--radius-lg);  padding: var(--space-5);  display: flex;  flex-direction: column;  gap: var(--space-4);}.chartHeader {  display: flex;  justify-content: space-between;  align-items: center;}.chartTitle {  font-size: 1.125rem;  font-weight: 600;  color: var(--color-ink);  margin: 0;}.exportsSection {  background: var(--color-surface);  border: 1px solid var(--color-border);  border-radius: var(--radius-lg);  padding: var(--space-5);  display: flex;  flex-direction: column;  gap: var(--space-3);}.exportsTitle {  font-size: 1.125rem;  font-weight: 600;  color: var(--color-ink);  margin: 0;}.exportButtons {  display: flex;  gap: var(--space-3);  flex-wrap: wrap;}.exportBtn {  background: var(--color-surface-sunken);  color: var(--color-ink);  border: 1px solid var(--color-border);  border-radius: var(--radius-pill);  padding: 0.5rem 1.25rem;  font-size: 0.875rem;  font-weight: 500;  cursor: pointer;  display: inline-flex;  align-items: center;  gap: var(--space-2);  min-height: 40px;}.exportBtn:hover:not(:disabled) {  background: var(--color-surface-hover);  border-color: var(--color-beet);}.exportBtn:disabled {  opacity: 0.6;  cursor: not-allowed;}.historySection {  background: var(--color-surface);  border: 1px solid var(--color-border);  border-radius: var(--radius-lg);  overflow: hidden;}.historyTable {  width: 100%;  border-collapse: collapse;  text-align: left;  font-size: 0.875rem;}.historyTh {  padding: var(--space-3) var(--space-4);  background: var(--color-surface-sunken);  color: var(--color-ink-muted);  font-weight: 600;  font-size: 0.75rem;  text-transform: uppercase;  letter-spacing: 0.05em;  border-bottom: 1px solid var(--color-border);}.historyTd {  padding: var(--space-3) var(--space-4);  color: var(--color-ink);  border-bottom: 1px solid var(--color-border);}
+=======
 .container {
   display: flex;
   flex-direction: column;
@@ -149,7 +152,8 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .historyTable {
@@ -175,3 +179,4 @@
   color: var(--color-ink);
   border-bottom: 1px solid var(--color-border);
 }
+>>>>>>> bc73418815cde522512fe21a2af884eee3163165

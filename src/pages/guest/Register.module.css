@@ -1,666 +1,1 @@
-/* ==========================================================================
-   Register.module.css — Luxury Editorial Split-Screen Styling for Registration
-   ========================================================================== */
-
-.registerPage {
-  min-height: calc(100vh - 140px);
-  background-color: #faf8f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(20px, 1.5rem + 1.5vw, 48px) 16px;
-}
-
-.registerContainer {
-  width: 100%;
-  max-width: 1080px;
-  background-color: #ffffff;
-  border: 1px solid #ebdcd5;
-  border-radius: 20px;
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: 1fr;
-  box-shadow: 0 10px 40px rgba(46, 43, 38, 0.08);
-}
-
-@media (min-width: 900px) {
-  .registerContainer {
-    grid-template-columns: 1fr 1.25fr;
-    min-height: 660px;
-  }
-}
-
-/* ─── LEFT SHOWCASE PANEL ────────────────────────────────────────── */
-.showcasePanel {
-  position: relative;
-  display: none;
-  background-color: #3e0e16;
-  overflow: hidden;
-}
-
-@media (min-width: 900px) {
-  .showcasePanel {
-    display: flex;
-  }
-}
-
-.showcaseBgImg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.38;
-  filter: saturate(1.1);
-}
-
-.showcaseOverlay {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(180deg, rgba(62, 14, 22, 0.8) 0%, rgba(42, 9, 15, 0.95) 100%);
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  color: #ffffff;
-}
-
-.showcaseTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.showcaseLogoWrap {
-  filter: brightness(0) invert(1);
-}
-
-.showcaseBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #faede9;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 4px 10px;
-  border-radius: 999px;
-  backdrop-filter: blur(4px);
-}
-
-.showcaseQuoteBlock {
-  margin-block: auto;
-  padding-block: 24px;
-}
-
-.showcaseHeading {
-  font-family: Georgia, 'Playfair Display', serif;
-  font-size: 1.45rem;
-  font-weight: 700;
-  line-height: 1.35;
-  color: #faede9;
-  margin: 0 0 10px 0;
-}
-
-.showcaseLead {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.84rem;
-  line-height: 1.6;
-  color: #d8c2b7;
-  margin: 0 0 24px 0;
-}
-
-.showcasePoints {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.showcasePoint {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.8rem;
-  color: #efe5df;
-}
-
-.pointCheck {
-  color: #55d66d;
-  flex-shrink: 0;
-}
-
-.showcaseFooter {
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.footerStepIndicator {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.74rem;
-  color: #d8c2b7;
-}
-
-.stepProgressDots {
-  display: flex;
-  gap: 6px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.25);
-  transition: all 180ms ease;
-}
-
-.dotActive {
-  background-color: #ffffff;
-  transform: scale(1.2);
-}
-
-/* ─── RIGHT FORM PANEL ───────────────────────────────────────────── */
-.formPanel {
-  padding: clamp(28px, 1.5rem + 2vw, 48px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.formInner {
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.navRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.backBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #7d7266;
-  text-decoration: none;
-  cursor: pointer;
-  padding: 0;
-  transition: color 120ms ease;
-}
-
-.backBtn:hover {
-  color: #541722;
-}
-
-.stepCounterText {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #8c3f20;
-}
-
-.formHeader {
-  margin-bottom: 22px;
-}
-
-.formKicker {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #8c3f20;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.formTitle {
-  font-family: Georgia, 'Playfair Display', serif;
-  font-size: clamp(1.4rem, 1.15rem + 0.9vw, 1.85rem);
-  font-weight: 700;
-  color: #4a1521;
-  line-height: 1.25;
-  margin: 0 0 6px 0;
-}
-
-.formSubtitle {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.82rem;
-  color: #6b6259;
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* ─── STEP 1: ROLE SELECTION CARDS ───────────────────────────────── */
-.roleSelectionForm {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.roleCardsGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.roleOptionCard {
-  background-color: #faf8f5;
-  border: 1.5px solid #ebdcd5;
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  cursor: pointer;
-  transition: all 150ms ease;
-  position: relative;
-}
-
-.roleOptionCard:hover {
-  background-color: #ffffff;
-  border-color: #541722;
-  box-shadow: 0 4px 14px rgba(84, 23, 34, 0.08);
-}
-
-.roleOptionActive {
-  background-color: #fdf8f7;
-  border-color: #541722;
-  box-shadow: 0 4px 16px rgba(84, 23, 34, 0.12);
-}
-
-.roleRadioHidden {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.roleIconBox {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background-color: #faede9;
-  color: #541722;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.roleOptionActive .roleIconBox {
-  background-color: #541722;
-  color: #ffffff;
-}
-
-.roleCardText {
-  flex: 1;
-}
-
-.roleTitleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.roleCardTitle {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #24201c;
-}
-
-.roleActiveCheck {
-  color: #541722;
-  flex-shrink: 0;
-}
-
-.roleCardDesc {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.76rem;
-  line-height: 1.45;
-  color: #6b6259;
-  margin: 0;
-}
-
-.continueBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 13px 20px;
-  background-color: #541722;
-  color: #ffffff;
-  border: none;
-  border-radius: 9px;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(84, 23, 34, 0.2);
-  transition: all 150ms ease;
-}
-
-.continueBtn:hover {
-  background-color: #3e0e16;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(84, 23, 34, 0.28);
-}
-
-.formFooterPrompt {
-  text-align: center;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.78rem;
-  color: #7d7266;
-  margin-top: 4px;
-}
-
-.formFooterPrompt p {
-  margin: 0;
-}
-
-.loginLink {
-  color: #541722;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.loginLink:hover {
-  text-decoration: underline;
-}
-
-/* ─── STEP 2: DETAILS FORM ───────────────────────────────────────── */
-.detailsForm {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.twoFieldsGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-}
-
-@media (min-width: 600px) {
-  .twoFieldsGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.fieldGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.fieldLabel {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #2e2b26;
-}
-
-.requiredStar {
-  color: #c0392b;
-}
-
-.inputWrapper {
-  display: flex;
-  align-items: center;
-  background-color: #faf8f5;
-  border: 1px solid #ded3cb;
-  border-radius: 8px;
-  padding: 2px 12px;
-  transition: all 120ms ease;
-}
-
-.inputWrapper:focus-within {
-  background-color: #ffffff;
-  border-color: #541722;
-  box-shadow: 0 0 0 3px rgba(84, 23, 34, 0.1);
-}
-
-.inputError {
-  border-color: #c0392b !important;
-  background-color: #fff9f9 !important;
-}
-
-.fieldIcon {
-  color: #8c8175;
-  flex-shrink: 0;
-  margin-right: 8px;
-}
-
-.textInput,
-.selectInput {
-  flex: 1;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.8125rem;
-  color: #24201c;
-  padding: 8px 0;
-  min-width: 0;
-}
-
-.textInput:focus,
-.textInput:focus-visible,
-.selectInput:focus,
-.selectInput:focus-visible {
-  border: none !important;
-  outline: none !important;
-  outline-offset: 0 !important;
-  box-shadow: none !important;
-}
-
-.selectInput {
-  cursor: pointer;
-}
-
-.togglePasswordBtn {
-  background: transparent;
-  border: none;
-  color: #8c8175;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.togglePasswordBtn:hover {
-  color: #24201c;
-}
-
-.errorText {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.68rem;
-  color: #c0392b;
-  font-weight: 500;
-}
-
-.termsRow {
-  margin-top: 4px;
-}
-
-.checkboxLabel {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 8px;
-  cursor: pointer;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.74rem;
-  line-height: 1.4;
-  color: #544d45;
-  user-select: none;
-}
-
-.checkboxInput {
-  accent-color: #541722;
-  width: 15px;
-  height: 15px;
-  margin-top: 2px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.submitBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px 20px;
-  background-color: #541722;
-  color: #ffffff;
-  border: none;
-  border-radius: 9px;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(84, 23, 34, 0.2);
-  transition: all 150ms ease;
-  margin-top: 6px;
-}
-
-.submitBtn:hover:not(:disabled) {
-  background-color: #3e0e16;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(84, 23, 34, 0.28);
-}
-
-.submitBtn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* ─── STEP 3: SUCCESS CELEBRATION ────────────────────────────────── */
-.successBlock {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: clamp(24px, 1rem + 2vw, 40px) 16px;
-  animation: fadeIn 220ms ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.successIconBubble {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background-color: #e5f6e8;
-  color: #175e21;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-.successHeading {
-  font-family: Georgia, 'Playfair Display', serif;
-  font-size: 1.55rem;
-  font-weight: 700;
-  color: #24201c;
-  margin: 0 0 8px 0;
-}
-
-.successBadgePill {
-  display: inline-block;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.74rem;
-  font-weight: 700;
-  background-color: #faede9;
-  color: #541722;
-  padding: 4px 12px;
-  border-radius: 999px;
-  margin-bottom: 16px;
-}
-
-.successMessage {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: #4a433b;
-  max-width: 440px;
-  margin: 0 0 28px 0;
-}
-
-.successActionButtons {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.successPrimaryBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 22px;
-  background-color: #541722;
-  color: #ffffff;
-  border-radius: 8px;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.84rem;
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: 0 4px 12px rgba(84, 23, 34, 0.2);
-  transition: all 120ms ease;
-}
-
-.successPrimaryBtn:hover {
-  background-color: #3e0e16;
-}
-
-.successSecondaryBtn {
-  display: inline-flex;
-  align-items: center;
-  padding: 12px 20px;
-  background-color: #faf5f2;
-  border: 1px solid #ebdcd5;
-  color: #541722;
-  border-radius: 8px;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.84rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 120ms ease;
-}
-
-.successSecondaryBtn:hover {
-  background-color: #faede9;
-}
+.registerPage {  min-height: calc(100vh - 140px);  background-color: #faf8f5;  display: flex;  align-items: center;  justify-content: center;  padding: clamp(20px, 1.5rem + 1.5vw, 48px) 16px;}.registerContainer {  width: 100%;  max-width: 1080px;  background-color: #ffffff;  border: 1px solid #ebdcd5;  border-radius: 20px;  overflow: hidden;  display: grid;  grid-template-columns: 1fr;  box-shadow: 0 10px 40px rgba(46, 43, 38, 0.08);}@media (min-width: 900px) {  .registerContainer {    grid-template-columns: 1fr 1.25fr;    min-height: 660px;  }}.showcasePanel {  position: relative;  display: none;  background-color: #3e0e16;  overflow: hidden;}@media (min-width: 900px) {  .showcasePanel {    display: flex;  }}.showcaseBgImg {  position: absolute;  inset: 0;  width: 100%;  height: 100%;  object-fit: cover;  opacity: 0.38;  filter: saturate(1.1);}.showcaseOverlay {  position: relative;  z-index: 1;  width: 100%;  height: 100%;  background: linear-gradient(180deg, rgba(62, 14, 22, 0.8) 0%, rgba(42, 9, 15, 0.95) 100%);  padding: 40px;  display: flex;  flex-direction: column;  justify-content: space-between;  color: #ffffff;}.showcaseTop {  display: flex;  align-items: center;  justify-content: space-between;}.showcaseLogoWrap {  filter: brightness(0) invert(1);}.showcaseBadge {  display: inline-flex;  align-items: center;  gap: 5px;  background-color: rgba(255, 255, 255, 0.15);  color: #faede9;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.68rem;  font-weight: 600;  text-transform: uppercase;  letter-spacing: 0.04em;  padding: 4px 10px;  border-radius: 999px;  backdrop-filter: blur(4px);}.showcaseQuoteBlock {  margin-block: auto;  padding-block: 24px;}.showcaseHeading {  font-family: Georgia, 'Playfair Display', serif;  font-size: 1.45rem;  font-weight: 700;  line-height: 1.35;  color: #faede9;  margin: 0 0 10px 0;}.showcaseLead {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.84rem;  line-height: 1.6;  color: #d8c2b7;  margin: 0 0 24px 0;}.showcasePoints {  display: flex;  flex-direction: column;  gap: 12px;}.showcasePoint {  display: flex;  align-items: center;  gap: 10px;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.8rem;  color: #efe5df;}.pointCheck {  color: #55d66d;  flex-shrink: 0;}.showcaseFooter {  padding-top: 20px;  border-top: 1px solid rgba(255, 255, 255, 0.15);}.footerStepIndicator {  display: flex;  align-items: center;  justify-content: space-between;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.74rem;  color: #d8c2b7;}.stepProgressDots {  display: flex;  gap: 6px;}.dot {  width: 8px;  height: 8px;  border-radius: 50%;  background-color: rgba(255, 255, 255, 0.25);  transition: all 180ms ease;}.dotActive {  background-color: #ffffff;  transform: scale(1.2);}.formPanel {  padding: clamp(28px, 1.5rem + 2vw, 48px);  display: flex;  flex-direction: column;  justify-content: center;}.formInner {  width: 100%;  max-width: 480px;  margin: 0 auto;}.navRow {  display: flex;  align-items: center;  justify-content: space-between;  margin-bottom: 20px;}.backBtn {  display: inline-flex;  align-items: center;  gap: 6px;  background: transparent;  border: none;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.76rem;  font-weight: 600;  color: #7d7266;  text-decoration: none;  cursor: pointer;  padding: 0;  transition: color 120ms ease;}.backBtn:hover {  color: #541722;}.stepCounterText {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.72rem;  font-weight: 700;  text-transform: uppercase;  letter-spacing: 0.05em;  color: #8c3f20;}.formHeader {  margin-bottom: 22px;}.formKicker {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.72rem;  font-weight: 700;  color: #8c3f20;  text-transform: uppercase;  letter-spacing: 0.06em;  display: block;  margin-bottom: 4px;}.formTitle {  font-family: Georgia, 'Playfair Display', serif;  font-size: clamp(1.4rem, 1.15rem + 0.9vw, 1.85rem);  font-weight: 700;  color: #4a1521;  line-height: 1.25;  margin: 0 0 6px 0;}.formSubtitle {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.82rem;  color: #6b6259;  line-height: 1.5;  margin: 0;}.roleSelectionForm {  display: flex;  flex-direction: column;  gap: 20px;}.roleCardsGrid {  display: flex;  flex-direction: column;  gap: 14px;}.roleOptionCard {  background-color: #faf8f5;  border: 1.5px solid #ebdcd5;  border-radius: 12px;  padding: 16px;  display: flex;  align-items: flex-start;  gap: 14px;  cursor: pointer;  transition: all 150ms ease;  position: relative;}.roleOptionCard:hover {  background-color: #ffffff;  border-color: #541722;  box-shadow: 0 4px 14px rgba(84, 23, 34, 0.08);}.roleOptionActive {  background-color: #fdf8f7;  border-color: #541722;  box-shadow: 0 4px 16px rgba(84, 23, 34, 0.12);}.roleRadioHidden {  position: absolute;  opacity: 0;  pointer-events: none;}.roleIconBox {  width: 44px;  height: 44px;  border-radius: 10px;  background-color: #faede9;  color: #541722;  display: flex;  align-items: center;  justify-content: center;  flex-shrink: 0;}.roleOptionActive .roleIconBox {  background-color: #541722;  color: #ffffff;}.roleCardText {  flex: 1;}.roleTitleRow {  display: flex;  align-items: center;  justify-content: space-between;  margin-bottom: 4px;}.roleCardTitle {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.875rem;  font-weight: 700;  color: #24201c;}.roleActiveCheck {  color: #541722;  flex-shrink: 0;}.roleCardDesc {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.76rem;  line-height: 1.45;  color: #6b6259;  margin: 0;}.continueBtn {  display: inline-flex;  align-items: center;  justify-content: center;  gap: 8px;  width: 100%;  padding: 13px 20px;  background-color: #541722;  color: #ffffff;  border: none;  border-radius: 9px;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.875rem;  font-weight: 700;  cursor: pointer;  box-shadow: 0 4px 12px rgba(84, 23, 34, 0.2);  transition: all 150ms ease;}.continueBtn:hover {  background-color: #3e0e16;  transform: translateY(-1px);  box-shadow: 0 6px 16px rgba(84, 23, 34, 0.28);}.formFooterPrompt {  text-align: center;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.78rem;  color: #7d7266;  margin-top: 4px;}.formFooterPrompt p {  margin: 0;}.loginLink {  color: #541722;  font-weight: 700;  text-decoration: none;}.loginLink:hover {  text-decoration: underline;}.detailsForm {  display: flex;  flex-direction: column;  gap: 14px;}.twoFieldsGrid {  display: grid;  grid-template-columns: 1fr;  gap: 14px;}@media (min-width: 600px) {  .twoFieldsGrid {    grid-template-columns: 1fr 1fr;  }}.fieldGroup {  display: flex;  flex-direction: column;  gap: 5px;}.fieldLabel {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.76rem;  font-weight: 600;  color: #2e2b26;}.requiredStar {  color: #c0392b;}.inputWrapper {  display: flex;  align-items: center;  background-color: #faf8f5;  border: 1px solid #ded3cb;  border-radius: 8px;  padding: 2px 12px;  transition: all 120ms ease;}.inputWrapper:focus-within {  background-color: #ffffff;  border-color: #541722;  box-shadow: 0 0 0 3px rgba(84, 23, 34, 0.1);}.inputError {  border-color: #c0392b !important;  background-color: #fff9f9 !important;}.fieldIcon {  color: #8c8175;  flex-shrink: 0;  margin-right: 8px;}.textInput,.selectInput {  flex: 1;  border: none;  background: transparent;  outline: none;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.8125rem;  color: #24201c;  padding: 8px 0;  min-width: 0;}.textInput:focus,.textInput:focus-visible,.selectInput:focus,.selectInput:focus-visible {  border: none !important;  outline: none !important;  outline-offset: 0 !important;  box-shadow: none !important;}.selectInput {  cursor: pointer;}.togglePasswordBtn {  background: transparent;  border: none;  color: #8c8175;  cursor: pointer;  padding: 4px;  display: flex;  align-items: center;  justify-content: center;}.togglePasswordBtn:hover {  color: #24201c;}.errorText {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.68rem;  color: #c0392b;  font-weight: 500;}.termsRow {  margin-top: 4px;}.checkboxLabel {  display: inline-flex;  align-items: flex-start;  gap: 8px;  cursor: pointer;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.74rem;  line-height: 1.4;  color: #544d45;  user-select: none;}.checkboxInput {  accent-color: #541722;  width: 15px;  height: 15px;  margin-top: 2px;  cursor: pointer;  flex-shrink: 0;}.submitBtn {  display: inline-flex;  align-items: center;  justify-content: center;  gap: 8px;  width: 100%;  padding: 12px 20px;  background-color: #541722;  color: #ffffff;  border: none;  border-radius: 9px;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.875rem;  font-weight: 700;  cursor: pointer;  box-shadow: 0 4px 12px rgba(84, 23, 34, 0.2);  transition: all 150ms ease;  margin-top: 6px;}.submitBtn:hover:not(:disabled) {  background-color: #3e0e16;  transform: translateY(-1px);  box-shadow: 0 6px 16px rgba(84, 23, 34, 0.28);}.submitBtn:disabled {  opacity: 0.7;  cursor: not-allowed;}.successBlock {  display: flex;  flex-direction: column;  align-items: center;  text-align: center;  padding: clamp(24px, 1rem + 2vw, 40px) 16px;  animation: fadeIn 220ms ease;}@keyframes fadeIn {  from {    opacity: 0;    transform: translateY(8px);  }  to {    opacity: 1;    transform: translateY(0);  }}.successIconBubble {  width: 72px;  height: 72px;  border-radius: 50%;  background-color: #e5f6e8;  color: #175e21;  display: flex;  align-items: center;  justify-content: center;  margin-bottom: 16px;}.successHeading {  font-family: Georgia, 'Playfair Display', serif;  font-size: 1.55rem;  font-weight: 700;  color: #24201c;  margin: 0 0 8px 0;}.successBadgePill {  display: inline-block;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.74rem;  font-weight: 700;  background-color: #faede9;  color: #541722;  padding: 4px 12px;  border-radius: 999px;  margin-bottom: 16px;}.successMessage {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.875rem;  line-height: 1.6;  color: #4a433b;  max-width: 440px;  margin: 0 0 28px 0;}.successActionButtons {  display: flex;  align-items: center;  gap: 12px;  flex-wrap: wrap;  justify-content: center;}.successPrimaryBtn {  display: inline-flex;  align-items: center;  gap: 6px;  padding: 12px 22px;  background-color: #541722;  color: #ffffff;  border-radius: 8px;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.84rem;  font-weight: 700;  text-decoration: none;  box-shadow: 0 4px 12px rgba(84, 23, 34, 0.2);  transition: all 120ms ease;}.successPrimaryBtn:hover {  background-color: #3e0e16;}.successSecondaryBtn {  display: inline-flex;  align-items: center;  padding: 12px 20px;  background-color: #faf5f2;  border: 1px solid #ebdcd5;  color: #541722;  border-radius: 8px;  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.84rem;  font-weight: 600;  text-decoration: none;  transition: all 120ms ease;}.successSecondaryBtn:hover {  background-color: #faede9;}

@@ -1,261 +1,1 @@
-/**
- * Farmer Products and Weekly Template routes.
- * Endpoints for catalog management, stock toggles, bulk actions, and recurring templates.
- */
-
-import { Router } from 'express';
-import { requireApprovedFarmer } from '../../../middleware/requireApprovedFarmer.js';
-import { getDb } from '../../../db/client.js';
-import { COLLECTIONS } from '../../../db/collections.js';
-import { toObjectId } from '../../../utils/ids.js';
-import { AppError } from '../../../utils/errors.js';
-import {
-  listFarmerProducts,
-  getFarmerProductById,
-  createFarmerProduct,
-  updateFarmerProduct,
-  setProductSoldOut,
-  setProductAvailable,
-  setProductHidden,
-  deleteFarmerProduct,
-  bulkFarmerProducts,
-} from './farmerProducts.service.js';
-import {
-  getWeeklyTemplate,
-  updateWeeklyTemplate,
-  applyWeeklyTemplate,
-} from './weeklyTemplate.service.js';
-import { defineRoutes } from '../../../utils/defineRoutes.js';
-
-export const farmerProductsRouter = Router();
-export const weeklyTemplateRouter = Router();
-
-/**
- * Middleware to resolve the farmer document from req.user.id.
- */
-async function resolveFarmer(req, res, next) {
-  try {
-    const db = getDb();
-    const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({
-      userId: toObjectId(req.user.id),
-    });
-    if (!farmer) {
-      return next(AppError.notFound('Farmer profile not found'));
-    }
-    req.farmer = farmer;
-    next();
-  } catch (err) {
-    next(err);
-  }
-}
-
-// ── Products Endpoints ──────────────────────────────────────────
-const productRoutes = [
-  {
-    method: 'get',
-    path: '/',
-    auth: 'farmer',
-    middlewares: [resolveFarmer],
-    summary: 'List own products with filtering and pagination',
-    handler: async (req, res, next) => {
-      try {
-        const result = await listFarmerProducts(req.farmer._id, req.query);
-        res.json(result);
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Create a new product in farmer catalog',
-    body: 'createProduct',
-    handler: async (req, res, next) => {
-      try {
-        const product = await createFarmerProduct(req.farmer._id, req.body);
-        res.status(201).json({ data: product });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/bulk',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Execute bulk availability or quantity changes',
-    body: 'bulkProducts',
-    handler: async (req, res, next) => {
-      try {
-        const result = await bulkFarmerProducts(req.farmer._id, req.body);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'get',
-    path: '/:id',
-    auth: 'farmer',
-    middlewares: [resolveFarmer],
-    summary: 'Get product details for catalog management',
-    handler: async (req, res, next) => {
-      try {
-        const product = await getFarmerProductById(req.farmer._id, req.params.id);
-        res.json({ data: product });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'patch',
-    path: '/:id',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Update an existing product',
-    body: 'updateProduct',
-    handler: async (req, res, next) => {
-      try {
-        const product = await updateFarmerProduct(req.farmer._id, req.params.id, req.body);
-        res.json({ data: product });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'delete',
-    path: '/:id',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Archive or remove a product from the catalog',
-    handler: async (req, res, next) => {
-      try {
-        const result = await deleteFarmerProduct(req.farmer._id, req.params.id);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/:id/sold-out',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Quick toggle product to sold-out',
-    handler: async (req, res, next) => {
-      try {
-        const product = await setProductSoldOut(req.farmer._id, req.params.id);
-        res.json({ data: product });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/:id/available',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Restock product and mark available',
-    body: 'availableProduct',
-    handler: async (req, res, next) => {
-      try {
-        const product = await setProductAvailable(req.farmer._id, req.params.id, req.body || {});
-        res.json({ data: product });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/:id/hide',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Hide product from public catalog',
-    handler: async (req, res, next) => {
-      try {
-        const product = await setProductHidden(req.farmer._id, req.params.id, true);
-        res.json({ data: product });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/:id/unhide',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Unhide product back into public catalog',
-    handler: async (req, res, next) => {
-      try {
-        const product = await setProductHidden(req.farmer._id, req.params.id, false);
-        res.json({ data: product });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-];
-
-// ── Weekly Template Endpoints ────────────────────────────────────
-const weeklyRoutes = [
-  {
-    method: 'get',
-    path: '/',
-    auth: 'farmer',
-    middlewares: [resolveFarmer],
-    summary: 'Get weekly inventory template configuration',
-    handler: async (req, res, next) => {
-      try {
-        const items = await getWeeklyTemplate(req.farmer._id);
-        res.json({ data: items });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'put',
-    path: '/',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Update weekly inventory template configuration',
-    body: 'weeklyTemplate',
-    handler: async (req, res, next) => {
-      try {
-        const result = await updateWeeklyTemplate(req.farmer._id, req.body.items);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-  {
-    method: 'post',
-    path: '/apply',
-    auth: 'farmer',
-    middlewares: [requireApprovedFarmer, resolveFarmer],
-    summary: 'Apply weekly inventory template and trigger restock alerts',
-    handler: async (req, res, next) => {
-      try {
-        const result = await applyWeeklyTemplate(req.farmer._id);
-        res.json({ data: result });
-      } catch (err) {
-        next(err);
-      }
-    },
-  },
-];
-
-defineRoutes(farmerProductsRouter, 'farmerProducts', productRoutes, { basePath: '/api/farmer/products' });
-defineRoutes(weeklyTemplateRouter, 'weeklyTemplate', weeklyRoutes, { basePath: '/api/farmer/weekly-template' });
+import { Router } from 'express';import { requireApprovedFarmer } from '../../../middleware/requireApprovedFarmer.js';import { getDb } from '../../../db/client.js';import { COLLECTIONS } from '../../../db/collections.js';import { toObjectId } from '../../../utils/ids.js';import { AppError } from '../../../utils/errors.js';import {  listFarmerProducts,  getFarmerProductById,  createFarmerProduct,  updateFarmerProduct,  setProductSoldOut,  setProductAvailable,  setProductHidden,  deleteFarmerProduct,  bulkFarmerProducts,} from './farmerProducts.service.js';import {  getWeeklyTemplate,  updateWeeklyTemplate,  applyWeeklyTemplate,} from './weeklyTemplate.service.js';import { defineRoutes } from '../../../utils/defineRoutes.js';export const farmerProductsRouter = Router();export const weeklyTemplateRouter = Router();async function resolveFarmer(req, res, next) {  try {    const db = getDb();    const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({      userId: toObjectId(req.user.id),    });    if (!farmer) {      return next(AppError.notFound('Farmer profile not found'));    }    req.farmer = farmer;    next();  } catch (err) {    next(err);  }}const productRoutes = [  {    method: 'get',    path: '/',    auth: 'farmer',    middlewares: [resolveFarmer],    summary: 'List own products with filtering and pagination',    handler: async (req, res, next) => {      try {        const result = await listFarmerProducts(req.farmer._id, req.query);        res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Create a new product in farmer catalog',    body: 'createProduct',    handler: async (req, res, next) => {      try {        const product = await createFarmerProduct(req.farmer._id, req.body);        res.status(201).json({ data: product });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/bulk',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Execute bulk availability or quantity changes',    body: 'bulkProducts',    handler: async (req, res, next) => {      try {        const result = await bulkFarmerProducts(req.farmer._id, req.body);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },  {    method: 'get',    path: '/:id',    auth: 'farmer',    middlewares: [resolveFarmer],    summary: 'Get product details for catalog management',    handler: async (req, res, next) => {      try {        const product = await getFarmerProductById(req.farmer._id, req.params.id);        res.json({ data: product });      } catch (err) {        next(err);      }    },  },  {    method: 'patch',    path: '/:id',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Update an existing product',    body: 'updateProduct',    handler: async (req, res, next) => {      try {        const product = await updateFarmerProduct(req.farmer._id, req.params.id, req.body);        res.json({ data: product });      } catch (err) {        next(err);      }    },  },  {    method: 'delete',    path: '/:id',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Archive or remove a product from the catalog',    handler: async (req, res, next) => {      try {        const result = await deleteFarmerProduct(req.farmer._id, req.params.id);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/:id/sold-out',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Quick toggle product to sold-out',    handler: async (req, res, next) => {      try {        const product = await setProductSoldOut(req.farmer._id, req.params.id);        res.json({ data: product });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/:id/available',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Restock product and mark available',    body: 'availableProduct',    handler: async (req, res, next) => {      try {        const product = await setProductAvailable(req.farmer._id, req.params.id, req.body || {});        res.json({ data: product });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/:id/hide',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Hide product from public catalog',    handler: async (req, res, next) => {      try {        const product = await setProductHidden(req.farmer._id, req.params.id, true);        res.json({ data: product });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/:id/unhide',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Unhide product back into public catalog',    handler: async (req, res, next) => {      try {        const product = await setProductHidden(req.farmer._id, req.params.id, false);        res.json({ data: product });      } catch (err) {        next(err);      }    },  },];const weeklyRoutes = [  {    method: 'get',    path: '/',    auth: 'farmer',    middlewares: [resolveFarmer],    summary: 'Get weekly inventory template configuration',    handler: async (req, res, next) => {      try {        const items = await getWeeklyTemplate(req.farmer._id);        res.json({ data: items });      } catch (err) {        next(err);      }    },  },  {    method: 'put',    path: '/',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Update weekly inventory template configuration',    body: 'weeklyTemplate',    handler: async (req, res, next) => {      try {        const result = await updateWeeklyTemplate(req.farmer._id, req.body.items);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/apply',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Apply weekly inventory template and trigger restock alerts',    handler: async (req, res, next) => {      try {        const result = await applyWeeklyTemplate(req.farmer._id);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },];defineRoutes(farmerProductsRouter, 'farmerProducts', productRoutes, { basePath: '/api/farmer/products' });defineRoutes(weeklyTemplateRouter, 'weeklyTemplate', weeklyRoutes, { basePath: '/api/farmer/weekly-template' });

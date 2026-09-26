@@ -1,112 +1,1 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-
-const INITIAL_NOTIFICATIONS = [
-  {
-    id: 'notif-1',
-    title: 'Order Ready for Pickup',
-    message: 'Order ML-7429 is packed and waiting at Riverbend Farm (Stall 4).',
-    type: 'order',
-    link: '/buyer/orders/order-1',
-    time: '12m ago',
-    unread: true,
-  },
-  {
-    id: 'notif-2',
-    title: 'Weekend Restock Alert',
-    message: 'Oak & Mill Bakery listed artisan Sourdough Boules for Saturday pickup.',
-    type: 'restock',
-    link: '/buyer/products/p-07',
-    time: '1h ago',
-    unread: true,
-  },
-  {
-    id: 'notif-3',
-    title: 'Order Accepted',
-    message: 'Riverbend Farm confirmed your harvest pre-order for Saturday morning.',
-    type: 'order',
-    link: '/buyer/orders/order-1',
-    time: 'Yesterday',
-    unread: false,
-  },
-  {
-    id: 'notif-4',
-    title: 'Saturday Market Reminder',
-    message: 'Elm Street Market opens Saturday at 8:00 AM. 12 local stalls attending.',
-    type: 'market',
-    link: '/buyer/markets/market-elm',
-    time: '2d ago',
-    unread: false,
-  },
-];
-
-const NotificationContext = createContext(null);
-
-export function NotificationProvider({ children }) {
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
-
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => n.unread).length,
-    [notifications]
-  );
-
-  const markAsRead = useCallback((id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
-    );
-  }, []);
-
-  const markAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-  }, []);
-
-  const clearAll = useCallback(() => {
-    setNotifications([]);
-  }, []);
-
-  const addNotification = useCallback((notif) => {
-    setNotifications((prev) => [
-      {
-        id: `notif-${Date.now()}`,
-        time: 'Just now',
-        unread: true,
-        ...notif,
-      },
-      ...prev,
-    ]);
-  }, []);
-
-  const value = useMemo(
-    () => ({
-      notifications,
-      unreadCount,
-      markAsRead,
-      markAllAsRead,
-      clearAll,
-      addNotification,
-    }),
-    [notifications, unreadCount, markAsRead, markAllAsRead, clearAll, addNotification]
-  );
-
-  return (
-    <NotificationContext.Provider value={value}>
-      {children}
-    </NotificationContext.Provider>
-  );
-}
-
-export function useNotifications() {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    return {
-      notifications: [],
-      unreadCount: 0,
-      markAsRead: () => {},
-      markAllAsRead: () => {},
-      clearAll: () => {},
-      addNotification: () => {},
-    };
-  }
-  return context;
-}
-
-export default NotificationContext;
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';const INITIAL_NOTIFICATIONS = [  {    id: 'notif-1',    title: 'Order Ready for Pickup',    message: 'Order ML-7429 is packed and waiting at Riverbend Farm (Stall 4).',    type: 'order',    link: '/buyer/orders/order-1',    time: '12m ago',    unread: true,  },  {    id: 'notif-2',    title: 'Weekend Restock Alert',    message: 'Oak & Mill Bakery listed artisan Sourdough Boules for Saturday pickup.',    type: 'restock',    link: '/buyer/products/p-07',    time: '1h ago',    unread: true,  },  {    id: 'notif-3',    title: 'Order Accepted',    message: 'Riverbend Farm confirmed your harvest pre-order for Saturday morning.',    type: 'order',    link: '/buyer/orders/order-1',    time: 'Yesterday',    unread: false,  },  {    id: 'notif-4',    title: 'Saturday Market Reminder',    message: 'Elm Street Market opens Saturday at 8:00 AM. 12 local stalls attending.',    type: 'market',    link: '/buyer/markets/market-elm',    time: '2d ago',    unread: false,  },];const NotificationContext = createContext(null);export function NotificationProvider({ children }) {  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);  const unreadCount = useMemo(    () => notifications.filter((n) => n.unread).length,    [notifications]  );  const markAsRead = useCallback((id) => {    setNotifications((prev) =>      prev.map((n) => (n.id === id ? { ...n, unread: false } : n))    );  }, []);  const markAllAsRead = useCallback(() => {    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));  }, []);  const clearAll = useCallback(() => {    setNotifications([]);  }, []);  const addNotification = useCallback((notif) => {    setNotifications((prev) => [      {        id: `notif-${Date.now()}`,        time: 'Just now',        unread: true,        ...notif,      },      ...prev,    ]);  }, []);  const value = useMemo(    () => ({      notifications,      unreadCount,      markAsRead,      markAllAsRead,      clearAll,      addNotification,    }),    [notifications, unreadCount, markAsRead, markAllAsRead, clearAll, addNotification]  );  return (    <NotificationContext.Provider value={value}>      {children}    </NotificationContext.Provider>  );}export function useNotifications() {  const context = useContext(NotificationContext);  if (!context) {    return {      notifications: [],      unreadCount: 0,      markAsRead: () => {},      markAllAsRead: () => {},      clearAll: () => {},      addNotification: () => {},    };  }  return context;}export default NotificationContext;

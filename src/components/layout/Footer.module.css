@@ -1,165 +1,1 @@
-.footerWrapper {
-  margin-top: auto;
-  width: 100%;
-  background-color: var(--color-beet-tint, #f7eef0);
-  border-top: 1px solid rgba(122, 46, 59, 0.12);
-}
-
-.footerBody {
-  padding-top: clamp(2.5rem, 2rem + 2vw, 3.5rem);
-}
-
-.footerContent {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8, 2rem);
-  padding-bottom: clamp(2rem, 1.5rem + 1.5vw, 3rem);
-}
-
-@media (min-width: 640px) {
-  .footerContent {
-    grid-template-columns: 1.5fr 1fr 1fr;
-  }
-}
-
-@media (min-width: 900px) {
-  .footerContent {
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: var(--space-6, 1.5rem);
-  }
-}
-
-/* Col 1: Brand */
-.brandCol {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: 280px;
-}
-
-.brandLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  margin-bottom: 12px;
-}
-
-.logoBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #ffffff;
-  padding: 3px 8px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(46, 43, 38, 0.06);
-  border: 1px solid rgba(122, 46, 59, 0.1);
-  height: 28px;
-}
-
-.logoImg {
-  height: 18px;
-  width: auto;
-  object-fit: contain;
-  display: block;
-}
-
-.brandName {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--color-beet-dark, #5e212b);
-  letter-spacing: -0.015em;
-  line-height: 1;
-}
-
-.tagline {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.8125rem;
-  color: #6b6259;
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* Cols: Nav & Support */
-.navCol {
-  display: flex;
-  flex-direction: column;
-}
-
-.colTitle {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #2e2b26;
-  margin: 0 0 14px 0;
-}
-
-.linkList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.footerLink {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.8125rem;
-  color: #6b6259;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  transition: color var(--duration-fast, 120ms) ease;
-}
-
-.footerLink:hover {
-  color: var(--color-beet, #7a2e3b);
-}
-
-/* Col 4: Connect */
-.connectCol {
-  display: flex;
-  flex-direction: column;
-}
-
-.socialIcons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.socialLink {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 6px;
-  background-color: transparent;
-  color: #2e2b26;
-  text-decoration: none;
-  transition: color var(--duration-fast, 120ms) ease,
-              background-color var(--duration-fast, 120ms) ease;
-}
-
-.socialLink:hover {
-  color: var(--color-beet, #7a2e3b);
-  background-color: rgba(122, 46, 59, 0.08);
-}
-
-/* Bottom Bar */
-.bottomBar {
-  border-top: 1px solid rgba(122, 46, 59, 0.1);
-  padding-block: 16px;
-  text-align: center;
-}
-
-.copyright {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.75rem;
-  color: #6b6259;
-  margin: 0;
-}
+.footerWrapper {  margin-top: auto;  width: 100%;  background-color: var(--color-beet-tint, #f7eef0);  border-top: 1px solid rgba(122, 46, 59, 0.12);}.footerBody {  padding-top: clamp(2.5rem, 2rem + 2vw, 3.5rem);}.footerContent {  display: grid;  grid-template-columns: 1fr;  gap: var(--space-8, 2rem);  padding-bottom: clamp(2rem, 1.5rem + 1.5vw, 3rem);}@media (min-width: 640px) {  .footerContent {    grid-template-columns: 1.5fr 1fr 1fr;  }}@media (min-width: 900px) {  .footerContent {    grid-template-columns: 2fr 1fr 1fr 1fr;    gap: var(--space-6, 1.5rem);  }}.brandCol {  display: flex;  flex-direction: column;  align-items: flex-start;  max-width: 280px;}.brandLink {  display: inline-flex;  align-items: center;  gap: 10px;  text-decoration: none;  margin-bottom: 12px;}.logoBadge {  display: inline-flex;  align-items: center;  justify-content: center;  background-color: #ffffff;  padding: 3px 8px;  border-radius: 4px;  box-shadow: 0 1px 3px rgba(46, 43, 38, 0.06);  border: 1px solid rgba(122, 46, 59, 0.1);  height: 28px;}.logoImg {  height: 18px;  width: auto;  object-fit: contain;  display: block;}.brandName {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 1.15rem;  font-weight: 700;  color: var(--color-beet-dark, #5e212b);  letter-spacing: -0.015em;  line-height: 1;}.tagline {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.8125rem;  color: #6b6259;  line-height: 1.5;  margin: 0;}.navCol {  display: flex;  flex-direction: column;}.colTitle {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.875rem;  font-weight: 700;  color: #2e2b26;  margin: 0 0 14px 0;}.linkList {  display: flex;  flex-direction: column;  gap: 10px;  list-style: none;  margin: 0;  padding: 0;}.footerLink {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.8125rem;  color: #6b6259;  text-decoration: none;  display: inline-flex;  align-items: center;  min-height: 44px;  transition: color var(--duration-fast, 120ms) ease;}.footerLink:hover {  color: var(--color-beet, #7a2e3b);}.connectCol {  display: flex;  flex-direction: column;}.socialIcons {  display: flex;  align-items: center;  gap: 8px;}.socialLink {  display: inline-flex;  align-items: center;  justify-content: center;  width: 44px;  height: 44px;  border-radius: 6px;  background-color: transparent;  color: #2e2b26;  text-decoration: none;  transition: color var(--duration-fast, 120ms) ease,              background-color var(--duration-fast, 120ms) ease;}.socialLink:hover {  color: var(--color-beet, #7a2e3b);  background-color: rgba(122, 46, 59, 0.08);}.bottomBar {  border-top: 1px solid rgba(122, 46, 59, 0.1);  padding-block: 16px;  text-align: center;}.copyright {  font-family: var(--font-body, 'Inter', sans-serif);  font-size: 0.75rem;  color: #6b6259;  margin: 0;}

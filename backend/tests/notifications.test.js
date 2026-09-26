@@ -1,166 +1,1 @@
-/**
- * Notifications integration test suite (T3.191 - T3.200).
- * Tests notification listing with indexed unread count, unread filter,
- * single mark-as-read with IDOR isolation (404), and batch read-all.
- */
-
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
-import { ObjectId } from 'mongodb';
-import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
-import { COLLECTIONS } from '../src/db/collections.js';
-
-describe('Notifications Suite (T3.191 - T3.200)', () => {
-  let db;
-  let customerGeorgeAuth;
-  let customerMiaAuth;
-
-  let notifGeorge1;
-  let notifGeorge2;
-  let notifMia;
-
-  before(async () => {
-    const env = await setupTestEnvironment();
-    db = env.db;
-
-    customerGeorgeAuth = await loginUser('george@example.com', 'market123');
-    customerMiaAuth = await loginUser('mia@example.com', 'market123');
-
-    const gid = new ObjectId(customerGeorgeAuth.user.id);
-    const mid = new ObjectId(customerMiaAuth.user.id);
-
-    // Backup existing notifications for test users
-    priorNotifs = await db.collection(COLLECTIONS.NOTIFICATIONS).find({
-      userId: { $in: [gid, mid] },
-    }).toArray();
-
-    // Clean prior notifications for test users
-    await db.collection(COLLECTIONS.NOTIFICATIONS).deleteMany({
-      userId: { $in: [gid, mid] },
-    });
-
-    const now = Date.now();
-    notifGeorge1 = {
-      _id: new ObjectId(),
-      userId: gid,
-      type: 'order_placed',
-      title: 'Order Placed',
-      body: 'Your order ML-1001 was placed.',
-      data: { orderNumber: 'ML-1001' },
-      readAt: null,
-      createdAt: new Date(now - 10000),
-    };
-
-    notifGeorge2 = {
-      _id: new ObjectId(),
-      userId: gid,
-      type: 'order_ready',
-      title: 'Order Ready',
-      body: 'Your order ML-1001 is ready for pickup!',
-      data: { orderNumber: 'ML-1001' },
-      readAt: null,
-      createdAt: new Date(now - 5000),
-    };
-
-    notifMia = {
-      _id: new ObjectId(),
-      userId: mid,
-      type: 'order_placed',
-      title: 'Order Placed',
-      body: "Mia's order ML-2001 was placed.",
-      data: { orderNumber: 'ML-2001' },
-      readAt: null,
-      createdAt: new Date(now),
-    };
-
-    await db.collection(COLLECTIONS.NOTIFICATIONS).insertMany([notifGeorge1, notifGeorge2, notifMia]);
-  });
-
-  let priorNotifs = [];
-
-  after(async () => {
-    await db.collection(COLLECTIONS.NOTIFICATIONS).deleteMany({
-      _id: { $in: [notifGeorge1._id, notifGeorge2._id, notifMia._id] },
-    });
-    if (priorNotifs.length > 0) {
-      await db.collection(COLLECTIONS.NOTIFICATIONS).insertMany(priorNotifs);
-    }
-    await teardownTestEnvironment();
-  });
-
-  it('T3.191: GET /api/notifications returns user notifications and meta.unreadCount', async () => {
-    const res = await request('/api/notifications', {
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 200);
-    const body = await res.json();
-    assert.ok(Array.isArray(body.data));
-    assert.equal(body.data.length, 2);
-    assert.equal(body.meta.unreadCount, 2);
-    assert.equal(body.data[0].id, notifGeorge2._id.toString());
-    assert.equal(body.data[1].id, notifGeorge1._id.toString());
-  });
-
-  it('T3.192: POST /api/notifications/:id/read marks single notification as read', async () => {
-    const res = await request(`/api/notifications/${notifGeorge1._id.toString()}/read`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 200);
-    const body = await res.json();
-    assert.equal(body.data.id, notifGeorge1._id.toString());
-    assert.ok(body.data.readAt);
-
-    // Verify unreadCount updated
-    const listRes = await request('/api/notifications', {
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-    const listBody = await listRes.json();
-    assert.equal(listBody.meta.unreadCount, 1);
-  });
-
-  it('T3.193: GET /api/notifications?unread=true returns only unread notifications', async () => {
-    const res = await request('/api/notifications?unread=true', {
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 200);
-    const body = await res.json();
-    assert.equal(body.data.length, 1);
-    assert.equal(body.data[0].id, notifGeorge2._id.toString());
-  });
-
-  it('T3.194: POST /api/notifications/:id/read returns 404 for IDOR attempt on another user notification', async () => {
-    const res = await request(`/api/notifications/${notifMia._id.toString()}/read`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 404);
-  });
-
-  it('T3.195: POST /api/notifications/read-all marks all unread notifications as read', async () => {
-    const res = await request('/api/notifications/read-all', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-
-    assert.equal(res.status, 200);
-    const body = await res.json();
-    assert.equal(body.data.modifiedCount, 1); // Only notifGeorge2 was unread
-
-    // Verify unreadCount is now 0
-    const listRes = await request('/api/notifications', {
-      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },
-    });
-    const listBody = await listRes.json();
-    assert.equal(listBody.meta.unreadCount, 0);
-  });
-
-  it('T3.196: Unauthenticated request to /api/notifications returns 401', async () => {
-    const res = await request('/api/notifications');
-    assert.equal(res.status, 401);
-  });
-});
+import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { ObjectId } from 'mongodb';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { COLLECTIONS } from '../src/db/collections.js';describe('Notifications Suite (T3.191 - T3.200)', () => {  let db;  let customerGeorgeAuth;  let customerMiaAuth;  let notifGeorge1;  let notifGeorge2;  let notifMia;  before(async () => {    const env = await setupTestEnvironment();    db = env.db;    customerGeorgeAuth = await loginUser('george@example.com', 'market123');    customerMiaAuth = await loginUser('mia@example.com', 'market123');    const gid = new ObjectId(customerGeorgeAuth.user.id);    const mid = new ObjectId(customerMiaAuth.user.id);    priorNotifs = await db.collection(COLLECTIONS.NOTIFICATIONS).find({      userId: { $in: [gid, mid] },    }).toArray();    await db.collection(COLLECTIONS.NOTIFICATIONS).deleteMany({      userId: { $in: [gid, mid] },    });    const now = Date.now();    notifGeorge1 = {      _id: new ObjectId(),      userId: gid,      type: 'order_placed',      title: 'Order Placed',      body: 'Your order ML-1001 was placed.',      data: { orderNumber: 'ML-1001' },      readAt: null,      createdAt: new Date(now - 10000),    };    notifGeorge2 = {      _id: new ObjectId(),      userId: gid,      type: 'order_ready',      title: 'Order Ready',      body: 'Your order ML-1001 is ready for pickup!',      data: { orderNumber: 'ML-1001' },      readAt: null,      createdAt: new Date(now - 5000),    };    notifMia = {      _id: new ObjectId(),      userId: mid,      type: 'order_placed',      title: 'Order Placed',      body: "Mia's order ML-2001 was placed.",      data: { orderNumber: 'ML-2001' },      readAt: null,      createdAt: new Date(now),    };    await db.collection(COLLECTIONS.NOTIFICATIONS).insertMany([notifGeorge1, notifGeorge2, notifMia]);  });  let priorNotifs = [];  after(async () => {    await db.collection(COLLECTIONS.NOTIFICATIONS).deleteMany({      _id: { $in: [notifGeorge1._id, notifGeorge2._id, notifMia._id] },    });    if (priorNotifs.length > 0) {      await db.collection(COLLECTIONS.NOTIFICATIONS).insertMany(priorNotifs);    }    await teardownTestEnvironment();  });  it('T3.191: GET /api/notifications returns user notifications and meta.unreadCount', async () => {    const res = await request('/api/notifications', {      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.ok(Array.isArray(body.data));    assert.equal(body.data.length, 2);    assert.equal(body.meta.unreadCount, 2);    assert.equal(body.data[0].id, notifGeorge2._id.toString());    assert.equal(body.data[1].id, notifGeorge1._id.toString());  });  it('T3.192: POST /api/notifications/:id/read marks single notification as read', async () => {    const res = await request(`/api/notifications/${notifGeorge1._id.toString()}/read`, {      method: 'POST',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.equal(body.data.id, notifGeorge1._id.toString());    assert.ok(body.data.readAt);    const listRes = await request('/api/notifications', {      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    const listBody = await listRes.json();    assert.equal(listBody.meta.unreadCount, 1);  });  it('T3.193: GET /api/notifications?unread=true returns only unread notifications', async () => {    const res = await request('/api/notifications?unread=true', {      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.equal(body.data.length, 1);    assert.equal(body.data[0].id, notifGeorge2._id.toString());  });  it('T3.194: POST /api/notifications/:id/read returns 404 for IDOR attempt on another user notification', async () => {    const res = await request(`/api/notifications/${notifMia._id.toString()}/read`, {      method: 'POST',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 404);  });  it('T3.195: POST /api/notifications/read-all marks all unread notifications as read', async () => {    const res = await request('/api/notifications/read-all', {      method: 'POST',      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    assert.equal(res.status, 200);    const body = await res.json();    assert.equal(body.data.modifiedCount, 1);     const listRes = await request('/api/notifications', {      headers: { Authorization: `Bearer ${customerGeorgeAuth.accessToken}` },    });    const listBody = await listRes.json();    assert.equal(listBody.meta.unreadCount, 0);  });  it('T3.196: Unauthenticated request to /api/notifications returns 401', async () => {    const res = await request('/api/notifications');    assert.equal(res.status, 401);  });});

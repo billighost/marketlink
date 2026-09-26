@@ -1,250 +1,1 @@
-/**
- * Favorites module service layer.
- * Implements customer favorites management for products and farmers,
- * lightweight ID listing for hearts, and keyset cursor-paginated card lists.
- */
-
-import { ObjectId } from 'mongodb';
-import { getDb } from '../../db/client.js';
-import { COLLECTIONS } from '../../db/collections.js';
-import { toObjectId } from '../../utils/ids.js';
-import { AppError } from '../../utils/errors.js';
-import { encodeCursor, decodeCursor, buildKeysetPredicate } from '../../utils/cursor.js';
-import { toProductCard, toFarmerCard } from '../../utils/shapes.js';
-
-/**
- * Adds a target (product or farmer) to customer's favorites.
- * Idempotent operation: duplicate adds succeed silently.
- *
- * @param {string|ObjectId} userId
- * @param {'product'|'farmer'} targetType
- * @param {string|ObjectId} targetId
- * @returns {Promise<{ message: string }>}
- */
-export async function addFavorite(userId, targetType, targetId) {
-  const db = getDb();
-  const uid = toObjectId(userId);
-  const tid = toObjectId(targetId);
-
-  if (targetType === 'product') {
-    const product = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: tid, listed: true });
-    if (!product) {
-      throw AppError.notFound('Product not found or not listed.');
-    }
-  } else if (targetType === 'farmer') {
-    const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: tid, listingEnabled: true });
-    if (!farmer) {
-      throw AppError.notFound('Farmer not found or not listed.');
-    }
-  } else {
-    throw AppError.unprocessable([{ field: 'type', message: 'Target type must be product or farmer.' }]);
-  }
-
-  await db.collection(COLLECTIONS.FAVORITES).updateOne(
-    { userId: uid, targetType, targetId: tid },
-    {
-      $setOnInsert: {
-        _id: new ObjectId(),
-        userId: uid,
-        targetType,
-        targetId: tid,
-        createdAt: new Date(),
-      },
-    },
-    { upsert: true }
-  );
-
-  return { message: 'Added to favorites.' };
-}
-
-/**
- * Removes a target from customer's favorites.
- * Idempotent operation: removing a non-favorited item succeeds.
- *
- * @param {string|ObjectId} userId
- * @param {'product'|'farmer'} targetType
- * @param {string|ObjectId} targetId
- * @returns {Promise<{ message: string }>}
- */
-export async function removeFavorite(userId, targetType, targetId) {
-  const db = getDb();
-  const uid = toObjectId(userId);
-  const tid = toObjectId(targetId);
-
-  if (!['product', 'farmer'].includes(targetType)) {
-    throw AppError.unprocessable([{ field: 'type', message: 'Target type must be product or farmer.' }]);
-  }
-
-  await db.collection(COLLECTIONS.FAVORITES).deleteOne({
-    userId: uid,
-    targetType,
-    targetId: tid,
-  });
-
-  return { message: 'Removed from favorites.' };
-}
-
-/**
- * Returns lightweight lists of favorited IDs (capped at 500 each) for client heart state.
- *
- * @param {string|ObjectId} userId
- * @returns {Promise<{ productIds: Array<string>, farmerIds: Array<string> }>}
- */
-export async function getFavoriteIds(userId) {
-  const db = getDb();
-  const uid = toObjectId(userId);
-
-  const favorites = await db
-    .collection(COLLECTIONS.FAVORITES)
-    .find({ userId: uid })
-    .project({ targetType: 1, targetId: 1 })
-    .limit(1000)
-    .toArray();
-
-  const productIds = [];
-  const farmerIds = [];
-
-  for (const fav of favorites) {
-    if (fav.targetType === 'product' && productIds.length < 500) {
-      productIds.push(fav.targetId.toString());
-    } else if (fav.targetType === 'farmer' && farmerIds.length < 500) {
-      farmerIds.push(fav.targetId.toString());
-    }
-  }
-
-  return { productIds, farmerIds };
-}
-
-/**
- * Lists favorited items with cursor pagination (most recent first).
- *
- * @param {string|ObjectId} userId
- * @param {object} params
- * @param {'product'|'farmer'} params.type
- * @param {string} [params.cursor]
- * @param {number} [params.limit=20]
- * @returns {Promise<{ items: Array<object>, nextCursor: string|null, limit: number }>}
- */
-export async function listFavorites(userId, { type, cursor, limit = 20 } = {}) {
-  const db = getDb();
-  const uid = toObjectId(userId);
-  const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
-
-  if (!['product', 'farmer'].includes(type)) {
-    throw AppError.unprocessable([{ field: 'type', message: "Query parameter 'type' must be 'product' or 'farmer'." }]);
-  }
-
-  const filter = {
-    userId: uid,
-    targetType: type,
-  };
-
-  if (cursor) {
-    const decoded = decodeCursor(cursor, 'newest');
-    const { predicate } = buildKeysetPredicate('createdAt', 'desc', decoded.k[0], decoded.id);
-    filter.$and = [predicate];
-  }
-
-  const favoriteDocs = await db
-    .collection(COLLECTIONS.FAVORITES)
-    .find(filter)
-    .sort({ createdAt: -1, _id: -1 })
-    .limit(parsedLimit + 1)
-    .toArray();
-
-  const hasMore = favoriteDocs.length > parsedLimit;
-  const pageDocs = hasMore ? favoriteDocs.slice(0, parsedLimit) : favoriteDocs;
-
-  let nextCursor = null;
-  if (hasMore && pageDocs.length > 0) {
-    const lastDoc = pageDocs[pageDocs.length - 1];
-    nextCursor = encodeCursor({
-      s: 'newest',
-      k: [lastDoc.createdAt],
-      id: lastDoc._id.toString(),
-    });
-  }
-
-  const targetIds = pageDocs.map((d) => d.targetId);
-
-  let items = [];
-
-  if (type === 'product' && targetIds.length > 0) {
-    const products = await db
-      .collection(COLLECTIONS.PRODUCTS)
-      .find({ _id: { $in: targetIds } })
-      .toArray();
-
-    // Map by id to preserve favorites sort order
-    const productMap = new Map(products.map((p) => [p._id.toString(), p]));
-
-    // Check if any product needs farmer enrichment
-    const missingFarmerIds = products
-      .filter((p) => !p.farmer || !p.farmer.stallName)
-      .map((p) => p.farmerId);
-
-    const farmerMap = new Map();
-    if (missingFarmerIds.length > 0) {
-      const farmers = await db
-        .collection(COLLECTIONS.FARMERS)
-        .find({ _id: { $in: missingFarmerIds } })
-        .project({ stallName: 1, stallNumber: 1, art: 1 })
-        .toArray();
-      farmers.forEach((f) => farmerMap.set(f._id.toString(), f));
-    }
-
-    for (const d of pageDocs) {
-      const prod = productMap.get(d.targetId.toString());
-      if (!prod) continue;
-
-      if (!prod.farmer || !prod.farmer.stallName) {
-        const f = farmerMap.get(prod.farmerId?.toString());
-        if (f) {
-          prod.farmer = {
-            id: f._id.toString(),
-            stallName: f.stallName,
-            stallNumber: f.stallNumber || '',
-            art: f.art,
-          };
-        }
-      }
-
-      items.push(toProductCard(prod));
-    }
-  } else if (type === 'farmer' && targetIds.length > 0) {
-    const farmers = await db
-      .collection(COLLECTIONS.FARMERS)
-      .find({ _id: { $in: targetIds } })
-      .toArray();
-
-    const farmerMap = new Map(farmers.map((f) => [f._id.toString(), f]));
-
-    // Load markets for farmer card enrichment
-    const allMarketIds = [...new Set(farmers.flatMap((f) => f.marketIds || []))];
-    const markets =
-      allMarketIds.length > 0
-        ? await db
-            .collection(COLLECTIONS.MARKETS)
-            .find({ _id: { $in: allMarketIds } })
-            .toArray()
-        : [];
-    const marketMap = new Map(markets.map((m) => [m._id.toString(), m]));
-
-    for (const d of pageDocs) {
-      const farmer = farmerMap.get(d.targetId.toString());
-      if (!farmer) continue;
-
-      const farmerMarkets = (farmer.marketIds || [])
-        .map((mid) => marketMap.get(mid.toString()))
-        .filter(Boolean);
-
-      items.push(toFarmerCard(farmer, { markets: farmerMarkets }));
-    }
-  }
-
-  return {
-    items,
-    nextCursor,
-    limit: parsedLimit,
-  };
-}
+import { ObjectId } from 'mongodb';import { getDb } from '../../db/client.js';import { COLLECTIONS } from '../../db/collections.js';import { toObjectId } from '../../utils/ids.js';import { AppError } from '../../utils/errors.js';import { encodeCursor, decodeCursor, buildKeysetPredicate } from '../../utils/cursor.js';import { toProductCard, toFarmerCard } from '../../utils/shapes.js';export async function addFavorite(userId, targetType, targetId) {  const db = getDb();  const uid = toObjectId(userId);  const tid = toObjectId(targetId);  if (targetType === 'product') {    const product = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: tid, listed: true });    if (!product) {      throw AppError.notFound('Product not found or not listed.');    }  } else if (targetType === 'farmer') {    const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: tid, listingEnabled: true });    if (!farmer) {      throw AppError.notFound('Farmer not found or not listed.');    }  } else {    throw AppError.unprocessable([{ field: 'type', message: 'Target type must be product or farmer.' }]);  }  await db.collection(COLLECTIONS.FAVORITES).updateOne(    { userId: uid, targetType, targetId: tid },    {      $setOnInsert: {        _id: new ObjectId(),        userId: uid,        targetType,        targetId: tid,        createdAt: new Date(),      },    },    { upsert: true }  );  return { message: 'Added to favorites.' };}export async function removeFavorite(userId, targetType, targetId) {  const db = getDb();  const uid = toObjectId(userId);  const tid = toObjectId(targetId);  if (!['product', 'farmer'].includes(targetType)) {    throw AppError.unprocessable([{ field: 'type', message: 'Target type must be product or farmer.' }]);  }  await db.collection(COLLECTIONS.FAVORITES).deleteOne({    userId: uid,    targetType,    targetId: tid,  });  return { message: 'Removed from favorites.' };}export async function getFavoriteIds(userId) {  const db = getDb();  const uid = toObjectId(userId);  const favorites = await db    .collection(COLLECTIONS.FAVORITES)    .find({ userId: uid })    .project({ targetType: 1, targetId: 1 })    .limit(1000)    .toArray();  const productIds = [];  const farmerIds = [];  for (const fav of favorites) {    if (fav.targetType === 'product' && productIds.length < 500) {      productIds.push(fav.targetId.toString());    } else if (fav.targetType === 'farmer' && farmerIds.length < 500) {      farmerIds.push(fav.targetId.toString());    }  }  return { productIds, farmerIds };}export async function listFavorites(userId, { type, cursor, limit = 20 } = {}) {  const db = getDb();  const uid = toObjectId(userId);  const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);  if (!['product', 'farmer'].includes(type)) {    throw AppError.unprocessable([{ field: 'type', message: "Query parameter 'type' must be 'product' or 'farmer'." }]);  }  const filter = {    userId: uid,    targetType: type,  };  if (cursor) {    const decoded = decodeCursor(cursor, 'newest');    const { predicate } = buildKeysetPredicate('createdAt', 'desc', decoded.k[0], decoded.id);    filter.$and = [predicate];  }  const favoriteDocs = await db    .collection(COLLECTIONS.FAVORITES)    .find(filter)    .sort({ createdAt: -1, _id: -1 })    .limit(parsedLimit + 1)    .toArray();  const hasMore = favoriteDocs.length > parsedLimit;  const pageDocs = hasMore ? favoriteDocs.slice(0, parsedLimit) : favoriteDocs;  let nextCursor = null;  if (hasMore && pageDocs.length > 0) {    const lastDoc = pageDocs[pageDocs.length - 1];    nextCursor = encodeCursor({      s: 'newest',      k: [lastDoc.createdAt],      id: lastDoc._id.toString(),    });  }  const targetIds = pageDocs.map((d) => d.targetId);  let items = [];  if (type === 'product' && targetIds.length > 0) {    const products = await db      .collection(COLLECTIONS.PRODUCTS)      .find({ _id: { $in: targetIds } })      .toArray();    const productMap = new Map(products.map((p) => [p._id.toString(), p]));    const missingFarmerIds = products      .filter((p) => !p.farmer || !p.farmer.stallName)      .map((p) => p.farmerId);    const farmerMap = new Map();    if (missingFarmerIds.length > 0) {      const farmers = await db        .collection(COLLECTIONS.FARMERS)        .find({ _id: { $in: missingFarmerIds } })        .project({ stallName: 1, stallNumber: 1, art: 1 })        .toArray();      farmers.forEach((f) => farmerMap.set(f._id.toString(), f));    }    for (const d of pageDocs) {      const prod = productMap.get(d.targetId.toString());      if (!prod) continue;      if (!prod.farmer || !prod.farmer.stallName) {        const f = farmerMap.get(prod.farmerId?.toString());        if (f) {          prod.farmer = {            id: f._id.toString(),            stallName: f.stallName,            stallNumber: f.stallNumber || '',            art: f.art,          };        }      }      items.push(toProductCard(prod));    }  } else if (type === 'farmer' && targetIds.length > 0) {    const farmers = await db      .collection(COLLECTIONS.FARMERS)      .find({ _id: { $in: targetIds } })      .toArray();    const farmerMap = new Map(farmers.map((f) => [f._id.toString(), f]));    const allMarketIds = [...new Set(farmers.flatMap((f) => f.marketIds || []))];    const markets =      allMarketIds.length > 0        ? await db            .collection(COLLECTIONS.MARKETS)            .find({ _id: { $in: allMarketIds } })            .toArray()        : [];    const marketMap = new Map(markets.map((m) => [m._id.toString(), m]));    for (const d of pageDocs) {      const farmer = farmerMap.get(d.targetId.toString());      if (!farmer) continue;      const farmerMarkets = (farmer.marketIds || [])        .map((mid) => marketMap.get(mid.toString()))        .filter(Boolean);      items.push(toFarmerCard(farmer, { markets: farmerMarkets }));    }  }  return {    items,    nextCursor,    limit: parsedLimit,  };}

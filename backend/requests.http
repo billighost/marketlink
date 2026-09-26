@@ -1,264 +1,1 @@
-### ==============================================================================
-### MarketLink API REST Client Collection (Stage 5 Verification)
-### ==============================================================================
-
-@baseUrl = http://localhost:4000/api
-@customerEmail = george@example.com
-@farmerEmail = riverbend@example.com
-@adminEmail = admin@marketlink.test
-@password = market123
-@adminPassword = Admin12345
-
-### ------------------------------------------------------------------------------
-### 1. Health & System
-### ------------------------------------------------------------------------------
-
-# @name healthCheck
-GET {{baseUrl}}/health HTTP/1.1
-
-###
-
-# @name readyCheck
-GET {{baseUrl}}/ready HTTP/1.1
-
-###
-
-# @name versionCheck
-GET {{baseUrl}}/version HTTP/1.1
-
-### ------------------------------------------------------------------------------
-### 2. Authentication
-### ------------------------------------------------------------------------------
-
-# @name loginCustomer
-POST {{baseUrl}}/auth/login HTTP/1.1
-Content-Type: application/json
-
-{
-  "email": "{{customerEmail}}",
-  "password": "{{password}}"
-}
-
-###
-@customerToken = {{loginCustomer.response.body.data.accessToken}}
-
-# @name loginFarmer
-POST {{baseUrl}}/auth/login HTTP/1.1
-Content-Type: application/json
-
-{
-  "email": "{{farmerEmail}}",
-  "password": "{{password}}"
-}
-
-###
-@farmerToken = {{loginFarmer.response.body.data.accessToken}}
-
-# @name loginAdmin
-POST {{baseUrl}}/auth/login HTTP/1.1
-Content-Type: application/json
-
-{
-  "email": "{{adminEmail}}",
-  "password": "{{adminPassword}}"
-}
-
-###
-@adminToken = {{loginAdmin.response.body.data.accessToken}}
-
-# @name authMe
-GET {{baseUrl}}/auth/me HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-###
-
-# @name forgotPassword
-POST {{baseUrl}}/auth/forgot-password HTTP/1.1
-Content-Type: application/json
-
-{
-  "email": "{{customerEmail}}"
-}
-
-### ------------------------------------------------------------------------------
-### 3. Customer Profile & Users
-### ------------------------------------------------------------------------------
-
-# @name getMe
-GET {{baseUrl}}/users/me HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-###
-
-# @name patchMe
-PATCH {{baseUrl}}/users/me HTTP/1.1
-Authorization: Bearer {{customerToken}}
-Content-Type: application/json
-
-{
-  "phone": "(555) 012-9999"
-}
-
-###
-
-# @name getSavedMarkets
-GET {{baseUrl}}/users/me/saved-markets HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-### ------------------------------------------------------------------------------
-### 4. Public Discovery & Catalog
-### ------------------------------------------------------------------------------
-
-# @name getCategories
-GET {{baseUrl}}/categories HTTP/1.1
-
-###
-
-# @name getPublicHome
-GET {{baseUrl}}/public/home HTTP/1.1
-
-###
-
-# @name getMarkets
-GET {{baseUrl}}/markets?day=sat HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-###
-
-# @name getFarmers
-GET {{baseUrl}}/farmers?sort=rating HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-###
-
-# @name getProducts
-GET {{baseUrl}}/products?limit=10&sort=popular HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-###
-
-# @name searchSuggestions
-GET {{baseUrl}}/search/suggestions?q=tom HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-###
-
-# @name getFeed
-GET {{baseUrl}}/feed HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-### ------------------------------------------------------------------------------
-### 5. Cart, Checkout & Orders
-### ------------------------------------------------------------------------------
-
-# @name cartQuote
-POST {{baseUrl}}/cart/quote HTTP/1.1
-Authorization: Bearer {{customerToken}}
-Content-Type: application/json
-
-{
-  "groups": []
-}
-
-###
-
-# @name getOrders
-GET {{baseUrl}}/orders?tab=active HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-### ------------------------------------------------------------------------------
-### 6. Favorites, Notifications & Assistant
-### ------------------------------------------------------------------------------
-
-# @name getFavoriteIds
-GET {{baseUrl}}/favorites/ids HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-###
-
-# @name getNotifications
-GET {{baseUrl}}/notifications HTTP/1.1
-Authorization: Bearer {{customerToken}}
-
-###
-
-# @name assistantMessage
-POST {{baseUrl}}/assistant/message HTTP/1.1
-Authorization: Bearer {{customerToken}}
-Content-Type: application/json
-
-{
-  "text": "What markets are open on Saturday?"
-}
-
-### ------------------------------------------------------------------------------
-### 7. Farmer Management
-### ------------------------------------------------------------------------------
-
-# @name farmerOverview
-GET {{baseUrl}}/farmer/overview HTTP/1.1
-Authorization: Bearer {{farmerToken}}
-
-###
-
-# @name farmerProducts
-GET {{baseUrl}}/farmer/products HTTP/1.1
-Authorization: Bearer {{farmerToken}}
-
-###
-
-# @name farmerOrders
-GET {{baseUrl}}/farmer/orders?tab=today HTTP/1.1
-Authorization: Bearer {{farmerToken}}
-
-###
-
-# @name farmerInsights
-GET {{baseUrl}}/farmer/insights?range=30d HTTP/1.1
-Authorization: Bearer {{farmerToken}}
-
-### ------------------------------------------------------------------------------
-### 8. Admin Management & Reports
-### ------------------------------------------------------------------------------
-
-# @name adminOverview
-GET {{baseUrl}}/admin/overview HTTP/1.1
-Authorization: Bearer {{adminToken}}
-
-###
-
-# @name adminFarmers
-GET {{baseUrl}}/admin/farmers?status=pending HTTP/1.1
-Authorization: Bearer {{adminToken}}
-
-###
-
-# @name adminCustomers
-GET {{baseUrl}}/admin/customers HTTP/1.1
-Authorization: Bearer {{adminToken}}
-
-###
-
-# @name adminReportsSummary
-GET {{baseUrl}}/admin/reports/summary?range=30d HTTP/1.1
-Authorization: Bearer {{adminToken}}
-
-###
-
-# @name adminExportOrdersCsv
-GET {{baseUrl}}/admin/reports/export?type=orders&range=30d HTTP/1.1
-Authorization: Bearer {{adminToken}}
-
-###
-
-# @name adminCategories
-GET {{baseUrl}}/admin/categories HTTP/1.1
-Authorization: Bearer {{adminToken}}
-
-###
-
-# @name adminSettings
-GET {{baseUrl}}/admin/settings HTTP/1.1
-Authorization: Bearer {{adminToken}}
-
-###
+### ==============================================================================### MarketLink API REST Client Collection (Stage 5 Verification)### ==============================================================================@baseUrl = http://localhost:4000/api@customerEmail = george@example.com@farmerEmail = riverbend@example.com@adminEmail = admin@marketlink.test@password = market123@adminPassword = Admin12345### ------------------------------------------------------------------------------### 1. Health & System### ------------------------------------------------------------------------------# @name healthCheckGET {{baseUrl}}/health HTTP/1.1#### @name readyCheckGET {{baseUrl}}/ready HTTP/1.1#### @name versionCheckGET {{baseUrl}}/version HTTP/1.1### ------------------------------------------------------------------------------### 2. Authentication### ------------------------------------------------------------------------------# @name loginCustomerPOST {{baseUrl}}/auth/login HTTP/1.1Content-Type: application/json{  "email": "{{customerEmail}}",  "password": "{{password}}"}###@customerToken = {{loginCustomer.response.body.data.accessToken}}# @name loginFarmerPOST {{baseUrl}}/auth/login HTTP/1.1Content-Type: application/json{  "email": "{{farmerEmail}}",  "password": "{{password}}"}###@farmerToken = {{loginFarmer.response.body.data.accessToken}}# @name loginAdminPOST {{baseUrl}}/auth/login HTTP/1.1Content-Type: application/json{  "email": "{{adminEmail}}",  "password": "{{adminPassword}}"}###@adminToken = {{loginAdmin.response.body.data.accessToken}}# @name authMeGET {{baseUrl}}/auth/me HTTP/1.1Authorization: Bearer {{customerToken}}#### @name forgotPasswordPOST {{baseUrl}}/auth/forgot-password HTTP/1.1Content-Type: application/json{  "email": "{{customerEmail}}"}### ------------------------------------------------------------------------------### 3. Customer Profile & Users### ------------------------------------------------------------------------------# @name getMeGET {{baseUrl}}/users/me HTTP/1.1Authorization: Bearer {{customerToken}}#### @name patchMePATCH {{baseUrl}}/users/me HTTP/1.1Authorization: Bearer {{customerToken}}Content-Type: application/json{  "phone": "(555) 012-9999"}#### @name getSavedMarketsGET {{baseUrl}}/users/me/saved-markets HTTP/1.1Authorization: Bearer {{customerToken}}### ------------------------------------------------------------------------------### 4. Public Discovery & Catalog### ------------------------------------------------------------------------------# @name getCategoriesGET {{baseUrl}}/categories HTTP/1.1#### @name getPublicHomeGET {{baseUrl}}/public/home HTTP/1.1#### @name getMarketsGET {{baseUrl}}/markets?day=sat HTTP/1.1Authorization: Bearer {{customerToken}}#### @name getFarmersGET {{baseUrl}}/farmers?sort=rating HTTP/1.1Authorization: Bearer {{customerToken}}#### @name getProductsGET {{baseUrl}}/products?limit=10&sort=popular HTTP/1.1Authorization: Bearer {{customerToken}}#### @name searchSuggestionsGET {{baseUrl}}/search/suggestions?q=tom HTTP/1.1Authorization: Bearer {{customerToken}}#### @name getFeedGET {{baseUrl}}/feed HTTP/1.1Authorization: Bearer {{customerToken}}### ------------------------------------------------------------------------------### 5. Cart, Checkout & Orders### ------------------------------------------------------------------------------# @name cartQuotePOST {{baseUrl}}/cart/quote HTTP/1.1Authorization: Bearer {{customerToken}}Content-Type: application/json{  "groups": []}#### @name getOrdersGET {{baseUrl}}/orders?tab=active HTTP/1.1Authorization: Bearer {{customerToken}}### ------------------------------------------------------------------------------### 6. Favorites, Notifications & Assistant### ------------------------------------------------------------------------------# @name getFavoriteIdsGET {{baseUrl}}/favorites/ids HTTP/1.1Authorization: Bearer {{customerToken}}#### @name getNotificationsGET {{baseUrl}}/notifications HTTP/1.1Authorization: Bearer {{customerToken}}#### @name assistantMessagePOST {{baseUrl}}/assistant/message HTTP/1.1Authorization: Bearer {{customerToken}}Content-Type: application/json{  "text": "What markets are open on Saturday?"}### ------------------------------------------------------------------------------### 7. Farmer Management### ------------------------------------------------------------------------------# @name farmerOverviewGET {{baseUrl}}/farmer/overview HTTP/1.1Authorization: Bearer {{farmerToken}}#### @name farmerProductsGET {{baseUrl}}/farmer/products HTTP/1.1Authorization: Bearer {{farmerToken}}#### @name farmerOrdersGET {{baseUrl}}/farmer/orders?tab=today HTTP/1.1Authorization: Bearer {{farmerToken}}#### @name farmerInsightsGET {{baseUrl}}/farmer/insights?range=30d HTTP/1.1Authorization: Bearer {{farmerToken}}### ------------------------------------------------------------------------------### 8. Admin Management & Reports### ------------------------------------------------------------------------------# @name adminOverviewGET {{baseUrl}}/admin/overview HTTP/1.1Authorization: Bearer {{adminToken}}#### @name adminFarmersGET {{baseUrl}}/admin/farmers?status=pending HTTP/1.1Authorization: Bearer {{adminToken}}#### @name adminCustomersGET {{baseUrl}}/admin/customers HTTP/1.1Authorization: Bearer {{adminToken}}#### @name adminReportsSummaryGET {{baseUrl}}/admin/reports/summary?range=30d HTTP/1.1Authorization: Bearer {{adminToken}}#### @name adminExportOrdersCsvGET {{baseUrl}}/admin/reports/export?type=orders&range=30d HTTP/1.1Authorization: Bearer {{adminToken}}#### @name adminCategoriesGET {{baseUrl}}/admin/categories HTTP/1.1Authorization: Bearer {{adminToken}}#### @name adminSettingsGET {{baseUrl}}/admin/settings HTTP/1.1Authorization: Bearer {{adminToken}}###

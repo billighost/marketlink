@@ -1,120 +1,1 @@
-import React from 'react';
-
-/**
- * Botanical Leaf Icon matching the brand mark from the design:
- * Two sprouting leaves joined at the stem base.
- */
-export function MarketLinkLeaf({ size = 26, className = '', color = '#3E5844' }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden="true"
-      style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}
-    >
-      {/* Left Leaf: angled up-left */}
-      <path
-        d="M23.2 38.8 C21.5 34.5 13.8 28.2 12.2 21.6 C10.8 15.8 14.5 11.2 20.8 13.4 C25.8 15.2 26.2 24.8 23.2 38.8 Z"
-        fill={color}
-      />
-      {/* Right Leaf: angled up-right */}
-      <path
-        d="M24.8 38.8 C26.8 33.2 32.5 22.8 37.6 16.5 C42.2 10.8 47.5 13.2 46.2 20.1 C44.5 28.6 34.5 35.8 24.8 38.8 Z"
-        fill={color}
-      />
-      {/* Subtle Stem Base */}
-      <path
-        d="M22.5 37.5 C23.5 41.5 24 43 24 43 C24 43 24.5 41.5 25.5 37.5 Z"
-        fill={color}
-      />
-    </svg>
-  );
-}
-
-/**
- * MarketLink Brand Logo Component
- * - variant="horizontal": Leaf icon on left, "Market" in burgundy + "Link" in dark green
- * - variant="stacked": Leaf icon centered above "MarketLink" (Hero style)
- * - variant="icon": Leaf icon only
- */
-export function MarketLinkLogo({
-  variant = 'horizontal',
-  size = 'md', // 'sm', 'md', 'lg', 'xl', 'hero'
-  leafColor = '#3E5844',
-  marketColor = '#5C1D2E',
-  linkColor = '#2E4A3B',
-  className = '',
-  style = {},
-}) {
-  const sizeMap = {
-    sm: { leaf: 20, font: '1.1rem', gap: '7px' },
-    md: { leaf: 26, font: '1.45rem', gap: '9px' },
-    lg: { leaf: 34, font: '1.85rem', gap: '11px' },
-    xl: { leaf: 44, font: '2.5rem', gap: '14px' },
-    hero: { leaf: 52, font: 'clamp(2.5rem, 2rem + 2.5vw, 3.8rem)', gap: '12px' },
-  };
-
-  const currentSize = sizeMap[size] || sizeMap.md;
-
-  if (variant === 'icon') {
-    return <MarketLinkLeaf size={currentSize.leaf} color={leafColor} className={className} />;
-  }
-
-  const textStyle = {
-    fontFamily: "'Playfair Display', Georgia, 'Times New Roman', serif",
-    fontWeight: 700,
-    letterSpacing: '-0.02em',
-    lineHeight: 1,
-    display: 'inline-flex',
-    alignItems: 'baseline',
-  };
-
-  if (variant === 'stacked') {
-    return (
-      <div
-        className={className}
-        style={{
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: currentSize.gap,
-          userSelect: 'none',
-          ...style,
-        }}
-      >
-        <MarketLinkLeaf size={currentSize.leaf} color={leafColor} />
-        <div style={{ ...textStyle, fontSize: currentSize.font }}>
-          <span style={{ color: marketColor }}>Market</span>
-          <span style={{ color: linkColor }}>Link</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Default horizontal
-  return (
-    <div
-      className={className}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: currentSize.gap,
-        userSelect: 'none',
-        ...style,
-      }}
-    >
-      <MarketLinkLeaf size={currentSize.leaf} color={leafColor} />
-      <div style={{ ...textStyle, fontSize: currentSize.font }}>
-        <span style={{ color: marketColor }}>Market</span>
-        <span style={{ color: linkColor }}>Link</span>
-      </div>
-    </div>
-  );
-}
-
-export default MarketLinkLogo;
+import React from 'react';export function MarketLinkLeaf({ size = 26, className = '', color = '#3E5844' }) {  return (    <svg      width={size}      height={size}      viewBox="0 0 48 48"      fill="none"      xmlns="http://www.w3.org/2000/svg"      className={className}      aria-hidden="true"      style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}    >      {}      <path        d="M23.2 38.8 C21.5 34.5 13.8 28.2 12.2 21.6 C10.8 15.8 14.5 11.2 20.8 13.4 C25.8 15.2 26.2 24.8 23.2 38.8 Z"        fill={color}      />      {}      <path        d="M24.8 38.8 C26.8 33.2 32.5 22.8 37.6 16.5 C42.2 10.8 47.5 13.2 46.2 20.1 C44.5 28.6 34.5 35.8 24.8 38.8 Z"        fill={color}      />      {}      <path        d="M22.5 37.5 C23.5 41.5 24 43 24 43 C24 43 24.5 41.5 25.5 37.5 Z"        fill={color}      />    </svg>  );}export function MarketLinkLogo({  variant = 'horizontal',  size = 'md',   leafColor = '#3E5844',  marketColor = '#5C1D2E',  linkColor = '#2E4A3B',  className = '',  style = {},}) {  const sizeMap = {    sm: { leaf: 20, font: '1.1rem', gap: '7px' },    md: { leaf: 26, font: '1.45rem', gap: '9px' },    lg: { leaf: 34, font: '1.85rem', gap: '11px' },    xl: { leaf: 44, font: '2.5rem', gap: '14px' },    hero: { leaf: 52, font: 'clamp(2.5rem, 2rem + 2.5vw, 3.8rem)', gap: '12px' },  };  const currentSize = sizeMap[size] || sizeMap.md;  if (variant === 'icon') {    return <MarketLinkLeaf size={currentSize.leaf} color={leafColor} className={className} />;  }  const textStyle = {    fontFamily: "'Playfair Display', Georgia, 'Times New Roman', serif",    fontWeight: 700,    letterSpacing: '-0.02em',    lineHeight: 1,    display: 'inline-flex',    alignItems: 'baseline',  };  if (variant === 'stacked') {    return (      <div        className={className}        style={{          display: 'inline-flex',          flexDirection: 'column',          alignItems: 'center',          justifyContent: 'center',          gap: currentSize.gap,          userSelect: 'none',          ...style,        }}      >        <MarketLinkLeaf size={currentSize.leaf} color={leafColor} />        <div style={{ ...textStyle, fontSize: currentSize.font }}>          <span style={{ color: marketColor }}>Market</span>          <span style={{ color: linkColor }}>Link</span>        </div>      </div>    );  }  return (    <div      className={className}      style={{        display: 'inline-flex',        alignItems: 'center',        gap: currentSize.gap,        userSelect: 'none',        ...style,      }}    >      <MarketLinkLeaf size={currentSize.leaf} color={leafColor} />      <div style={{ ...textStyle, fontSize: currentSize.font }}>        <span style={{ color: marketColor }}>Market</span>        <span style={{ color: linkColor }}>Link</span>      </div>    </div>  );}export default MarketLinkLogo;

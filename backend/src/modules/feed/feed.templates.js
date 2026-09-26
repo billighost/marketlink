@@ -1,305 +1,1 @@
-/**
- * Feed template registry.
- * Defines 13 modular sections for the endless home feed.
- * Each template verifies availability and returns null when minimum items (< 3) cannot be met.
- */
-
-import { ObjectId } from 'mongodb';
-import { COLLECTIONS } from '../../db/collections.js';
-import { walkRandom } from './feed.walker.js';
-import { toProductCard, toFarmerCard } from '../../utils/shapes.js';
-import { toObjectId } from '../../utils/ids.js';
-import { getFarmerIdsForDay } from '../products/products.service.js';
-
-export const FEED_TEMPLATES = [
-  {
-    id: 'becauseYouLike',
-    type: 'productRow',
-    title: (ctx) => `Because you like ${ctx.userProfile?.topCategoryName || 'fresh produce'}`,
-    async build(ctx) {
-      const topSlug = ctx.userProfile?.topCategorySlug;
-      if (!topSlug) return null;
-
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, categorySlug: topSlug },
-        { seed: ctx.seed + 1, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: { category: topSlug } },
-      };
-    },
-  },
-  {
-    id: 'under5',
-    type: 'productRow',
-    title: () => 'Under $5',
-    async build(ctx) {
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, priceCents: { $lte: 500 } },
-        { seed: ctx.seed + 2, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: { maxPrice: 500 } },
-      };
-    },
-  },
-  {
-    id: 'ovenWarm',
-    type: 'productRow',
-    title: () => 'Still warm from the oven',
-    async build(ctx) {
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, categorySlug: 'bakery' },
-        { seed: ctx.seed + 3, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: { category: 'bakery' } },
-      };
-    },
-  },
-  {
-    id: 'sundayMorning',
-    type: 'productRow',
-    title: () => 'Sunday morning picks',
-    async build(ctx) {
-      const sunFarmerIds = await getFarmerIdsForDay('sun');
-      if (!sunFarmerIds || sunFarmerIds.length === 0) return null;
-
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, farmerId: { $in: sunFarmerIds } },
-        { seed: ctx.seed + 4, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: { day: 'sun' } },
-      };
-    },
-  },
-  {
-    id: 'farmersYouMightLove',
-    type: 'farmerRow',
-    title: () => 'Farmers you might love',
-    async build(ctx) {
-      const favIds = ctx.userProfile?.favouriteFarmerIds || [];
-      const filter = { listingEnabled: true };
-      if (favIds.length > 0) {
-        filter._id = { $nin: favIds.map(toObjectId) };
-      }
-
-      const farmers = await walkRandom(
-        ctx.db,
-        COLLECTIONS.FARMERS,
-        filter,
-        { seed: ctx.seed + 5, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (farmers.length < 3) return null;
-
-      return {
-        items: farmers.map((f) => toFarmerCard(f, ctx.allMarkets)),
-        seeAll: { path: '/farmers', query: {} },
-      };
-    },
-  },
-  {
-    id: 'pantry',
-    type: 'productRow',
-    title: () => 'Pantry staples',
-    async build(ctx) {
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, categorySlug: { $in: ['honey-and-jam', 'dairy-and-eggs'] } },
-        { seed: ctx.seed + 6, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: { category: 'honey-and-jam' } },
-      };
-    },
-  },
-  {
-    id: 'eggsDairy',
-    type: 'productRow',
-    title: () => 'Fresh eggs and dairy',
-    async build(ctx) {
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, categorySlug: 'dairy-and-eggs' },
-        { seed: ctx.seed + 7, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: { category: 'dairy-and-eggs' } },
-      };
-    },
-  },
-  {
-    id: 'sweet',
-    type: 'productRow',
-    title: () => 'Sweet things',
-    async build(ctx) {
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, categorySlug: { $in: ['fruit', 'honey-and-jam', 'bakery'] } },
-        { seed: ctx.seed + 8, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: { category: 'fruit' } },
-      };
-    },
-  },
-  {
-    id: 'popularAtMarket',
-    type: 'productRow',
-    title: (ctx) => `Popular at ${ctx.homeMarketName || 'Market'}`,
-    async build(ctx) {
-      const marketId = ctx.userProfile?.homeMarketId;
-      if (!marketId) return null;
-
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, marketIds: marketId },
-        { seed: ctx.seed + 9, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: { market: marketId.toString() } },
-      };
-    },
-  },
-  {
-    id: 'backByDemand',
-    type: 'productRow',
-    title: () => 'Back by popular demand',
-    async build(ctx) {
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, availability: 'in' },
-        { seed: ctx.seed + 10, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: { sort: 'popular' } },
-      };
-    },
-  },
-  {
-    id: 'smallFarms',
-    type: 'featureRow',
-    title: () => 'From small farms',
-    async build(ctx) {
-      const farmers = await walkRandom(
-        ctx.db,
-        COLLECTIONS.FARMERS,
-        { listingEnabled: true, isTopSeller: false },
-        { seed: ctx.seed + 11, batch: ctx.batch, count: 6 }
-      );
-
-      const excludeObjIds = Array.from(ctx.exclude)
-        .map((id) => {
-          try {
-            return typeof id === 'string' ? new ObjectId(id) : id;
-          } catch {
-            return null;
-          }
-        })
-        .filter(Boolean);
-
-      const products = [];
-      for (const f of farmers) {
-        if (products.length >= 3) break;
-        const p = await ctx.db.collection(COLLECTIONS.PRODUCTS).findOne({
-          farmerId: f._id,
-          listed: true,
-          _id: { $nin: excludeObjIds.concat(products.map((d) => d._id)) },
-        });
-        if (p) products.push(p);
-      }
-
-      if (products.length < 3) return null;
-
-      return {
-        items: products.map(toProductCard),
-        seeAll: { path: '/farmers', query: {} },
-      };
-    },
-  },
-  {
-    id: 'quickPicks',
-    type: 'quickPicks',
-    title: () => 'Quick pickup picks',
-    async build(ctx) {
-      const items = await walkRandom(
-        ctx.db,
-        COLLECTIONS.PRODUCTS,
-        { listed: true, availability: 'in' },
-        { seed: ctx.seed + 12, batch: ctx.batch, count: 6, exclude: Array.from(ctx.exclude) }
-      );
-      if (items.length < 3) return null;
-
-      return {
-        items: items.map(toProductCard),
-        seeAll: { path: '/products', query: {} },
-      };
-    },
-  },
-  {
-    id: 'seasonalStrip',
-    type: 'categoryStrip',
-    title: () => 'In season',
-    async build(ctx) {
-      const cats = await ctx.db
-        .collection(COLLECTIONS.CATEGORIES)
-        .find({ active: true })
-        .sort({ sortOrder: 1 })
-        .limit(6)
-        .toArray();
-
-      if (cats.length === 0) return null;
-
-      return {
-        items: cats.map((c) => ({
-          slug: c.slug,
-          name: c.name,
-          art: c.art || null,
-          count: c.productCount || 0,
-        })),
-        seeAll: { path: '/categories', query: {} },
-      };
-    },
-  },
-];
+import { ObjectId } from 'mongodb';import { COLLECTIONS } from '../../db/collections.js';import { walkRandom } from './feed.walker.js';import { toProductCard, toFarmerCard } from '../../utils/shapes.js';import { toObjectId } from '../../utils/ids.js';import { getFarmerIdsForDay } from '../products/products.service.js';export const FEED_TEMPLATES = [  {    id: 'becauseYouLike',    type: 'productRow',    title: (ctx) => `Because you like ${ctx.userProfile?.topCategoryName || 'fresh produce'}`,    async build(ctx) {      const topSlug = ctx.userProfile?.topCategorySlug;      if (!topSlug) return null;      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, categorySlug: topSlug },        { seed: ctx.seed + 1, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: { category: topSlug } },      };    },  },  {    id: 'under5',    type: 'productRow',    title: () => 'Under $5',    async build(ctx) {      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, priceCents: { $lte: 500 } },        { seed: ctx.seed + 2, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: { maxPrice: 500 } },      };    },  },  {    id: 'ovenWarm',    type: 'productRow',    title: () => 'Still warm from the oven',    async build(ctx) {      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, categorySlug: 'bakery' },        { seed: ctx.seed + 3, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: { category: 'bakery' } },      };    },  },  {    id: 'sundayMorning',    type: 'productRow',    title: () => 'Sunday morning picks',    async build(ctx) {      const sunFarmerIds = await getFarmerIdsForDay('sun');      if (!sunFarmerIds || sunFarmerIds.length === 0) return null;      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, farmerId: { $in: sunFarmerIds } },        { seed: ctx.seed + 4, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: { day: 'sun' } },      };    },  },  {    id: 'farmersYouMightLove',    type: 'farmerRow',    title: () => 'Farmers you might love',    async build(ctx) {      const favIds = ctx.userProfile?.favouriteFarmerIds || [];      const filter = { listingEnabled: true };      if (favIds.length > 0) {        filter._id = { $nin: favIds.map(toObjectId) };      }      const farmers = await walkRandom(        ctx.db,        COLLECTIONS.FARMERS,        filter,        { seed: ctx.seed + 5, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (farmers.length < 3) return null;      return {        items: farmers.map((f) => toFarmerCard(f, ctx.allMarkets)),        seeAll: { path: '/farmers', query: {} },      };    },  },  {    id: 'pantry',    type: 'productRow',    title: () => 'Pantry staples',    async build(ctx) {      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, categorySlug: { $in: ['honey-and-jam', 'dairy-and-eggs'] } },        { seed: ctx.seed + 6, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: { category: 'honey-and-jam' } },      };    },  },  {    id: 'eggsDairy',    type: 'productRow',    title: () => 'Fresh eggs and dairy',    async build(ctx) {      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, categorySlug: 'dairy-and-eggs' },        { seed: ctx.seed + 7, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: { category: 'dairy-and-eggs' } },      };    },  },  {    id: 'sweet',    type: 'productRow',    title: () => 'Sweet things',    async build(ctx) {      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, categorySlug: { $in: ['fruit', 'honey-and-jam', 'bakery'] } },        { seed: ctx.seed + 8, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: { category: 'fruit' } },      };    },  },  {    id: 'popularAtMarket',    type: 'productRow',    title: (ctx) => `Popular at ${ctx.homeMarketName || 'Market'}`,    async build(ctx) {      const marketId = ctx.userProfile?.homeMarketId;      if (!marketId) return null;      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, marketIds: marketId },        { seed: ctx.seed + 9, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: { market: marketId.toString() } },      };    },  },  {    id: 'backByDemand',    type: 'productRow',    title: () => 'Back by popular demand',    async build(ctx) {      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, availability: 'in' },        { seed: ctx.seed + 10, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: { sort: 'popular' } },      };    },  },  {    id: 'smallFarms',    type: 'featureRow',    title: () => 'From small farms',    async build(ctx) {      const farmers = await walkRandom(        ctx.db,        COLLECTIONS.FARMERS,        { listingEnabled: true, isTopSeller: false },        { seed: ctx.seed + 11, batch: ctx.batch, count: 6 }      );      const excludeObjIds = Array.from(ctx.exclude)        .map((id) => {          try {            return typeof id === 'string' ? new ObjectId(id) : id;          } catch {            return null;          }        })        .filter(Boolean);      const products = [];      for (const f of farmers) {        if (products.length >= 3) break;        const p = await ctx.db.collection(COLLECTIONS.PRODUCTS).findOne({          farmerId: f._id,          listed: true,          _id: { $nin: excludeObjIds.concat(products.map((d) => d._id)) },        });        if (p) products.push(p);      }      if (products.length < 3) return null;      return {        items: products.map(toProductCard),        seeAll: { path: '/farmers', query: {} },      };    },  },  {    id: 'quickPicks',    type: 'quickPicks',    title: () => 'Quick pickup picks',    async build(ctx) {      const items = await walkRandom(        ctx.db,        COLLECTIONS.PRODUCTS,        { listed: true, availability: 'in' },        { seed: ctx.seed + 12, batch: ctx.batch, count: 6, exclude: Array.from(ctx.exclude) }      );      if (items.length < 3) return null;      return {        items: items.map(toProductCard),        seeAll: { path: '/products', query: {} },      };    },  },  {    id: 'seasonalStrip',    type: 'categoryStrip',    title: () => 'In season',    async build(ctx) {      const cats = await ctx.db        .collection(COLLECTIONS.CATEGORIES)        .find({ active: true })        .sort({ sortOrder: 1 })        .limit(6)        .toArray();      if (cats.length === 0) return null;      return {        items: cats.map((c) => ({          slug: c.slug,          name: c.name,          art: c.art || null,          count: c.productCount || 0,        })),        seeAll: { path: '/categories', query: {} },      };    },  },];

@@ -1,71 +1,1 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { getNotifications } from '@/api/me';
-
-let globalUnreadCount = 0;
-const listeners = new Set();
-
-function notifyListeners(count) {
-  globalUnreadCount = count;
-  listeners.forEach((listener) => listener(count));
-}
-
-/**
- * Hook for polling unread notification count.
- * Polls every 60s only when the tab is visible.
- */
-export function useNotificationCount() {
-  const { isAuthenticated } = useAuth();
-  const [unreadCount, setUnreadCount] = useState(globalUnreadCount);
-
-  useEffect(() => {
-    listeners.add(setUnreadCount);
-    return () => {
-      listeners.delete(setUnreadCount);
-    };
-  }, []);
-
-  const fetchCount = useCallback(async () => {
-    if (!isAuthenticated || typeof document === 'undefined' || document.hidden) return;
-    try {
-      const res = await getNotifications({ unread: true, limit: 1 });
-      const count = res.meta?.unreadCount || 0;
-      notifyListeners(count);
-    } catch {
-      // ignore
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      notifyListeners(0);
-      return;
-    }
-
-    fetchCount();
-
-    // 60s poll timer
-    const interval = setInterval(() => {
-      fetchCount();
-    }, 60000);
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchCount();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [isAuthenticated, fetchCount]);
-
-  return {
-    unreadCount,
-    refetchCount: fetchCount,
-    setCount: notifyListeners,
-  };
-}
+import { useState, useEffect, useCallback } from 'react';import { useAuth } from '@/context/AuthContext';import { getNotifications } from '@/api/me';let globalUnreadCount = 0;const listeners = new Set();function notifyListeners(count) {  globalUnreadCount = count;  listeners.forEach((listener) => listener(count));}export function useNotificationCount() {  const { isAuthenticated } = useAuth();  const [unreadCount, setUnreadCount] = useState(globalUnreadCount);  useEffect(() => {    listeners.add(setUnreadCount);    return () => {      listeners.delete(setUnreadCount);    };  }, []);  const fetchCount = useCallback(async () => {    if (!isAuthenticated || typeof document === 'undefined' || document.hidden) return;    try {      const res = await getNotifications({ unread: true, limit: 1 });      const count = res.meta?.unreadCount || 0;      notifyListeners(count);    } catch {    }  }, [isAuthenticated]);  useEffect(() => {    if (!isAuthenticated) {      notifyListeners(0);      return;    }    fetchCount();    const interval = setInterval(() => {      fetchCount();    }, 60000);    const handleVisibilityChange = () => {      if (!document.hidden) {        fetchCount();      }    };    document.addEventListener('visibilitychange', handleVisibilityChange);    return () => {      clearInterval(interval);      document.removeEventListener('visibilitychange', handleVisibilityChange);    };  }, [isAuthenticated, fetchCount]);  return {    unreadCount,    refetchCount: fetchCount,    setCount: notifyListeners,  };}
