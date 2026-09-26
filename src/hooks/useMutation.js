@@ -1,1 +1,71 @@
-import { useState, useCallback, useRef, useEffect } from 'react';import { invalidateQueries } from './useQuery';export function useMutation(mutationFn, options = {}) {  const { invalidateKeyPrefix, onSuccess, onError } = options;  const [loading, setLoading] = useState(false);  const [error, setError] = useState(null);  const [data, setData] = useState(null);  const mountedRef = useRef(true);  useEffect(() => {    mountedRef.current = true;    return () => {      mountedRef.current = false;    };  }, []);  const mutate = useCallback(    async (variables) => {      setLoading(true);      setError(null);      try {        const result = await mutationFn(variables);        if (mountedRef.current) {          setData(result);          setLoading(false);        }        if (invalidateKeyPrefix) {          const prefixes = Array.isArray(invalidateKeyPrefix)            ? invalidateKeyPrefix            : [invalidateKeyPrefix];          for (const prefix of prefixes) {            invalidateQueries(prefix);          }        }        if (onSuccess) {          onSuccess(result, variables);        }        return result;      } catch (err) {        if (mountedRef.current) {          setError(err);          setLoading(false);        }        if (onError) {          onError(err, variables);        }        throw err;      }    },    [mutationFn, invalidateKeyPrefix, onSuccess, onError]  );  const reset = useCallback(() => {    setData(null);    setError(null);    setLoading(false);  }, []);  return { mutate, loading, error, data, reset };}export default useMutation;
+/**
+ * Mutation hook with loading, error states, and optional query invalidation
+ */
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { invalidateQueries } from './useQuery';
+
+export function useMutation(mutationFn, options = {}) {
+  const { invalidateKeyPrefix, onSuccess, onError } = options;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
+
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const mutate = useCallback(
+    async (variables) => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await mutationFn(variables);
+        if (mountedRef.current) {
+          setData(result);
+          setLoading(false);
+        }
+
+        if (invalidateKeyPrefix) {
+          const prefixes = Array.isArray(invalidateKeyPrefix)
+            ? invalidateKeyPrefix
+            : [invalidateKeyPrefix];
+          for (const prefix of prefixes) {
+            invalidateQueries(prefix);
+          }
+        }
+
+        if (onSuccess) {
+          onSuccess(result, variables);
+        }
+
+        return result;
+      } catch (err) {
+        if (mountedRef.current) {
+          setError(err);
+          setLoading(false);
+        }
+        if (onError) {
+          onError(err, variables);
+        }
+        throw err;
+      }
+    },
+    [mutationFn, invalidateKeyPrefix, onSuccess, onError]
+  );
+
+  const reset = useCallback(() => {
+    setData(null);
+    setError(null);
+    setLoading(false);
+  }, []);
+
+  return { mutate, loading, error, data, reset };
+}
+
+export default useMutation;

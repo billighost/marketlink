@@ -1,1 +1,13 @@
-const fs = require('fs');const findings = JSON.parse(fs.readFileSync('scratch/audit_results_current.json', 'utf8'));console.log('=== SQUEEZED DETAILS ===');const squeezedMap = {};findings.filter(f => f.type === 'SQUEEZED').forEach(f => {  const key = `${f.page} | ${f.selector} | ${f.message}`;  squeezedMap[key] = (squeezedMap[key] || 0) + 1;});for (const [k, count] of Object.entries(squeezedMap)) {  console.log(`${count}x: ${k}`);}
+const fs = require('fs');
+
+const findings = JSON.parse(fs.readFileSync('scratch/audit_results_current.json', 'utf8'));
+
+console.log('=== SQUEEZED DETAILS ===');
+const squeezedMap = {};
+findings.filter(f => f.type === 'SQUEEZED').forEach(f => {
+  const key = `${f.page} | ${f.selector} | ${f.message}`;
+  squeezedMap[key] = (squeezedMap[key] || 0) + 1;
+});
+for (const [k, count] of Object.entries(squeezedMap)) {
+  console.log(`${count}x: ${k}`);
+}

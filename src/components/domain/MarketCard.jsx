@@ -1,1 +1,111 @@
-import React from 'react';import { Link, useLocation } from 'react-router-dom';import { MapPin, Clock, Users, Check } from 'lucide-react';import { useAuth } from '@/context/AuthContext';import Badge from '@/components/ui/Badge';import Illustration from '@/components/domain/Illustration';import { formatMarketSchedule } from '@/utils/format';import styles from './MarketCard.module.css';export function MarketCard({  market,  onSelect,  className = '',}) {  const location = useLocation();  const { user, isAuthenticated, selectedMarketId, switchMarket } = useAuth();  if (!market) return null;  const currentId = user?.homeMarketId || selectedMarketId;  const isCurrentMarket = currentId ? currentId === market.id : market.id === 'market-elm';  const marketSheetPath = isAuthenticated ? `/buyer/markets/${market.id}` : `/markets/${market.id}`;  const linkState = { background: location.state?.background || location };  const handleSelect = (e) => {    e.preventDefault();    e.stopPropagation();    if (switchMarket) {      switchMarket(market.id);    }    onSelect?.(market);  };  return (    <article      className={`${styles.card} ${isCurrentMarket ? styles.selectedCard : ''} ${className}`}      aria-label={`${market.name}, ${market.address}`}    >      <Link        to={marketSheetPath}        state={linkState}        className={styles.stretchedLink}        tabIndex={0}        aria-label={`View details for ${market.name}`}      />      <div className={styles.header}>        <div className={styles.iconWrapper}>          <Illustration name="stall" size="md" />        </div>        <div className={styles.titleInfo}>          <div className={styles.titleRow}>            <h3 className={styles.name}>{market.name}</h3>            {isCurrentMarket && (              <Badge variant="success" size="sm">Your market</Badge>            )}          </div>          <p className={styles.address}>            <MapPin size={14} className={styles.metaIcon} aria-hidden="true" />            <span>{market.address}</span>            {market.distance && (              <>                <span className={styles.dot} aria-hidden="true">·</span>                <span>{market.distance}</span>              </>            )}          </p>        </div>      </div>      <div className={styles.details}>        <div className={styles.detailItem}>          <Clock size={14} className={styles.metaIcon} aria-hidden="true" />          <span>{formatMarketSchedule(market)}</span>        </div>        {market.farmerCount && (          <div className={styles.detailItem}>            <Users size={14} className={styles.metaIcon} aria-hidden="true" />            <span>{market.farmerCount} local Farmers</span>          </div>        )}      </div>      {onSelect && (        <div className={styles.footer}>          <button            type="button"            className={`${styles.selectButton} ${isCurrentMarket ? styles.selectedButton : ''}`}            onClick={handleSelect}            disabled={isCurrentMarket}          >            {isCurrentMarket ? (              <>                <Check size={16} strokeWidth={2} aria-hidden="true" />                <span>Selected</span>              </>            ) : (              <span>Shop this market</span>            )}          </button>        </div>      )}    </article>  );}export default MarketCard;
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { MapPin, Clock, Users, Check } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import Badge from '@/components/ui/Badge';
+import Illustration from '@/components/domain/Illustration';
+import { formatMarketSchedule } from '@/utils/format';
+import styles from './MarketCard.module.css';
+
+/**
+ * Market card showing details, schedule, distance, and selection state.
+ */
+export function MarketCard({
+  market,
+  onSelect,
+  className = '',
+}) {
+  const location = useLocation();
+  const { user, isAuthenticated, selectedMarketId, switchMarket } = useAuth();
+
+  if (!market) return null;
+
+  const currentId = user?.homeMarketId || selectedMarketId;
+  const isCurrentMarket = currentId ? currentId === market.id : market.id === 'market-elm';
+
+  const marketSheetPath = isAuthenticated ? `/buyer/markets/${market.id}` : `/markets/${market.id}`;
+  const linkState = { background: location.state?.background || location };
+
+  const handleSelect = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (switchMarket) {
+      switchMarket(market.id);
+    }
+    onSelect?.(market);
+  };
+
+  return (
+    <article
+      className={`${styles.card} ${isCurrentMarket ? styles.selectedCard : ''} ${className}`}
+      aria-label={`${market.name}, ${market.address}`}
+    >
+      <Link
+        to={marketSheetPath}
+        state={linkState}
+        className={styles.stretchedLink}
+        tabIndex={0}
+        aria-label={`View details for ${market.name}`}
+      />
+
+      <div className={styles.header}>
+        <div className={styles.iconWrapper}>
+          <Illustration name="stall" size="md" />
+        </div>
+        <div className={styles.titleInfo}>
+          <div className={styles.titleRow}>
+            <h3 className={styles.name}>{market.name}</h3>
+            {isCurrentMarket && (
+              <Badge variant="success" size="sm">Your market</Badge>
+            )}
+          </div>
+          <p className={styles.address}>
+            <MapPin size={14} className={styles.metaIcon} aria-hidden="true" />
+            <span>{market.address}</span>
+            {market.distance && (
+              <>
+                <span className={styles.dot} aria-hidden="true">·</span>
+                <span>{market.distance}</span>
+              </>
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className={styles.details}>
+        <div className={styles.detailItem}>
+          <Clock size={14} className={styles.metaIcon} aria-hidden="true" />
+          <span>{formatMarketSchedule(market)}</span>
+        </div>
+        {market.farmerCount && (
+          <div className={styles.detailItem}>
+            <Users size={14} className={styles.metaIcon} aria-hidden="true" />
+            <span>{market.farmerCount} local Farmers</span>
+          </div>
+        )}
+      </div>
+
+      {onSelect && (
+        <div className={styles.footer}>
+          <button
+            type="button"
+            className={`${styles.selectButton} ${isCurrentMarket ? styles.selectedButton : ''}`}
+            onClick={handleSelect}
+            disabled={isCurrentMarket}
+          >
+            {isCurrentMarket ? (
+              <>
+                <Check size={16} strokeWidth={2} aria-hidden="true" />
+                <span>Selected</span>
+              </>
+            ) : (
+              <span>Shop this market</span>
+            )}
+          </button>
+        </div>
+      )}
+    </article>
+  );
+}
+
+export default MarketCard;

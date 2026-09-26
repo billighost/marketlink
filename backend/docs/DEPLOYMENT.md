@@ -1,1 +1,98 @@
-# MarketLink Production Deployment & Operational Runbook## 1. System Requirements & Architecture- **Runtime**: Node.js 20.x LTS or higher (ES Modules enabled).- **Database**: MongoDB 6.0+ (Replica Set required for transactions; MongoDB Atlas recommended).- **Process Manager**: PM2, systemd, or Kubernetes container runtime.- **Reverse Proxy**: Nginx, Cloudflare, or AWS ALB handling SSL/TLS termination and forwarding `X-Forwarded-For`.- **Memory Footprint**: 256MB baseline, 512MB recommended per process instance.---## 2. Environment Variables SpecificationAll environment variables are validated at server startup via `src/config/env.js`. If any required variable is missing or malformed, the process exits immediately with a fatal diagnostic error.| Variable | Required | Default | Sensitive | Description || :--- | :--- | :--- | :--- | :--- || `NODE_ENV` | Yes | `development` | No | Application environment (`production`, `development`, `test`). || `PORT` | No | `4000` | No | TCP port the Express server listens on. || `MONGODB_URI` | Yes | - | **Yes** | MongoDB connection string (e.g. `mongodb+srv://...`). || `DB_NAME` | No | `marketlink` | No | Database name. Must never be `marketlink_test` in production. || `JWT_SECRET` | Yes | - | **Yes** | Secret key for signing access tokens (min 32 characters). || `JWT_REFRESH_SECRET` | Yes | - | **Yes** | Secret key for signing refresh tokens (min 32 characters). || `COOKIE_SECRET` | Yes | - | **Yes** | Secret for signing HTTP cookies. || `FRONTEND_URL` | No | `http://localhost:5173` | No | Allowed CORS origin for browser requests. || `CLOUDINARY_CLOUD_NAME`| No | - | No | Cloudinary cloud identifier for media storage. || `CLOUDINARY_API_KEY` | No | - | **Yes** | Cloudinary API access key. || `CLOUDINARY_API_SECRET`| No | - | **Yes** | Cloudinary API access secret. |---## 3. Production Readiness & Health ChecksThe backend provides two standard operational health probes:### 3.1 Liveness Probe (`GET /api/health`)Checks if the Node.js process is active and accepting HTTP traffic.- **HTTP 200**: `{ "data": { "status": "ok", "uptime": 1245.2, "timestamp": "..." } }`- Used by orchestrators (Kubernetes/ECS) to detect process hangs.### 3.2 Readiness Probe (`GET /api/ready`)Checks if the application is fully connected to the database and ready to process traffic.- **HTTP 200**: `{ "data": { "status": "ready", "database": "connected", "indexes": "ready" } }`- **HTTP 503**: Database ping failed or index build in progress.- Traffic routers must withhold user requests until `/api/ready` returns 200.---## 4. Zero-Downtime Deployment Procedure1. **Pre-Deployment Index Synchronization**:   Ensure all compound and unique indexes exist on the production cluster before routing new code traffic:   ```bash   npm run indexes   ```2. **Start Canary / Blue-Green Pods**:   Launch new container instances running the updated version.3. **Verify Readiness**:   Poll `GET /api/ready` on new instances until HTTP 200 is confirmed.4. **Shift Traffic**:   Update load balancer target group to new instances.5. **Graceful Connection Draining**:   When receiving `SIGTERM` or `SIGINT`, the server:   - Stops accepting new connections.   - Waits up to 30 seconds for active in-flight requests to complete.   - Closes MongoDB client connections cleanly.   - Terminates process with code 0.---## 5. Backup & Disaster Recovery### 5.1 Sanitized JSON Data ExportTo export all operational collections for offline inspection, data science, or audit without leaking sensitive secrets:```bashnpm run export:json```- Creates timestamped directory: `exports/marketlink-export-<timestamp>/`.- Automatically strips: `passwordHash`, `tokenHash`, `tokens`, `resetToken`, `sessions`, `audit_logs`.### 5.2 MongoDB Native Binary Backup (mongodump)```bash# Backup entire production databasemongodump --uri="$MONGODB_URI" --db=marketlink --out=/backups/$(date +%F) --gzip# Restore from snapshotmongorestore --uri="$MONGODB_URI" --db=marketlink --gzip /backups/YYYY-MM-DD/marketlink```---## 6. Safety Guards & Accidental Reset PreventionMarketLink implements hardcoded Safety Guards (`src/db/safetyGuard.js`) protecting against destructive commands:- **Production Drop Block**: `drop()`, `deleteMany({})`, or dropDatabase commands targeted against production or Atlas clusters will throw a fatal error immediately unless `--force` is explicitly provided in development.- **Test Database Isolation**: Integration and scenario tests are strictly confined to `marketlink_test` or in-memory targets.- **Audit Logging**: All administrative approvals, rejections, suspensions, and content removals are written immutably to the `audit_logs` collection.
+# MarketLink Production Deployment & Operational Runbook
+
+## 1. System Requirements & Architecture
+
+- **Runtime**: Node.js 20.x LTS or higher (ES Modules enabled).
+- **Database**: MongoDB 6.0+ (Replica Set required for transactions; MongoDB Atlas recommended).
+- **Process Manager**: PM2, systemd, or Kubernetes container runtime.
+- **Reverse Proxy**: Nginx, Cloudflare, or AWS ALB handling SSL/TLS termination and forwarding `X-Forwarded-For`.
+- **Memory Footprint**: 256MB baseline, 512MB recommended per process instance.
+
+---
+
+## 2. Environment Variables Specification
+
+All environment variables are validated at server startup via `src/config/env.js`. If any required variable is missing or malformed, the process exits immediately with a fatal diagnostic error.
+
+| Variable | Required | Default | Sensitive | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `NODE_ENV` | Yes | `development` | No | Application environment (`production`, `development`, `test`). |
+| `PORT` | No | `4000` | No | TCP port the Express server listens on. |
+| `MONGODB_URI` | Yes | - | **Yes** | MongoDB connection string (e.g. `mongodb+srv://...`). |
+| `DB_NAME` | No | `marketlink` | No | Database name. Must never be `marketlink_test` in production. |
+| `JWT_SECRET` | Yes | - | **Yes** | Secret key for signing access tokens (min 32 characters). |
+| `JWT_REFRESH_SECRET` | Yes | - | **Yes** | Secret key for signing refresh tokens (min 32 characters). |
+| `COOKIE_SECRET` | Yes | - | **Yes** | Secret for signing HTTP cookies. |
+| `FRONTEND_URL` | No | `http://localhost:5173` | No | Allowed CORS origin for browser requests. |
+| `CLOUDINARY_CLOUD_NAME`| No | - | No | Cloudinary cloud identifier for media storage. |
+| `CLOUDINARY_API_KEY` | No | - | **Yes** | Cloudinary API access key. |
+| `CLOUDINARY_API_SECRET`| No | - | **Yes** | Cloudinary API access secret. |
+
+---
+
+## 3. Production Readiness & Health Checks
+
+The backend provides two standard operational health probes:
+
+### 3.1 Liveness Probe (`GET /api/health`)
+Checks if the Node.js process is active and accepting HTTP traffic.
+- **HTTP 200**: `{ "data": { "status": "ok", "uptime": 1245.2, "timestamp": "..." } }`
+- Used by orchestrators (Kubernetes/ECS) to detect process hangs.
+
+### 3.2 Readiness Probe (`GET /api/ready`)
+Checks if the application is fully connected to the database and ready to process traffic.
+- **HTTP 200**: `{ "data": { "status": "ready", "database": "connected", "indexes": "ready" } }`
+- **HTTP 503**: Database ping failed or index build in progress.
+- Traffic routers must withhold user requests until `/api/ready` returns 200.
+
+---
+
+## 4. Zero-Downtime Deployment Procedure
+
+1. **Pre-Deployment Index Synchronization**:
+   Ensure all compound and unique indexes exist on the production cluster before routing new code traffic:
+   ```bash
+   npm run indexes
+   ```
+2. **Start Canary / Blue-Green Pods**:
+   Launch new container instances running the updated version.
+3. **Verify Readiness**:
+   Poll `GET /api/ready` on new instances until HTTP 200 is confirmed.
+4. **Shift Traffic**:
+   Update load balancer target group to new instances.
+5. **Graceful Connection Draining**:
+   When receiving `SIGTERM` or `SIGINT`, the server:
+   - Stops accepting new connections.
+   - Waits up to 30 seconds for active in-flight requests to complete.
+   - Closes MongoDB client connections cleanly.
+   - Terminates process with code 0.
+
+---
+
+## 5. Backup & Disaster Recovery
+
+### 5.1 Sanitized JSON Data Export
+To export all operational collections for offline inspection, data science, or audit without leaking sensitive secrets:
+```bash
+npm run export:json
+```
+- Creates timestamped directory: `exports/marketlink-export-<timestamp>/`.
+- Automatically strips: `passwordHash`, `tokenHash`, `tokens`, `resetToken`, `sessions`, `audit_logs`.
+
+### 5.2 MongoDB Native Binary Backup (mongodump)
+```bash
+# Backup entire production database
+mongodump --uri="$MONGODB_URI" --db=marketlink --out=/backups/$(date +%F) --gzip
+
+# Restore from snapshot
+mongorestore --uri="$MONGODB_URI" --db=marketlink --gzip /backups/YYYY-MM-DD/marketlink
+```
+
+---
+
+## 6. Safety Guards & Accidental Reset Prevention
+
+MarketLink implements hardcoded Safety Guards (`src/db/safetyGuard.js`) protecting against destructive commands:
+- **Production Drop Block**: `drop()`, `deleteMany({})`, or dropDatabase commands targeted against production or Atlas clusters will throw a fatal error immediately unless `--force` is explicitly provided in development.
+- **Test Database Isolation**: Integration and scenario tests are strictly confined to `marketlink_test` or in-memory targets.
+- **Audit Logging**: All administrative approvals, rejections, suspensions, and content removals are written immutably to the `audit_logs` collection.

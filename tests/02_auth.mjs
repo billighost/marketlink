@@ -1,1 +1,143 @@
-import { createTestContext, BASE_URL } from './helpers.mjs';export async function runAuthSuite() {  console.log('\n======================================================');  console.log('🧪 RUNNING TEST SUITE 2: Authentication Flows');  console.log('======================================================');  const { browser, context, page, consoleErrors, uncaughtErrors } = await createTestContext();  const results = [];  try {    console.log('Testing 2.1: Login Form Validation ...');    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });    await page.waitForSelector('button[type="submit"]', { timeout: 8000 });    const submitBtn = await page.$('button[type="submit"]');    await submitBtn.click();    await page.waitForTimeout(400);    const emailInput = await page.$('input[type="email"]');    const emailValidationMsg = await emailInput.evaluate(el => el.validationMessage || '');    console.log(`  ✓ Browser validation or field error triggered: "${emailValidationMsg}"`);    results.push({ test: 'Login Validation', status: 'PASS', details: 'Empty submission prevented' });    console.log('Testing 2.2: Invalid Credentials Handling ...');    await page.fill('input[type="email"]', 'wrong@example.com');    await page.fill('input[type="password"]', 'wrongpassword');    await submitBtn.click();    await page.waitForSelector('[role="alert"], [class*="error"], [class*="alert"]', { timeout: 6000 });    const errorBanner = await page.$('[role="alert"], [class*="error"], [class*="alert"]');    const errorText = await errorBanner.textContent();    console.log(`  ✓ Invalid credentials error displayed: "${errorText.trim()}"`);    if (!errorText.toLowerCase().includes('invalid') && !errorText.toLowerCase().includes('credentials') && !errorText.toLowerCase().includes('password')) {      throw new Error(`Unexpected error message: ${errorText}`);    }    results.push({ test: 'Invalid Credentials', status: 'PASS', details: `Error displayed: "${errorText.trim()}"` });    console.log('Testing 2.3: Successful Customer Login ...');    await page.fill('input[type="email"]', 'george@example.com');    await page.fill('input[type="password"]', 'market123');    await submitBtn.click();    await page.waitForURL('**/buyer**', { timeout: 10000 });    await page.waitForLoadState('domcontentloaded');    const currentUrl = page.url();    console.log(`  ✓ Successfully signed in and redirected to: ${currentUrl}`);    if (!currentUrl.includes('/buyer')) {      throw new Error(`Expected redirect to /buyer, but on: ${currentUrl}`);    }    results.push({ test: 'Customer Login', status: 'PASS', details: 'Redirected to /buyer' });    console.log('Testing 2.4: Silent Session Restore on Reload ...');    await page.reload({ waitUntil: 'domcontentloaded' });    await page.waitForSelector('main, [class*="header"], [role="main"]', { timeout: 8000 });    await page.waitForTimeout(500);    const reloadUrl = page.url();    console.log(`  ✓ After page reload, URL is: ${reloadUrl}`);    if (!reloadUrl.includes('/buyer')) {      throw new Error(`Session was lost on reload! Redirected to: ${reloadUrl}`);    }    results.push({ test: 'Silent Session Restore', status: 'PASS', details: 'Maintained /buyer on page reload' });    console.log('Testing 2.5: Customer Sign Out ...');    await page.goto(`${BASE_URL}/buyer/profile`, { waitUntil: 'domcontentloaded' });    await page.waitForSelector('h1, [class*="userName"]', { timeout: 8000 });    console.log(`  Profile URL: ${page.url()}, Title: "${await page.title()}"`);    await page.waitForSelector('button:has-text("Sign out")', { timeout: 8000 });    const signOutRow = await page.$('button:has-text("Sign out")');    await signOutRow.click();    await page.waitForSelector('[role="dialog"] button:has-text("Sign out"), [class*="signOutModal"] button:has-text("Sign out")', { timeout: 6000 });    const confirmSignOut = await page.$('[role="dialog"] button:has-text("Sign out"), [class*="signOutModal"] button:has-text("Sign out")');    await confirmSignOut.click();    await page.waitForURL(url => !url.pathname.includes('/buyer'), { timeout: 8000 });    console.log(`  ✓ Successfully signed out. Current URL: ${page.url()}`);    results.push({ test: 'Sign Out', status: 'PASS', details: `Session cleared, redirected to ${page.url()}` });    console.log('Testing 2.6: Forgot Password Flow ...');    await page.goto(`${BASE_URL}/forgot-password`, { waitUntil: 'domcontentloaded' });    await page.fill('input[type="email"]', 'george@example.com');    await page.click('button[type="submit"]');    await page.waitForSelector(':has-text("Check your inbox"), [class*="success"]', { timeout: 6000 });    console.log('  ✓ Forgot password success confirmation displayed');    results.push({ test: 'Forgot Password', status: 'PASS', details: 'Confirmation displayed' });    console.log('Testing 2.7: Reset Password Invalid Token Handling ...');    await page.goto(`${BASE_URL}/reset-password?token=invalid_expired_token`, { waitUntil: 'domcontentloaded' });    await page.fill('input[name="password"], input[type="password"]:first-of-type', 'NewPassword123');    await page.fill('input[name="confirmPassword"], input[type="password"]:last-of-type', 'NewPassword123');    await page.click('button[type="submit"]');    await page.waitForTimeout(1000);    const resetError = await page.$('[role="alert"], [class*="error"]');    if (resetError) {      const resetErrorText = await resetError.textContent();      console.log(`  ✓ Reset password token error displayed: "${resetErrorText.trim()}"`);    }    results.push({ test: 'Reset Password Token', status: 'PASS', details: 'Handled expired/invalid token' });  } catch (err) {    console.error('❌ AUTH SUITE ERROR:', err);    results.push({ test: 'Auth Suite', status: 'FAIL', details: err.message });  } finally {    await browser.close();  }  const passed = results.every(r => r.status === 'PASS');  console.log('\n--- Auth Suite Summary ---');  results.forEach(r => console.log(`  ${r.status === 'PASS' ? '✅' : '❌'} ${r.test}: ${r.details}`));  return { passed, results, errors: uncaughtErrors };}if (process.argv[1]?.endsWith('02_auth.mjs')) {  runAuthSuite().then(({ passed }) => {    process.exit(passed ? 0 : 1);  });}
+import { createTestContext, BASE_URL } from './helpers.mjs';
+
+export async function runAuthSuite() {
+  console.log('\n======================================================');
+  console.log('🧪 RUNNING TEST SUITE 2: Authentication Flows');
+  console.log('======================================================');
+
+  const { browser, context, page, consoleErrors, uncaughtErrors } = await createTestContext();
+  const results = [];
+
+  try {
+    // ── 2.1 Login Field Validation ──────────────────────────────────
+    console.log('Testing 2.1: Login Form Validation ...');
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+
+    // Wait for form and submit empty
+    await page.waitForSelector('button[type="submit"]', { timeout: 8000 });
+    const submitBtn = await page.$('button[type="submit"]');
+    await submitBtn.click();
+    await page.waitForTimeout(400);
+
+    const emailInput = await page.$('input[type="email"]');
+    const emailValidationMsg = await emailInput.evaluate(el => el.validationMessage || '');
+    console.log(`  ✓ Browser validation or field error triggered: "${emailValidationMsg}"`);
+
+    results.push({ test: 'Login Validation', status: 'PASS', details: 'Empty submission prevented' });
+
+    // ── 2.2 Invalid Credentials Error Display ───────────────────────
+    console.log('Testing 2.2: Invalid Credentials Handling ...');
+    await page.fill('input[type="email"]', 'wrong@example.com');
+    await page.fill('input[type="password"]', 'wrongpassword');
+    await submitBtn.click();
+
+    // Look for error banner / message
+    await page.waitForSelector('[role="alert"], [class*="error"], [class*="alert"]', { timeout: 6000 });
+    const errorBanner = await page.$('[role="alert"], [class*="error"], [class*="alert"]');
+    const errorText = await errorBanner.textContent();
+    console.log(`  ✓ Invalid credentials error displayed: "${errorText.trim()}"`);
+    if (!errorText.toLowerCase().includes('invalid') && !errorText.toLowerCase().includes('credentials') && !errorText.toLowerCase().includes('password')) {
+      throw new Error(`Unexpected error message: ${errorText}`);
+    }
+
+    results.push({ test: 'Invalid Credentials', status: 'PASS', details: `Error displayed: "${errorText.trim()}"` });
+
+    // ── 2.3 Successful Customer Login & Redirect ────────────────────
+    console.log('Testing 2.3: Successful Customer Login ...');
+    await page.fill('input[type="email"]', 'george@example.com');
+    await page.fill('input[type="password"]', 'market123');
+    await submitBtn.click();
+
+    // Wait for redirect to /buyer
+    await page.waitForURL('**/buyer**', { timeout: 10000 });
+    await page.waitForLoadState('domcontentloaded');
+    const currentUrl = page.url();
+    console.log(`  ✓ Successfully signed in and redirected to: ${currentUrl}`);
+    if (!currentUrl.includes('/buyer')) {
+      throw new Error(`Expected redirect to /buyer, but on: ${currentUrl}`);
+    }
+
+    results.push({ test: 'Customer Login', status: 'PASS', details: 'Redirected to /buyer' });
+
+    // ── 2.4 Silent Session Restore on Reload ─────────────────────────
+    console.log('Testing 2.4: Silent Session Restore on Reload ...');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('main, [class*="header"], [role="main"]', { timeout: 8000 });
+    await page.waitForTimeout(500);
+    const reloadUrl = page.url();
+    console.log(`  ✓ After page reload, URL is: ${reloadUrl}`);
+    if (!reloadUrl.includes('/buyer')) {
+      throw new Error(`Session was lost on reload! Redirected to: ${reloadUrl}`);
+    }
+
+    results.push({ test: 'Silent Session Restore', status: 'PASS', details: 'Maintained /buyer on page reload' });
+
+    // ── 2.5 Customer Sign Out & Confirmation Modal ───────────────────
+    console.log('Testing 2.5: Customer Sign Out ...');
+    await page.goto(`${BASE_URL}/buyer/profile`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('h1, [class*="userName"]', { timeout: 8000 });
+    console.log(`  Profile URL: ${page.url()}, Title: "${await page.title()}"`);
+
+    // Wait for and click the Sign out list row
+    await page.waitForSelector('button:has-text("Sign out")', { timeout: 8000 });
+    const signOutRow = await page.$('button:has-text("Sign out")');
+    await signOutRow.click();
+
+    // Click confirm "Sign out" in the BottomSheet modal
+    await page.waitForSelector('[role="dialog"] button:has-text("Sign out"), [class*="signOutModal"] button:has-text("Sign out")', { timeout: 6000 });
+    const confirmSignOut = await page.$('[role="dialog"] button:has-text("Sign out"), [class*="signOutModal"] button:has-text("Sign out")');
+    await confirmSignOut.click();
+
+    // Verify redirected away from /buyer (to / or /login)
+    await page.waitForURL(url => !url.pathname.includes('/buyer'), { timeout: 8000 });
+    console.log(`  ✓ Successfully signed out. Current URL: ${page.url()}`);
+
+    results.push({ test: 'Sign Out', status: 'PASS', details: `Session cleared, redirected to ${page.url()}` });
+
+    // ── 2.6 Forgot Password Flow ─────────────────────────────────────
+    console.log('Testing 2.6: Forgot Password Flow ...');
+    await page.goto(`${BASE_URL}/forgot-password`, { waitUntil: 'domcontentloaded' });
+
+    await page.fill('input[type="email"]', 'george@example.com');
+    await page.click('button[type="submit"]');
+
+    // Wait for success confirmation
+    await page.waitForSelector(':has-text("Check your inbox"), [class*="success"]', { timeout: 6000 });
+    console.log('  ✓ Forgot password success confirmation displayed');
+
+    results.push({ test: 'Forgot Password', status: 'PASS', details: 'Confirmation displayed' });
+
+    // ── 2.7 Reset Password Token Validation ──────────────────────────
+    console.log('Testing 2.7: Reset Password Invalid Token Handling ...');
+    await page.goto(`${BASE_URL}/reset-password?token=invalid_expired_token`, { waitUntil: 'domcontentloaded' });
+    await page.fill('input[name="password"], input[type="password"]:first-of-type', 'NewPassword123');
+    await page.fill('input[name="confirmPassword"], input[type="password"]:last-of-type', 'NewPassword123');
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(1000);
+
+    const resetError = await page.$('[role="alert"], [class*="error"]');
+    if (resetError) {
+      const resetErrorText = await resetError.textContent();
+      console.log(`  ✓ Reset password token error displayed: "${resetErrorText.trim()}"`);
+    }
+
+    results.push({ test: 'Reset Password Token', status: 'PASS', details: 'Handled expired/invalid token' });
+
+  } catch (err) {
+    console.error('❌ AUTH SUITE ERROR:', err);
+    results.push({ test: 'Auth Suite', status: 'FAIL', details: err.message });
+  } finally {
+    await browser.close();
+  }
+
+  const passed = results.every(r => r.status === 'PASS');
+  console.log('\n--- Auth Suite Summary ---');
+  results.forEach(r => console.log(`  ${r.status === 'PASS' ? '✅' : '❌'} ${r.test}: ${r.details}`));
+  return { passed, results, errors: uncaughtErrors };
+}
+
+if (process.argv[1]?.endsWith('02_auth.mjs')) {
+  runAuthSuite().then(({ passed }) => {
+    process.exit(passed ? 0 : 1);
+  });
+}

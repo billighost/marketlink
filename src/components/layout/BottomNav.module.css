@@ -1,3 +1,7 @@
+/* ============================================================
+   MARKETLINK — BOTTOM NAV (PREMIUM MOBILE NAVIGATION)
+   ============================================================ */
+
 .nav {
   position: fixed;
   bottom: 0;
@@ -8,13 +12,15 @@
   backdrop-filter: blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
   border-top: 1px solid rgba(46, 43, 38, 0.08);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: env(safe-area-inset-bottom);
   box-shadow: 0 -4px 24px rgba(46, 43, 38, 0.06);
 }
+
 .list {
   display: flex;
   height: 60px;
 }
+
 .item {
   flex: 1;
   display: flex;
@@ -22,6 +28,7 @@
   justify-content: center;
   padding-block: var(--space-1);
 }
+
 .button {
   display: flex;
   flex-direction: column;
@@ -39,17 +46,22 @@
   touch-action: manipulation;
   border-radius: 0;
 }
+
 .button:focus-visible {
   outline: 2px solid #541722;
   outline-offset: -2px;
   border-radius: 8px;
 }
+
 .button:active {
   transform: scale(0.93);
 }
+
 .active {
   color: #541722;
 }
+
+/* Active indicator pill */
 .bar {
   position: absolute;
   top: 0;
@@ -61,10 +73,12 @@
   border-radius: 0 0 4px 4px;
   animation: barSlideIn 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 @keyframes barSlideIn {
   from { width: 0; opacity: 0; }
   to   { width: 28px; opacity: 1; }
 }
+
 .iconWrap {
   position: relative;
   z-index: 1;
@@ -74,14 +88,17 @@
   width: 28px;
   height: 28px;
 }
+
 .active .iconWrap {
   animation: iconBounce 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 @keyframes iconBounce {
   0%   { transform: scale(1); }
   50%  { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
+
 .badge {
   position: absolute;
   top: -4px;
@@ -100,10 +117,12 @@
   border: 2px solid rgba(255, 252, 250, 0.97);
   animation: badgePop 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 @keyframes badgePop {
   from { transform: scale(0); }
   to   { transform: scale(1); }
 }
+
 .unreadDot {
   position: absolute;
   top: -2px;
@@ -113,6 +132,7 @@
   border-radius: var(--radius-full);
   background-color: var(--color-beet);
 }
+
 .label {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.68rem;
@@ -120,9 +140,12 @@
   line-height: 1;
   transition: font-weight 180ms ease;
 }
+
 .active .label {
   font-weight: 700;
 }
+
+/* Desktop: hide bottom nav */
 @media (min-width: 1024px) {
   .nav {
     display: none;

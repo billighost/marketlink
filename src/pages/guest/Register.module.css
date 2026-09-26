@@ -1,3 +1,7 @@
+/* ==========================================================================
+   Register.module.css — Luxury Editorial Split-Screen Styling for Registration
+   ========================================================================== */
+
 .registerPage {
   min-height: calc(100vh - 140px);
   background-color: #faf8f5;
@@ -6,6 +10,7 @@
   justify-content: center;
   padding: clamp(20px, 1.5rem + 1.5vw, 48px) 16px;
 }
+
 .registerContainer {
   width: 100%;
   max-width: 1080px;
@@ -17,23 +22,28 @@
   grid-template-columns: 1fr;
   box-shadow: 0 10px 40px rgba(46, 43, 38, 0.08);
 }
+
 @media (min-width: 900px) {
   .registerContainer {
     grid-template-columns: 1fr 1.25fr;
     min-height: 660px;
   }
 }
+
+/* ─── LEFT SHOWCASE PANEL ────────────────────────────────────────── */
 .showcasePanel {
   position: relative;
   display: none;
   background-color: #3e0e16;
   overflow: hidden;
 }
+
 @media (min-width: 900px) {
   .showcasePanel {
     display: flex;
   }
 }
+
 .showcaseBgImg {
   position: absolute;
   inset: 0;
@@ -43,6 +53,7 @@
   opacity: 0.38;
   filter: saturate(1.1);
 }
+
 .showcaseOverlay {
   position: relative;
   z-index: 1;
@@ -55,14 +66,17 @@
   justify-content: space-between;
   color: #ffffff;
 }
+
 .showcaseTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
 .showcaseLogoWrap {
   filter: brightness(0) invert(1);
 }
+
 .showcaseBadge {
   display: inline-flex;
   align-items: center;
@@ -78,10 +92,12 @@
   border-radius: 999px;
   backdrop-filter: blur(4px);
 }
+
 .showcaseQuoteBlock {
   margin-block: auto;
   padding-block: 24px;
 }
+
 .showcaseHeading {
   font-family: Georgia, 'Playfair Display', serif;
   font-size: 1.45rem;
@@ -90,6 +106,7 @@
   color: #faede9;
   margin: 0 0 10px 0;
 }
+
 .showcaseLead {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.84rem;
@@ -97,11 +114,13 @@
   color: #d8c2b7;
   margin: 0 0 24px 0;
 }
+
 .showcasePoints {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
 .showcasePoint {
   display: flex;
   align-items: center;
@@ -110,14 +129,17 @@
   font-size: 0.8rem;
   color: #efe5df;
 }
+
 .pointCheck {
   color: #55d66d;
   flex-shrink: 0;
 }
+
 .showcaseFooter {
   padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
+
 .footerStepIndicator {
   display: flex;
   align-items: center;
@@ -126,10 +148,12 @@
   font-size: 0.74rem;
   color: #d8c2b7;
 }
+
 .stepProgressDots {
   display: flex;
   gap: 6px;
 }
+
 .dot {
   width: 8px;
   height: 8px;
@@ -137,27 +161,33 @@
   background-color: rgba(255, 255, 255, 0.25);
   transition: all 180ms ease;
 }
+
 .dotActive {
   background-color: #ffffff;
   transform: scale(1.2);
 }
+
+/* ─── RIGHT FORM PANEL ───────────────────────────────────────────── */
 .formPanel {
   padding: clamp(28px, 1.5rem + 2vw, 48px);
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
+
 .formInner {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
 }
+
 .navRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
 }
+
 .backBtn {
   display: inline-flex;
   align-items: center;
@@ -173,9 +203,11 @@
   padding: 0;
   transition: color 120ms ease;
 }
+
 .backBtn:hover {
   color: #541722;
 }
+
 .stepCounterText {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.72rem;
@@ -184,9 +216,11 @@
   letter-spacing: 0.05em;
   color: #8c3f20;
 }
+
 .formHeader {
   margin-bottom: 22px;
 }
+
 .formKicker {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.72rem;
@@ -197,6 +231,7 @@
   display: block;
   margin-bottom: 4px;
 }
+
 .formTitle {
   font-family: Georgia, 'Playfair Display', serif;
   font-size: clamp(1.4rem, 1.15rem + 0.9vw, 1.85rem);
@@ -205,6 +240,7 @@
   line-height: 1.25;
   margin: 0 0 6px 0;
 }
+
 .formSubtitle {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.82rem;
@@ -212,16 +248,20 @@
   line-height: 1.5;
   margin: 0;
 }
+
+/* ─── STEP 1: ROLE SELECTION CARDS ───────────────────────────────── */
 .roleSelectionForm {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
+
 .roleCardsGrid {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
 .roleOptionCard {
   background-color: #faf8f5;
   border: 1.5px solid #ebdcd5;
@@ -234,21 +274,25 @@
   transition: all 150ms ease;
   position: relative;
 }
+
 .roleOptionCard:hover {
   background-color: #ffffff;
   border-color: #541722;
   box-shadow: 0 4px 14px rgba(84, 23, 34, 0.08);
 }
+
 .roleOptionActive {
   background-color: #fdf8f7;
   border-color: #541722;
   box-shadow: 0 4px 16px rgba(84, 23, 34, 0.12);
 }
+
 .roleRadioHidden {
   position: absolute;
   opacity: 0;
   pointer-events: none;
 }
+
 .roleIconBox {
   width: 44px;
   height: 44px;
@@ -260,29 +304,35 @@
   justify-content: center;
   flex-shrink: 0;
 }
+
 .roleOptionActive .roleIconBox {
   background-color: #541722;
   color: #ffffff;
 }
+
 .roleCardText {
   flex: 1;
 }
+
 .roleTitleRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
 }
+
 .roleCardTitle {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.875rem;
   font-weight: 700;
   color: #24201c;
 }
+
 .roleActiveCheck {
   color: #541722;
   flex-shrink: 0;
 }
+
 .roleCardDesc {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.76rem;
@@ -290,6 +340,7 @@
   color: #6b6259;
   margin: 0;
 }
+
 .continueBtn {
   display: inline-flex;
   align-items: center;
@@ -308,11 +359,13 @@
   box-shadow: 0 4px 12px rgba(84, 23, 34, 0.2);
   transition: all 150ms ease;
 }
+
 .continueBtn:hover {
   background-color: #3e0e16;
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(84, 23, 34, 0.28);
 }
+
 .formFooterPrompt {
   text-align: center;
   font-family: var(--font-body, 'Inter', sans-serif);
@@ -320,46 +373,57 @@
   color: #7d7266;
   margin-top: 4px;
 }
+
 .formFooterPrompt p {
   margin: 0;
 }
+
 .loginLink {
   color: #541722;
   font-weight: 700;
   text-decoration: none;
 }
+
 .loginLink:hover {
   text-decoration: underline;
 }
+
+/* ─── STEP 2: DETAILS FORM ───────────────────────────────────────── */
 .detailsForm {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
 .twoFieldsGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
 }
+
 @media (min-width: 600px) {
   .twoFieldsGrid {
     grid-template-columns: 1fr 1fr;
   }
 }
+
 .fieldGroup {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
+
 .fieldLabel {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.76rem;
   font-weight: 600;
   color: #2e2b26;
 }
+
 .requiredStar {
   color: #c0392b;
 }
+
 .inputWrapper {
   display: flex;
   align-items: center;
@@ -369,20 +433,24 @@
   padding: 2px 12px;
   transition: all 120ms ease;
 }
+
 .inputWrapper:focus-within {
   background-color: #ffffff;
   border-color: #541722;
   box-shadow: 0 0 0 3px rgba(84, 23, 34, 0.1);
 }
+
 .inputError {
   border-color: #c0392b !important;
   background-color: #fff9f9 !important;
 }
+
 .fieldIcon {
   color: #8c8175;
   flex-shrink: 0;
   margin-right: 8px;
 }
+
 .textInput,
 .selectInput {
   flex: 1;
@@ -395,6 +463,7 @@
   padding: 8px 0;
   min-width: 0;
 }
+
 .textInput:focus,
 .textInput:focus-visible,
 .selectInput:focus,
@@ -404,9 +473,11 @@
   outline-offset: 0 !important;
   box-shadow: none !important;
 }
+
 .selectInput {
   cursor: pointer;
 }
+
 .togglePasswordBtn {
   background: transparent;
   border: none;
@@ -417,18 +488,22 @@
   align-items: center;
   justify-content: center;
 }
+
 .togglePasswordBtn:hover {
   color: #24201c;
 }
+
 .errorText {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.68rem;
   color: #c0392b;
   font-weight: 500;
 }
+
 .termsRow {
   margin-top: 4px;
 }
+
 .checkboxLabel {
   display: inline-flex;
   align-items: flex-start;
@@ -440,6 +515,7 @@
   color: #544d45;
   user-select: none;
 }
+
 .checkboxInput {
   accent-color: #541722;
   width: 15px;
@@ -448,6 +524,7 @@
   cursor: pointer;
   flex-shrink: 0;
 }
+
 .submitBtn {
   display: inline-flex;
   align-items: center;
@@ -467,15 +544,19 @@
   transition: all 150ms ease;
   margin-top: 6px;
 }
+
 .submitBtn:hover:not(:disabled) {
   background-color: #3e0e16;
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(84, 23, 34, 0.28);
 }
+
 .submitBtn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+/* ─── STEP 3: SUCCESS CELEBRATION ────────────────────────────────── */
 .successBlock {
   display: flex;
   flex-direction: column;
@@ -484,6 +565,7 @@
   padding: clamp(24px, 1rem + 2vw, 40px) 16px;
   animation: fadeIn 220ms ease;
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -494,6 +576,7 @@
     transform: translateY(0);
   }
 }
+
 .successIconBubble {
   width: 72px;
   height: 72px;
@@ -505,6 +588,7 @@
   justify-content: center;
   margin-bottom: 16px;
 }
+
 .successHeading {
   font-family: Georgia, 'Playfair Display', serif;
   font-size: 1.55rem;
@@ -512,6 +596,7 @@
   color: #24201c;
   margin: 0 0 8px 0;
 }
+
 .successBadgePill {
   display: inline-block;
   font-family: var(--font-body, 'Inter', sans-serif);
@@ -523,6 +608,7 @@
   border-radius: 999px;
   margin-bottom: 16px;
 }
+
 .successMessage {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.875rem;
@@ -531,6 +617,7 @@
   max-width: 440px;
   margin: 0 0 28px 0;
 }
+
 .successActionButtons {
   display: flex;
   align-items: center;
@@ -538,6 +625,7 @@
   flex-wrap: wrap;
   justify-content: center;
 }
+
 .successPrimaryBtn {
   display: inline-flex;
   align-items: center;
@@ -553,9 +641,11 @@
   box-shadow: 0 4px 12px rgba(84, 23, 34, 0.2);
   transition: all 120ms ease;
 }
+
 .successPrimaryBtn:hover {
   background-color: #3e0e16;
 }
+
 .successSecondaryBtn {
   display: inline-flex;
   align-items: center;
@@ -570,6 +660,7 @@
   text-decoration: none;
   transition: all 120ms ease;
 }
+
 .successSecondaryBtn:hover {
   background-color: #faede9;
 }

@@ -50,10 +50,13 @@
   margin: 0;
 }
 
-.headerSubtitle {
+.headerDate {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: var(--text-xs);
   color: var(--color-ink-soft);
-  margin: 2px 0 0;
+  margin: 4px 0 0;
 }
 
 /* ---- Body ---- */
@@ -88,27 +91,15 @@
 }
 
 .summaryTotal {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
-  color: var(--color-beet-dark);
+  color: var(--color-ink);
   margin-left: auto;
 }
 
 /* ---- Map ---- */
 .mapSection {
   border-bottom: 1px solid var(--color-border);
-  position: relative;
-}
-
-.mapTip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--color-card);
-  font-size: var(--text-xs);
-  color: var(--color-ink-soft);
-  border-top: 1px solid var(--color-border);
 }
 
 /* ---- Itinerary ---- */
@@ -117,14 +108,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-}
-
-.itineraryHeading {
-  font-family: var(--font-head);
-  font-size: var(--text-h4);
-  font-weight: var(--weight-head);
-  color: var(--color-ink);
-  margin: 0;
 }
 
 /* Market section */
@@ -138,7 +121,6 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-  padding-bottom: var(--space-2);
 }
 
 .marketIconWrap {
@@ -155,16 +137,16 @@
 
 .marketName {
   font-family: var(--font-head);
-  font-size: var(--text-base);
+  font-size: var(--text-h4);
   font-weight: var(--weight-head);
   color: var(--color-ink);
   margin: 0;
 }
 
 .marketAddress {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-ink-soft);
-  margin: 2px 0 0;
+  margin: 3px 0 0;
 }
 
 /* Farmers list (vertical timeline) */
@@ -182,21 +164,8 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-  padding: var(--space-3);
+  padding: var(--space-3) 0;
   position: relative;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-  margin-bottom: var(--space-2);
-}
-
-.farmerStop:hover {
-  background: var(--color-wood-tint);
-}
-
-.farmerStopSelected {
-  background: var(--color-beet-tint);
-  box-shadow: 0 0 0 1.5px var(--color-beet);
 }
 
 /* Stop badge on the timeline */
@@ -210,7 +179,7 @@
   background: var(--color-beet);
   color: #fff;
   font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-semibold);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -221,85 +190,35 @@
 .stopContent {
   flex: 1;
   min-width: 0;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.stopHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
+.farmerStop:last-child .stopContent {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .farmerName {
   font-size: var(--text-body);
   font-weight: var(--weight-semibold);
   color: var(--color-ink);
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-1);
 }
 
-.stallPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--color-wood-line);
-  color: var(--color-ink);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  padding: 2px 7px;
-  border-radius: var(--radius-full);
-}
-
-.ratingBadge {
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  color: #b45309;
-  background: #fef3c7;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  white-space: nowrap;
-}
-
-.stopTimingRow {
+.stopMeta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
   margin-bottom: var(--space-2);
 }
 
-.timingMeta {
+.stopMetaItem {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: var(--text-xs);
   color: var(--color-ink-soft);
-}
-
-/* Preferred window selector */
-.windowSelectWrap {
-  margin-bottom: var(--space-3);
-  background: var(--color-card);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-}
-
-.windowLabel {
-  display: block;
-  font-size: 11px;
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  margin-bottom: 4px;
-}
-
-.windowSelect {
-  width: 100%;
-  font-size: var(--text-xs);
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg);
-  color: var(--color-ink);
 }
 
 /* Items at stop */
@@ -310,19 +229,16 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: var(--color-canvas);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
 }
 
 .stopItem {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
 }
 
-.stopItemName { flex: 1; color: var(--color-ink); font-weight: var(--weight-medium); }
+.stopItemName { flex: 1; color: var(--color-ink); }
 .stopItemDetail { color: var(--color-ink-faint); }
 .stopItemPrice { font-weight: var(--weight-semibold); color: var(--color-ink); }
 
@@ -330,7 +246,7 @@
 .directionsLink {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
   color: var(--color-beet);
@@ -347,19 +263,14 @@
   gap: var(--space-3);
   align-items: center;
   border-top: 1px solid var(--color-border);
-  background: var(--color-card);
 }
 
-.primaryActionBtn {
+.viewOrdersBtn {
   width: 100%;
-  max-width: 420px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  max-width: 400px;
 }
 
-.secondaryActionBtn {
+.newBasketBtn {
   background: none;
   border: none;
   color: var(--color-beet);
@@ -369,7 +280,7 @@
   padding: var(--space-2);
   text-decoration: underline;
 }
-.secondaryActionBtn:hover { color: var(--color-beet-dark); }
+.newBasketBtn:hover { color: var(--color-beet-dark); }
 
 /* ---- Responsive ---- */
 @media (max-width: 480px) {

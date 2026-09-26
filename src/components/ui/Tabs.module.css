@@ -1,1 +1,55 @@
-.tabs {  display: flex;  border-bottom: var(--border);  gap: var(--space-4);  overflow-x: auto;  scrollbar-width: none;}.tabs::-webkit-scrollbar {  display: none;}.tab {  display: flex;  align-items: center;  justify-content: center;  gap: var(--space-2);  min-height: var(--tap-min);  min-width: var(--tap-min);  padding: var(--space-2) var(--space-3);  font-family: var(--font-body);  font-size: var(--text-sm);  font-weight: var(--weight-medium);  color: var(--color-ink-soft);  cursor: pointer;  white-space: nowrap;  border-bottom: 2px solid transparent;  margin-bottom: -1px;  transition: color var(--duration-fast) var(--ease-standard),              border-color var(--duration-fast) var(--ease-standard);}.tab:hover {  color: var(--color-ink);}.tab:focus-visible {  outline: var(--focus-ring);  outline-offset: var(--focus-offset);}.active {  color: var(--color-beet);  border-bottom-color: var(--color-beet);}.count {  font-size: var(--text-xs);  color: var(--color-ink-faint);}.active .count {  color: var(--color-beet);}
+/* Tabs — view switcher */
+.tabs {
+  display: flex;
+  border-bottom: var(--border);
+  gap: var(--space-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
+}
+
+.tab:hover {
+  color: var(--color-ink);
+}
+
+.tab:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.active {
+  color: var(--color-beet);
+  border-bottom-color: var(--color-beet);
+}
+
+.count {
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+}
+
+.active .count {
+  color: var(--color-beet);
+}

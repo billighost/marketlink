@@ -1,1 +1,189 @@
-import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { ObjectId } from 'mongodb';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';import { COLLECTIONS } from '../src/db/collections.js';import bcrypt from 'bcryptjs';describe('RBAC Matrix Suite (T4.276 - T4.285)', () => {  let db;  let tokens = {    anonymous: null,    customer: null,    farmerPending: null,    farmerActive: null,    admin: null,  };  before(async () => {    const env = await setupTestEnvironment();    db = env.db;    const adminLogin = await loginUser('admin@marketlink.test', 'Admin12345');    tokens.admin = adminLogin.accessToken;    const custLogin = await loginUser('george@example.com', 'market123');    tokens.customer = custLogin.accessToken;    const farmerLogin = await loginUser('riverbend@example.com', 'market123');    tokens.farmerActive = farmerLogin.accessToken;    const pendingEmail = `pending.rbac.${Date.now()}@example.com`;    const pendingUserId = new ObjectId();    const pendingFarmerId = new ObjectId();    const pwHash = await bcrypt.hash('market123', 10);    await db.collection(COLLECTIONS.USERS).insertOne({      _id: pendingUserId,      role: 'farmer',      name: 'Pending RBAC Farmer',      email: pendingEmail,      passwordHash: pwHash,      status: 'pending',      createdAt: new Date(),      updatedAt: new Date(),    });    await db.collection(COLLECTIONS.FARMERS).insertOne({      _id: pendingFarmerId,      userId: pendingUserId,      stallName: 'Pending RBAC Stall',      stallNameLower: 'pending rbac stall',      email: pendingEmail,      listingEnabled: false,      marketIds: [],      createdAt: new Date(),      updatedAt: new Date(),    });    const pendingLogin = await loginUser(pendingEmail, 'market123');    tokens.farmerPending = pendingLogin.accessToken;  });  after(async () => {    await teardownTestEnvironment();  });  const farmerRoutes = [    { method: 'GET', path: '/api/farmer/profile' },    { method: 'GET', path: '/api/farmer/slots' },    { method: 'GET', path: '/api/farmer/products' },    { method: 'GET', path: '/api/farmer/weekly-template' },    { method: 'GET', path: '/api/farmer/orders' },    { method: 'GET', path: '/api/farmer/reviews' },    { method: 'GET', path: '/api/farmer/insights' },    { method: 'GET', path: '/api/farmer/overview' },  ];  const adminRoutes = [    { method: 'GET', path: '/api/admin/overview' },    { method: 'GET', path: '/api/admin/farmers' },    { method: 'GET', path: '/api/admin/customers' },    { method: 'GET', path: '/api/admin/moderation' },    { method: 'GET', path: '/api/admin/categories' },    { method: 'GET', path: '/api/admin/announcements' },    { method: 'GET', path: '/api/admin/settings' },    { method: 'GET', path: '/api/admin/messages' },    { method: 'GET', path: '/api/admin/reports/summary' },  ];  it('T4.276: Anonymous requests receive 401 UNAUTHORIZED on all protected routes', async () => {    for (const r of [...farmerRoutes, ...adminRoutes]) {      const res = await request(r.path, { method: r.method });      assert.equal(res.status, 401, `Expected 401 for anonymous on ${r.method} ${r.path}, got ${res.status}`);    }  });  it('T4.277: Customer receives 403 FORBIDDEN on all farmer and admin routes', async () => {    for (const r of [...farmerRoutes, ...adminRoutes]) {      const res = await request(r.path, {        method: r.method,        headers: { Authorization: `Bearer ${tokens.customer}` },      });      assert.equal(res.status, 403, `Expected 403 for customer on ${r.method} ${r.path}, got ${res.status}`);    }  });  it('T4.278: Farmer (active) receives 403 FORBIDDEN on all admin routes', async () => {    for (const r of adminRoutes) {      const res = await request(r.path, {        method: r.method,        headers: { Authorization: `Bearer ${tokens.farmerActive}` },      });      assert.equal(res.status, 403, `Expected 403 for active farmer on ${r.method} ${r.path}, got ${res.status}`);    }  });  it('T4.279: Farmer (active) successfully accesses all farmer routes', async () => {    for (const r of farmerRoutes) {      const res = await request(r.path, {        method: r.method,        headers: { Authorization: `Bearer ${tokens.farmerActive}` },      });      assert.equal(res.status, 200, `Expected 200 for active farmer on ${r.method} ${r.path}, got ${res.status}`);    }  });  it('T4.280: Farmer (pending) can read profile, but receives 403 FARMER_NOT_APPROVED on mutating catalog/slots routes', async () => {    const profRes = await request('/api/farmer/profile', {      headers: { Authorization: `Bearer ${tokens.farmerPending}` },    });    assert.equal(profRes.status, 200);    const prodRes = await request('/api/farmer/products', {      method: 'POST',      headers: { Authorization: `Bearer ${tokens.farmerPending}` },      body: {        name: 'Pending Product',        categoryId: new ObjectId(),        priceCents: 400,        unit: 'lb',        quantityAvailable: 10,      },    });    assert.equal(prodRes.status, 403);    const prodBody = await prodRes.json();    assert.equal(prodBody.error?.code, 'FARMER_NOT_APPROVED');    for (const r of adminRoutes) {      const res = await request(r.path, {        method: r.method,        headers: { Authorization: `Bearer ${tokens.farmerPending}` },      });      assert.equal(res.status, 403);    }  });  it('T4.281: Admin receives 403 on farmer routes, and 200 on all admin routes', async () => {    for (const r of farmerRoutes) {      const res = await request(r.path, {        method: r.method,        headers: { Authorization: `Bearer ${tokens.admin}` },      });      assert.equal(res.status, 403, `Expected 403 for admin on farmer route ${r.path}`);    }    for (const r of adminRoutes) {      const res = await request(r.path, {        method: r.method,        headers: { Authorization: `Bearer ${tokens.admin}` },      });      assert.equal(res.status, 200, `Expected 200 for admin on admin route ${r.path}`);    }  });});
+/**
+ * RBAC Matrix Test Suite (T4.276 - T4.285)
+ * Systematically tests every /api/farmer/* and /api/admin/* route across:
+ * { no token, customer, farmer (pending), farmer (active), admin }
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { ObjectId } from 'mongodb';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+import bcrypt from 'bcryptjs';
+
+describe('RBAC Matrix Suite (T4.276 - T4.285)', () => {
+  let db;
+  let tokens = {
+    anonymous: null,
+    customer: null,
+    farmerPending: null,
+    farmerActive: null,
+    admin: null,
+  };
+
+  before(async () => {
+    const env = await setupTestEnvironment();
+    db = env.db;
+
+    // 1. Admin login
+    const adminLogin = await loginUser('admin@marketlink.test', 'Admin12345');
+    tokens.admin = adminLogin.accessToken;
+
+    // 2. Active Customer login
+    const custLogin = await loginUser('george@example.com', 'market123');
+    tokens.customer = custLogin.accessToken;
+
+    // 3. Active Farmer login
+    const farmerLogin = await loginUser('riverbend@example.com', 'market123');
+    tokens.farmerActive = farmerLogin.accessToken;
+
+    // 4. Pending Farmer creation & login
+    const pendingEmail = `pending.rbac.${Date.now()}@example.com`;
+    const pendingUserId = new ObjectId();
+    const pendingFarmerId = new ObjectId();
+    const pwHash = await bcrypt.hash('market123', 10);
+
+    await db.collection(COLLECTIONS.USERS).insertOne({
+      _id: pendingUserId,
+      role: 'farmer',
+      name: 'Pending RBAC Farmer',
+      email: pendingEmail,
+      passwordHash: pwHash,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await db.collection(COLLECTIONS.FARMERS).insertOne({
+      _id: pendingFarmerId,
+      userId: pendingUserId,
+      stallName: 'Pending RBAC Stall',
+      stallNameLower: 'pending rbac stall',
+      email: pendingEmail,
+      listingEnabled: false,
+      marketIds: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const pendingLogin = await loginUser(pendingEmail, 'market123');
+    tokens.farmerPending = pendingLogin.accessToken;
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
+  });
+
+  const farmerRoutes = [
+    { method: 'GET', path: '/api/farmer/profile' },
+    { method: 'GET', path: '/api/farmer/slots' },
+    { method: 'GET', path: '/api/farmer/products' },
+    { method: 'GET', path: '/api/farmer/weekly-template' },
+    { method: 'GET', path: '/api/farmer/orders' },
+    { method: 'GET', path: '/api/farmer/reviews' },
+    { method: 'GET', path: '/api/farmer/insights' },
+    { method: 'GET', path: '/api/farmer/overview' },
+  ];
+
+  const adminRoutes = [
+    { method: 'GET', path: '/api/admin/overview' },
+    { method: 'GET', path: '/api/admin/farmers' },
+    { method: 'GET', path: '/api/admin/customers' },
+    { method: 'GET', path: '/api/admin/moderation' },
+    { method: 'GET', path: '/api/admin/categories' },
+    { method: 'GET', path: '/api/admin/announcements' },
+    { method: 'GET', path: '/api/admin/settings' },
+    { method: 'GET', path: '/api/admin/messages' },
+    { method: 'GET', path: '/api/admin/reports/summary' },
+  ];
+
+  it('T4.276: Anonymous requests receive 401 UNAUTHORIZED on all protected routes', async () => {
+    for (const r of [...farmerRoutes, ...adminRoutes]) {
+      const res = await request(r.path, { method: r.method });
+      assert.equal(res.status, 401, `Expected 401 for anonymous on ${r.method} ${r.path}, got ${res.status}`);
+    }
+  });
+
+  it('T4.277: Customer receives 403 FORBIDDEN on all farmer and admin routes', async () => {
+    for (const r of [...farmerRoutes, ...adminRoutes]) {
+      const res = await request(r.path, {
+        method: r.method,
+        headers: { Authorization: `Bearer ${tokens.customer}` },
+      });
+      assert.equal(res.status, 403, `Expected 403 for customer on ${r.method} ${r.path}, got ${res.status}`);
+    }
+  });
+
+  it('T4.278: Farmer (active) receives 403 FORBIDDEN on all admin routes', async () => {
+    for (const r of adminRoutes) {
+      const res = await request(r.path, {
+        method: r.method,
+        headers: { Authorization: `Bearer ${tokens.farmerActive}` },
+      });
+      assert.equal(res.status, 403, `Expected 403 for active farmer on ${r.method} ${r.path}, got ${res.status}`);
+    }
+  });
+
+  it('T4.279: Farmer (active) successfully accesses all farmer routes', async () => {
+    for (const r of farmerRoutes) {
+      const res = await request(r.path, {
+        method: r.method,
+        headers: { Authorization: `Bearer ${tokens.farmerActive}` },
+      });
+      assert.equal(res.status, 200, `Expected 200 for active farmer on ${r.method} ${r.path}, got ${res.status}`);
+    }
+  });
+
+  it('T4.280: Farmer (pending) can read profile, but receives 403 FARMER_NOT_APPROVED on mutating catalog/slots routes', async () => {
+    // 1. Pending farmer can read profile
+    const profRes = await request('/api/farmer/profile', {
+      headers: { Authorization: `Bearer ${tokens.farmerPending}` },
+    });
+    assert.equal(profRes.status, 200);
+
+    // 2. Pending farmer receives 403 FARMER_NOT_APPROVED when attempting to create a product
+    const prodRes = await request('/api/farmer/products', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tokens.farmerPending}` },
+      body: {
+        name: 'Pending Product',
+        categoryId: new ObjectId(),
+        priceCents: 400,
+        unit: 'lb',
+        quantityAvailable: 10,
+      },
+    });
+    assert.equal(prodRes.status, 403);
+    const prodBody = await prodRes.json();
+    assert.equal(prodBody.error?.code, 'FARMER_NOT_APPROVED');
+
+    // 3. Pending farmer cannot access admin routes
+    for (const r of adminRoutes) {
+      const res = await request(r.path, {
+        method: r.method,
+        headers: { Authorization: `Bearer ${tokens.farmerPending}` },
+      });
+      assert.equal(res.status, 403);
+    }
+  });
+
+  it('T4.281: Admin receives 403 on farmer routes, and 200 on all admin routes', async () => {
+    // Admin on farmer routes -> 403
+    for (const r of farmerRoutes) {
+      const res = await request(r.path, {
+        method: r.method,
+        headers: { Authorization: `Bearer ${tokens.admin}` },
+      });
+      assert.equal(res.status, 403, `Expected 403 for admin on farmer route ${r.path}`);
+    }
+
+    // Admin on admin routes -> 200
+    for (const r of adminRoutes) {
+      const res = await request(r.path, {
+        method: r.method,
+        headers: { Authorization: `Bearer ${tokens.admin}` },
+      });
+      assert.equal(res.status, 200, `Expected 200 for admin on admin route ${r.path}`);
+    }
+  });
+});

@@ -1,1 +1,220 @@
-import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';describe('Security Hardening Suite', () => {  before(async () => {    await setupTestEnvironment();  });  after(async () => {    await teardownTestEnvironment();  });  describe('RBAC Route Guard Demonstration', () => {    it('blocks unauthenticated requests to protected ping route with 401 UNAUTHENTICATED', async () => {      const res = await request('/api/auth/_ping/farmer');      assert.equal(res.status, 401);      const body = await res.json();      assert.equal(body.error.code, 'UNAUTHENTICATED');    });    it('blocks Customer attempting to access Farmer route with 403 FORBIDDEN', async () => {      const customerLogin = await loginUser('george@example.com', 'market123');      const res = await request('/api/auth/_ping/farmer', {        headers: {          Authorization: `Bearer ${customerLogin.accessToken}`,        },      });      assert.equal(res.status, 403);      const body = await res.json();      assert.equal(body.error.code, 'FORBIDDEN');    });    it('allows Farmer to access Farmer route with 200 OK', async () => {      const farmerLogin = await loginUser('riverbend@example.com', 'market123');      const res = await request('/api/auth/_ping/farmer', {        headers: {          Authorization: `Bearer ${farmerLogin.accessToken}`,        },      });      assert.equal(res.status, 200);      const body = await res.json();      assert.equal(body.data.ok, true);    });    it('allows Admin to access Admin route with 200 OK', async () => {      const adminLogin = await loginUser('admin@marketlink.test', 'Admin12345');      const res = await request('/api/auth/_ping/admin', {        headers: {          Authorization: `Bearer ${adminLogin.accessToken}`,        },      });      assert.equal(res.status, 200);      const body = await res.json();      assert.equal(body.data.ok, true);    });  });  describe('NoSQL Operator Injection Defense', () => {    it('rejects body containing {$gt: ""} with 400 BAD_JSON', async () => {      const res = await request('/api/auth/login', {        method: 'POST',        headers: { 'Content-Type': 'application/json' },        body: JSON.stringify({          email: { $gt: '' },          password: 'Password123',        }),      });      assert.equal(res.status, 400);      const body = await res.json();      assert.equal(body.error.code, 'BAD_JSON');    });    it('rejects body containing $where operator with 400 BAD_JSON', async () => {      const res = await request('/api/auth/login', {        method: 'POST',        headers: { 'Content-Type': 'application/json' },        body: JSON.stringify({          $where: 'function() { return true; }',          password: 'Password123',        }),      });      assert.equal(res.status, 400);      const body = await res.json();      assert.equal(body.error.code, 'BAD_JSON');    });    it('rejects query string operator injection ?email[$ne]=x with 400 BAD_JSON', async () => {      const res = await request('/api/health?email[$ne]=test');      assert.equal(res.status, 400);      const body = await res.json();      assert.equal(body.error.code, 'BAD_JSON');    });  });  describe('Malformed Payloads & Body Size Limits', () => {    it('returns 400 BAD_JSON on malformed JSON syntax', async () => {      const res = await request('/api/auth/login', {        method: 'POST',        headers: { 'Content-Type': 'application/json' },        body: '{"email": "broken_json...',      });      assert.equal(res.status, 400);      const body = await res.json();      assert.equal(body.error.code, 'BAD_JSON');    });    it('returns 413 PAYLOAD_TOO_LARGE when payload exceeds 100kb', async () => {      const hugeString = 'x'.repeat(105 * 1024);       const res = await request('/api/contact', {        method: 'POST',        headers: { 'Content-Type': 'application/json' },        body: JSON.stringify({          name: 'Heavy Request',          email: 'heavy@example.com',          topic: 'feedback',          message: hugeString,        }),      });      assert.equal(res.status, 413);      const body = await res.json();      assert.equal(body.error.code, 'PAYLOAD_TOO_LARGE');    });  });  describe('Security Headers & CORS Policy', () => {    it('sets essential Helmet security headers', async () => {      const res = await request('/api/health');      assert.equal(res.headers.get('x-content-type-options'), 'nosniff');      assert.equal(res.headers.get('x-frame-options'), 'SAMEORIGIN');      assert.equal(res.headers.get('x-powered-by'), null, 'x-powered-by must be disabled');    });    it('allows CORS from configured origin and sends credentials header', async () => {      const res = await request('/api/health', {        headers: {          Origin: 'http://localhost:5173',        },      });      assert.equal(res.headers.get('access-control-allow-origin'), 'http://localhost:5173');      assert.equal(res.headers.get('access-control-allow-credentials'), 'true');    });    it('does not reflect disallowed origins in Access-Control-Allow-Origin', async () => {      const res = await request('/api/health', {        headers: {          Origin: 'http://malicious-site.example',        },      });      assert.notEqual(res.headers.get('access-control-allow-origin'), 'http://malicious-site.example');    });  });  describe('Login Brute-Force Rate Limiting', () => {    it('returns 429 RATE_LIMITED after exceeding login attempt threshold', async () => {      const headers = {        'x-enable-rate-limit': 'true',        'Content-Type': 'application/json',      };      const payload = {        email: 'attacker@example.com',        password: 'bad-password',      };      let hit429 = false;      for (let i = 0; i < 12; i++) {        const res = await request('/api/auth/login', {          method: 'POST',          headers,          body: payload,        });        if (res.status === 429) {          hit429 = true;          const body = await res.json();          assert.equal(body.error.code, 'RATE_LIMITED');          break;        }      }      assert.ok(hit429, 'Must trigger 429 RATE_LIMITED after excessive login attempts');    });  });  describe('Information Disclosure & Stack Traces', () => {    it('never leaks stack traces in error bodies', async () => {      const res = await request('/api/auth/login', {        method: 'POST',        headers: { 'Content-Type': 'application/json' },        body: JSON.stringify({ email: 'bad' }),      });      const body = await res.json();      assert.equal(body.stack, undefined, 'stack trace must never leak');      assert.equal(body.error.stack, undefined, 'error stack must never leak');    });  });});
+/**
+ * Security and hardening test suite.
+ * Tests RBAC guards, NoSQL injection prevention, malformed JSON, payload size limits,
+ * Helmet security headers, CORS origin restrictions, rate limiting, and stack trace concealment.
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { setupTestEnvironment, teardownTestEnvironment, request, loginUser } from './helpers.js';
+
+describe('Security Hardening Suite', () => {
+  before(async () => {
+    await setupTestEnvironment();
+  });
+
+  after(async () => {
+    await teardownTestEnvironment();
+  });
+
+  // ── 1. Role-Based Access Control (RBAC) ──
+  describe('RBAC Route Guard Demonstration', () => {
+    it('blocks unauthenticated requests to protected ping route with 401 UNAUTHENTICATED', async () => {
+      const res = await request('/api/auth/_ping/farmer');
+      assert.equal(res.status, 401);
+      const body = await res.json();
+      assert.equal(body.error.code, 'UNAUTHENTICATED');
+    });
+
+    it('blocks Customer attempting to access Farmer route with 403 FORBIDDEN', async () => {
+      const customerLogin = await loginUser('george@example.com', 'market123');
+      const res = await request('/api/auth/_ping/farmer', {
+        headers: {
+          Authorization: `Bearer ${customerLogin.accessToken}`,
+        },
+      });
+
+      assert.equal(res.status, 403);
+      const body = await res.json();
+      assert.equal(body.error.code, 'FORBIDDEN');
+    });
+
+    it('allows Farmer to access Farmer route with 200 OK', async () => {
+      const farmerLogin = await loginUser('riverbend@example.com', 'market123');
+      const res = await request('/api/auth/_ping/farmer', {
+        headers: {
+          Authorization: `Bearer ${farmerLogin.accessToken}`,
+        },
+      });
+
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      assert.equal(body.data.ok, true);
+    });
+
+    it('allows Admin to access Admin route with 200 OK', async () => {
+      const adminLogin = await loginUser('admin@marketlink.test', 'Admin12345');
+      const res = await request('/api/auth/_ping/admin', {
+        headers: {
+          Authorization: `Bearer ${adminLogin.accessToken}`,
+        },
+      });
+
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      assert.equal(body.data.ok, true);
+    });
+  });
+
+  // ── 2. NoSQL Operator Injection Sanitization ──
+  describe('NoSQL Operator Injection Defense', () => {
+    it('rejects body containing {$gt: ""} with 400 BAD_JSON', async () => {
+      const res = await request('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: { $gt: '' },
+          password: 'Password123',
+        }),
+      });
+
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.equal(body.error.code, 'BAD_JSON');
+    });
+
+    it('rejects body containing $where operator with 400 BAD_JSON', async () => {
+      const res = await request('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          $where: 'function() { return true; }',
+          password: 'Password123',
+        }),
+      });
+
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.equal(body.error.code, 'BAD_JSON');
+    });
+
+    it('rejects query string operator injection ?email[$ne]=x with 400 BAD_JSON', async () => {
+      const res = await request('/api/health?email[$ne]=test');
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.equal(body.error.code, 'BAD_JSON');
+    });
+  });
+
+  // ── 3. Malformed JSON & Body Size Caps ──
+  describe('Malformed Payloads & Body Size Limits', () => {
+    it('returns 400 BAD_JSON on malformed JSON syntax', async () => {
+      const res = await request('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{"email": "broken_json...',
+      });
+
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.equal(body.error.code, 'BAD_JSON');
+    });
+
+    it('returns 413 PAYLOAD_TOO_LARGE when payload exceeds 100kb', async () => {
+      const hugeString = 'x'.repeat(105 * 1024); // 105kb
+      const res = await request('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Heavy Request',
+          email: 'heavy@example.com',
+          topic: 'feedback',
+          message: hugeString,
+        }),
+      });
+
+      assert.equal(res.status, 413);
+      const body = await res.json();
+      assert.equal(body.error.code, 'PAYLOAD_TOO_LARGE');
+    });
+  });
+
+  // ── 4. Headers & CORS ──
+  describe('Security Headers & CORS Policy', () => {
+    it('sets essential Helmet security headers', async () => {
+      const res = await request('/api/health');
+      assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+      assert.equal(res.headers.get('x-frame-options'), 'SAMEORIGIN');
+      assert.equal(res.headers.get('x-powered-by'), null, 'x-powered-by must be disabled');
+    });
+
+    it('allows CORS from configured origin and sends credentials header', async () => {
+      const res = await request('/api/health', {
+        headers: {
+          Origin: 'http://localhost:5173',
+        },
+      });
+
+      assert.equal(res.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+      assert.equal(res.headers.get('access-control-allow-credentials'), 'true');
+    });
+
+    it('does not reflect disallowed origins in Access-Control-Allow-Origin', async () => {
+      const res = await request('/api/health', {
+        headers: {
+          Origin: 'http://malicious-site.example',
+        },
+      });
+
+      assert.notEqual(res.headers.get('access-control-allow-origin'), 'http://malicious-site.example');
+    });
+  });
+
+  // ── 5. Login Rate Limiting ──
+  describe('Login Brute-Force Rate Limiting', () => {
+    it('returns 429 RATE_LIMITED after exceeding login attempt threshold', async () => {
+      const headers = {
+        'x-enable-rate-limit': 'true',
+        'Content-Type': 'application/json',
+      };
+      const payload = {
+        email: 'attacker@example.com',
+        password: 'bad-password',
+      };
+
+      // Login limit is 10 per 15 minutes.
+      let hit429 = false;
+      for (let i = 0; i < 12; i++) {
+        const res = await request('/api/auth/login', {
+          method: 'POST',
+          headers,
+          body: payload,
+        });
+
+        if (res.status === 429) {
+          hit429 = true;
+          const body = await res.json();
+          assert.equal(body.error.code, 'RATE_LIMITED');
+          break;
+        }
+      }
+
+      assert.ok(hit429, 'Must trigger 429 RATE_LIMITED after excessive login attempts');
+    });
+  });
+
+  // ── 6. Error Concealment ──
+  describe('Information Disclosure & Stack Traces', () => {
+    it('never leaks stack traces in error bodies', async () => {
+      const res = await request('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'bad' }),
+      });
+
+      const body = await res.json();
+      assert.equal(body.stack, undefined, 'stack trace must never leak');
+      assert.equal(body.error.stack, undefined, 'error stack must never leak');
+    });
+  });
+});

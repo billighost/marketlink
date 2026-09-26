@@ -1,1 +1,240 @@
-import { ObjectId } from 'mongodb';import { getDb } from '../../../db/client.js';import { COLLECTIONS } from '../../../db/collections.js';import { toObjectId } from '../../../utils/ids.js';import { AppError } from '../../../utils/errors.js';import { ALLOWED_ART_KEYS } from '../../../constants.js';import { syncCategoryRename } from '../../../utils/sync.js';import { writeAudit } from '../../../utils/audit.js';import { slugify } from '../markets/adminMarkets.service.js';export function toCategoryDto(c) {  return {    id: c._id.toString(),    name: c.name,    slug: c.slug,    sortOrder: c.sortOrder ?? 0,    art: c.art || '',    active: Boolean(c.active),  };}export async function listCategoriesAdmin() {  const db = getDb();  const categories = await db    .collection(COLLECTIONS.CATEGORIES)    .find({})    .sort({ sortOrder: 1, name: 1 })    .toArray();  return categories.map(toCategoryDto);}export async function createCategory(adminActor, body) {  if (!body || typeof body !== 'object') {    throw AppError.validation('Request body must be an object');  }  const { name, sortOrder, art, active } = body;  if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 40) {    throw AppError.validation('Name must be between 2 and 40 characters', { field: 'name' });  }  if (typeof sortOrder !== 'number' || !Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 999) {    throw AppError.validation('sortOrder must be an integer between 0 and 999', { field: 'sortOrder' });  }  if (typeof art !== 'string' || !ALLOWED_ART_KEYS.includes(art)) {    throw AppError.validation('art key must be a valid allowed art key', { field: 'art' });  }  const db = getDb();  const existing = await db.collection(COLLECTIONS.CATEGORIES).findOne({    name: { $regex: `^${name.trim()}$`, $options: 'i' },  });  if (existing) {    throw new AppError(409, 'CATEGORY_EXISTS', `A category named '${name.trim()}' already exists.`);  }  let baseSlug = slugify(name);  let slug = baseSlug;  let counter = 2;  while (await db.collection(COLLECTIONS.CATEGORIES).findOne({ slug })) {    slug = `${baseSlug}-${counter++}`;  }  const doc = {    _id: new ObjectId(),    name: name.trim(),    slug,    sortOrder,    art,    active: active !== undefined ? Boolean(active) : true,  };  await db.collection(COLLECTIONS.CATEGORIES).insertOne(doc);  await writeAudit(    adminActor,    'category.create',    { type: 'category', id: doc._id },    { name: doc.name, slug: doc.slug }  );  return toCategoryDto(doc);}export async function updateCategory(adminActor, categoryId, body) {  if (!categoryId || !ObjectId.isValid(categoryId)) {    throw AppError.notFound('Category not found');  }  const db = getDb();  const cid = toObjectId(categoryId);  const category = await db.collection(COLLECTIONS.CATEGORIES).findOne({ _id: cid });  if (!category) {    throw AppError.notFound('Category not found');  }  const updateFields = {};  if ('name' in body) {    if (typeof body.name !== 'string' || body.name.trim().length < 2 || body.name.trim().length > 40) {      throw AppError.validation('Name must be between 2 and 40 characters', { field: 'name' });    }    const trimmed = body.name.trim();    if (trimmed.toLowerCase() !== category.name.toLowerCase()) {      const existing = await db.collection(COLLECTIONS.CATEGORIES).findOne({        _id: { $ne: cid },        name: { $regex: `^${trimmed}$`, $options: 'i' },      });      if (existing) {        throw new AppError(409, 'CATEGORY_EXISTS', `Category '${trimmed}' already exists.`);      }      updateFields.name = trimmed;      let baseSlug = slugify(trimmed);      let slug = baseSlug;      let counter = 2;      while (await db.collection(COLLECTIONS.CATEGORIES).findOne({ _id: { $ne: cid }, slug })) {        slug = `${baseSlug}-${counter++}`;      }      updateFields.slug = slug;    }  }  if ('sortOrder' in body) {    if (typeof body.sortOrder !== 'number' || !Number.isInteger(body.sortOrder) || body.sortOrder < 0 || body.sortOrder > 999) {      throw AppError.validation('sortOrder must be an integer between 0 and 999', { field: 'sortOrder' });    }    updateFields.sortOrder = body.sortOrder;  }  if ('art' in body) {    if (typeof body.art !== 'string' || !ALLOWED_ART_KEYS.includes(body.art)) {      throw AppError.validation('art key must be a valid allowed art key', { field: 'art' });    }    updateFields.art = body.art;  }  if ('active' in body) {    updateFields.active = Boolean(body.active);  }  if (Object.keys(updateFields).length > 0) {    await db.collection(COLLECTIONS.CATEGORIES).updateOne({ _id: cid }, { $set: updateFields });    if (updateFields.slug && updateFields.slug !== category.slug) {      await syncCategoryRename(cid, updateFields.slug, { db });    }    await writeAudit(      adminActor,      'category.update',      { type: 'category', id: cid },      { before: category, after: updateFields }    );  }  const updated = await db.collection(COLLECTIONS.CATEGORIES).findOne({ _id: cid });  return toCategoryDto(updated);}export async function deleteCategory(adminActor, categoryId) {  if (!categoryId || !ObjectId.isValid(categoryId)) {    throw AppError.notFound('Category not found');  }  const db = getDb();  const cid = toObjectId(categoryId);  const category = await db.collection(COLLECTIONS.CATEGORIES).findOne({ _id: cid });  if (!category) {    throw AppError.notFound('Category not found');  }  const inUseCount = await db.collection(COLLECTIONS.PRODUCTS).countDocuments({    categoryId: cid,  });  if (inUseCount > 0) {    throw new AppError(409, 'CATEGORY_IN_USE', `Cannot delete category containing ${inUseCount} product(s).`);  }  await db.collection(COLLECTIONS.CATEGORIES).deleteOne({ _id: cid });  await writeAudit(    adminActor,    'category.delete',    { type: 'category', id: cid },    { name: category.name }  );  return { deleted: true };}export async function reorderCategories(adminActor, orderList) {  if (!Array.isArray(orderList) || orderList.length === 0) {    throw AppError.validation('order must be a non-empty array', { field: 'order' });  }  const db = getDb();  const ops = [];  for (const item of orderList) {    if (!item.id || !ObjectId.isValid(item.id)) {      throw AppError.validation('Invalid id in reorder item', { field: 'order.id' });    }    if (typeof item.sortOrder !== 'number' || !Number.isInteger(item.sortOrder)) {      throw AppError.validation('Invalid sortOrder in reorder item', { field: 'order.sortOrder' });    }    ops.push({      updateOne: {        filter: { _id: toObjectId(item.id) },        update: { $set: { sortOrder: item.sortOrder } },      },    });  }  const res = await db.collection(COLLECTIONS.CATEGORIES).bulkWrite(ops);  await writeAudit(    adminActor,    'category.reorder',    { type: 'category', id: null },    { modifiedCount: res.modifiedCount }  );  return { reorderedCount: res.modifiedCount };}
+/**
+ * Admin Categories service layer.
+ * CRUD, reordering, slug synchronization propagation, and active integrity constraints.
+ */
+
+import { ObjectId } from 'mongodb';
+import { getDb } from '../../../db/client.js';
+import { COLLECTIONS } from '../../../db/collections.js';
+import { toObjectId } from '../../../utils/ids.js';
+import { AppError } from '../../../utils/errors.js';
+import { ALLOWED_ART_KEYS } from '../../../constants.js';
+import { syncCategoryRename } from '../../../utils/sync.js';
+import { writeAudit } from '../../../utils/audit.js';
+import { slugify } from '../markets/adminMarkets.service.js';
+
+export function toCategoryDto(c) {
+  return {
+    id: c._id.toString(),
+    name: c.name,
+    slug: c.slug,
+    sortOrder: c.sortOrder ?? 0,
+    art: c.art || '',
+    active: Boolean(c.active),
+  };
+}
+
+export async function listCategoriesAdmin() {
+  const db = getDb();
+  const categories = await db
+    .collection(COLLECTIONS.CATEGORIES)
+    .find({})
+    .sort({ sortOrder: 1, name: 1 })
+    .toArray();
+  return categories.map(toCategoryDto);
+}
+
+export async function createCategory(adminActor, body) {
+  if (!body || typeof body !== 'object') {
+    throw AppError.validation('Request body must be an object');
+  }
+
+  const { name, sortOrder, art, active } = body;
+
+  if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 40) {
+    throw AppError.validation('Name must be between 2 and 40 characters', { field: 'name' });
+  }
+
+  if (typeof sortOrder !== 'number' || !Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 999) {
+    throw AppError.validation('sortOrder must be an integer between 0 and 999', { field: 'sortOrder' });
+  }
+
+  if (typeof art !== 'string' || !ALLOWED_ART_KEYS.includes(art)) {
+    throw AppError.validation('art key must be a valid allowed art key', { field: 'art' });
+  }
+
+  const db = getDb();
+
+  // Check unique name case-insensitive
+  const existing = await db.collection(COLLECTIONS.CATEGORIES).findOne({
+    name: { $regex: `^${name.trim()}$`, $options: 'i' },
+  });
+  if (existing) {
+    throw new AppError(409, 'CATEGORY_EXISTS', `A category named '${name.trim()}' already exists.`);
+  }
+
+  // Generate unique slug
+  let baseSlug = slugify(name);
+  let slug = baseSlug;
+  let counter = 2;
+  while (await db.collection(COLLECTIONS.CATEGORIES).findOne({ slug })) {
+    slug = `${baseSlug}-${counter++}`;
+  }
+
+  const doc = {
+    _id: new ObjectId(),
+    name: name.trim(),
+    slug,
+    sortOrder,
+    art,
+    active: active !== undefined ? Boolean(active) : true,
+  };
+
+  await db.collection(COLLECTIONS.CATEGORIES).insertOne(doc);
+
+  await writeAudit(
+    adminActor,
+    'category.create',
+    { type: 'category', id: doc._id },
+    { name: doc.name, slug: doc.slug }
+  );
+
+  return toCategoryDto(doc);
+}
+
+export async function updateCategory(adminActor, categoryId, body) {
+  if (!categoryId || !ObjectId.isValid(categoryId)) {
+    throw AppError.notFound('Category not found');
+  }
+
+  const db = getDb();
+  const cid = toObjectId(categoryId);
+
+  const category = await db.collection(COLLECTIONS.CATEGORIES).findOne({ _id: cid });
+  if (!category) {
+    throw AppError.notFound('Category not found');
+  }
+
+  const updateFields = {};
+
+  if ('name' in body) {
+    if (typeof body.name !== 'string' || body.name.trim().length < 2 || body.name.trim().length > 40) {
+      throw AppError.validation('Name must be between 2 and 40 characters', { field: 'name' });
+    }
+    const trimmed = body.name.trim();
+    if (trimmed.toLowerCase() !== category.name.toLowerCase()) {
+      const existing = await db.collection(COLLECTIONS.CATEGORIES).findOne({
+        _id: { $ne: cid },
+        name: { $regex: `^${trimmed}$`, $options: 'i' },
+      });
+      if (existing) {
+        throw new AppError(409, 'CATEGORY_EXISTS', `Category '${trimmed}' already exists.`);
+      }
+      updateFields.name = trimmed;
+
+      let baseSlug = slugify(trimmed);
+      let slug = baseSlug;
+      let counter = 2;
+      while (await db.collection(COLLECTIONS.CATEGORIES).findOne({ _id: { $ne: cid }, slug })) {
+        slug = `${baseSlug}-${counter++}`;
+      }
+      updateFields.slug = slug;
+    }
+  }
+
+  if ('sortOrder' in body) {
+    if (typeof body.sortOrder !== 'number' || !Number.isInteger(body.sortOrder) || body.sortOrder < 0 || body.sortOrder > 999) {
+      throw AppError.validation('sortOrder must be an integer between 0 and 999', { field: 'sortOrder' });
+    }
+    updateFields.sortOrder = body.sortOrder;
+  }
+
+  if ('art' in body) {
+    if (typeof body.art !== 'string' || !ALLOWED_ART_KEYS.includes(body.art)) {
+      throw AppError.validation('art key must be a valid allowed art key', { field: 'art' });
+    }
+    updateFields.art = body.art;
+  }
+
+  if ('active' in body) {
+    updateFields.active = Boolean(body.active);
+  }
+
+  if (Object.keys(updateFields).length > 0) {
+    await db.collection(COLLECTIONS.CATEGORIES).updateOne({ _id: cid }, { $set: updateFields });
+
+    // If slug changed, propagate to products and farmers via D3 sync
+    if (updateFields.slug && updateFields.slug !== category.slug) {
+      await syncCategoryRename(cid, updateFields.slug, { db });
+    }
+
+    await writeAudit(
+      adminActor,
+      'category.update',
+      { type: 'category', id: cid },
+      { before: category, after: updateFields }
+    );
+  }
+
+  const updated = await db.collection(COLLECTIONS.CATEGORIES).findOne({ _id: cid });
+  return toCategoryDto(updated);
+}
+
+export async function deleteCategory(adminActor, categoryId) {
+  if (!categoryId || !ObjectId.isValid(categoryId)) {
+    throw AppError.notFound('Category not found');
+  }
+
+  const db = getDb();
+  const cid = toObjectId(categoryId);
+
+  const category = await db.collection(COLLECTIONS.CATEGORIES).findOne({ _id: cid });
+  if (!category) {
+    throw AppError.notFound('Category not found');
+  }
+
+  // Check if products reference this category
+  const inUseCount = await db.collection(COLLECTIONS.PRODUCTS).countDocuments({
+    categoryId: cid,
+  });
+
+  if (inUseCount > 0) {
+    throw new AppError(409, 'CATEGORY_IN_USE', `Cannot delete category containing ${inUseCount} product(s).`);
+  }
+
+  await db.collection(COLLECTIONS.CATEGORIES).deleteOne({ _id: cid });
+
+  await writeAudit(
+    adminActor,
+    'category.delete',
+    { type: 'category', id: cid },
+    { name: category.name }
+  );
+
+  return { deleted: true };
+}
+
+export async function reorderCategories(adminActor, orderList) {
+  if (!Array.isArray(orderList) || orderList.length === 0) {
+    throw AppError.validation('order must be a non-empty array', { field: 'order' });
+  }
+
+  const db = getDb();
+  const ops = [];
+
+  for (const item of orderList) {
+    if (!item.id || !ObjectId.isValid(item.id)) {
+      throw AppError.validation('Invalid id in reorder item', { field: 'order.id' });
+    }
+    if (typeof item.sortOrder !== 'number' || !Number.isInteger(item.sortOrder)) {
+      throw AppError.validation('Invalid sortOrder in reorder item', { field: 'order.sortOrder' });
+    }
+    ops.push({
+      updateOne: {
+        filter: { _id: toObjectId(item.id) },
+        update: { $set: { sortOrder: item.sortOrder } },
+      },
+    });
+  }
+
+  const res = await db.collection(COLLECTIONS.CATEGORIES).bulkWrite(ops);
+
+  await writeAudit(
+    adminActor,
+    'category.reorder',
+    { type: 'category', id: null },
+    { modifiedCount: res.modifiedCount }
+  );
+
+  return { reorderedCount: res.modifiedCount };
+}

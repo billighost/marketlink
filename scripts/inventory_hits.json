@@ -1,1 +1,2830 @@
-[  {    "pattern": "random",    "category": "random",    "file": "src/api/client.js",    "line": 62,    "snippet": "return 'idemp_' + Math.random().toString(36).substring(2) + Date.now().toString(36);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/api/client.js",    "line": 233,    "snippet": "  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/api/farmer.js",    "line": 110,    "snippet": "* Weekly Inventory Template"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/api/farmer.js",    "line": 112,    "snippet": "export async function getWeeklyTemplate(signal) {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/api/farmer.js",    "line": 113,    "snippet": "return apiFetch('/farmer/weekly-template', { signal });"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/api/farmer.js",    "line": 116,    "snippet": "export async function updateWeeklyTemplate(items) {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/api/farmer.js",    "line": 117,    "snippet": "return apiFetch('/farmer/weekly-template', {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/api/farmer.js",    "line": 123,    "snippet": "export const saveWeeklyTemplate = updateWeeklyTemplate;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/api/farmer.js",    "line": 125,    "snippet": "export async function applyWeeklyTemplate() {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/api/farmer.js",    "line": 126,    "snippet": "return apiFetch('/farmer/weekly-template/apply', {"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/components/domain/AddToCartButton.jsx",    "line": 43,    "snippet": "setTimeout(() => {"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/components/domain/BarChart.jsx",    "line": 68,    "snippet": "const pct = maxVal > 0 ? (item.value / maxVal) * 100 : 0;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/domain/BarChart.module.css",    "line": 107,    "snippet": "grid-template-columns: 140px 1fr 90px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/domain/BarChart.module.css",    "line": 117,    "snippet": "grid-template-columns: 100px 1fr 70px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/domain/GlobalSearchModal.jsx",    "line": 4,    "snippet": "import { products, farmers, markets } from '@/data/placeholders';"  },  {    "pattern": "placeholders_file",    "category": "placeholder data",    "file": "src/components/domain/GlobalSearchModal.jsx",    "line": 4,    "snippet": "import { products, farmers, markets } from '@/data/placeholders';"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/components/domain/GlobalSearchModal.jsx",    "line": 26,    "snippet": "setTimeout(() => inputRef.current?.focus(), 50);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/domain/GlobalSearchModal.jsx",    "line": 138,    "snippet": "placeholder=\"Search produce, bakers, growers, or markets...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/domain/GlobalSearchModal.module.css",    "line": 66,    "snippet": ".input::placeholder {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/domain/MapPlaceholder.jsx",    "line": 3,    "snippet": "import styles from './MapPlaceholder.module.css';"  },  {    "pattern": "map_placeholder",    "category": "placeholder data",    "file": "src/components/domain/MapPlaceholder.jsx",    "line": 3,    "snippet": "import styles from './MapPlaceholder.module.css';"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/domain/MapPlaceholder.jsx",    "line": 6,    "snippet": "* Placeholder map container displaying market coordinates / pins."  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/domain/MapPlaceholder.jsx",    "line": 8,    "snippet": "export function MapPlaceholder({"  },  {    "pattern": "map_placeholder",    "category": "placeholder data",    "file": "src/components/domain/MapPlaceholder.jsx",    "line": 8,    "snippet": "export function MapPlaceholder({"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/domain/MapPlaceholder.jsx",    "line": 33,    "snippet": "export default MapPlaceholder;"  },  {    "pattern": "map_placeholder",    "category": "placeholder data",    "file": "src/components/domain/MapPlaceholder.jsx",    "line": 33,    "snippet": "export default MapPlaceholder;"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/components/domain/MapView.jsx",    "line": 140,    "snippet": "lat: parseFloat(latLng.lat.toFixed(6)),"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/components/domain/MapView.jsx",    "line": 141,    "snippet": "lng: parseFloat(latLng.lng.toFixed(6)),"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/components/domain/MapView.jsx",    "line": 171,    "snippet": "lat: parseFloat(e.latlng.lat.toFixed(6)),"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/components/domain/MapView.jsx",    "line": 172,    "snippet": "lng: parseFloat(e.latlng.lng.toFixed(6)),"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/layout/Footer.module.css",    "line": 14,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/layout/Footer.module.css",    "line": 21,    "snippet": "grid-template-columns: 1.5fr 1fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/layout/Footer.module.css",    "line": 27,    "snippet": "grid-template-columns: 2fr 1fr 1fr 1fr;"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/components/layout/MarketDropdown.jsx",    "line": 58,    "snippet": "setTimeout(() => {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/layout/MarketDropdown.jsx",    "line": 160,    "snippet": "placeholder=\"Search markets or address...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/layout/MarketDropdown.module.css",    "line": 209,    "snippet": ".searchInput::placeholder {"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/components/layout/TopBar.jsx",    "line": 152,    "snippet": "const timer = setTimeout(() => {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/layout/TopBar.jsx",    "line": 235,    "snippet": "placeholder=\"Search products...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/layout/TopBar.module.css",    "line": 233,    "snippet": ".searchInput::placeholder {"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/components/ui/BottomSheet.jsx",    "line": 83,    "snippet": "const timer = setTimeout(() => {"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/components/ui/BottomSheet.jsx",    "line": 122,    "snippet": "setTimeout(cleanup, duration);"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/components/ui/BottomSheet.jsx",    "line": 385,    "snippet": "const focusTimer = setTimeout(() => {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/ui/ConfirmStep.jsx",    "line": 17,    "snippet": "reasonPlaceholder = 'Please explain the reason...',"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/ui/ConfirmStep.jsx",    "line": 61,    "snippet": "placeholder={reasonPlaceholder}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/ui/Skeleton.jsx",    "line": 5,    "snippet": "* Loading placeholder with gentle opacity pulse."  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/ui/Skeleton.module.css",    "line": 1,    "snippet": ""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/ui/TimeSelect.jsx",    "line": 24,    "snippet": "placeholder = 'Select time',"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/components/ui/TimeSelect.jsx",    "line": 54,    "snippet": "<option value=\"\">{placeholder}</option>"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/components/ui/Toast.jsx",    "line": 13,    "snippet": "const timer = setTimeout(() => {"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/context/AuthContext.jsx",    "line": 39,    "snippet": "const timeoutTimer = setTimeout(() => {"  },  {    "pattern": "console",    "category": "debug log",    "file": "src/context/AuthContext.jsx",    "line": 169,    "snippet": "console.warn('Could not sync home market to user profile:', err);"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/context/CartContext.jsx",    "line": 160,    "snippet": "quoteDebounceRef.current = setTimeout(() => {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/data/placeholders.js",    "line": 2,    "snippet": "* Reusable placeholder data for MarketLink"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/data/placeholders.js",    "line": 4,    "snippet": "* TEMP: replace with API calls when backend is ready."  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/data/placeholders.js",    "line": 7,    "snippet": "  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/data/placeholders.js",    "line": 8,    "snippet": "  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/data/placeholders.js",    "line": 9,    "snippet": "export const demoUsers = {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/data/placeholders.js",    "line": 42,    "snippet": "  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/data/placeholders.js",    "line": 43,    "snippet": "export const currentCustomer = demoUsers.customer;"  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/data/placeholders.js",    "line": 523,    "snippet": "'Who sells eggs?': 'Willow Bend Poultry at Stall 9 has free-range eggs — $6.00 a dozen or $3.50 for "  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/data/placeholders.js",    "line": 566,    "snippet": "{ id: 'item-1', name: 'Heirloom tomatoes',  farmer: 'Riverbend Farm',       price: '$4.50', unit: 'l"  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/data/placeholders.js",    "line": 567,    "snippet": "{ id: 'item-2', name: 'Sourdough loaf',     farmer: 'Oak & Mill Bakery',    price: '$7.00', unit: 'l"  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/data/placeholders.js",    "line": 568,    "snippet": "{ id: 'item-3', name: 'Wildflower honey',   farmer: 'Hollow Creek Apiary',  price: '$9.50', unit: 'j"  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/data/placeholders.js",    "line": 569,    "snippet": "{ id: 'item-4', name: 'Rainbow carrots',    farmer: 'Riverbend Farm',       price: '$4.50', unit: 'b"  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/data/placeholders.js",    "line": 570,    "snippet": "{ id: 'item-5', name: 'Farm eggs',          farmer: 'Willow Bend Poultry',  price: '$6.00', unit: 'd"  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/data/placeholders.js",    "line": 571,    "snippet": "{ id: 'item-6', name: 'Rhubarb',            farmer: 'Hollow Creek Apiary',  price: '$3.50', unit: 'b"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/dev/layoutCheck.js",    "line": 308,    "snippet": "targetRatio = parseFloat(declaredAspectAttr);"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/dev/layoutCheck.js",    "line": 328,    "snippet": "message: `Aspect ratio mismatch: rendered ${(actualRatio).toFixed(2)}, declared ${(targetRatio).toFi"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/hooks/useDebouncedValue.js",    "line": 10,    "snippet": "const handler = setTimeout(() => {"  },  {    "pattern": "console",    "category": "debug log",    "file": "src/hooks/useFeed.js",    "line": 62,    "snippet": "console.error('[useFeed] Error loading feed batch:', err);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Markets.jsx",    "line": 235,    "snippet": "placeholder=\"Search markets or address...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Markets.jsx",    "line": 355,    "snippet": "placeholder=\"e.g. Elm Street Farmers Market\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Markets.jsx",    "line": 368,    "snippet": "placeholder=\"e.g. 12 Elm Street, Melbourne\""  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/admin/Markets.jsx",    "line": 394,    "snippet": "Lat: {coords.lat.toFixed(5)}, Lng: {coords.lng.toFixed(5)}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Markets.jsx",    "line": 404,    "snippet": "placeholder=\"https://maps.google.com/?q=-33.86,151.20\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Markets.jsx",    "line": 480,    "snippet": "placeholder=\"e.g. Parking available behind the town hall.\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Moderation.jsx",    "line": 192,    "snippet": "reasonPlaceholder=\"Admin note (optional)...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Overview.module.css",    "line": 51,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Overview.module.css",    "line": 58,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/admin/People.jsx",    "line": 71,    "snippet": "const timer = setTimeout(() => {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/People.jsx",    "line": 214,    "snippet": "placeholder={`Search ${activeTab === 'farmers' ? 'stalls' : 'customers'}...`}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/People.jsx",    "line": 525,    "snippet": "reasonPlaceholder=\"e.g. Missing required certifications or outside delivery zone...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/People.jsx",    "line": 540,    "snippet": "reasonPlaceholder=\"e.g. Policy violation or quality concerns...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/People.jsx",    "line": 555,    "snippet": "reasonPlaceholder=\"e.g. Inappropriate behavior or requested closure...\""  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/admin/Reports.jsx",    "line": 66,    "snippet": "value: (m.revenueCents || 0) / 100,"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/admin/Reports.jsx",    "line": 130,    "snippet": "valueFormatter={(v) => formatCurrency(v * 100)}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Reports.module.css",    "line": 52,    "snippet": "grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/admin/Settings.jsx",    "line": 494,    "snippet": "placeholder=\"Admin resolution note or reply...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Assistant.jsx",    "line": 201,    "snippet": "placeholder=\"Ask about stalls, items, or pickup...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Cart.jsx",    "line": 239,    "snippet": "<span className={styles.itemPrice}>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Cart.jsx",    "line": 287,    "snippet": "placeholder=\"E.g., Please pack ripe tomatoes on top, extra paper bag...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Cart.module.css",    "line": 46,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Cart.module.css",    "line": 208,    "snippet": ".itemPrice {"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/buyer/FarmerDetail.jsx",    "line": 126,    "snippet": "{farmer.ratingAvg?.toFixed(1) || '5.0'} ({farmer.ratingCount || farmerReviews.length})"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/FarmerDetail.module.css",    "line": 161,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Farmers.jsx",    "line": 54,    "snippet": "placeholder=\"Search farm stalls, bakers, beekeepers...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Farmers.module.css",    "line": 61,    "snippet": ".searchInput::placeholder {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Farmers.module.css",    "line": 100,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Farmers.module.css",    "line": 107,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Farmers.module.css",    "line": 113,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Farmers.module.css",    "line": 119,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Favorites.module.css",    "line": 48,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Favorites.module.css",    "line": 54,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Favorites.module.css",    "line": 61,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Home.jsx",    "line": 92,    "snippet": "placeholder=\"Search farm fresh produce, bakery...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Home.module.css",    "line": 85,    "snippet": ".searchInput::placeholder {"  },  {    "pattern": "console",    "category": "debug log",    "file": "src/pages/buyer/MarketDetail.jsx",    "line": 88,    "snippet": "console.error('Failed to set home market:', err);"  },  {    "pattern": "console",    "category": "debug log",    "file": "src/pages/buyer/MarketDetail.jsx",    "line": 103,    "snippet": "console.error('Failed to toggle saved market:', err);"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/buyer/MarketDetail.jsx",    "line": 155,    "snippet": "<span>{market.distanceKm.toFixed(1)} km away</span>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Markets.module.css",    "line": 149,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Markets.module.css",    "line": 155,    "snippet": "grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/OrderDetail.jsx",    "line": 191,    "snippet": "placeholder=\"E.g., Plans changed, unable to attend...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/OrderDetail.jsx",    "line": 242,    "snippet": "placeholder=\"Tell other market customers about the freshness, taste, and stall experience...\""  },  {    "pattern": "console",    "category": "debug log",    "file": "src/pages/buyer/Products.jsx",    "line": 106,    "snippet": "console.error('[Products] Error fetching products:', err);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Products.jsx",    "line": 197,    "snippet": "placeholder=\"Search all market products...\""  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/buyer/Products.jsx",    "line": 201,    "snippet": "onBlur={() => setTimeout(() => setIsSearchFocused(false), 250)}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Products.module.css",    "line": 88,    "snippet": ".searchInput::placeholder {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Products.module.css",    "line": 263,    "snippet": "grid-template-columns: repeat(2, minmax(0, 1fr));"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Products.module.css",    "line": 270,    "snippet": "grid-template-columns: repeat(3, minmax(0, 1fr));"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/buyer/Profile.jsx",    "line": 38,    "snippet": "setTimeout(() => setMotionSaved(false), 1800);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/ProfileDetails.jsx",    "line": 73,    "snippet": "placeholder=\"(555) 000-0000\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/ProfileDetails.jsx",    "line": 80,    "snippet": "placeholder=\"Street address, City, State\""  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/buyer/ProfileNotifications.jsx",    "line": 89,    "snippet": "setTimeout(() => {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Reviews.jsx",    "line": 20,    "snippet": "import { reviews as initialReviews, orders, products, farmers } from '@/data/placeholders';"  },  {    "pattern": "placeholders_file",    "category": "placeholder data",    "file": "src/pages/buyer/Reviews.jsx",    "line": 20,    "snippet": "import { reviews as initialReviews, orders, products, farmers } from '@/data/placeholders';"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/buyer/Reviews.jsx",    "line": 64,    "snippet": "const avg = (sum / total).toFixed(1);"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/buyer/Reviews.jsx",    "line": 73,    "snippet": "5: Math.round((counts[5] / total) * 100),"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/buyer/Reviews.jsx",    "line": 74,    "snippet": "4: Math.round((counts[4] / total) * 100),"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/buyer/Reviews.jsx",    "line": 75,    "snippet": "3: Math.round((counts[3] / total) * 100),"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/buyer/Reviews.jsx",    "line": 76,    "snippet": "2: Math.round((counts[2] / total) * 100),"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/buyer/Reviews.jsx",    "line": 77,    "snippet": "1: Math.round((counts[1] / total) * 100),"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Reviews.jsx",    "line": 231,    "snippet": "placeholder=\"Search reviews by produce, farm, or customer...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Reviews.jsx",    "line": 607,    "snippet": "placeholder=\"Share details on freshness, flavour, how you prepared it, or your stall interaction...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Reviews.module.css",    "line": 82,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Reviews.module.css",    "line": 93,    "snippet": "grid-template-columns: 200px 1fr 240px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Reviews.module.css",    "line": 294,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/buyer/Reviews.module.css",    "line": 300,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 213,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 219,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 274,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 281,    "snippet": "grid-template-columns: 1.1fr 0.9fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 725,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 731,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 737,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 854,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 860,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 866,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 996,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 1002,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 1008,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 1110,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/About.module.css",    "line": 1116,    "snippet": "grid-template-columns: 1.2fr 0.8fr;"  },  {    "pattern": "random",    "category": "random",    "file": "src/pages/guest/Contact.jsx",    "line": 150,    "snippet": "setTicketId(res?.id ? `ML-${res.id.slice(-6).toUpperCase()}` : `ML-${Math.floor(100000 + Math.random"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/guest/Contact.jsx",    "line": 184,    "snippet": "setTimeout(() => setCopiedPhone(false), 2000);"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/guest/Contact.jsx",    "line": 190,    "snippet": "setTimeout(() => setCopiedEmail(false), 2000);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Contact.jsx",    "line": 442,    "snippet": "placeholder=\"e.g. Claire Adams\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Contact.jsx",    "line": 459,    "snippet": "placeholder=\"claire@example.com\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Contact.jsx",    "line": 477,    "snippet": "placeholder=\"(212) 555-0123\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Contact.jsx",    "line": 499,    "snippet": "placeholder=\"Tell us what you need help with, what stall you're looking for, or details about your f"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Contact.module.css",    "line": 159,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Contact.module.css",    "line": 165,    "snippet": "grid-template-columns: 1fr 1.25fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Contact.module.css",    "line": 631,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Contact.module.css",    "line": 637,    "snippet": "grid-template-columns: 1fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/FarmerDetail.module.css",    "line": 313,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/FarmerDetail.module.css",    "line": 320,    "snippet": "grid-template-columns: 1fr 320px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/FarmerDetail.module.css",    "line": 358,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/FarmerDetail.module.css",    "line": 364,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/FarmerDetail.module.css",    "line": 371,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/FarmerDetail.module.css",    "line": 567,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/FarmerDetail.module.css",    "line": 573,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Farmers.jsx",    "line": 126,    "snippet": "placeholder=\"Search farmers, farm names, or specialties...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Farmers.module.css",    "line": 121,    "snippet": ".searchInput::placeholder {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Farmers.module.css",    "line": 266,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Farmers.module.css",    "line": 272,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Farmers.module.css",    "line": 278,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Farmers.module.css",    "line": 284,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 265,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 271,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 277,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 448,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 454,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 460,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 638,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 644,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 650,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 782,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 788,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Home.module.css",    "line": 794,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.jsx",    "line": 90,    "snippet": "if (err.code === 'TOO_MANY_ATTEMPTS') {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.jsx",    "line": 91,    "snippet": "setErrorMessage('Too many failed sign-in attempts. Your account is temporarily locked for 15 minutes"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.jsx",    "line": 217,    "snippet": "placeholder=\"name@example.com\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.jsx",    "line": 245,    "snippet": "placeholder=\"••••••••\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 22,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 28,    "snippet": "grid-template-columns: 1fr 1.15fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 425,    "snippet": ""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 426,    "snippet": ".quickDemoSection {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 430,    "snippet": ".demoDivider {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 436,    "snippet": ".demoDivider::before {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 446,    "snippet": ".demoDivider span {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 455,    "snippet": ".demoButtonsRow {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 461,    "snippet": ".demoPillBtn {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Login.module.css",    "line": 481,    "snippet": ".demoPillBtn:hover {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Market.jsx",    "line": 216,    "snippet": "placeholder=\"Search markets or locations...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Market.jsx",    "line": 423,    "snippet": "placeholder=\"Search by market name or address...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Market.module.css",    "line": 260,    "snippet": ".sidebarSearchInput::placeholder,"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Market.module.css",    "line": 261,    "snippet": ".listSearchInput::placeholder {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Market.module.css",    "line": 966,    "snippet": "grid-template-columns: 1fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Market.module.css",    "line": 1097,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Market.module.css",    "line": 1103,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Market.module.css",    "line": 1109,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/guest/MarketDetail.jsx",    "line": 79,    "snippet": "setTimeout(() => setCopied(false), 2000);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 291,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 299,    "snippet": "grid-template-columns: 1.5fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 459,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 469,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 588,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 594,    "snippet": "grid-template-columns: 1fr 380px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 602,    "snippet": "grid-template-columns: 1fr 400px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 673,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 679,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 743,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 749,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 808,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 814,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 968,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/MarketDetail.module.css",    "line": 974,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/guest/ProductDetail.jsx",    "line": 79,    "snippet": "setTimeout(() => setShared(false), 2000);"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/guest/ProductDetail.jsx",    "line": 135,    "snippet": "const unitPriceCents = product.priceCents || (product.price ? product.price * 100 : 0);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/ProductDetail.module.css",    "line": 230,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/ProductDetail.module.css",    "line": 236,    "snippet": "grid-template-columns: 1fr 380px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/ProductDetail.module.css",    "line": 244,    "snippet": "grid-template-columns: 1fr 400px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/ProductDetail.module.css",    "line": 259,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/ProductDetail.module.css",    "line": 267,    "snippet": "grid-template-columns: 1fr 160px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/ProductDetail.module.css",    "line": 357,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/ProductDetail.module.css",    "line": 367,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/ProductDetail.module.css",    "line": 1043,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/ProductDetail.module.css",    "line": 1049,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/guest/Products.jsx",    "line": 72,    "snippet": "numericPrice: (p.priceCents || 0) / 100,"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Products.jsx",    "line": 144,    "snippet": "placeholder=\"Search tomatoes, sourdough, peaches, honey...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Products.module.css",    "line": 105,    "snippet": ".searchInput::placeholder {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Products.module.css",    "line": 304,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Products.module.css",    "line": 310,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Products.module.css",    "line": 316,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Products.module.css",    "line": 322,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.jsx",    "line": 435,    "snippet": "placeholder=\"e.g. Eleanor Vance\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.jsx",    "line": 457,    "snippet": "placeholder=\"name@example.com\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.jsx",    "line": 478,    "snippet": "placeholder=\"(212) 555-0123\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.jsx",    "line": 527,    "snippet": "placeholder=\"e.g. Riverbend Organic Farm\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.jsx",    "line": 547,    "snippet": "placeholder=\"e.g. Elena Vance\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.jsx",    "line": 593,    "snippet": "placeholder=\"grower@farm.org\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.jsx",    "line": 613,    "snippet": "placeholder=\"(555) 012-3456\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.jsx",    "line": 650,    "snippet": "placeholder=\"Min. 8 characters\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.jsx",    "line": 690,    "snippet": "placeholder=\"Repeat password\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.module.css",    "line": 22,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.module.css",    "line": 28,    "snippet": "grid-template-columns: 1fr 1.25fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.module.css",    "line": 400,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/guest/Register.module.css",    "line": 406,    "snippet": "grid-template-columns: 1fr 1fr;"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/vendor/DashboardTab.jsx",    "line": 179,    "snippet": "<span className={styles.progressValue}>60 / 100 bunches</span>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/DashboardTab.module.css",    "line": 27,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/DashboardTab.module.css",    "line": 87,    "snippet": "grid-template-columns: 2fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/DashboardTab.module.css",    "line": 245,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/DashboardTab.module.css",    "line": 248,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/DashboardTab.module.css",    "line": 260,    "snippet": "grid-template-columns: 1fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/DashboardTab.module.css",    "line": 274,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/FarmInventoryTab.jsx",    "line": 13,    "snippet": "<input type=\"text\" placeholder=\"Search produce...\" className={styles.searchInput} />"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/FarmInventoryTab.module.css",    "line": 66,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/FarmInventoryTab.module.css",    "line": 152,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/FarmInventoryTab.module.css",    "line": 169,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/HistoryTab.jsx",    "line": 14,    "snippet": "<input type=\"text\" placeholder=\"Search order ID, customer...\" className={styles.searchInput} />"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/IncomingOrdersTab.jsx",    "line": 4,    "snippet": "const MOCK_ORDERS = ["  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/IncomingOrdersTab.jsx",    "line": 12,    "snippet": "const [orders, setOrders] = useState(MOCK_ORDERS);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/IncomingOrdersTab.jsx",    "line": 20,    "snippet": "<button className={styles.btnOutline} onClick={() => setOrders([])}>Clear (Demo Empty State)</button"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Insights.module.css",    "line": 46,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/vendor/MyStall.jsx",    "line": 266,    "snippet": "lat: parseFloat(pos.coords.latitude.toFixed(6)),"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/vendor/MyStall.jsx",    "line": 267,    "snippet": "lng: parseFloat(pos.coords.longitude.toFixed(6)),"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/MyStall.jsx",    "line": 551,    "snippet": "placeholder=\"e.g. Booth 14\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/MyStall.jsx",    "line": 839,    "snippet": "placeholder=\"e.g. Farm maintenance\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/MyStall.jsx",    "line": 903,    "snippet": "placeholder=\"e.g. Elm Street Market, Center Aisle Stall 12\""  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/vendor/MyStall.jsx",    "line": 935,    "snippet": "setLocationCoords({ ...locationCoords, lat: parseFloat(e.target.value) || 0 })"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/vendor/MyStall.jsx",    "line": 946,    "snippet": "setLocationCoords({ ...locationCoords, lng: parseFloat(e.target.value) || 0 })"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/MyStall.module.css",    "line": 158,    "snippet": "grid-template-columns: 1fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/MyStall.module.css",    "line": 164,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/MyStall.module.css",    "line": 257,    "snippet": "grid-template-columns: 1fr 1fr 36px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/OrderDetail.jsx",    "line": 129,    "snippet": "reasonPlaceholder=\"e.g. Item out of harvest, stall closing early...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/OrderDetail.jsx",    "line": 149,    "snippet": "reasonPlaceholder=\"e.g. Unforeseen harvest shortage...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/OrderDetail.jsx",    "line": 226,    "snippet": "<span className={styles.itemPrice}>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/OrderDetail.module.css",    "line": 187,    "snippet": ".itemPrice {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Overview.module.css",    "line": 227,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "console",    "category": "debug log",    "file": "src/pages/vendor/ProfileTab.jsx",    "line": 29,    "snippet": "console.log('Profile saved:', profileData);"  },  {    "pattern": "console",    "category": "debug log",    "file": "src/pages/vendor/ProfileTab.jsx",    "line": 34,    "snippet": "console.log('Password updated:', passwordData);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/ProfileTab.jsx",    "line": 154,    "snippet": "placeholder=\"Enter current password\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/ProfileTab.jsx",    "line": 166,    "snippet": "placeholder=\"Enter new password\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/ProfileTab.jsx",    "line": 177,    "snippet": "placeholder=\"Confirm new password\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/ProfileTab.module.css",    "line": 143,    "snippet": "grid-template-columns: 1fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/ProfileTab.module.css",    "line": 247,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/vendor/Reviews.jsx",    "line": 122,    "snippet": "const ratingAvg = summary?.ratingAvg ? Number(summary.ratingAvg).toFixed(1) : '0.0';"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/pages/vendor/Reviews.jsx",    "line": 152,    "snippet": "const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Reviews.jsx",    "line": 312,    "snippet": "placeholder=\"Thank the customer or address feedback...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Reviews.jsx",    "line": 370,    "snippet": "reasonPlaceholder=\"e.g. Abusive language, false order claims...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Reviews.module.css",    "line": 27,    "snippet": "grid-template-columns: 140px 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Reviews.module.css",    "line": 38,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Reviews.module.css",    "line": 73,    "snippet": "grid-template-columns: 24px 1fr 24px;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/SalesTab.module.css",    "line": 40,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/SalesTab.module.css",    "line": 71,    "snippet": "grid-template-columns: 2fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/SalesTab.module.css",    "line": 184,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/SalesTab.module.css",    "line": 201,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 8,    "snippet": "applyWeeklyTemplate,"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 23,    "snippet": "import WeeklyTemplate from './WeeklyTemplate';"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 51,    "snippet": "  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/vendor/Stock.jsx",    "line": 77,    "snippet": "const timer = setTimeout(() => {"  },  {    "pattern": "setTimeout",    "category": "fake delay",    "file": "src/pages/vendor/Stock.jsx",    "line": 143,    "snippet": "const timer = setTimeout(async () => {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 196,    "snippet": "  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 197,    "snippet": "const handleApplyTemplate = async () => {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 199,    "snippet": "const res = await applyWeeklyTemplate();"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 201,    "snippet": "setToastMessage(`Weekly template applied for ${updatedCount} products.`);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 207,    "snippet": "setToastMessage(`Failed to apply template: ${err?.message}`);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 238,    "snippet": "onClick={() => setSheetMode('template')}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 240,    "snippet": "Weekly template"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 245,    "snippet": "onClick={() => setSheetMode('confirm-apply-template')}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 247,    "snippet": "Apply template"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 259,    "snippet": "placeholder=\"Search products by name...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 454,    "snippet": "{}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 455,    "snippet": "{sheetMode === 'template' && ("  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 460,    "snippet": "title=\"Weekly Stock Template\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 462,    "snippet": "<WeeklyTemplate"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 465,    "snippet": "setToastMessage('Weekly template saved.');"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 472,    "snippet": "{}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 473,    "snippet": "{sheetMode === 'confirm-apply-template' && ("  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 478,    "snippet": "title=\"Apply Weekly Template\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 482,    "snippet": "message={`This resets quantities for ${products.length} products to their weekly template values.`}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 483,    "snippet": "confirmLabel=\"Apply template\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.jsx",    "line": 486,    "snippet": "onConfirm={handleApplyTemplate}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.module.css",    "line": 132,    "snippet": "grid-template-columns: 52px 1fr auto;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/Stock.module.css",    "line": 142,    "snippet": "grid-template-columns: 44px 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 11,    "snippet": "import { parseDollarsToCents, formatCentsToDollarsInput } from '@/utils/format';"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 83,    "snippet": "  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 84,    "snippet": "const [templateEnabled, setTemplateEnabled] = useState(false);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 85,    "snippet": "const [templateDefaultQty, setTemplateDefaultQty] = useState(10);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 111,    "snippet": "setPriceInput(formatCentsToDollarsInput(p.priceCents));"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 121,    "snippet": "if (p.weeklyTemplate) {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 122,    "snippet": "setTemplateEnabled(Boolean(p.weeklyTemplate.enabled));"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 123,    "snippet": "setTemplateDefaultQty(p.weeklyTemplate.defaultQuantity ?? 10);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 232,    "snippet": "weeklyTemplate: {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 233,    "snippet": "enabled: templateEnabled,"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 234,    "snippet": "defaultQuantity: Number(templateDefaultQty),"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 353,    "snippet": "placeholder=\"e.g. Rainbow carrots\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 407,    "snippet": "placeholder=\"4.50\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 493,    "snippet": "placeholder=\"Tasting notes, harvest date, preparation ideas...\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 599,    "snippet": "{}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 600,    "snippet": "<div className={styles.templateSection}>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 601,    "snippet": "<div className={styles.templateToggleRow}>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 603,    "snippet": "<strong className={styles.templateTitle}>Weekly template</strong>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 607,    "snippet": "checked={templateEnabled}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 609,    "snippet": "setTemplateEnabled(checked);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 613,    "snippet": "label=\"Enable weekly template\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 617,    "snippet": "{templateEnabled && ("  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 618,    "snippet": "<div className={styles.templateQtyRow}>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 619,    "snippet": "<label htmlFor=\"template-default-qty\" className={styles.fieldLabel}>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 623,    "snippet": "id=\"template-default-qty\""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 625,    "snippet": "value={templateDefaultQty}"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.jsx",    "line": 627,    "snippet": "setTemplateDefaultQty(parseInt(e.target.value || '0', 10));"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.module.css",    "line": 103,    "snippet": "grid-template-columns: 1fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.module.css",    "line": 109,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.module.css",    "line": 287,    "snippet": "grid-template-columns: repeat(6, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.module.css",    "line": 296,    "snippet": "grid-template-columns: repeat(4, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.module.css",    "line": 320,    "snippet": ""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.module.css",    "line": 321,    "snippet": ".templateSection {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.module.css",    "line": 331,    "snippet": ".templateToggleRow {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.module.css",    "line": 338,    "snippet": ".templateTitle {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StockForm.module.css",    "line": 344,    "snippet": ".templateQtyRow {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StoreSettingsTab.jsx",    "line": 295,    "snippet": "<p className={styles.helpText}>Temporarily close stall for extended breaks.</p>"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StoreSettingsTab.module.css",    "line": 217,    "snippet": "grid-template-columns: 1fr 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/StoreSettingsTab.module.css",    "line": 543,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 2,    "snippet": "import { getWeeklyTemplate, updateWeeklyTemplate } from '@/api/farmer';"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 6,    "snippet": "import styles from './WeeklyTemplate.module.css';"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 8,    "snippet": "export function WeeklyTemplate({ onClose, onSaved }) {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 18,    "snippet": "const res = await getWeeklyTemplate();"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 23,    "snippet": "if (isMounted) setError(err?.message || 'Could not load weekly template.');"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 55,    "snippet": "await updateWeeklyTemplate("  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 65,    "snippet": "setError(err?.message || 'Failed to save weekly template.');"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 84,    "snippet": "Configure default restock quantities for each product. Applying the template resets listed items to "  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 141,    "snippet": "Save template"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/pages/vendor/WeeklyTemplate.jsx",    "line": 148,    "snippet": "export default WeeklyTemplate;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/routes/AppRoutes.jsx",    "line": 74,    "snippet": "* Temporary placeholder for authenticated areas accessed via preview buttons"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/routes/AppRoutes.jsx",    "line": 76,    "snippet": "function PreviewPlaceholder({ roleName }) {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/routes/AppRoutes.jsx",    "line": 84,    "snippet": "This is a placeholder for the authenticated {roleName} workspace. Signed-in pages are in development"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/base.css",    "line": 276,    "snippet": ""  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/base.css",    "line": 277,    "snippet": "::placeholder {"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/tokens.css",    "line": 9,    "snippet": "--color-canvas:       #F5EFE3;  "  },  {    "pattern": "placeholders_file",    "category": "placeholder data",    "file": "src/styles/tokens.css",    "line": 9,    "snippet": "--color-canvas:       #F5EFE3;  "  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/tokens.css",    "line": 13,    "snippet": "--color-ink-faint:    #9A9088;  "  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/utils.css",    "line": 97,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/utils.css",    "line": 103,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/utils.css",    "line": 109,    "snippet": "grid-template-columns: 1fr;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/utils.css",    "line": 115,    "snippet": "grid-template-columns: repeat(2, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/utils.css",    "line": 121,    "snippet": "grid-template-columns: repeat(3, 1fr);"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/styles/utils.css",    "line": 127,    "snippet": "grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));"  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/utils/format.js",    "line": 7,    "snippet": "* Format integer cents as USD currency ($4.50)"  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/utils/format.js",    "line": 13,    "snippet": "return '$0.00';"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/utils/format.js",    "line": 16,    "snippet": "const dollars = cents >= 100 || Number.isInteger(cents) ? cents / 100 : cents;"  },  {    "pattern": "literal_price",    "category": "hard-coded number",    "file": "src/utils/format.js",    "line": 28,    "snippet": "* Parses a dollar string ($4.50 or 4.5) to integer cents using integer math."  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/utils/format.js",    "line": 42,    "snippet": "return dollars * 100 + cents;"  },  {    "pattern": "placeholder_keywords",    "category": "placeholder data",    "file": "src/utils/format.js",    "line": 50,    "snippet": "export function formatCentsToDollarsInput(cents) {"  },  {    "pattern": "float_money",    "category": "float money math",    "file": "src/utils/format.js",    "line": 52,    "snippet": "const dollars = Math.floor(cents / 100);"  }]
+[
+  {
+    "pattern": "random",
+    "category": "random",
+    "file": "src/api/client.js",
+    "line": 62,
+    "snippet": "return 'idemp_' + Math.random().toString(36).substring(2) + Date.now().toString(36);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/api/client.js",
+    "line": 233,
+    "snippet": "// Attempt to parse JSON response"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/api/farmer.js",
+    "line": 110,
+    "snippet": "* Weekly Inventory Template"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/api/farmer.js",
+    "line": 112,
+    "snippet": "export async function getWeeklyTemplate(signal) {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/api/farmer.js",
+    "line": 113,
+    "snippet": "return apiFetch('/farmer/weekly-template', { signal });"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/api/farmer.js",
+    "line": 116,
+    "snippet": "export async function updateWeeklyTemplate(items) {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/api/farmer.js",
+    "line": 117,
+    "snippet": "return apiFetch('/farmer/weekly-template', {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/api/farmer.js",
+    "line": 123,
+    "snippet": "export const saveWeeklyTemplate = updateWeeklyTemplate;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/api/farmer.js",
+    "line": 125,
+    "snippet": "export async function applyWeeklyTemplate() {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/api/farmer.js",
+    "line": 126,
+    "snippet": "return apiFetch('/farmer/weekly-template/apply', {"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/components/domain/AddToCartButton.jsx",
+    "line": 43,
+    "snippet": "setTimeout(() => {"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/components/domain/BarChart.jsx",
+    "line": 68,
+    "snippet": "const pct = maxVal > 0 ? (item.value / maxVal) * 100 : 0;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/domain/BarChart.module.css",
+    "line": 107,
+    "snippet": "grid-template-columns: 140px 1fr 90px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/domain/BarChart.module.css",
+    "line": 117,
+    "snippet": "grid-template-columns: 100px 1fr 70px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/domain/GlobalSearchModal.jsx",
+    "line": 4,
+    "snippet": "import { products, farmers, markets } from '@/data/placeholders';"
+  },
+  {
+    "pattern": "placeholders_file",
+    "category": "placeholder data",
+    "file": "src/components/domain/GlobalSearchModal.jsx",
+    "line": 4,
+    "snippet": "import { products, farmers, markets } from '@/data/placeholders';"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/components/domain/GlobalSearchModal.jsx",
+    "line": 26,
+    "snippet": "setTimeout(() => inputRef.current?.focus(), 50);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/domain/GlobalSearchModal.jsx",
+    "line": 138,
+    "snippet": "placeholder=\"Search produce, bakers, growers, or markets...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/domain/GlobalSearchModal.module.css",
+    "line": 66,
+    "snippet": ".input::placeholder {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/domain/MapPlaceholder.jsx",
+    "line": 3,
+    "snippet": "import styles from './MapPlaceholder.module.css';"
+  },
+  {
+    "pattern": "map_placeholder",
+    "category": "placeholder data",
+    "file": "src/components/domain/MapPlaceholder.jsx",
+    "line": 3,
+    "snippet": "import styles from './MapPlaceholder.module.css';"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/domain/MapPlaceholder.jsx",
+    "line": 6,
+    "snippet": "* Placeholder map container displaying market coordinates / pins."
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/domain/MapPlaceholder.jsx",
+    "line": 8,
+    "snippet": "export function MapPlaceholder({"
+  },
+  {
+    "pattern": "map_placeholder",
+    "category": "placeholder data",
+    "file": "src/components/domain/MapPlaceholder.jsx",
+    "line": 8,
+    "snippet": "export function MapPlaceholder({"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/domain/MapPlaceholder.jsx",
+    "line": 33,
+    "snippet": "export default MapPlaceholder;"
+  },
+  {
+    "pattern": "map_placeholder",
+    "category": "placeholder data",
+    "file": "src/components/domain/MapPlaceholder.jsx",
+    "line": 33,
+    "snippet": "export default MapPlaceholder;"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/components/domain/MapView.jsx",
+    "line": 140,
+    "snippet": "lat: parseFloat(latLng.lat.toFixed(6)),"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/components/domain/MapView.jsx",
+    "line": 141,
+    "snippet": "lng: parseFloat(latLng.lng.toFixed(6)),"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/components/domain/MapView.jsx",
+    "line": 171,
+    "snippet": "lat: parseFloat(e.latlng.lat.toFixed(6)),"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/components/domain/MapView.jsx",
+    "line": 172,
+    "snippet": "lng: parseFloat(e.latlng.lng.toFixed(6)),"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/layout/Footer.module.css",
+    "line": 14,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/layout/Footer.module.css",
+    "line": 21,
+    "snippet": "grid-template-columns: 1.5fr 1fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/layout/Footer.module.css",
+    "line": 27,
+    "snippet": "grid-template-columns: 2fr 1fr 1fr 1fr;"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/components/layout/MarketDropdown.jsx",
+    "line": 58,
+    "snippet": "setTimeout(() => {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/layout/MarketDropdown.jsx",
+    "line": 160,
+    "snippet": "placeholder=\"Search markets or address...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/layout/MarketDropdown.module.css",
+    "line": 209,
+    "snippet": ".searchInput::placeholder {"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/components/layout/TopBar.jsx",
+    "line": 152,
+    "snippet": "const timer = setTimeout(() => {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/layout/TopBar.jsx",
+    "line": 235,
+    "snippet": "placeholder=\"Search products...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/layout/TopBar.module.css",
+    "line": 233,
+    "snippet": ".searchInput::placeholder {"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/components/ui/BottomSheet.jsx",
+    "line": 83,
+    "snippet": "const timer = setTimeout(() => {"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/components/ui/BottomSheet.jsx",
+    "line": 122,
+    "snippet": "setTimeout(cleanup, duration);"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/components/ui/BottomSheet.jsx",
+    "line": 385,
+    "snippet": "const focusTimer = setTimeout(() => {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/ui/ConfirmStep.jsx",
+    "line": 17,
+    "snippet": "reasonPlaceholder = 'Please explain the reason...',"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/ui/ConfirmStep.jsx",
+    "line": 61,
+    "snippet": "placeholder={reasonPlaceholder}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/ui/Skeleton.jsx",
+    "line": 5,
+    "snippet": "* Loading placeholder with gentle opacity pulse."
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/ui/Skeleton.module.css",
+    "line": 1,
+    "snippet": "/* Skeleton — loading placeholder */"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/ui/TimeSelect.jsx",
+    "line": 24,
+    "snippet": "placeholder = 'Select time',"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/components/ui/TimeSelect.jsx",
+    "line": 54,
+    "snippet": "<option value=\"\">{placeholder}</option>"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/components/ui/Toast.jsx",
+    "line": 13,
+    "snippet": "const timer = setTimeout(() => {"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/context/AuthContext.jsx",
+    "line": 39,
+    "snippet": "const timeoutTimer = setTimeout(() => {"
+  },
+  {
+    "pattern": "console",
+    "category": "debug log",
+    "file": "src/context/AuthContext.jsx",
+    "line": 169,
+    "snippet": "console.warn('Could not sync home market to user profile:', err);"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/context/CartContext.jsx",
+    "line": 160,
+    "snippet": "quoteDebounceRef.current = setTimeout(() => {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/data/placeholders.js",
+    "line": 2,
+    "snippet": "* Reusable placeholder data for MarketLink"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/data/placeholders.js",
+    "line": 4,
+    "snippet": "* TEMP: replace with API calls when backend is ready."
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/data/placeholders.js",
+    "line": 7,
+    "snippet": "// ─── Demo users for login ────────────────────────────────────────────────────"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/data/placeholders.js",
+    "line": 8,
+    "snippet": "// TEMP: replace when backend is ready"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/data/placeholders.js",
+    "line": 9,
+    "snippet": "export const demoUsers = {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/data/placeholders.js",
+    "line": 42,
+    "snippet": "// ─── Current customer (derived from demo user) ──────────────────────────────"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/data/placeholders.js",
+    "line": 43,
+    "snippet": "export const currentCustomer = demoUsers.customer;"
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/data/placeholders.js",
+    "line": 523,
+    "snippet": "'Who sells eggs?': 'Willow Bend Poultry at Stall 9 has free-range eggs — $6.00 a dozen or $3.50 for "
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/data/placeholders.js",
+    "line": 566,
+    "snippet": "{ id: 'item-1', name: 'Heirloom tomatoes',  farmer: 'Riverbend Farm',       price: '$4.50', unit: 'l"
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/data/placeholders.js",
+    "line": 567,
+    "snippet": "{ id: 'item-2', name: 'Sourdough loaf',     farmer: 'Oak & Mill Bakery',    price: '$7.00', unit: 'l"
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/data/placeholders.js",
+    "line": 568,
+    "snippet": "{ id: 'item-3', name: 'Wildflower honey',   farmer: 'Hollow Creek Apiary',  price: '$9.50', unit: 'j"
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/data/placeholders.js",
+    "line": 569,
+    "snippet": "{ id: 'item-4', name: 'Rainbow carrots',    farmer: 'Riverbend Farm',       price: '$4.50', unit: 'b"
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/data/placeholders.js",
+    "line": 570,
+    "snippet": "{ id: 'item-5', name: 'Farm eggs',          farmer: 'Willow Bend Poultry',  price: '$6.00', unit: 'd"
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/data/placeholders.js",
+    "line": 571,
+    "snippet": "{ id: 'item-6', name: 'Rhubarb',            farmer: 'Hollow Creek Apiary',  price: '$3.50', unit: 'b"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/dev/layoutCheck.js",
+    "line": 308,
+    "snippet": "targetRatio = parseFloat(declaredAspectAttr);"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/dev/layoutCheck.js",
+    "line": 328,
+    "snippet": "message: `Aspect ratio mismatch: rendered ${(actualRatio).toFixed(2)}, declared ${(targetRatio).toFi"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/hooks/useDebouncedValue.js",
+    "line": 10,
+    "snippet": "const handler = setTimeout(() => {"
+  },
+  {
+    "pattern": "console",
+    "category": "debug log",
+    "file": "src/hooks/useFeed.js",
+    "line": 62,
+    "snippet": "console.error('[useFeed] Error loading feed batch:', err);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Markets.jsx",
+    "line": 235,
+    "snippet": "placeholder=\"Search markets or address...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Markets.jsx",
+    "line": 355,
+    "snippet": "placeholder=\"e.g. Elm Street Farmers Market\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Markets.jsx",
+    "line": 368,
+    "snippet": "placeholder=\"e.g. 12 Elm Street, Melbourne\""
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/admin/Markets.jsx",
+    "line": 394,
+    "snippet": "Lat: {coords.lat.toFixed(5)}, Lng: {coords.lng.toFixed(5)}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Markets.jsx",
+    "line": 404,
+    "snippet": "placeholder=\"https://maps.google.com/?q=-33.86,151.20\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Markets.jsx",
+    "line": 480,
+    "snippet": "placeholder=\"e.g. Parking available behind the town hall.\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Moderation.jsx",
+    "line": 192,
+    "snippet": "reasonPlaceholder=\"Admin note (optional)...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Overview.module.css",
+    "line": 51,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Overview.module.css",
+    "line": 58,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/admin/People.jsx",
+    "line": 71,
+    "snippet": "const timer = setTimeout(() => {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/People.jsx",
+    "line": 214,
+    "snippet": "placeholder={`Search ${activeTab === 'farmers' ? 'stalls' : 'customers'}...`}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/People.jsx",
+    "line": 525,
+    "snippet": "reasonPlaceholder=\"e.g. Missing required certifications or outside delivery zone...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/People.jsx",
+    "line": 540,
+    "snippet": "reasonPlaceholder=\"e.g. Policy violation or quality concerns...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/People.jsx",
+    "line": 555,
+    "snippet": "reasonPlaceholder=\"e.g. Inappropriate behavior or requested closure...\""
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/admin/Reports.jsx",
+    "line": 66,
+    "snippet": "value: (m.revenueCents || 0) / 100,"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/admin/Reports.jsx",
+    "line": 130,
+    "snippet": "valueFormatter={(v) => formatCurrency(v * 100)}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Reports.module.css",
+    "line": 52,
+    "snippet": "grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/admin/Settings.jsx",
+    "line": 494,
+    "snippet": "placeholder=\"Admin resolution note or reply...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Assistant.jsx",
+    "line": 201,
+    "snippet": "placeholder=\"Ask about stalls, items, or pickup...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Cart.jsx",
+    "line": 239,
+    "snippet": "<span className={styles.itemPrice}>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Cart.jsx",
+    "line": 287,
+    "snippet": "placeholder=\"E.g., Please pack ripe tomatoes on top, extra paper bag...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Cart.module.css",
+    "line": 46,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Cart.module.css",
+    "line": 208,
+    "snippet": ".itemPrice {"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/buyer/FarmerDetail.jsx",
+    "line": 126,
+    "snippet": "{farmer.ratingAvg?.toFixed(1) || '5.0'} ({farmer.ratingCount || farmerReviews.length})"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/FarmerDetail.module.css",
+    "line": 161,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Farmers.jsx",
+    "line": 54,
+    "snippet": "placeholder=\"Search farm stalls, bakers, beekeepers...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Farmers.module.css",
+    "line": 61,
+    "snippet": ".searchInput::placeholder {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Farmers.module.css",
+    "line": 100,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Farmers.module.css",
+    "line": 107,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Farmers.module.css",
+    "line": 113,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Farmers.module.css",
+    "line": 119,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Favorites.module.css",
+    "line": 48,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Favorites.module.css",
+    "line": 54,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Favorites.module.css",
+    "line": 61,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Home.jsx",
+    "line": 92,
+    "snippet": "placeholder=\"Search farm fresh produce, bakery...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Home.module.css",
+    "line": 85,
+    "snippet": ".searchInput::placeholder {"
+  },
+  {
+    "pattern": "console",
+    "category": "debug log",
+    "file": "src/pages/buyer/MarketDetail.jsx",
+    "line": 88,
+    "snippet": "console.error('Failed to set home market:', err);"
+  },
+  {
+    "pattern": "console",
+    "category": "debug log",
+    "file": "src/pages/buyer/MarketDetail.jsx",
+    "line": 103,
+    "snippet": "console.error('Failed to toggle saved market:', err);"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/buyer/MarketDetail.jsx",
+    "line": 155,
+    "snippet": "<span>{market.distanceKm.toFixed(1)} km away</span>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Markets.module.css",
+    "line": 149,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Markets.module.css",
+    "line": 155,
+    "snippet": "grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/OrderDetail.jsx",
+    "line": 191,
+    "snippet": "placeholder=\"E.g., Plans changed, unable to attend...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/OrderDetail.jsx",
+    "line": 242,
+    "snippet": "placeholder=\"Tell other market customers about the freshness, taste, and stall experience...\""
+  },
+  {
+    "pattern": "console",
+    "category": "debug log",
+    "file": "src/pages/buyer/Products.jsx",
+    "line": 106,
+    "snippet": "console.error('[Products] Error fetching products:', err);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Products.jsx",
+    "line": 197,
+    "snippet": "placeholder=\"Search all market products...\""
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/buyer/Products.jsx",
+    "line": 201,
+    "snippet": "onBlur={() => setTimeout(() => setIsSearchFocused(false), 250)}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Products.module.css",
+    "line": 88,
+    "snippet": ".searchInput::placeholder {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Products.module.css",
+    "line": 263,
+    "snippet": "grid-template-columns: repeat(2, minmax(0, 1fr));"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Products.module.css",
+    "line": 270,
+    "snippet": "grid-template-columns: repeat(3, minmax(0, 1fr));"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/buyer/Profile.jsx",
+    "line": 38,
+    "snippet": "setTimeout(() => setMotionSaved(false), 1800);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/ProfileDetails.jsx",
+    "line": 73,
+    "snippet": "placeholder=\"(555) 000-0000\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/ProfileDetails.jsx",
+    "line": 80,
+    "snippet": "placeholder=\"Street address, City, State\""
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/buyer/ProfileNotifications.jsx",
+    "line": 89,
+    "snippet": "setTimeout(() => {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 20,
+    "snippet": "import { reviews as initialReviews, orders, products, farmers } from '@/data/placeholders';"
+  },
+  {
+    "pattern": "placeholders_file",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 20,
+    "snippet": "import { reviews as initialReviews, orders, products, farmers } from '@/data/placeholders';"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 64,
+    "snippet": "const avg = (sum / total).toFixed(1);"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 73,
+    "snippet": "5: Math.round((counts[5] / total) * 100),"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 74,
+    "snippet": "4: Math.round((counts[4] / total) * 100),"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 75,
+    "snippet": "3: Math.round((counts[3] / total) * 100),"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 76,
+    "snippet": "2: Math.round((counts[2] / total) * 100),"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 77,
+    "snippet": "1: Math.round((counts[1] / total) * 100),"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 231,
+    "snippet": "placeholder=\"Search reviews by produce, farm, or customer...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Reviews.jsx",
+    "line": 607,
+    "snippet": "placeholder=\"Share details on freshness, flavour, how you prepared it, or your stall interaction...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Reviews.module.css",
+    "line": 82,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Reviews.module.css",
+    "line": 93,
+    "snippet": "grid-template-columns: 200px 1fr 240px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Reviews.module.css",
+    "line": 294,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/buyer/Reviews.module.css",
+    "line": 300,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 213,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 219,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 274,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 281,
+    "snippet": "grid-template-columns: 1.1fr 0.9fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 725,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 731,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 737,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 854,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 860,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 866,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 996,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 1002,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 1008,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 1110,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/About.module.css",
+    "line": 1116,
+    "snippet": "grid-template-columns: 1.2fr 0.8fr;"
+  },
+  {
+    "pattern": "random",
+    "category": "random",
+    "file": "src/pages/guest/Contact.jsx",
+    "line": 150,
+    "snippet": "setTicketId(res?.id ? `ML-${res.id.slice(-6).toUpperCase()}` : `ML-${Math.floor(100000 + Math.random"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/guest/Contact.jsx",
+    "line": 184,
+    "snippet": "setTimeout(() => setCopiedPhone(false), 2000);"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/guest/Contact.jsx",
+    "line": 190,
+    "snippet": "setTimeout(() => setCopiedEmail(false), 2000);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Contact.jsx",
+    "line": 442,
+    "snippet": "placeholder=\"e.g. Claire Adams\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Contact.jsx",
+    "line": 459,
+    "snippet": "placeholder=\"claire@example.com\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Contact.jsx",
+    "line": 477,
+    "snippet": "placeholder=\"(212) 555-0123\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Contact.jsx",
+    "line": 499,
+    "snippet": "placeholder=\"Tell us what you need help with, what stall you're looking for, or details about your f"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Contact.module.css",
+    "line": 159,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Contact.module.css",
+    "line": 165,
+    "snippet": "grid-template-columns: 1fr 1.25fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Contact.module.css",
+    "line": 631,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Contact.module.css",
+    "line": 637,
+    "snippet": "grid-template-columns: 1fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/FarmerDetail.module.css",
+    "line": 313,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/FarmerDetail.module.css",
+    "line": 320,
+    "snippet": "grid-template-columns: 1fr 320px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/FarmerDetail.module.css",
+    "line": 358,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/FarmerDetail.module.css",
+    "line": 364,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/FarmerDetail.module.css",
+    "line": 371,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/FarmerDetail.module.css",
+    "line": 567,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/FarmerDetail.module.css",
+    "line": 573,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Farmers.jsx",
+    "line": 126,
+    "snippet": "placeholder=\"Search farmers, farm names, or specialties...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Farmers.module.css",
+    "line": 121,
+    "snippet": ".searchInput::placeholder {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Farmers.module.css",
+    "line": 266,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Farmers.module.css",
+    "line": 272,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Farmers.module.css",
+    "line": 278,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Farmers.module.css",
+    "line": 284,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 265,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 271,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 277,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 448,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 454,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 460,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 638,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 644,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 650,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 782,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 788,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Home.module.css",
+    "line": 794,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.jsx",
+    "line": 90,
+    "snippet": "if (err.code === 'TOO_MANY_ATTEMPTS') {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.jsx",
+    "line": 91,
+    "snippet": "setErrorMessage('Too many failed sign-in attempts. Your account is temporarily locked for 15 minutes"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.jsx",
+    "line": 217,
+    "snippet": "placeholder=\"name@example.com\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.jsx",
+    "line": 245,
+    "snippet": "placeholder=\"••••••••\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 22,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 28,
+    "snippet": "grid-template-columns: 1fr 1.15fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 425,
+    "snippet": "/* ─── QUICK DEMO PERSONAS ────────────────────────────────────────── */"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 426,
+    "snippet": ".quickDemoSection {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 430,
+    "snippet": ".demoDivider {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 436,
+    "snippet": ".demoDivider::before {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 446,
+    "snippet": ".demoDivider span {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 455,
+    "snippet": ".demoButtonsRow {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 461,
+    "snippet": ".demoPillBtn {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Login.module.css",
+    "line": 481,
+    "snippet": ".demoPillBtn:hover {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Market.jsx",
+    "line": 216,
+    "snippet": "placeholder=\"Search markets or locations...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Market.jsx",
+    "line": 423,
+    "snippet": "placeholder=\"Search by market name or address...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Market.module.css",
+    "line": 260,
+    "snippet": ".sidebarSearchInput::placeholder,"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Market.module.css",
+    "line": 261,
+    "snippet": ".listSearchInput::placeholder {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Market.module.css",
+    "line": 966,
+    "snippet": "grid-template-columns: 1fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Market.module.css",
+    "line": 1097,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Market.module.css",
+    "line": 1103,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Market.module.css",
+    "line": 1109,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/guest/MarketDetail.jsx",
+    "line": 79,
+    "snippet": "setTimeout(() => setCopied(false), 2000);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 291,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 299,
+    "snippet": "grid-template-columns: 1.5fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 459,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 469,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 588,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 594,
+    "snippet": "grid-template-columns: 1fr 380px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 602,
+    "snippet": "grid-template-columns: 1fr 400px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 673,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 679,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 743,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 749,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 808,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 814,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 968,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/MarketDetail.module.css",
+    "line": 974,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/guest/ProductDetail.jsx",
+    "line": 79,
+    "snippet": "setTimeout(() => setShared(false), 2000);"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/guest/ProductDetail.jsx",
+    "line": 135,
+    "snippet": "const unitPriceCents = product.priceCents || (product.price ? product.price * 100 : 0);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/ProductDetail.module.css",
+    "line": 230,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/ProductDetail.module.css",
+    "line": 236,
+    "snippet": "grid-template-columns: 1fr 380px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/ProductDetail.module.css",
+    "line": 244,
+    "snippet": "grid-template-columns: 1fr 400px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/ProductDetail.module.css",
+    "line": 259,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/ProductDetail.module.css",
+    "line": 267,
+    "snippet": "grid-template-columns: 1fr 160px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/ProductDetail.module.css",
+    "line": 357,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/ProductDetail.module.css",
+    "line": 367,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/ProductDetail.module.css",
+    "line": 1043,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/ProductDetail.module.css",
+    "line": 1049,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/guest/Products.jsx",
+    "line": 72,
+    "snippet": "numericPrice: (p.priceCents || 0) / 100,"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Products.jsx",
+    "line": 144,
+    "snippet": "placeholder=\"Search tomatoes, sourdough, peaches, honey...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Products.module.css",
+    "line": 105,
+    "snippet": ".searchInput::placeholder {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Products.module.css",
+    "line": 304,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Products.module.css",
+    "line": 310,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Products.module.css",
+    "line": 316,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Products.module.css",
+    "line": 322,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.jsx",
+    "line": 435,
+    "snippet": "placeholder=\"e.g. Eleanor Vance\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.jsx",
+    "line": 457,
+    "snippet": "placeholder=\"name@example.com\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.jsx",
+    "line": 478,
+    "snippet": "placeholder=\"(212) 555-0123\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.jsx",
+    "line": 527,
+    "snippet": "placeholder=\"e.g. Riverbend Organic Farm\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.jsx",
+    "line": 547,
+    "snippet": "placeholder=\"e.g. Elena Vance\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.jsx",
+    "line": 593,
+    "snippet": "placeholder=\"grower@farm.org\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.jsx",
+    "line": 613,
+    "snippet": "placeholder=\"(555) 012-3456\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.jsx",
+    "line": 650,
+    "snippet": "placeholder=\"Min. 8 characters\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.jsx",
+    "line": 690,
+    "snippet": "placeholder=\"Repeat password\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.module.css",
+    "line": 22,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.module.css",
+    "line": 28,
+    "snippet": "grid-template-columns: 1fr 1.25fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.module.css",
+    "line": 400,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/guest/Register.module.css",
+    "line": 406,
+    "snippet": "grid-template-columns: 1fr 1fr;"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/vendor/DashboardTab.jsx",
+    "line": 179,
+    "snippet": "<span className={styles.progressValue}>60 / 100 bunches</span>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/DashboardTab.module.css",
+    "line": 27,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/DashboardTab.module.css",
+    "line": 87,
+    "snippet": "grid-template-columns: 2fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/DashboardTab.module.css",
+    "line": 245,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/DashboardTab.module.css",
+    "line": 248,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/DashboardTab.module.css",
+    "line": 260,
+    "snippet": "grid-template-columns: 1fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/DashboardTab.module.css",
+    "line": 274,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/FarmInventoryTab.jsx",
+    "line": 13,
+    "snippet": "<input type=\"text\" placeholder=\"Search produce...\" className={styles.searchInput} />"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/FarmInventoryTab.module.css",
+    "line": 66,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/FarmInventoryTab.module.css",
+    "line": 152,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/FarmInventoryTab.module.css",
+    "line": 169,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/HistoryTab.jsx",
+    "line": 14,
+    "snippet": "<input type=\"text\" placeholder=\"Search order ID, customer...\" className={styles.searchInput} />"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/IncomingOrdersTab.jsx",
+    "line": 4,
+    "snippet": "const MOCK_ORDERS = ["
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/IncomingOrdersTab.jsx",
+    "line": 12,
+    "snippet": "const [orders, setOrders] = useState(MOCK_ORDERS);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/IncomingOrdersTab.jsx",
+    "line": 20,
+    "snippet": "<button className={styles.btnOutline} onClick={() => setOrders([])}>Clear (Demo Empty State)</button"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Insights.module.css",
+    "line": 46,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/vendor/MyStall.jsx",
+    "line": 266,
+    "snippet": "lat: parseFloat(pos.coords.latitude.toFixed(6)),"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/vendor/MyStall.jsx",
+    "line": 267,
+    "snippet": "lng: parseFloat(pos.coords.longitude.toFixed(6)),"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/MyStall.jsx",
+    "line": 551,
+    "snippet": "placeholder=\"e.g. Booth 14\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/MyStall.jsx",
+    "line": 839,
+    "snippet": "placeholder=\"e.g. Farm maintenance\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/MyStall.jsx",
+    "line": 903,
+    "snippet": "placeholder=\"e.g. Elm Street Market, Center Aisle Stall 12\""
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/vendor/MyStall.jsx",
+    "line": 935,
+    "snippet": "setLocationCoords({ ...locationCoords, lat: parseFloat(e.target.value) || 0 })"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/vendor/MyStall.jsx",
+    "line": 946,
+    "snippet": "setLocationCoords({ ...locationCoords, lng: parseFloat(e.target.value) || 0 })"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/MyStall.module.css",
+    "line": 158,
+    "snippet": "grid-template-columns: 1fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/MyStall.module.css",
+    "line": 164,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/MyStall.module.css",
+    "line": 257,
+    "snippet": "grid-template-columns: 1fr 1fr 36px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/OrderDetail.jsx",
+    "line": 129,
+    "snippet": "reasonPlaceholder=\"e.g. Item out of harvest, stall closing early...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/OrderDetail.jsx",
+    "line": 149,
+    "snippet": "reasonPlaceholder=\"e.g. Unforeseen harvest shortage...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/OrderDetail.jsx",
+    "line": 226,
+    "snippet": "<span className={styles.itemPrice}>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/OrderDetail.module.css",
+    "line": 187,
+    "snippet": ".itemPrice {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Overview.module.css",
+    "line": 227,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "console",
+    "category": "debug log",
+    "file": "src/pages/vendor/ProfileTab.jsx",
+    "line": 29,
+    "snippet": "console.log('Profile saved:', profileData);"
+  },
+  {
+    "pattern": "console",
+    "category": "debug log",
+    "file": "src/pages/vendor/ProfileTab.jsx",
+    "line": 34,
+    "snippet": "console.log('Password updated:', passwordData);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/ProfileTab.jsx",
+    "line": 154,
+    "snippet": "placeholder=\"Enter current password\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/ProfileTab.jsx",
+    "line": 166,
+    "snippet": "placeholder=\"Enter new password\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/ProfileTab.jsx",
+    "line": 177,
+    "snippet": "placeholder=\"Confirm new password\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/ProfileTab.module.css",
+    "line": 143,
+    "snippet": "grid-template-columns: 1fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/ProfileTab.module.css",
+    "line": 247,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/vendor/Reviews.jsx",
+    "line": 122,
+    "snippet": "const ratingAvg = summary?.ratingAvg ? Number(summary.ratingAvg).toFixed(1) : '0.0';"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/pages/vendor/Reviews.jsx",
+    "line": 152,
+    "snippet": "const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Reviews.jsx",
+    "line": 312,
+    "snippet": "placeholder=\"Thank the customer or address feedback...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Reviews.jsx",
+    "line": 370,
+    "snippet": "reasonPlaceholder=\"e.g. Abusive language, false order claims...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Reviews.module.css",
+    "line": 27,
+    "snippet": "grid-template-columns: 140px 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Reviews.module.css",
+    "line": 38,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Reviews.module.css",
+    "line": 73,
+    "snippet": "grid-template-columns: 24px 1fr 24px;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/SalesTab.module.css",
+    "line": 40,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/SalesTab.module.css",
+    "line": 71,
+    "snippet": "grid-template-columns: 2fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/SalesTab.module.css",
+    "line": 184,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/SalesTab.module.css",
+    "line": 201,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 8,
+    "snippet": "applyWeeklyTemplate,"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 23,
+    "snippet": "import WeeklyTemplate from './WeeklyTemplate';"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 51,
+    "snippet": "// Sheet modals: 'none' | 'new' | 'edit' | 'template' | 'confirm-apply-template'"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 77,
+    "snippet": "const timer = setTimeout(() => {"
+  },
+  {
+    "pattern": "setTimeout",
+    "category": "fake delay",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 143,
+    "snippet": "const timer = setTimeout(async () => {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 196,
+    "snippet": "// Apply Weekly Template"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 197,
+    "snippet": "const handleApplyTemplate = async () => {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 199,
+    "snippet": "const res = await applyWeeklyTemplate();"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 201,
+    "snippet": "setToastMessage(`Weekly template applied for ${updatedCount} products.`);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 207,
+    "snippet": "setToastMessage(`Failed to apply template: ${err?.message}`);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 238,
+    "snippet": "onClick={() => setSheetMode('template')}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 240,
+    "snippet": "Weekly template"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 245,
+    "snippet": "onClick={() => setSheetMode('confirm-apply-template')}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 247,
+    "snippet": "Apply template"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 259,
+    "snippet": "placeholder=\"Search products by name...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 454,
+    "snippet": "{/* Weekly Template Sheet */}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 455,
+    "snippet": "{sheetMode === 'template' && ("
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 460,
+    "snippet": "title=\"Weekly Stock Template\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 462,
+    "snippet": "<WeeklyTemplate"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 465,
+    "snippet": "setToastMessage('Weekly template saved.');"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 472,
+    "snippet": "{/* Apply Template Confirm Peek Sheet */}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 473,
+    "snippet": "{sheetMode === 'confirm-apply-template' && ("
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 478,
+    "snippet": "title=\"Apply Weekly Template\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 482,
+    "snippet": "message={`This resets quantities for ${products.length} products to their weekly template values.`}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 483,
+    "snippet": "confirmLabel=\"Apply template\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.jsx",
+    "line": 486,
+    "snippet": "onConfirm={handleApplyTemplate}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.module.css",
+    "line": 132,
+    "snippet": "grid-template-columns: 52px 1fr auto;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/Stock.module.css",
+    "line": 142,
+    "snippet": "grid-template-columns: 44px 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 11,
+    "snippet": "import { parseDollarsToCents, formatCentsToDollarsInput } from '@/utils/format';"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 83,
+    "snippet": "// Weekly template config"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 84,
+    "snippet": "const [templateEnabled, setTemplateEnabled] = useState(false);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 85,
+    "snippet": "const [templateDefaultQty, setTemplateDefaultQty] = useState(10);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 111,
+    "snippet": "setPriceInput(formatCentsToDollarsInput(p.priceCents));"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 121,
+    "snippet": "if (p.weeklyTemplate) {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 122,
+    "snippet": "setTemplateEnabled(Boolean(p.weeklyTemplate.enabled));"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 123,
+    "snippet": "setTemplateDefaultQty(p.weeklyTemplate.defaultQuantity ?? 10);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 232,
+    "snippet": "weeklyTemplate: {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 233,
+    "snippet": "enabled: templateEnabled,"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 234,
+    "snippet": "defaultQuantity: Number(templateDefaultQty),"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 353,
+    "snippet": "placeholder=\"e.g. Rainbow carrots\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 407,
+    "snippet": "placeholder=\"4.50\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 493,
+    "snippet": "placeholder=\"Tasting notes, harvest date, preparation ideas...\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 599,
+    "snippet": "{/* Weekly Inventory Template Section */}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 600,
+    "snippet": "<div className={styles.templateSection}>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 601,
+    "snippet": "<div className={styles.templateToggleRow}>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 603,
+    "snippet": "<strong className={styles.templateTitle}>Weekly template</strong>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 607,
+    "snippet": "checked={templateEnabled}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 609,
+    "snippet": "setTemplateEnabled(checked);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 613,
+    "snippet": "label=\"Enable weekly template\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 617,
+    "snippet": "{templateEnabled && ("
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 618,
+    "snippet": "<div className={styles.templateQtyRow}>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 619,
+    "snippet": "<label htmlFor=\"template-default-qty\" className={styles.fieldLabel}>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 623,
+    "snippet": "id=\"template-default-qty\""
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 625,
+    "snippet": "value={templateDefaultQty}"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.jsx",
+    "line": 627,
+    "snippet": "setTemplateDefaultQty(parseInt(e.target.value || '0', 10));"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.module.css",
+    "line": 103,
+    "snippet": "grid-template-columns: 1fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.module.css",
+    "line": 109,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.module.css",
+    "line": 287,
+    "snippet": "grid-template-columns: repeat(6, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.module.css",
+    "line": 296,
+    "snippet": "grid-template-columns: repeat(4, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.module.css",
+    "line": 320,
+    "snippet": "/* Template Section */"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.module.css",
+    "line": 321,
+    "snippet": ".templateSection {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.module.css",
+    "line": 331,
+    "snippet": ".templateToggleRow {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.module.css",
+    "line": 338,
+    "snippet": ".templateTitle {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StockForm.module.css",
+    "line": 344,
+    "snippet": ".templateQtyRow {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StoreSettingsTab.jsx",
+    "line": 295,
+    "snippet": "<p className={styles.helpText}>Temporarily close stall for extended breaks.</p>"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StoreSettingsTab.module.css",
+    "line": 217,
+    "snippet": "grid-template-columns: 1fr 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/StoreSettingsTab.module.css",
+    "line": 543,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 2,
+    "snippet": "import { getWeeklyTemplate, updateWeeklyTemplate } from '@/api/farmer';"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 6,
+    "snippet": "import styles from './WeeklyTemplate.module.css';"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 8,
+    "snippet": "export function WeeklyTemplate({ onClose, onSaved }) {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 18,
+    "snippet": "const res = await getWeeklyTemplate();"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 23,
+    "snippet": "if (isMounted) setError(err?.message || 'Could not load weekly template.');"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 55,
+    "snippet": "await updateWeeklyTemplate("
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 65,
+    "snippet": "setError(err?.message || 'Failed to save weekly template.');"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 84,
+    "snippet": "Configure default restock quantities for each product. Applying the template resets listed items to "
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 141,
+    "snippet": "Save template"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/pages/vendor/WeeklyTemplate.jsx",
+    "line": 148,
+    "snippet": "export default WeeklyTemplate;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/routes/AppRoutes.jsx",
+    "line": 74,
+    "snippet": "* Temporary placeholder for authenticated areas accessed via preview buttons"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/routes/AppRoutes.jsx",
+    "line": 76,
+    "snippet": "function PreviewPlaceholder({ roleName }) {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/routes/AppRoutes.jsx",
+    "line": 84,
+    "snippet": "This is a placeholder for the authenticated {roleName} workspace. Signed-in pages are in development"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/base.css",
+    "line": 276,
+    "snippet": "/* Placeholder styling */"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/base.css",
+    "line": 277,
+    "snippet": "::placeholder {"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/tokens.css",
+    "line": 9,
+    "snippet": "--color-canvas:       #F5EFE3;  /* \"Market canvas\": footer, image placeholders, empty states */"
+  },
+  {
+    "pattern": "placeholders_file",
+    "category": "placeholder data",
+    "file": "src/styles/tokens.css",
+    "line": 9,
+    "snippet": "--color-canvas:       #F5EFE3;  /* \"Market canvas\": footer, image placeholders, empty states */"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/tokens.css",
+    "line": 13,
+    "snippet": "--color-ink-faint:    #9A9088;  /* Placeholder text and disabled text ONLY (never essential info) */"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/utils.css",
+    "line": 97,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/utils.css",
+    "line": 103,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/utils.css",
+    "line": 109,
+    "snippet": "grid-template-columns: 1fr;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/utils.css",
+    "line": 115,
+    "snippet": "grid-template-columns: repeat(2, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/utils.css",
+    "line": 121,
+    "snippet": "grid-template-columns: repeat(3, 1fr);"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/styles/utils.css",
+    "line": 127,
+    "snippet": "grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));"
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/utils/format.js",
+    "line": 7,
+    "snippet": "* Format integer cents as USD currency ($4.50)"
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/utils/format.js",
+    "line": 13,
+    "snippet": "return '$0.00';"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/utils/format.js",
+    "line": 16,
+    "snippet": "const dollars = cents >= 100 || Number.isInteger(cents) ? cents / 100 : cents;"
+  },
+  {
+    "pattern": "literal_price",
+    "category": "hard-coded number",
+    "file": "src/utils/format.js",
+    "line": 28,
+    "snippet": "* Parses a dollar string ($4.50 or 4.5) to integer cents using integer math."
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/utils/format.js",
+    "line": 42,
+    "snippet": "return dollars * 100 + cents;"
+  },
+  {
+    "pattern": "placeholder_keywords",
+    "category": "placeholder data",
+    "file": "src/utils/format.js",
+    "line": 50,
+    "snippet": "export function formatCentsToDollarsInput(cents) {"
+  },
+  {
+    "pattern": "float_money",
+    "category": "float money math",
+    "file": "src/utils/format.js",
+    "line": 52,
+    "snippet": "const dollars = Math.floor(cents / 100);"
+  }
+]

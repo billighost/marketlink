@@ -1,1 +1,99 @@
-.button {  display: inline-flex;  align-items: center;  justify-content: center;  gap: var(--space-2);  border-radius: var(--radius-md);  font-family: var(--font-body);  font-weight: var(--weight-medium);  text-decoration: none;  cursor: pointer;  white-space: nowrap;  transition: background-color var(--duration-fast) var(--ease-standard),              border-color var(--duration-fast) var(--ease-standard),              color var(--duration-fast) var(--ease-standard);  border: 1px solid transparent;  text-align: center;}.button:disabled,.button[aria-disabled="true"] {  opacity: 0.5;  cursor: not-allowed;  pointer-events: none;}.button:active:not(:disabled) {  transform: scale(0.98);}.button:focus-visible {  outline: var(--focus-ring);  outline-offset: var(--focus-offset);}.md {  min-height: var(--control-h);  padding-inline: var(--space-5);  font-size: var(--text-sm);  line-height: var(--lh-ui);}.sm {  min-height: var(--tap-min);  padding-inline: var(--space-4);  font-size: var(--text-sm);  line-height: var(--lh-ui);}.primary {  background-color: var(--color-primary);  color: var(--color-on-primary);  border-color: var(--color-primary);}.primary:hover:not(:disabled) {  background-color: var(--color-primary-hover);  border-color: var(--color-primary-hover);  color: var(--color-on-primary);}.secondary {  background-color: transparent;  color: var(--color-ink);  border-color: var(--color-border);}.secondary:hover:not(:disabled) {  background-color: var(--color-canvas-soft);  border-color: var(--color-ink-soft);  color: var(--color-ink);}.text {  background-color: transparent;  color: var(--color-link);  border-color: transparent;  min-height: var(--tap-min);  padding-inline: var(--space-2);  text-decoration: underline;  text-underline-offset: 3px;}.text:hover:not(:disabled) {  color: var(--color-primary-hover);  text-decoration: underline;}.danger {  background-color: var(--color-danger);  color: var(--color-white);  border-color: var(--color-danger);}.danger:hover:not(:disabled) {  filter: brightness(0.9);}
+/* Button module styles */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+  border: 1px solid transparent;
+  text-align: center;
+}
+
+.button:disabled,
+.button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Sizes */
+.md {
+  min-height: var(--control-h);
+  padding-inline: var(--space-5);
+  font-size: var(--text-sm);
+  line-height: var(--lh-ui);
+}
+
+.sm {
+  min-height: var(--tap-min);
+  padding-inline: var(--space-4);
+  font-size: var(--text-sm);
+  line-height: var(--lh-ui);
+}
+
+/* Variants */
+.primary {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary);
+}
+
+.primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: var(--color-on-primary);
+}
+
+.secondary {
+  background-color: transparent;
+  color: var(--color-ink);
+  border-color: var(--color-border);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: var(--color-canvas-soft);
+  border-color: var(--color-ink-soft);
+  color: var(--color-ink);
+}
+
+.text {
+  background-color: transparent;
+  color: var(--color-link);
+  border-color: transparent;
+  min-height: var(--tap-min);
+  padding-inline: var(--space-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.text:hover:not(:disabled) {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+.danger {
+  background-color: var(--color-danger);
+  color: var(--color-white);
+  border-color: var(--color-danger);
+}
+
+.danger:hover:not(:disabled) {
+  filter: brightness(0.9);
+}

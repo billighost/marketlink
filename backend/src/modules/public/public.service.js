@@ -1,1 +1,124 @@
-import { getDb } from '../../db/client.js';import { COLLECTIONS } from '../../db/collections.js';import { toFarmerCard } from '../../utils/shapes.js';import { listActiveAnnouncements } from '../announcements/announcements.service.js';export async function getPublicHomeData() {  const db = getDb();  const market = await db    .collection(COLLECTIONS.MARKETS)    .findOne({ status: 'active' }, { projection: { _id: 1, name: 1, slug: 1, address: 1, schedule: 1 } });  const marketId = market?._id;  const boardDay = market?.schedule?.[0]?.day || 'sat';  const [boardProducts, topFarmers, announcements, markets] = await Promise.all([    db      .collection(COLLECTIONS.PRODUCTS)      .find(        {          listed: true,          availability: { $in: ['in', 'low'] },          ...(marketId ? { marketIds: marketId } : {}),        },        {          projection: {            _id: 1,            name: 1,            priceCents: 1,            unit: 1,            availability: 1,            farmer: 1,            featuredScore: 1,          },        }      )      .sort({ featuredScore: -1 })      .limit(6)      .toArray(),    db      .collection(COLLECTIONS.FARMERS)      .find(        { listingEnabled: true },        {          projection: {            _id: 1,            stallName: 1,            stallNumber: 1,            specialty: 1,            art: 1,            imageUrl: 1,            ratingAvg: 1,            ratingCount: 1,            operatingDays: 1,            isTopSeller: 1,            isNew: 1,            marketIds: 1,          },        }      )      .sort({ salesCount: -1, ratingAvg: -1, _id: 1 })      .limit(3)      .toArray(),    listActiveAnnouncements('customer'),    db      .collection(COLLECTIONS.MARKETS)      .find({ status: 'active' }, { projection: { _id: 1, name: 1 } })      .toArray(),  ]);  const marketLookup = new Map(markets.map((m) => [m._id.toString(), m]));  const boardItems = boardProducts.map((p) => ({    id: p._id.toString(),    name: p.name,    farmerName: p.farmer?.stallName || '',    stallNumber: p.farmer?.stallNumber || '',    priceCents: p.priceCents,    unit: p.unit,    availability: p.availability,  }));  const farmerCards = topFarmers.map((f) => {    const fMarkets = (f.marketIds || [])      .map((id) => marketLookup.get(id.toString()))      .filter(Boolean);    return toFarmerCard(f, { markets: fMarkets });  });  return {    board: {      market: market        ? {            id: market._id.toString(),            name: market.name,            slug: market.slug,          }        : null,      day: boardDay,      items: boardItems,    },    farmers: farmerCards,    announcements: announcements.slice(0, 3).map((a) => ({      id: a.id,      title: a.title,      body: a.body,    })),  };}
+/**
+ * Public landing page service layer.
+ * Prepares guest landing board, featured farmers, and public announcements in a single round-trip.
+ */
+
+import { getDb } from '../../db/client.js';
+import { COLLECTIONS } from '../../db/collections.js';
+import { toFarmerCard } from '../../utils/shapes.js';
+import { listActiveAnnouncements } from '../announcements/announcements.service.js';
+
+/**
+ * Compiles public homepage discovery data for unauthenticated guests.
+ *
+ * @returns {Promise<object>}
+ */
+export async function getPublicHomeData() {
+  const db = getDb();
+
+  // 1. Fetch primary market for the board (Elm Street Market or first active)
+  const market = await db
+    .collection(COLLECTIONS.MARKETS)
+    .findOne({ status: 'active' }, { projection: { _id: 1, name: 1, slug: 1, address: 1, schedule: 1 } });
+
+  const marketId = market?._id;
+  const boardDay = market?.schedule?.[0]?.day || 'sat';
+
+  // 2. Parallel queries for board items, top farmers, and public announcements
+  const [boardProducts, topFarmers, announcements, markets] = await Promise.all([
+    db
+      .collection(COLLECTIONS.PRODUCTS)
+      .find(
+        {
+          listed: true,
+          availability: { $in: ['in', 'low'] },
+          ...(marketId ? { marketIds: marketId } : {}),
+        },
+        {
+          projection: {
+            _id: 1,
+            name: 1,
+            priceCents: 1,
+            unit: 1,
+            availability: 1,
+            farmer: 1,
+            featuredScore: 1,
+          },
+        }
+      )
+      .sort({ featuredScore: -1 })
+      .limit(6)
+      .toArray(),
+
+    db
+      .collection(COLLECTIONS.FARMERS)
+      .find(
+        { listingEnabled: true },
+        {
+          projection: {
+            _id: 1,
+            stallName: 1,
+            stallNumber: 1,
+            specialty: 1,
+            art: 1,
+            imageUrl: 1,
+            ratingAvg: 1,
+            ratingCount: 1,
+            operatingDays: 1,
+            isTopSeller: 1,
+            isNew: 1,
+            marketIds: 1,
+          },
+        }
+      )
+      .sort({ salesCount: -1, ratingAvg: -1, _id: 1 })
+      .limit(3)
+      .toArray(),
+
+    listActiveAnnouncements('customer'),
+
+    db
+      .collection(COLLECTIONS.MARKETS)
+      .find({ status: 'active' }, { projection: { _id: 1, name: 1 } })
+      .toArray(),
+  ]);
+
+  const marketLookup = new Map(markets.map((m) => [m._id.toString(), m]));
+
+  const boardItems = boardProducts.map((p) => ({
+    id: p._id.toString(),
+    name: p.name,
+    farmerName: p.farmer?.stallName || '',
+    stallNumber: p.farmer?.stallNumber || '',
+    priceCents: p.priceCents,
+    unit: p.unit,
+    availability: p.availability,
+  }));
+
+  const farmerCards = topFarmers.map((f) => {
+    const fMarkets = (f.marketIds || [])
+      .map((id) => marketLookup.get(id.toString()))
+      .filter(Boolean);
+    return toFarmerCard(f, { markets: fMarkets });
+  });
+
+  return {
+    board: {
+      market: market
+        ? {
+            id: market._id.toString(),
+            name: market.name,
+            slug: market.slug,
+          }
+        : null,
+      day: boardDay,
+      items: boardItems,
+    },
+    farmers: farmerCards,
+    announcements: announcements.slice(0, 3).map((a) => ({
+      id: a.id,
+      title: a.title,
+      body: a.body,
+    })),
+  };
+}

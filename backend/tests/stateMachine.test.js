@@ -1,1 +1,236 @@
-import { describe, it, before, after } from 'node:test';import assert from 'node:assert/strict';import { ObjectId } from 'mongodb';import { setupTestEnvironment, teardownTestEnvironment } from './helpers.js';import { COLLECTIONS } from '../src/db/collections.js';import { ORDER_STATUSES, ROLES } from '../src/constants.js';import { TRANSITIONS, transitionOrder } from '../src/modules/orders/orderStateMachine.js';describe('Order State Machine Matrix Suite (T3.111 - T3.140)', () => {  let db;  let sampleCustomer;  let sampleFarmerUser;  let sampleFarmerDoc;  let sampleProduct;  before(async () => {    const env = await setupTestEnvironment();    db = env.db;    sampleCustomer = await db.collection(COLLECTIONS.USERS).findOne({ email: 'george@example.com' });    sampleFarmerUser = await db.collection(COLLECTIONS.USERS).findOne({ email: 'riverbend@example.com' });    sampleFarmerDoc = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: sampleFarmerUser._id });    sampleProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: sampleFarmerDoc._id });  });  const createdOrderIds = [];  after(async () => {    if (createdOrderIds.length > 0) {      await db.collection(COLLECTIONS.ORDERS).deleteMany({ _id: { $in: createdOrderIds } });    }    await teardownTestEnvironment();  });  async function createTestOrder(status = 'placed', { cutoffOffsetHours = 24 } = {}) {    const now = new Date();    const cutoffAt = new Date(now.getTime() + cutoffOffsetHours * 3600000);    const orderDoc = {      _id: new ObjectId(),      orderNumber: `ML-TEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`,      checkoutId: new ObjectId().toString(),      customerId: sampleCustomer._id,      customerName: sampleCustomer.name,      farmerId: sampleFarmerDoc._id,      farmerUserId: sampleFarmerUser._id,      farmerName: sampleFarmerDoc.stallName,      marketId: sampleFarmerDoc.marketIds[0],      items: [        {          productId: sampleProduct._id,          name: sampleProduct.name,          unit: sampleProduct.unit,          priceCents: sampleProduct.priceCents,          quantity: 2,          lineTotalCents: sampleProduct.priceCents * 2,          art: sampleProduct.art,        },      ],      subtotalCents: sampleProduct.priceCents * 2,      totalCents: sampleProduct.priceCents * 2,      status,      pickup: {        start: new Date(now.getTime() + 48 * 3600000),        end: new Date(now.getTime() + 50 * 3600000),        stallNumber: '4',      },      cutoffAt,      timeline: [{ status: 'placed', at: now, byRole: 'customer' }],      reviewed: false,      slotKey: `${sampleFarmerDoc._id}|${new Date(now.getTime() + 48 * 3600000).toISOString()}`,      createdAt: now,      updatedAt: now,    };    createdOrderIds.push(orderDoc._id);    await db.collection(COLLECTIONS.ORDERS).insertOne(orderDoc);    return orderDoc;  }  it('T3.111: Full 6x6x3 State Machine Matrix matches TRANSITIONS specification', async () => {    const allRoles = [ROLES.CUSTOMER, ROLES.FARMER, ROLES.ADMIN];    for (const from of ORDER_STATUSES) {      for (const to of ORDER_STATUSES) {        for (const role of allRoles) {          const isExpectedAllowed =            TRANSITIONS[from] &&            TRANSITIONS[from][to] &&            TRANSITIONS[from][to].includes(role);          const order = await createTestOrder(from);          const actorId =            role === ROLES.CUSTOMER              ? sampleCustomer._id              : role === ROLES.FARMER              ? sampleFarmerUser._id              : new ObjectId();          const actor = { id: actorId, role };          const reason = ['declined', 'cancelled'].includes(to) ? 'Valid test reason here' : undefined;          try {            await transitionOrder(order._id, to, actor, { reason, db });            assert.ok(              isExpectedAllowed,              `Transition from ${from} to ${to} by ${role} succeeded but was expected to FAIL`            );          } catch (err) {            assert.ok(              !isExpectedAllowed,              `Transition from ${from} to ${to} by ${role} failed with [${err.code || err.message}] but was expected to PASS`            );          }        }      }    }  });  it('T3.112: Double transitions race condition: second transition fails with ORDER_CHANGED', async () => {    const order = await createTestOrder('placed');    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };    const [res1, res2] = await Promise.allSettled([      transitionOrder(order._id, 'accepted', farmerActor, { db }),      transitionOrder(order._id, 'accepted', farmerActor, { db }),    ]);    const successes = [res1, res2].filter((r) => r.status === 'fulfilled');    const failures = [res1, res2].filter((r) => r.status === 'rejected');    assert.equal(successes.length, 1, 'Exactly one transition must succeed');    assert.equal(failures.length, 1, 'The losing transition must fail');    assert.equal(failures[0].reason.code, 'ORDER_CHANGED');  });  it('T3.113: Customer cannot cancel after cutoff (409 CUTOFF_PASSED)', async () => {    const order = await createTestOrder('placed', { cutoffOffsetHours: -2 });    const customerActor = { id: sampleCustomer._id, role: ROLES.CUSTOMER };    await assert.rejects(      async () => {        await transitionOrder(order._id, 'cancelled', customerActor, { db });      },      (err) => err.code === 'CUTOFF_PASSED'    );  });  it('T3.114: Farmer cancellation requires a valid reason (3-200 chars)', async () => {    const order = await createTestOrder('placed');    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };    await assert.rejects(      async () => {        await transitionOrder(order._id, 'cancelled', farmerActor, { reason: '', db });      },      (err) => err.code === 'VALIDATION_FAILED'    );    await assert.rejects(      async () => {        await transitionOrder(order._id, 'cancelled', farmerActor, { reason: 'No', db });      },      (err) => err.code === 'VALIDATION_FAILED'    );  });  it('T3.115: Decline restores stock and cancel restores stock', async () => {    const prodBefore = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sampleProduct._id });    const initialQty = prodBefore.quantityAvailable;    const order = await createTestOrder('placed');    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };    await transitionOrder(order._id, 'declined', farmerActor, { reason: 'Out of stock for this week', db });    const prodAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sampleProduct._id });    assert.equal(      prodAfter.quantityAvailable,      initialQty + 2,      'Stock must be restored by 2 on order decline'    );    await db.collection(COLLECTIONS.PRODUCTS).updateOne(      { _id: sampleProduct._id },      { $set: { quantityAvailable: initialQty } }    );  });  it('T3.116: Complete transition increments salesCount on products and farmer', async () => {    const prodBefore = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sampleProduct._id });    const farmerBefore = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: sampleFarmerDoc._id });    const order = await createTestOrder('ready');    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };    await transitionOrder(order._id, 'completed', farmerActor, { db });    const prodAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sampleProduct._id });    const farmerAfter = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: sampleFarmerDoc._id });    assert.equal(prodAfter.salesCount, prodBefore.salesCount + 2);    assert.equal(farmerAfter.salesCount, farmerBefore.salesCount + 2);    const completedOrder = await db.collection(COLLECTIONS.ORDERS).findOne({ _id: order._id });    assert.ok(completedOrder.completedAt);    assert.equal(completedOrder.status, 'completed');  });  it('T3.117: Timeline is append-only and captures status, actor, and note', async () => {    const order = await createTestOrder('placed');    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };    await transitionOrder(order._id, 'accepted', farmerActor, { db });    await transitionOrder(order._id, 'ready', farmerActor, { db });    const updated = await db.collection(COLLECTIONS.ORDERS).findOne({ _id: order._id });    assert.equal(updated.timeline.length, 3);    assert.equal(updated.timeline[0].status, 'placed');    assert.equal(updated.timeline[1].status, 'accepted');    assert.equal(updated.timeline[2].status, 'ready');  });});
+/**
+ * Order State Machine unit and matrix test suite (T3.111 - T3.140).
+ * Generates the full 6x6x3 transition matrix programmatically, asserts atomic conditional updates,
+ * stock restoration on decline/cancel, salesCount increments on completion, and timeline integrity.
+ */
+
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { ObjectId } from 'mongodb';
+import { setupTestEnvironment, teardownTestEnvironment } from './helpers.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+import { ORDER_STATUSES, ROLES } from '../src/constants.js';
+import { TRANSITIONS, transitionOrder } from '../src/modules/orders/orderStateMachine.js';
+
+describe('Order State Machine Matrix Suite (T3.111 - T3.140)', () => {
+  let db;
+  let sampleCustomer;
+  let sampleFarmerUser;
+  let sampleFarmerDoc;
+  let sampleProduct;
+
+  before(async () => {
+    const env = await setupTestEnvironment();
+    db = env.db;
+
+    sampleCustomer = await db.collection(COLLECTIONS.USERS).findOne({ email: 'george@example.com' });
+    sampleFarmerUser = await db.collection(COLLECTIONS.USERS).findOne({ email: 'riverbend@example.com' });
+    sampleFarmerDoc = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: sampleFarmerUser._id });
+    sampleProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ farmerId: sampleFarmerDoc._id });
+  });
+
+  const createdOrderIds = [];
+
+  after(async () => {
+    if (createdOrderIds.length > 0) {
+      await db.collection(COLLECTIONS.ORDERS).deleteMany({ _id: { $in: createdOrderIds } });
+    }
+    await teardownTestEnvironment();
+  });
+
+  // Helper to create a test order in any specified initial status
+  async function createTestOrder(status = 'placed', { cutoffOffsetHours = 24 } = {}) {
+    const now = new Date();
+    const cutoffAt = new Date(now.getTime() + cutoffOffsetHours * 3600000);
+    const orderDoc = {
+      _id: new ObjectId(),
+      orderNumber: `ML-TEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      checkoutId: new ObjectId().toString(),
+      customerId: sampleCustomer._id,
+      customerName: sampleCustomer.name,
+      farmerId: sampleFarmerDoc._id,
+      farmerUserId: sampleFarmerUser._id,
+      farmerName: sampleFarmerDoc.stallName,
+      marketId: sampleFarmerDoc.marketIds[0],
+      items: [
+        {
+          productId: sampleProduct._id,
+          name: sampleProduct.name,
+          unit: sampleProduct.unit,
+          priceCents: sampleProduct.priceCents,
+          quantity: 2,
+          lineTotalCents: sampleProduct.priceCents * 2,
+          art: sampleProduct.art,
+        },
+      ],
+      subtotalCents: sampleProduct.priceCents * 2,
+      totalCents: sampleProduct.priceCents * 2,
+      status,
+      pickup: {
+        start: new Date(now.getTime() + 48 * 3600000),
+        end: new Date(now.getTime() + 50 * 3600000),
+        stallNumber: '4',
+      },
+      cutoffAt,
+      timeline: [{ status: 'placed', at: now, byRole: 'customer' }],
+      reviewed: false,
+      slotKey: `${sampleFarmerDoc._id}|${new Date(now.getTime() + 48 * 3600000).toISOString()}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    createdOrderIds.push(orderDoc._id);
+    await db.collection(COLLECTIONS.ORDERS).insertOne(orderDoc);
+    return orderDoc;
+  }
+
+  // T3.111: Matrix test: generate full 6x6x3 matrix programmatically
+  it('T3.111: Full 6x6x3 State Machine Matrix matches TRANSITIONS specification', async () => {
+    const allRoles = [ROLES.CUSTOMER, ROLES.FARMER, ROLES.ADMIN];
+
+    for (const from of ORDER_STATUSES) {
+      for (const to of ORDER_STATUSES) {
+        for (const role of allRoles) {
+          const isExpectedAllowed =
+            TRANSITIONS[from] &&
+            TRANSITIONS[from][to] &&
+            TRANSITIONS[from][to].includes(role);
+
+          const order = await createTestOrder(from);
+          const actorId =
+            role === ROLES.CUSTOMER
+              ? sampleCustomer._id
+              : role === ROLES.FARMER
+              ? sampleFarmerUser._id
+              : new ObjectId();
+
+          const actor = { id: actorId, role };
+          const reason = ['declined', 'cancelled'].includes(to) ? 'Valid test reason here' : undefined;
+
+          try {
+            await transitionOrder(order._id, to, actor, { reason, db });
+            assert.ok(
+              isExpectedAllowed,
+              `Transition from ${from} to ${to} by ${role} succeeded but was expected to FAIL`
+            );
+          } catch (err) {
+            assert.ok(
+              !isExpectedAllowed,
+              `Transition from ${from} to ${to} by ${role} failed with [${err.code || err.message}] but was expected to PASS`
+            );
+          }
+        }
+      }
+    }
+  });
+
+  it('T3.112: Double transitions race condition: second transition fails with ORDER_CHANGED', async () => {
+    const order = await createTestOrder('placed');
+    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };
+
+    // Parallel accept attempts
+    const [res1, res2] = await Promise.allSettled([
+      transitionOrder(order._id, 'accepted', farmerActor, { db }),
+      transitionOrder(order._id, 'accepted', farmerActor, { db }),
+    ]);
+
+    const successes = [res1, res2].filter((r) => r.status === 'fulfilled');
+    const failures = [res1, res2].filter((r) => r.status === 'rejected');
+
+    assert.equal(successes.length, 1, 'Exactly one transition must succeed');
+    assert.equal(failures.length, 1, 'The losing transition must fail');
+    assert.equal(failures[0].reason.code, 'ORDER_CHANGED');
+  });
+
+  it('T3.113: Customer cannot cancel after cutoff (409 CUTOFF_PASSED)', async () => {
+    // Cutoff passed 2 hours ago
+    const order = await createTestOrder('placed', { cutoffOffsetHours: -2 });
+    const customerActor = { id: sampleCustomer._id, role: ROLES.CUSTOMER };
+
+    await assert.rejects(
+      async () => {
+        await transitionOrder(order._id, 'cancelled', customerActor, { db });
+      },
+      (err) => err.code === 'CUTOFF_PASSED'
+    );
+  });
+
+  it('T3.114: Farmer cancellation requires a valid reason (3-200 chars)', async () => {
+    const order = await createTestOrder('placed');
+    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };
+
+    // Missing reason
+    await assert.rejects(
+      async () => {
+        await transitionOrder(order._id, 'cancelled', farmerActor, { reason: '', db });
+      },
+      (err) => err.code === 'VALIDATION_FAILED'
+    );
+
+    // Too short reason (< 3 chars)
+    await assert.rejects(
+      async () => {
+        await transitionOrder(order._id, 'cancelled', farmerActor, { reason: 'No', db });
+      },
+      (err) => err.code === 'VALIDATION_FAILED'
+    );
+  });
+
+  it('T3.115: Decline restores stock and cancel restores stock', async () => {
+    const prodBefore = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sampleProduct._id });
+    const initialQty = prodBefore.quantityAvailable;
+
+    const order = await createTestOrder('placed');
+    // Order has 2 items reserved in items
+    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };
+
+    await transitionOrder(order._id, 'declined', farmerActor, { reason: 'Out of stock for this week', db });
+
+    const prodAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sampleProduct._id });
+    assert.equal(
+      prodAfter.quantityAvailable,
+      initialQty + 2,
+      'Stock must be restored by 2 on order decline'
+    );
+
+    // Clean up product stock back to initial
+    await db.collection(COLLECTIONS.PRODUCTS).updateOne(
+      { _id: sampleProduct._id },
+      { $set: { quantityAvailable: initialQty } }
+    );
+  });
+
+  it('T3.116: Complete transition increments salesCount on products and farmer', async () => {
+    const prodBefore = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sampleProduct._id });
+    const farmerBefore = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: sampleFarmerDoc._id });
+
+    const order = await createTestOrder('ready');
+    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };
+
+    await transitionOrder(order._id, 'completed', farmerActor, { db });
+
+    const prodAfter = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: sampleProduct._id });
+    const farmerAfter = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: sampleFarmerDoc._id });
+
+    assert.equal(prodAfter.salesCount, prodBefore.salesCount + 2);
+    assert.equal(farmerAfter.salesCount, farmerBefore.salesCount + 2);
+
+    const completedOrder = await db.collection(COLLECTIONS.ORDERS).findOne({ _id: order._id });
+    assert.ok(completedOrder.completedAt);
+    assert.equal(completedOrder.status, 'completed');
+  });
+
+  it('T3.117: Timeline is append-only and captures status, actor, and note', async () => {
+    const order = await createTestOrder('placed');
+    const farmerActor = { id: sampleFarmerUser._id, role: ROLES.FARMER };
+
+    await transitionOrder(order._id, 'accepted', farmerActor, { db });
+    await transitionOrder(order._id, 'ready', farmerActor, { db });
+
+    const updated = await db.collection(COLLECTIONS.ORDERS).findOne({ _id: order._id });
+    assert.equal(updated.timeline.length, 3);
+    assert.equal(updated.timeline[0].status, 'placed');
+    assert.equal(updated.timeline[1].status, 'accepted');
+    assert.equal(updated.timeline[2].status, 'ready');
+  });
+});

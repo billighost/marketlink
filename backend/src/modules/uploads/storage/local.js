@@ -1,1 +1,52 @@
-import crypto from 'node:crypto';import fs from 'node:fs';import path from 'node:path';import { env } from '../../../config/env.js';import { parseDimensions } from '../uploads.service.js';export async function saveImage({ buffer, mime, folder = 'products' }) {  let ext = '.jpg';  if (mime === 'image/png') ext = '.png';  if (mime === 'image/webp') ext = '.webp';  const filename = crypto.randomBytes(16).toString('hex') + ext;  const targetPath = path.join(env.UPLOAD_DIR, filename);  await fs.promises.writeFile(targetPath, buffer, { flag: 'wx' });  const dims = parseDimensions(buffer, mime) || { width: 400, height: 400 };  return {    url: `/uploads/${filename}`,    publicId: `${env.CLOUDINARY_FOLDER || 'marketlink'}/${folder}/${filename.replace(/\.[^/.]+$/, '')}`,    width: dims.width,    height: dims.height,    bytes: buffer.length,  };}export async function deleteImage(publicId) {  if (!publicId) return false;  try {    const filename = path.basename(publicId);    const files = await fs.promises.readdir(env.UPLOAD_DIR).catch(() => []);    const match = files.find((f) => f.startsWith(filename));    if (match) {      await fs.promises.unlink(path.join(env.UPLOAD_DIR, match)).catch(() => {});      return true;    }    return false;  } catch {    return false;  }}export function isOwnUrl(url) {  if (!url || typeof url !== 'string') return false;  return url.startsWith('/uploads/');}
+/**
+ * Local disk storage driver (development fallback only).
+ */
+
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { env } from '../../../config/env.js';
+import { parseDimensions } from '../uploads.service.js';
+
+export async function saveImage({ buffer, mime, folder = 'products' }) {
+  let ext = '.jpg';
+  if (mime === 'image/png') ext = '.png';
+  if (mime === 'image/webp') ext = '.webp';
+
+  const filename = crypto.randomBytes(16).toString('hex') + ext;
+  const targetPath = path.join(env.UPLOAD_DIR, filename);
+
+  await fs.promises.writeFile(targetPath, buffer, { flag: 'wx' });
+
+  const dims = parseDimensions(buffer, mime) || { width: 400, height: 400 };
+
+  return {
+    url: `/uploads/${filename}`,
+    publicId: `${env.CLOUDINARY_FOLDER || 'marketlink'}/${folder}/${filename.replace(/\.[^/.]+$/, '')}`,
+    width: dims.width,
+    height: dims.height,
+    bytes: buffer.length,
+  };
+}
+
+export async function deleteImage(publicId) {
+  if (!publicId) return false;
+  try {
+    const filename = path.basename(publicId);
+    // Find matching file in UPLOAD_DIR
+    const files = await fs.promises.readdir(env.UPLOAD_DIR).catch(() => []);
+    const match = files.find((f) => f.startsWith(filename));
+    if (match) {
+      await fs.promises.unlink(path.join(env.UPLOAD_DIR, match)).catch(() => {});
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export function isOwnUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  return url.startsWith('/uploads/');
+}

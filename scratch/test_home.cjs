@@ -1,1 +1,27 @@
-const { chromium } = require('playwright');const VIEWPORTS = [  { name: '320px', width: 320, height: 568 },  { name: '360px', width: 360, height: 800 },  { name: '390px', width: 390, height: 844 },  { name: '430px', width: 430, height: 932 },  { name: '600px', width: 600, height: 960 },  { name: '768px', width: 768, height: 1024 },  { name: '844x390', width: 844, height: 390 },];(async () => {  const browser = await chromium.launch();  for (const vp of VIEWPORTS) {    const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });    await page.goto('http://localhost:3000/');    await page.waitForTimeout(500);    const issues = await page.evaluate(() => window.layoutCheck ? window.layoutCheck() : []);    console.log(`Guest Home @ ${vp.name}: ${issues.length} issues`);    if (issues.length > 0) {      issues.forEach(i => console.log('  ->', i.type, i.selector, i.message));    }    await page.close();  }  await browser.close();})();
+const { chromium } = require('playwright');
+
+const VIEWPORTS = [
+  { name: '320px', width: 320, height: 568 },
+  { name: '360px', width: 360, height: 800 },
+  { name: '390px', width: 390, height: 844 },
+  { name: '430px', width: 430, height: 932 },
+  { name: '600px', width: 600, height: 960 },
+  { name: '768px', width: 768, height: 1024 },
+  { name: '844x390', width: 844, height: 390 },
+];
+
+(async () => {
+  const browser = await chromium.launch();
+  for (const vp of VIEWPORTS) {
+    const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+    await page.goto('http://localhost:3000/');
+    await page.waitForTimeout(500);
+    const issues = await page.evaluate(() => window.layoutCheck ? window.layoutCheck() : []);
+    console.log(`Guest Home @ ${vp.name}: ${issues.length} issues`);
+    if (issues.length > 0) {
+      issues.forEach(i => console.log('  ->', i.type, i.selector, i.message));
+    }
+    await page.close();
+  }
+  await browser.close();
+})();

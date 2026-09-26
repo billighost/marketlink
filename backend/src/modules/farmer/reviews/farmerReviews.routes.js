@@ -1,1 +1,92 @@
-import { Router } from 'express';import { requireApprovedFarmer } from '../../../middleware/requireApprovedFarmer.js';import { getDb } from '../../../db/client.js';import { COLLECTIONS } from '../../../db/collections.js';import { toObjectId } from '../../../utils/ids.js';import { AppError } from '../../../utils/errors.js';import {  listFarmerReviews,  replyToReview,  deleteReviewReply,} from './farmerReviews.service.js';import { defineRoutes } from '../../../utils/defineRoutes.js';export const farmerReviewsRouter = Router();async function resolveFarmer(req, res, next) {  try {    const db = getDb();    const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({      userId: toObjectId(req.user.id),    });    if (!farmer) {      return next(AppError.notFound('Farmer profile not found'));    }    req.farmer = farmer;    next();  } catch (err) {    next(err);  }}const routes = [  {    method: 'get',    path: '/',    auth: 'farmer',    middlewares: [resolveFarmer],    summary: 'List customer reviews received for this stall and products',    handler: async (req, res, next) => {      try {        const result = await listFarmerReviews(req.farmer._id, req.query);        res.json(result);      } catch (err) {        next(err);      }    },  },  {    method: 'post',    path: '/:id/reply',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Post public stall reply to a customer review',    body: 'replyReview',    handler: async (req, res, next) => {      try {        const text = req.body?.body || req.body?.comment || req.body?.text;        const review = await replyToReview(req.farmer._id, req.params.id, text);        res.json({ data: review });      } catch (err) {        next(err);      }    },  },  {    method: 'delete',    path: '/:id/reply',    auth: 'farmer',    middlewares: [requireApprovedFarmer, resolveFarmer],    summary: 'Remove stall reply from a customer review',    handler: async (req, res, next) => {      try {        const result = await deleteReviewReply(req.farmer._id, req.params.id);        res.json({ data: result });      } catch (err) {        next(err);      }    },  },];defineRoutes(farmerReviewsRouter, 'farmerReviews', routes, { basePath: '/api/farmer/reviews' });
+/**
+ * Farmer Reviews routes controller.
+ * Exposes listing, summary breakdown, and reply endpoints.
+ */
+
+import { Router } from 'express';
+import { requireApprovedFarmer } from '../../../middleware/requireApprovedFarmer.js';
+import { getDb } from '../../../db/client.js';
+import { COLLECTIONS } from '../../../db/collections.js';
+import { toObjectId } from '../../../utils/ids.js';
+import { AppError } from '../../../utils/errors.js';
+import {
+  listFarmerReviews,
+  replyToReview,
+  deleteReviewReply,
+} from './farmerReviews.service.js';
+import { defineRoutes } from '../../../utils/defineRoutes.js';
+
+export const farmerReviewsRouter = Router();
+
+async function resolveFarmer(req, res, next) {
+  try {
+    const db = getDb();
+    const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({
+      userId: toObjectId(req.user.id),
+    });
+    if (!farmer) {
+      return next(AppError.notFound('Farmer profile not found'));
+    }
+    req.farmer = farmer;
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
+const routes = [
+  // GET /api/farmer/reviews
+  {
+    method: 'get',
+    path: '/',
+    auth: 'farmer',
+    middlewares: [resolveFarmer],
+    summary: 'List customer reviews received for this stall and products',
+    handler: async (req, res, next) => {
+      try {
+        const result = await listFarmerReviews(req.farmer._id, req.query);
+        res.json(result);
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+
+  // POST /api/farmer/reviews/:id/reply
+  {
+    method: 'post',
+    path: '/:id/reply',
+    auth: 'farmer',
+    middlewares: [requireApprovedFarmer, resolveFarmer],
+    summary: 'Post public stall reply to a customer review',
+    body: 'replyReview',
+    handler: async (req, res, next) => {
+      try {
+        const text = req.body?.body || req.body?.comment || req.body?.text;
+        const review = await replyToReview(req.farmer._id, req.params.id, text);
+        res.json({ data: review });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+
+  // DELETE /api/farmer/reviews/:id/reply
+  {
+    method: 'delete',
+    path: '/:id/reply',
+    auth: 'farmer',
+    middlewares: [requireApprovedFarmer, resolveFarmer],
+    summary: 'Remove stall reply from a customer review',
+    handler: async (req, res, next) => {
+      try {
+        const result = await deleteReviewReply(req.farmer._id, req.params.id);
+        res.json({ data: result });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+];
+
+defineRoutes(farmerReviewsRouter, 'farmerReviews', routes, { basePath: '/api/farmer/reviews' });

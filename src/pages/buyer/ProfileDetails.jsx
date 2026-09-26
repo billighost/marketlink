@@ -1,1 +1,99 @@
-import React, { useState } from 'react';import { useAuth } from '@/context/AuthContext';import { useToast } from '@/context/ToastContext';import { updateProfile } from '@/api/me';import FormField from '@/components/ui/FormField';import Button from '@/components/ui/Button';import styles from './ProfileDetails.module.css';export function ProfileDetails({ inSheet = true, onClose }) {  const { user, refreshUser } = useAuth();  const { showToast } = useToast();  const [name, setName] = useState(user?.name || '');  const [phone, setPhone] = useState(user?.phone || '');  const [address, setAddress] = useState(user?.address || '');  const [saving, setSaving] = useState(false);  const handleSubmit = async (e) => {    e.preventDefault();    if (!name.trim()) return;    setSaving(true);    try {      await updateProfile({        name: name.trim(),        phone: phone.trim() || undefined,        address: address.trim() || undefined,      });      await refreshUser();      showToast({        message: 'Personal details updated.',        type: 'success',      });      onClose?.();    } catch (err) {      showToast({        message: err.message || 'Unable to save personal details.',        type: 'danger',      });    } finally {      setSaving(false);    }  };  return (    <form className={styles.form} onSubmit={handleSubmit}>      <div className={styles.fields}>        <FormField          id="name"          label="Full name"          value={name}          onChange={(e) => setName(e.target.value)}          required        />        <FormField          id="email"          label="Email address"          type="email"          value={user?.email || ''}          disabled          hint="Email cannot be changed directly."        />        <FormField          id="phone"          label="Phone number (for pickup reminders)"          type="tel"          value={phone}          onChange={(e) => setPhone(e.target.value)}          placeholder="(555) 000-0000"        />        <FormField          id="address"          label="Home address"          value={address}          onChange={(e) => setAddress(e.target.value)}          placeholder="Street address, City, State"        />      </div>      <footer className={styles.footer}>        <Button          variant="primary"          size="lg"          type="submit"          className={styles.submitButton}          disabled={saving || !name.trim()}        >          {saving ? 'Saving...' : 'Save changes'}        </Button>      </footer>    </form>  );}export default ProfileDetails;
+import React, { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
+import { updateProfile } from '@/api/me';
+import FormField from '@/components/ui/FormField';
+import Button from '@/components/ui/Button';
+import styles from './ProfileDetails.module.css';
+
+/**
+ * Personal Details sheet for Customer profile.
+ * Connected to live backend PATCH /users/me.
+ */
+export function ProfileDetails({ inSheet = true, onClose }) {
+  const { user, refreshUser } = useAuth();
+  const { showToast } = useToast();
+
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [address, setAddress] = useState(user?.address || '');
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    setSaving(true);
+    try {
+      await updateProfile({
+        name: name.trim(),
+        phone: phone.trim() || undefined,
+        address: address.trim() || undefined,
+      });
+      await refreshUser();
+      showToast({
+        message: 'Personal details updated.',
+        type: 'success',
+      });
+      onClose?.();
+    } catch (err) {
+      showToast({
+        message: err.message || 'Unable to save personal details.',
+        type: 'danger',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form className={styles.form} onSubmit={handleSubmit}>
+      <div className={styles.fields}>
+        <FormField
+          id="name"
+          label="Full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <FormField
+          id="email"
+          label="Email address"
+          type="email"
+          value={user?.email || ''}
+          disabled
+          hint="Email cannot be changed directly."
+        />
+        <FormField
+          id="phone"
+          label="Phone number (for pickup reminders)"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="(555) 000-0000"
+        />
+        <FormField
+          id="address"
+          label="Home address"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="Street address, City, State"
+        />
+      </div>
+
+      <footer className={styles.footer}>
+        <Button
+          variant="primary"
+          size="lg"
+          type="submit"
+          className={styles.submitButton}
+          disabled={saving || !name.trim()}
+        >
+          {saving ? 'Saving...' : 'Save changes'}
+        </Button>
+      </footer>
+    </form>
+  );
+}
+
+export default ProfileDetails;

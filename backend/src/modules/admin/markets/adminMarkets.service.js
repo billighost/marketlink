@@ -1,1 +1,366 @@
-import { ObjectId } from 'mongodb';import { getDb } from '../../../db/client.js';import { COLLECTIONS } from '../../../db/collections.js';import { toObjectId } from '../../../utils/ids.js';import { AppError } from '../../../utils/errors.js';import { OPERATING_DAYS, MARKET_FACILITIES } from '../../../constants.js';import { toMarketDetail } from '../../../utils/shapes.js';import { toGeoPoint } from '../../../utils/geo.js';import { syncMarketRemoved } from '../../../utils/sync.js';import { writeAudit } from '../../../utils/audit.js';export function slugify(text) {  return text    .toString()    .normalize('NFD')    .replace(/[\u0300-\u036f]/g, '')    .toLowerCase()    .trim()    .replace(/[^a-z0-9\s-]/g, '')    .replace(/[\s_-]+/g, '-')    .replace(/^-+|-+$/g, '');}export function extractCoordsFromMapUrl(urlStr) {  if (!urlStr || typeof urlStr !== 'string') return null;  const allowed = [    'https://google.com/maps',    'https://www.google.com/maps',    'https://maps.google.com',    'https://goo.gl/maps',    'https://openstreetmap.org',    'https://www.openstreetmap.org',  ];  if (!allowed.some((prefix) => urlStr.startsWith(prefix))) {    return null;  }  const atMatch = urlStr.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);  if (atMatch) {    return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };  }  const qMatch = urlStr.match(/[?&]q=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);  if (qMatch) {    return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };  }  const mlatMatch = urlStr.match(/mlat=(-?\d+(?:\.\d+)?)/);  const mlonMatch = urlStr.match(/mlon=(-?\d+(?:\.\d+)?)/);  if (mlatMatch && mlonMatch) {    return { lat: parseFloat(mlatMatch[1]), lng: parseFloat(mlonMatch[1]) };  }  return null;}export function validateMarketInput(body, isPatch = false) {  if (!body || typeof body !== 'object' || Array.isArray(body)) {    throw AppError.validation('Request body must be an object');  }  const allowedFields = new Set([    'name',    'address',    'location',    'mapUrl',    'schedule',    'timezone',    'facilities',    'note',  ]);  for (const k of Object.keys(body)) {    if (!allowedFields.has(k)) {      throw AppError.validation(`Unexpected field: ${k}`, { field: k });    }  }  if (isPatch && Object.keys(body).length === 0) {    throw AppError.validation('At least one field must be provided to update');  }  const cleaned = {};  if ('name' in body || !isPatch) {    if (typeof body.name !== 'string' || body.name.trim().length < 2 || body.name.trim().length > 80) {      throw AppError.validation('Market name must be between 2 and 80 characters', { field: 'name' });    }    cleaned.name = body.name.trim();  }  if ('address' in body || !isPatch) {    if (typeof body.address !== 'string' || body.address.trim().length < 5 || body.address.trim().length > 200) {      throw AppError.validation('Market address must be between 5 and 200 characters', { field: 'address' });    }    cleaned.address = body.address.trim();  }  if ('location' in body || 'mapUrl' in body || !isPatch) {    let coords = null;    if (body.location && typeof body.location.lat === 'number' && typeof body.location.lng === 'number') {      if (body.location.lat < -90 || body.location.lat > 90 || body.location.lng < -180 || body.location.lng > 180) {        throw AppError.validation('Latitude must be between -90 and 90, longitude between -180 and 180', { field: 'location' });      }      coords = { lat: body.location.lat, lng: body.location.lng };    } else if (body.mapUrl) {      coords = extractCoordsFromMapUrl(body.mapUrl);      if (!coords) {        throw AppError.validation('Invalid mapUrl or could not extract coordinates from mapUrl', { field: 'mapUrl' });      }    }    if (coords) {      cleaned.location = toGeoPoint(coords.lng, coords.lat);    } else if (!isPatch) {      throw AppError.validation('Either valid location coordinates or a parseable mapUrl is required', { field: 'location' });    }  }  if ('schedule' in body || !isPatch) {    if (!Array.isArray(body.schedule) || body.schedule.length < 1 || body.schedule.length > 7) {      throw AppError.validation('Schedule must contain between 1 and 7 operating days', { field: 'schedule' });    }    for (const item of body.schedule) {      if (!item || !OPERATING_DAYS.includes(item.day)) {        throw AppError.validation(`Schedule day must be one of: ${OPERATING_DAYS.join(', ')}`, { field: 'schedule' });      }      if (        typeof item.openMin !== 'number' ||        typeof item.closeMin !== 'number' ||        item.openMin < 0 ||        item.closeMin > 1440 ||        item.closeMin <= item.openMin      ) {        throw AppError.validation('Schedule openMin and closeMin must be valid minutes with closeMin > openMin', { field: 'schedule' });      }    }    cleaned.schedule = body.schedule;  }  if ('timezone' in body || !isPatch) {    const tz = body.timezone || 'America/New_York';    const supported = Intl.supportedValuesOf('timeZone');    if (!supported.includes(tz)) {      throw AppError.validation(`Invalid timezone '${tz}'. Must be a supported IANA timezone.`, { field: 'timezone' });    }    cleaned.timezone = tz;  }  if ('facilities' in body) {    if (!Array.isArray(body.facilities)) {      throw AppError.validation('Facilities must be an array', { field: 'facilities' });    }    for (const fac of body.facilities) {      if (!MARKET_FACILITIES.includes(fac)) {        throw AppError.validation(`Invalid facility: ${fac}`, { field: 'facilities' });      }    }    cleaned.facilities = [...new Set(body.facilities)];  } else if (!isPatch) {    cleaned.facilities = [];  }  if ('note' in body) {    if (typeof body.note !== 'string' || body.note.length > 300) {      throw AppError.validation('Note cannot exceed 300 characters', { field: 'note' });    }    cleaned.note = body.note.trim();  } else if (!isPatch) {    cleaned.note = '';  }  return cleaned;}export async function createMarket(adminActor, body) {  const db = getDb();  const cleaned = validateMarketInput(body, false);  const existing = await db.collection(COLLECTIONS.MARKETS).findOne({    name: { $regex: `^${cleaned.name}$`, $options: 'i' },    status: 'active',  });  if (existing) {    throw new AppError(409, 'MARKET_EXISTS', `A market with the name '${cleaned.name}' already exists.`);  }  let baseSlug = slugify(cleaned.name);  let slug = baseSlug;  let counter = 2;  while (await db.collection(COLLECTIONS.MARKETS).findOne({ slug })) {    slug = `${baseSlug}-${counter++}`;  }  const now = new Date();  const doc = {    _id: new ObjectId(),    name: cleaned.name,    slug,    address: cleaned.address,    location: cleaned.location,    schedule: cleaned.schedule,    timezone: cleaned.timezone,    facilities: cleaned.facilities,    note: cleaned.note,    farmerCount: 0,    status: 'active',    createdAt: now,    updatedAt: now,  };  await db.collection(COLLECTIONS.MARKETS).insertOne(doc);  await writeAudit(    adminActor,    'market.create',    { type: 'market', id: doc._id },    { name: doc.name, slug: doc.slug }  );  return toMarketDetail(doc);}export async function updateMarket(adminActor, marketId, body) {  if (!marketId || !ObjectId.isValid(marketId)) {    throw AppError.notFound('Market not found');  }  const db = getDb();  const mId = toObjectId(marketId);  const market = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: mId, status: 'active' });  if (!market) {    throw AppError.notFound('Market not found');  }  const cleaned = validateMarketInput(body, true);  if (cleaned.name && cleaned.name.toLowerCase() !== market.name.toLowerCase()) {    const existing = await db.collection(COLLECTIONS.MARKETS).findOne({      _id: { $ne: mId },      name: { $regex: `^${cleaned.name}$`, $options: 'i' },      status: 'active',    });    if (existing) {      throw new AppError(409, 'MARKET_EXISTS', `A market with the name '${cleaned.name}' already exists.`);    }  }  const now = new Date();  const updateFields = { ...cleaned, updatedAt: now };  await db.collection(COLLECTIONS.MARKETS).updateOne({ _id: mId }, { $set: updateFields });  await writeAudit(    adminActor,    'market.update',    { type: 'market', id: mId },    { before: market, after: updateFields }  );  const updated = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: mId });  return toMarketDetail(updated);}export async function removeMarket(adminActor, marketId, force = false) {  if (!marketId || !ObjectId.isValid(marketId)) {    throw AppError.notFound('Market not found');  }  const db = getDb();  const mId = toObjectId(marketId);  const market = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: mId, status: 'active' });  if (!market) {    throw AppError.notFound('Market not found');  }  const attendingFarmersCount = await db.collection(COLLECTIONS.FARMERS).countDocuments({    marketIds: mId,  });  if (attendingFarmersCount > 0 && !force) {    throw new AppError(      409,      'FORCE_REQUIRED',      `Market has ${attendingFarmersCount} attending farmer(s). Pass force: true to detach.`    );  }  if (attendingFarmersCount > 0) {    await syncMarketRemoved(mId, db);  }  const now = new Date();  await db.collection(COLLECTIONS.MARKETS).updateOne(    { _id: mId },    { $set: { status: 'removed', farmerCount: 0, updatedAt: now } }  );  await writeAudit(    adminActor,    'market.remove',    { type: 'market', id: mId },    { detachedFarmers: attendingFarmersCount, force }  );  return { removed: true, detachedFarmers: attendingFarmersCount };}
+/**
+ * Admin Markets management service layer.
+ * Creates, updates, and removes markets with slugification, mapUrl geocoding, and D3 force detachment.
+ */
+
+import { ObjectId } from 'mongodb';
+import { getDb } from '../../../db/client.js';
+import { COLLECTIONS } from '../../../db/collections.js';
+import { toObjectId } from '../../../utils/ids.js';
+import { AppError } from '../../../utils/errors.js';
+import { OPERATING_DAYS, MARKET_FACILITIES } from '../../../constants.js';
+import { toMarketDetail } from '../../../utils/shapes.js';
+import { toGeoPoint } from '../../../utils/geo.js';
+import { syncMarketRemoved } from '../../../utils/sync.js';
+import { writeAudit } from '../../../utils/audit.js';
+
+export function slugify(text) {
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Extracts latitude and longitude from supported map provider URLs.
+ *
+ * @param {string} urlStr
+ * @returns {{ lat: number, lng: number } | null}
+ */
+export function extractCoordsFromMapUrl(urlStr) {
+  if (!urlStr || typeof urlStr !== 'string') return null;
+
+  // Allowed domains: google.com/maps, maps.google.com, goo.gl/maps, openstreetmap.org
+  const allowed = [
+    'https://google.com/maps',
+    'https://www.google.com/maps',
+    'https://maps.google.com',
+    'https://goo.gl/maps',
+    'https://openstreetmap.org',
+    'https://www.openstreetmap.org',
+  ];
+  if (!allowed.some((prefix) => urlStr.startsWith(prefix))) {
+    return null;
+  }
+
+  // 1. @lat,lng
+  const atMatch = urlStr.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if (atMatch) {
+    return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+  }
+
+  // 2. ?q=lat,lng or &q=lat,lng
+  const qMatch = urlStr.match(/[?&]q=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if (qMatch) {
+    return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
+  }
+
+  // 3. mlat=lat ... mlon=lng
+  const mlatMatch = urlStr.match(/mlat=(-?\d+(?:\.\d+)?)/);
+  const mlonMatch = urlStr.match(/mlon=(-?\d+(?:\.\d+)?)/);
+  if (mlatMatch && mlonMatch) {
+    return { lat: parseFloat(mlatMatch[1]), lng: parseFloat(mlonMatch[1]) };
+  }
+
+  return null;
+}
+
+/**
+ * Validates and sanitizes market fields per D2 specification.
+ *
+ * @param {object} body
+ * @param {boolean} [isPatch=false]
+ * @returns {object}
+ */
+export function validateMarketInput(body, isPatch = false) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw AppError.validation('Request body must be an object');
+  }
+
+  const allowedFields = new Set([
+    'name',
+    'address',
+    'location',
+    'mapUrl',
+    'schedule',
+    'timezone',
+    'facilities',
+    'note',
+  ]);
+
+  for (const k of Object.keys(body)) {
+    if (!allowedFields.has(k)) {
+      throw AppError.validation(`Unexpected field: ${k}`, { field: k });
+    }
+  }
+
+  if (isPatch && Object.keys(body).length === 0) {
+    throw AppError.validation('At least one field must be provided to update');
+  }
+
+  const cleaned = {};
+
+  // 1. name
+  if ('name' in body || !isPatch) {
+    if (typeof body.name !== 'string' || body.name.trim().length < 2 || body.name.trim().length > 80) {
+      throw AppError.validation('Market name must be between 2 and 80 characters', { field: 'name' });
+    }
+    cleaned.name = body.name.trim();
+  }
+
+  // 2. address
+  if ('address' in body || !isPatch) {
+    if (typeof body.address !== 'string' || body.address.trim().length < 5 || body.address.trim().length > 200) {
+      throw AppError.validation('Market address must be between 5 and 200 characters', { field: 'address' });
+    }
+    cleaned.address = body.address.trim();
+  }
+
+  // 3. location & mapUrl
+  if ('location' in body || 'mapUrl' in body || !isPatch) {
+    let coords = null;
+    if (body.location && typeof body.location.lat === 'number' && typeof body.location.lng === 'number') {
+      if (body.location.lat < -90 || body.location.lat > 90 || body.location.lng < -180 || body.location.lng > 180) {
+        throw AppError.validation('Latitude must be between -90 and 90, longitude between -180 and 180', { field: 'location' });
+      }
+      coords = { lat: body.location.lat, lng: body.location.lng };
+    } else if (body.mapUrl) {
+      coords = extractCoordsFromMapUrl(body.mapUrl);
+      if (!coords) {
+        throw AppError.validation('Invalid mapUrl or could not extract coordinates from mapUrl', { field: 'mapUrl' });
+      }
+    }
+
+    if (coords) {
+      cleaned.location = toGeoPoint(coords.lng, coords.lat);
+    } else if (!isPatch) {
+      throw AppError.validation('Either valid location coordinates or a parseable mapUrl is required', { field: 'location' });
+    }
+  }
+
+  // 4. schedule
+  if ('schedule' in body || !isPatch) {
+    if (!Array.isArray(body.schedule) || body.schedule.length < 1 || body.schedule.length > 7) {
+      throw AppError.validation('Schedule must contain between 1 and 7 operating days', { field: 'schedule' });
+    }
+    for (const item of body.schedule) {
+      if (!item || !OPERATING_DAYS.includes(item.day)) {
+        throw AppError.validation(`Schedule day must be one of: ${OPERATING_DAYS.join(', ')}`, { field: 'schedule' });
+      }
+      if (
+        typeof item.openMin !== 'number' ||
+        typeof item.closeMin !== 'number' ||
+        item.openMin < 0 ||
+        item.closeMin > 1440 ||
+        item.closeMin <= item.openMin
+      ) {
+        throw AppError.validation('Schedule openMin and closeMin must be valid minutes with closeMin > openMin', { field: 'schedule' });
+      }
+    }
+    cleaned.schedule = body.schedule;
+  }
+
+  // 5. timezone
+  if ('timezone' in body || !isPatch) {
+    const tz = body.timezone || 'America/New_York';
+    const supported = Intl.supportedValuesOf('timeZone');
+    if (!supported.includes(tz)) {
+      throw AppError.validation(`Invalid timezone '${tz}'. Must be a supported IANA timezone.`, { field: 'timezone' });
+    }
+    cleaned.timezone = tz;
+  }
+
+  // 6. facilities
+  if ('facilities' in body) {
+    if (!Array.isArray(body.facilities)) {
+      throw AppError.validation('Facilities must be an array', { field: 'facilities' });
+    }
+    for (const fac of body.facilities) {
+      if (!MARKET_FACILITIES.includes(fac)) {
+        throw AppError.validation(`Invalid facility: ${fac}`, { field: 'facilities' });
+      }
+    }
+    cleaned.facilities = [...new Set(body.facilities)];
+  } else if (!isPatch) {
+    cleaned.facilities = [];
+  }
+
+  // 7. note
+  if ('note' in body) {
+    if (typeof body.note !== 'string' || body.note.length > 300) {
+      throw AppError.validation('Note cannot exceed 300 characters', { field: 'note' });
+    }
+    cleaned.note = body.note.trim();
+  } else if (!isPatch) {
+    cleaned.note = '';
+  }
+
+  return cleaned;
+}
+
+/**
+ * Creates a new market.
+ *
+ * @param {object} adminActor
+ * @param {object} body
+ * @returns {Promise<object>}
+ */
+export async function createMarket(adminActor, body) {
+  const db = getDb();
+  const cleaned = validateMarketInput(body, false);
+
+  // Check unique name case-insensitive among active markets
+  const existing = await db.collection(COLLECTIONS.MARKETS).findOne({
+    name: { $regex: `^${cleaned.name}$`, $options: 'i' },
+    status: 'active',
+  });
+
+  if (existing) {
+    throw new AppError(409, 'MARKET_EXISTS', `A market with the name '${cleaned.name}' already exists.`);
+  }
+
+  // Generate unique slug
+  let baseSlug = slugify(cleaned.name);
+  let slug = baseSlug;
+  let counter = 2;
+  while (await db.collection(COLLECTIONS.MARKETS).findOne({ slug })) {
+    slug = `${baseSlug}-${counter++}`;
+  }
+
+  const now = new Date();
+  const doc = {
+    _id: new ObjectId(),
+    name: cleaned.name,
+    slug,
+    address: cleaned.address,
+    location: cleaned.location,
+    schedule: cleaned.schedule,
+    timezone: cleaned.timezone,
+    facilities: cleaned.facilities,
+    note: cleaned.note,
+    farmerCount: 0,
+    status: 'active',
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.collection(COLLECTIONS.MARKETS).insertOne(doc);
+
+  await writeAudit(
+    adminActor,
+    'market.create',
+    { type: 'market', id: doc._id },
+    { name: doc.name, slug: doc.slug }
+  );
+
+  return toMarketDetail(doc);
+}
+
+/**
+ * Updates an existing market.
+ *
+ * @param {object} adminActor
+ * @param {string|ObjectId} marketId
+ * @param {object} body
+ * @returns {Promise<object>}
+ */
+export async function updateMarket(adminActor, marketId, body) {
+  if (!marketId || !ObjectId.isValid(marketId)) {
+    throw AppError.notFound('Market not found');
+  }
+
+  const db = getDb();
+  const mId = toObjectId(marketId);
+
+  const market = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: mId, status: 'active' });
+  if (!market) {
+    throw AppError.notFound('Market not found');
+  }
+
+  const cleaned = validateMarketInput(body, true);
+
+  if (cleaned.name && cleaned.name.toLowerCase() !== market.name.toLowerCase()) {
+    const existing = await db.collection(COLLECTIONS.MARKETS).findOne({
+      _id: { $ne: mId },
+      name: { $regex: `^${cleaned.name}$`, $options: 'i' },
+      status: 'active',
+    });
+    if (existing) {
+      throw new AppError(409, 'MARKET_EXISTS', `A market with the name '${cleaned.name}' already exists.`);
+    }
+  }
+
+  const now = new Date();
+  const updateFields = { ...cleaned, updatedAt: now };
+
+  await db.collection(COLLECTIONS.MARKETS).updateOne({ _id: mId }, { $set: updateFields });
+
+  await writeAudit(
+    adminActor,
+    'market.update',
+    { type: 'market', id: mId },
+    { before: market, after: updateFields }
+  );
+
+  const updated = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: mId });
+  return toMarketDetail(updated);
+}
+
+/**
+ * Removes a market with force detachment checking.
+ *
+ * @param {object} adminActor
+ * @param {string|ObjectId} marketId
+ * @param {boolean} [force=false]
+ * @returns {Promise<{ removed: boolean, detachedFarmers: number }>}
+ */
+export async function removeMarket(adminActor, marketId, force = false) {
+  if (!marketId || !ObjectId.isValid(marketId)) {
+    throw AppError.notFound('Market not found');
+  }
+
+  const db = getDb();
+  const mId = toObjectId(marketId);
+
+  const market = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: mId, status: 'active' });
+  if (!market) {
+    throw AppError.notFound('Market not found');
+  }
+
+  const attendingFarmersCount = await db.collection(COLLECTIONS.FARMERS).countDocuments({
+    marketIds: mId,
+  });
+
+  if (attendingFarmersCount > 0 && !force) {
+    throw new AppError(
+      409,
+      'FORCE_REQUIRED',
+      `Market has ${attendingFarmersCount} attending farmer(s). Pass force: true to detach.`
+    );
+  }
+
+  // Detach farmers and products via D3 sync
+  if (attendingFarmersCount > 0) {
+    await syncMarketRemoved(mId, db);
+  }
+
+  const now = new Date();
+  await db.collection(COLLECTIONS.MARKETS).updateOne(
+    { _id: mId },
+    { $set: { status: 'removed', farmerCount: 0, updatedAt: now } }
+  );
+
+  await writeAudit(
+    adminActor,
+    'market.remove',
+    { type: 'market', id: mId },
+    { detachedFarmers: attendingFarmersCount, force }
+  );
+
+  return { removed: true, detachedFarmers: attendingFarmersCount };
+}

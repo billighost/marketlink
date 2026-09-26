@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import { apiFetch } from './client';export async function sendAssistantMessage(text, history = [], signal) {  const res = await apiFetch('/assistant/message', {    method: 'POST',    body: { text, history },    signal,  });  return res.data;}
-=======
 /**
  * Market Assistant AI / Bot API.
  * Supports streaming Server-Sent Events (SSE) with fallback to standard REST JSON.
@@ -113,4 +110,3 @@ export async function sendAssistantMessage(text, history = [], signal) {
   });
   return res.data;
 }
->>>>>>> bc73418815cde522512fe21a2af884eee3163165

@@ -1,1 +1,114 @@
-import { useState, useEffect, useCallback, useRef } from 'react';export function useInfiniteList(fetchPage, dependencies = []) {  const [items, setItems] = useState([]);  const [loading, setLoading] = useState(true);  const [loadingMore, setLoadingMore] = useState(false);  const [error, setError] = useState(null);  const [hasMore, setHasMore] = useState(false);  const [nextCursor, setNextCursor] = useState(null);  const cursorRef = useRef(null);  const abortControllerRef = useRef(null);  const mountedRef = useRef(true);  const loadInitial = useCallback(async () => {    if (abortControllerRef.current) {      abortControllerRef.current.abort();    }    abortControllerRef.current = new AbortController();    const signal = abortControllerRef.current.signal;    setLoading(true);    setError(null);    cursorRef.current = null;    try {      const response = await fetchPage({ cursor: null, signal });      if (!mountedRef.current || signal.aborted) return;      const pageItems = Array.isArray(response?.data) ? response.data : [];      const meta = response?.meta || {};      setItems(pageItems);      setHasMore(Boolean(meta.hasMore && meta.nextCursor));      setNextCursor(meta.nextCursor || null);      cursorRef.current = meta.nextCursor || null;      setLoading(false);    } catch (err) {      if (err.name === 'AbortError' || signal.aborted) return;      if (mountedRef.current) {        setError(err);        setLoading(false);      }    }  }, [fetchPage]);  const loadMore = useCallback(async () => {    if (!hasMore || loading || loadingMore || !cursorRef.current) return;    setLoadingMore(true);    const cursor = cursorRef.current;    try {      const response = await fetchPage({ cursor });      if (!mountedRef.current) return;      const pageItems = Array.isArray(response?.data) ? response.data : [];      const meta = response?.meta || {};      setItems((prev) => {        const seenIds = new Set(prev.map((i) => i.id || i._id));        const newUnique = pageItems.filter((item) => {          const id = item.id || item._id;          if (seenIds.has(id)) return false;          seenIds.add(id);          return true;        });        return [...prev, ...newUnique];      });      setHasMore(Boolean(meta.hasMore && meta.nextCursor));      setNextCursor(meta.nextCursor || null);      cursorRef.current = meta.nextCursor || null;    } catch (err) {      if (mountedRef.current) {        setError(err);      }    } finally {      if (mountedRef.current) {        setLoadingMore(false);      }    }  }, [fetchPage, hasMore, loading, loadingMore]);  useEffect(() => {    mountedRef.current = true;    loadInitial();    return () => {      mountedRef.current = false;      if (abortControllerRef.current) {        abortControllerRef.current.abort();      }    };  }, dependencies);  return {    items,    loading,    loadingMore,    error,    hasMore,    nextCursor,    loadMore,    refresh: loadInitial,  };}export default useInfiniteList;
+/**
+ * Hook for managing cursor-paginated lists with deduplication by item id,
+ * loadMore, hasMore, and refresh capabilities.
+ */
+import { useState, useEffect, useCallback, useRef } from 'react';
+
+export function useInfiniteList(fetchPage, dependencies = []) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
+
+  const cursorRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const mountedRef = useRef(true);
+
+  const loadInitial = useCallback(async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
+    setLoading(true);
+    setError(null);
+    cursorRef.current = null;
+
+    try {
+      const response = await fetchPage({ cursor: null, signal });
+      if (!mountedRef.current || signal.aborted) return;
+
+      const pageItems = Array.isArray(response?.data) ? response.data : [];
+      const meta = response?.meta || {};
+
+      setItems(pageItems);
+      setHasMore(Boolean(meta.hasMore && meta.nextCursor));
+      setNextCursor(meta.nextCursor || null);
+      cursorRef.current = meta.nextCursor || null;
+      setLoading(false);
+    } catch (err) {
+      if (err.name === 'AbortError' || signal.aborted) return;
+      if (mountedRef.current) {
+        setError(err);
+        setLoading(false);
+      }
+    }
+  }, [fetchPage]);
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || loading || loadingMore || !cursorRef.current) return;
+
+    setLoadingMore(true);
+    const cursor = cursorRef.current;
+
+    try {
+      const response = await fetchPage({ cursor });
+      if (!mountedRef.current) return;
+
+      const pageItems = Array.isArray(response?.data) ? response.data : [];
+      const meta = response?.meta || {};
+
+      setItems((prev) => {
+        const seenIds = new Set(prev.map((i) => i.id || i._id));
+        const newUnique = pageItems.filter((item) => {
+          const id = item.id || item._id;
+          if (seenIds.has(id)) return false;
+          seenIds.add(id);
+          return true;
+        });
+        return [...prev, ...newUnique];
+      });
+
+      setHasMore(Boolean(meta.hasMore && meta.nextCursor));
+      setNextCursor(meta.nextCursor || null);
+      cursorRef.current = meta.nextCursor || null;
+    } catch (err) {
+      if (mountedRef.current) {
+        setError(err);
+      }
+    } finally {
+      if (mountedRef.current) {
+        setLoadingMore(false);
+      }
+    }
+  }, [fetchPage, hasMore, loading, loadingMore]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    loadInitial();
+
+    return () => {
+      mountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, dependencies);
+
+  return {
+    items,
+    loading,
+    loadingMore,
+    error,
+    hasMore,
+    nextCursor,
+    loadMore,
+    refresh: loadInitial,
+  };
+}
+
+export default useInfiniteList;

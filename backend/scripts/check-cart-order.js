@@ -1,1 +1,120 @@
-import { connectDb, closeDb } from '../src/db/client.js';import { COLLECTIONS } from '../src/db/collections.js';import { getCartQuote } from '../src/modules/cart/cart.service.js';import { processCheckout } from '../src/modules/orders/checkout.service.js';async function main() {  const db = await connectDb();  console.log(`\n======================================================`);  console.log(`🛒  Checking Cart Quote vs Created Order & Stock Deltas`);  console.log(`======================================================\n`);  const customer = await db.collection(COLLECTIONS.USERS).findOne({ role: 'customer', status: 'active' });  if (!customer) {    console.log('No customer found (minimal DB state). Creating test order verification skipped.');    await closeDb();    process.exit(0);  }  const product = await db.collection(COLLECTIONS.PRODUCTS).findOne({ listed: true, quantityAvailable: { $gte: 5 } });  if (!product) {    console.log('No listed products with sufficient stock found. Verification skipped.');    await closeDb();    process.exit(0);  }  const initialStock = product.quantityAvailable;  const orderQty = 2;  const groupsPayload = [    {      farmerId: String(product.farmerId),      items: [        {          productId: String(product._id),          quantity: orderQty,        },      ],    },  ];  const quote = await getCartQuote(groupsPayload);  const quoteTotal = quote.totalCents;  console.log(`Quote Total: ${quoteTotal} cents ($${(quoteTotal / 100).toFixed(2)})`);  const selectedSlot = quote.groups[0]?.slots?.find((s) => s.isOpen) || quote.groups[0]?.slots?.[0];  if (!selectedSlot) {    console.log('No available slot for farmer product. Verification skipped.');    await closeDb();    process.exit(0);  }  const idempotencyKey = `chk_test_${Date.now()}`;  const checkoutPayload = {    user: {      id: customer._id.toString(),      name: customer.name,      status: customer.status,      role: customer.role,    },    idempotencyKey,    groups: [      {        farmerId: String(product.farmerId),        slotStart: selectedSlot.start,        items: [          {            productId: String(product._id),            quantity: orderQty,          },        ],      },    ],  };  const checkoutResult = await processCheckout(checkoutPayload);  const createdOrders = checkoutResult.data?.orders || [];  if (createdOrders.length === 0) {    throw new Error('Checkout did not return any created orders.');  }  const createdOrder = createdOrders[0];  console.log(`Created Order #${createdOrder.orderNumber}: Total ${createdOrder.totalCents} cents`);  if (createdOrder.totalCents !== quoteTotal) {    throw new Error(`Total mismatch! Quote was ${quoteTotal}, but Order is ${createdOrder.totalCents}`);  }  console.log('✓ Quote total matches created order total exactly.');  const updatedProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: product._id });  const expectedStock = initialStock - orderQty;  console.log(`Initial stock: ${initialStock} -> Expected: ${expectedStock} -> Actual: ${updatedProduct.quantityAvailable}`);  if (updatedProduct.quantityAvailable !== expectedStock) {    throw new Error(`Stock delta mismatch! Expected ${expectedStock}, got ${updatedProduct.quantityAvailable}`);  }  console.log('✓ Stock delta decremented correctly with zero drift.');  console.log('\n✅ Cart & order verification passed.\n');  await closeDb();  process.exit(0);}main().catch(async (err) => {  console.error('Check failed:', err);  await closeDb().catch(() => {});  process.exit(1);});
+/**
+ * Verification recipe: check-cart-order.js
+ * Usage: node scripts/check-cart-order.js
+ * Simulates a cart quote and checkout flow for a fixture cart,
+ * verifying that quote total == created order total, and stock deltas decrement accurately.
+ */
+
+import { connectDb, closeDb } from '../src/db/client.js';
+import { COLLECTIONS } from '../src/db/collections.js';
+import { getCartQuote } from '../src/modules/cart/cart.service.js';
+import { processCheckout } from '../src/modules/orders/checkout.service.js';
+
+async function main() {
+  const db = await connectDb();
+  console.log(`\n======================================================`);
+  console.log(`🛒  Checking Cart Quote vs Created Order & Stock Deltas`);
+  console.log(`======================================================\n`);
+
+  // Find a customer, farmer, and active product
+  const customer = await db.collection(COLLECTIONS.USERS).findOne({ role: 'customer', status: 'active' });
+  if (!customer) {
+    console.log('No customer found (minimal DB state). Creating test order verification skipped.');
+    await closeDb();
+    process.exit(0);
+  }
+
+  const product = await db.collection(COLLECTIONS.PRODUCTS).findOne({ listed: true, quantityAvailable: { $gte: 5 } });
+  if (!product) {
+    console.log('No listed products with sufficient stock found. Verification skipped.');
+    await closeDb();
+    process.exit(0);
+  }
+
+  const initialStock = product.quantityAvailable;
+  const orderQty = 2;
+
+  // 1. Get quote for fixture cart
+  const groupsPayload = [
+    {
+      farmerId: String(product.farmerId),
+      items: [
+        {
+          productId: String(product._id),
+          quantity: orderQty,
+        },
+      ],
+    },
+  ];
+
+  const quote = await getCartQuote(groupsPayload);
+  const quoteTotal = quote.totalCents;
+  console.log(`Quote Total: ${quoteTotal} cents ($${(quoteTotal / 100).toFixed(2)})`);
+
+  // 2. Perform checkout
+  const selectedSlot = quote.groups[0]?.slots?.find((s) => s.isOpen) || quote.groups[0]?.slots?.[0];
+  if (!selectedSlot) {
+    console.log('No available slot for farmer product. Verification skipped.');
+    await closeDb();
+    process.exit(0);
+  }
+
+  const idempotencyKey = `chk_test_${Date.now()}`;
+  const checkoutPayload = {
+    user: {
+      id: customer._id.toString(),
+      name: customer.name,
+      status: customer.status,
+      role: customer.role,
+    },
+    idempotencyKey,
+    groups: [
+      {
+        farmerId: String(product.farmerId),
+        slotStart: selectedSlot.start,
+        items: [
+          {
+            productId: String(product._id),
+            quantity: orderQty,
+          },
+        ],
+      },
+    ],
+  };
+
+  const checkoutResult = await processCheckout(checkoutPayload);
+  const createdOrders = checkoutResult.data?.orders || [];
+
+  if (createdOrders.length === 0) {
+    throw new Error('Checkout did not return any created orders.');
+  }
+
+  const createdOrder = createdOrders[0];
+  console.log(`Created Order #${createdOrder.orderNumber}: Total ${createdOrder.totalCents} cents`);
+
+  // 3. Verify quote total == order total
+  if (createdOrder.totalCents !== quoteTotal) {
+    throw new Error(`Total mismatch! Quote was ${quoteTotal}, but Order is ${createdOrder.totalCents}`);
+  }
+  console.log('✓ Quote total matches created order total exactly.');
+
+  // 4. Check stock delta
+  const updatedProduct = await db.collection(COLLECTIONS.PRODUCTS).findOne({ _id: product._id });
+  const expectedStock = initialStock - orderQty;
+  console.log(`Initial stock: ${initialStock} -> Expected: ${expectedStock} -> Actual: ${updatedProduct.quantityAvailable}`);
+
+  if (updatedProduct.quantityAvailable !== expectedStock) {
+    throw new Error(`Stock delta mismatch! Expected ${expectedStock}, got ${updatedProduct.quantityAvailable}`);
+  }
+  console.log('✓ Stock delta decremented correctly with zero drift.');
+
+  console.log('\n✅ Cart & order verification passed.\n');
+  await closeDb();
+  process.exit(0);
+}
+
+main().catch(async (err) => {
+  console.error('Check failed:', err);
+  await closeDb().catch(() => {});
+  process.exit(1);
+});
