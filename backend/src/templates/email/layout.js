@@ -46,7 +46,7 @@ export function htmlToPlainText(html) {
  * @returns {string} Fully structured HTML document
  */
 export function wrapLayout({ title, bodyHtml }) {
-  const baseUrl = env.APP_BASE_URL || 'http://localhost:5173';
+  const baseUrl = env.APP_BASE_URL || 'http://localhost:3000';
 
   return `<!DOCTYPE html>
 <html lang="en">

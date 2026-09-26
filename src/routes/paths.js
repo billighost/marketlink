@@ -38,8 +38,15 @@ export const PATHS = {
   BUYER_PROFILE_HELP: '/buyer/profile/help',
   BUYER_REVIEWS: '/buyer/reviews',
   BUYER_NOTIFICATIONS: '/buyer/notifications',
-  BUYER_SMART_BASKET: '/buyer/smart-basket',
-  BUYER_VISIT_PLANNER: '/buyer/visit-planner',
+  // Buyer redesign: canonical paths
+  BUYER_STALLS:            '/buyer/stalls',
+  BUYER_STALL_DETAIL:      '/buyer/stalls/:id',
+  BUYER_BASKET:            '/buyer/basket',
+  BUYER_CHECKOUT:          '/buyer/checkout',
+  BUYER_ORDER_CONFIRMED_ID:'/buyer/orders/:id/confirmed',
+  BUYER_SAVED:             '/buyer/saved',
+  BUYER_HELP:              '/buyer/help',
+  BUYER_PROFILE_REVIEWS:   '/buyer/profile/reviews',
   VENDOR: '/vendor',
   ADMIN: '/admin',
 };

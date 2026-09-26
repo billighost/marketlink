@@ -1,0 +1,10 @@
+.container {
+  padding-bottom: var(--space-12);
+}
+
+.intro {
+  margin: 0 0 var(--space-6) 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  line-height: var(--leading-normal);
+}

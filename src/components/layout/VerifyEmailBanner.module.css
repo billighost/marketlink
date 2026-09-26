@@ -1,17 +1,19 @@
+/* VerifyEmailBanner — Quiet reminder banner for unverified accounts */
+
 .banner {
-  background-color: var(--color-corn-light, #fdf6e7);
-  border-bottom: 1px solid var(--color-corn-border, #f4e3b5);
-  color: var(--color-ink, #2e2b26);
+  background-color: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-ink);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
-  line-height: var(--leading-normal);
   position: relative;
-  z-index: var(--z-sticky, 20);
+  z-index: 15;
 }
 
 .inner {
-  max-width: var(--container-max, 1200px);
-  margin: 0 auto;
-  padding: var(--space-2) var(--space-4);
+  max-width: var(--container-buyer-detail);
+  margin-inline: auto;
+  padding: var(--space-2) var(--page-pad);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,33 +28,37 @@
 }
 
 .icon {
-  color: var(--color-terracotta, #c25e40);
+  color: var(--color-ink-soft);
   flex-shrink: 0;
 }
 
 .text {
   color: var(--color-ink);
+  line-height: var(--lh-ui);
 }
 
 .actionsGroup {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  margin-left: auto;
+  gap: var(--space-2);
+  margin-inline-start: auto;
 }
 
 .resendBtn {
-  background: none;
+  background: transparent;
   border: none;
   padding: var(--space-1) var(--space-2);
+  font-family: var(--font-body);
   font-size: var(--text-xs);
-  font-weight: var(--weight-medium, 500);
-  color: var(--color-beet, #7a2e3b);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
   text-decoration: underline;
+  text-underline-offset: var(--underline-offset);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  min-height: var(--tap-min);
   transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
@@ -66,37 +72,55 @@
   text-decoration: none;
 }
 
+.resendBtn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
 .successFeedback {
+  font-family: var(--font-body);
   font-size: var(--text-xs);
-  color: var(--color-sage, #356b46);
+  color: var(--color-success);
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  font-weight: var(--weight-medium, 500);
+  font-weight: var(--weight-medium);
+  min-height: var(--tap-min);
 }
 
 .errorFeedback {
+  font-family: var(--font-body);
   font-size: var(--text-xs);
-  color: var(--color-terracotta, #c25e40);
-  font-weight: var(--weight-medium, 500);
+  color: var(--color-danger);
+  font-weight: var(--weight-medium);
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
 }
 
 .closeBtn {
-  background: none;
+  background: transparent;
   border: none;
-  color: var(--color-ink-soft, #6b665f);
+  color: var(--color-ink-soft);
   cursor: pointer;
-  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
   border-radius: var(--radius-sm);
-  transition: background-color var(--duration-fast) var(--ease-standard);
+  transition: color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
 }
 
 .closeBtn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--color-canvas-soft);
   color: var(--color-ink);
+}
+
+.closeBtn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
 }
 
 .spin {

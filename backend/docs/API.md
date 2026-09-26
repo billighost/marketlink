@@ -568,22 +568,53 @@ List active announcements tailored to caller's role.
 ## 8. Markets Directory & Schedules
 
 ### GET /api/markets
-List physical markets with geo or schedule filtering.
+List physical markets with geo or schedule filtering. Includes computed live market clock (`clock`).
 
 - **Auth**: `any` (Roles: `customer, farmer, admin`)
 - **Rate Limiter**: `default`
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `200 OK` on success: `{ "data": [ <MarketCard> ] }`
+    - `clock`: Market clock object with fields:
+      - `openNow`: Boolean indicating if market is currently operating.
+      - `nextStateChange`: ISO UTC timestamp of upcoming open or close transition.
+      - `stateLabel`: Human-readable label (e.g. `"Open · Closes at 2:00 PM"` or `"Closed · Opens Saturday at 8:00 AM"`).
+      - `scheduleSummary`: Formatted multi-day summary (e.g. `"Wed, Sat · 8:00 AM - 2:00 PM"`).
+      - `operatingDayNumbers`: Sorted array of integer day indices `[0..6]` (0 = Sunday ... 6 = Saturday).
+      - `nextOpenLabel`: Relative upcoming open descriptor (e.g. `"Saturday at 8:00 AM"`).
+      - `todayProgress`: Float in `[0, 1]` showing progress through today's operating window, or `null`.
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
 
+```json
+{
+  "data": [
+    {
+      "id": "6ab7bd30e52767fdc7b00f9b",
+      "name": "Downtown Farmers Market",
+      "slug": "downtown-farmers-market",
+      "address": "100 Market St, Cityville",
+      "timezone": "America/New_York",
+      "clock": {
+        "openNow": false,
+        "nextStateChange": "2026-10-03T12:00:00.000Z",
+        "stateLabel": "Closed · Opens Saturday at 8:00 AM",
+        "scheduleSummary": "Wed, Sat · 8:00 AM - 2:00 PM",
+        "operatingDayNumbers": [3, 6],
+        "nextOpenLabel": "Saturday at 8:00 AM",
+        "todayProgress": null
+      }
+    }
+  ]
+}
+```
+
 ### GET /api/markets/:id
-Get details for a specific market.
+Get details for a specific market including live operating clock (`clock`).
 
 - **Auth**: `any` (Roles: `customer, farmer, admin`)
 - **Rate Limiter**: `default`
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `200 OK` on success: `{ "data": <MarketDetail> }` (inherits `clock` object from MarketCard).
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
   - `404 NOT_FOUND` if resource id is not found or owned by another tenant.
@@ -614,22 +645,44 @@ List products available at this market.
 ## 9. Farmers Directory & Public Profiles
 
 ### GET /api/farmers
-List listed farmers with search and category filters.
+List listed farmers with search and category filters. Includes trading day numbers and stock signals.
 
 - **Auth**: `any` (Roles: `customer, farmer, admin`)
 - **Rate Limiter**: `default`
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `200 OK` on success: `{ "data": [ <FarmerCard> ] }`
+    - `operatingDayNumbers`: Array of integer day indices `[0..6]` (0 = Sunday ... 6 = Saturday) parsed from `operatingDays`.
+    - `openToday`: Boolean indicating if farmer operates on the current day in market timezone.
+    - `lowStockCount`: Number of listed products currently marked `availability: 'low'`.
+    - `soldOutCount`: Number of listed products currently marked `availability: 'out'`.
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
 
+```json
+{
+  "data": [
+    {
+      "id": "6ab7bd31e52767fdc7b00faa",
+      "stallName": "Riverbend Organics",
+      "specialty": "Certified organic produce & heirloom garlic",
+      "stallNumber": "Stall 4",
+      "operatingDays": ["wed", "sat"],
+      "operatingDayNumbers": [3, 6],
+      "openToday": false,
+      "lowStockCount": 1,
+      "soldOutCount": 0
+    }
+  ]
+}
+```
+
 ### GET /api/farmers/:id
-Get farmer profile details.
+Get farmer profile details with full bio, operating schedule, and stock signals.
 
 - **Auth**: `any` (Roles: `customer, farmer, admin`)
 - **Rate Limiter**: `default`
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `200 OK` on success: `{ "data": <FarmerDetail> }` (includes `operatingDayNumbers`, `openToday`, `lowStockCount`, `soldOutCount`).
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
   - `404 NOT_FOUND` if resource id is not found or owned by another tenant.
@@ -773,14 +826,39 @@ Delete a single search history entry.
 ## 12. Personalized Customer Feed
 
 ### GET /api/feed/meta
-Header greeting and next market opening line.
+Header greeting, next market opening line, and market clock.
 
 - **Auth**: `any` (Roles: `customer, farmer, admin`)
 - **Rate Limiter**: `default`
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `200 OK` on success: `{ "data": { "homeMarket": <MarketCard with clock>, "headline": string, ... } }`
+    - `homeMarket.clock`: Live MarketClock object for the customer's home or default market.
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
+
+```json
+{
+  "data": {
+    "greeting": "Good afternoon, Alex",
+    "homeMarket": {
+      "id": "6ab7bd30e52767fdc7b00f9b",
+      "name": "Downtown Farmers Market",
+      "slug": "downtown-farmers-market",
+      "address": "100 Market St, Cityville",
+      "timezone": "America/New_York",
+      "clock": {
+        "openNow": false,
+        "nextStateChange": "2026-10-03T12:00:00.000Z",
+        "stateLabel": "Closed · Opens Saturday at 8:00 AM",
+        "scheduleSummary": "Wed, Sat · 8:00 AM - 2:00 PM",
+        "operatingDayNumbers": [3, 6],
+        "nextOpenLabel": "Saturday at 8:00 AM",
+        "todayProgress": null
+      }
+    }
+  }
+}
+```
 
 ### GET /api/feed
 Curated personalized feed with infinite batch walking.
@@ -796,52 +874,140 @@ Curated personalized feed with infinite batch walking.
 ## 13. Cart Quotes & Pricing Validation
 
 ### POST /api/cart/quote
-Calculate live pricing, availability, and pickup slot validation for cart items.
+Calculate live pricing, availability, and pickup slot validation for cart items. Supports flat items list or pre-grouped vendor structure.
 
 - **Auth**: `customer` (Roles: `customer`)
 - **Rate Limiter**: `default`
-- **Request Schema**: `cartQuote` (Strict unknown field rejection)
+- **Request Schema**:
+  - **Flat format (new)**: `{ "items": [ { "productId": "...", "quantity": 2 } ] }`
+  - **Grouped format (legacy)**: `{ "groups": [ { "farmerId": "...", "lines": [ { "productId": "...", "quantity": 2 } ] } ] }`
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `200 OK` on success: `{ "data": { "groups": [ ... ], "subtotalCents": int, "totalCents": int } }`
+    - `groups[].farmer`: `{ id, stallName, name, stallNumber, marketId, marketName }`
+    - `groups[].cutoffLabel`: Human-readable localized reservation cutoff (e.g. `"Reserve by Friday 18:00"`).
+    - `groups[].pickupWindows`: Array of `{ id, startsAt, endsAt, label, available, remaining }`.
+    - `groups[].items`: Array of `{ productId, name, unit, quantity, unitPriceCents, lineTotalCents, availability }`.
+    - `groups[].issues`: Array of human-readable issues (`"OUT_OF_STOCK"`, `"INSUFFICIENT_STOCK"`, `"PRICE_CHANGED"`, `"PAST_CUTOFF"`, `"NO_SLOTS"`).
+    - `groups[].lines`, `groups[].slots`: Preserved for full backward compatibility.
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
   - `422 VALIDATION_FAILED` if request body contains invalid or unknown fields.
+
+```json
+{
+  "data": {
+    "groups": [
+      {
+        "farmerId": "6ab7bd31e52767fdc7b00faa",
+        "farmer": {
+          "id": "6ab7bd31e52767fdc7b00faa",
+          "stallName": "Riverbend Organics",
+          "name": "Riverbend Organics",
+          "stallNumber": "Stall 4",
+          "marketId": "6ab7bd30e52767fdc7b00f9b",
+          "marketName": "Downtown Farmers Market"
+        },
+        "cutoffLabel": "Reserve by Friday 18:00",
+        "pickupWindows": [
+          {
+            "id": "6ab7bd31e52767fdc7b00faa|2026-10-03T12:00:00.000Z",
+            "startsAt": "2026-10-03T12:00:00.000Z",
+            "endsAt": "2026-10-03T18:00:00.000Z",
+            "label": "Saturday, Oct 3, 08:00 - 14:00",
+            "available": true,
+            "remaining": 20
+          }
+        ],
+        "items": [
+          {
+            "productId": "6ab7bd32e52767fdc7b00fb0",
+            "name": "Organic Honeycrisp Apples",
+            "unit": "lb",
+            "quantity": 2,
+            "unitPriceCents": 350,
+            "lineTotalCents": 700,
+            "availability": "in"
+          }
+        ],
+        "issues": [],
+        "subtotalCents": 700,
+        "totalCents": 700
+      }
+    ],
+    "subtotalCents": 700,
+    "totalCents": 700
+  }
+}
+```
 
 
 ## 14. Customer Checkout & Orders
 
 ### POST /api/orders/checkout
-Submit pre-order checkout with idempotency.
+Submit pre-order checkout with idempotency. Generates 6-character uppercase alphanumeric collection code (`pickupCode`).
 
 - **Auth**: `customer` (Roles: `customer`)
 - **Rate Limiter**: `checkout`
 - **Request Schema**: `checkout` (Strict unknown field rejection)
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `201 Created` on success: `{ "data": { "checkoutId": "...", "orders": [ <OrderSummary> ] } }`
+    - `orders[].pickupCode`: 6-character Crockford-inspired alphanumeric string (e.g. `"7K4M9P"`) used by customer at pickup.
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
   - `422 VALIDATION_FAILED` if request body contains invalid or unknown fields.
 
 ### GET /api/orders
-List customer orders with tab filtering and keyset pagination.
+List customer orders with tab filtering and keyset pagination. Includes `pickupCode` on order items.
 
 - **Auth**: `customer` (Roles: `customer`)
 - **Rate Limiter**: `default`
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `200 OK` on success: `{ "data": [ <OrderSummary> ] }`
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
 
 ### GET /api/orders/:id
-Get customer order detail by ID.
+Get customer order detail by ID. Enforces strict tenant isolation (returns 404 for orders belonging to other customers).
 
 - **Auth**: `customer` (Roles: `customer`)
 - **Rate Limiter**: `default`
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `200 OK` on success: `{ "data": <OrderDetail> }`
+    - `data.pickupCode`: 6-character alphanumeric pickup code string (e.g. `"7K4M9P"`).
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
   - `404 NOT_FOUND` if resource id is not found or owned by another tenant.
+
+```json
+{
+  "data": {
+    "id": "6ab7bd63e52767fdc7b01052",
+    "orderNumber": "ML-1041",
+    "pickupCode": "7K4M9P",
+    "status": "placed",
+    "farmerId": "6ab7bd31e52767fdc7b00faa",
+    "farmerName": "Riverbend Organics",
+    "subtotalCents": 700,
+    "totalCents": 700,
+    "pickup": {
+      "start": "2026-10-03T12:00:00.000Z",
+      "end": "2026-10-03T18:00:00.000Z",
+      "stallNumber": "Stall 4"
+    },
+    "cutoffAt": "2026-10-02T22:00:00.000Z",
+    "items": [
+      {
+        "productId": "6ab7bd32e52767fdc7b00fb0",
+        "name": "Organic Honeycrisp Apples",
+        "unit": "lb",
+        "priceCents": 350,
+        "quantity": 2,
+        "lineTotalCents": 700
+      }
+    ]
+  }
+}
+```
 
 ### PATCH /api/orders/:id
 Modify order items, note, or pickup slot before cutoff.

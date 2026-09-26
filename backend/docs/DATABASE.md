@@ -147,6 +147,7 @@ Idempotent checkout sessions tracking atomic multi-vendor pre-orders.
 One order per farmer. A multi-farmer checkout creates multiple orders sharing a `checkoutId`.
 - `_id`: ObjectId
 - `orderNumber`: String (unique, e.g. "ML-1041")
+- `pickupCode`: String | null (6-char Crockford-inspired alphanumeric pickup code, e.g. "7K4M9P", unique sparse index)
 - `checkoutId`: String | ObjectId (grouped checkout session)
 - `idempotencyKey`: String (unique per customer partial)
 - `slotKey`: String (`<farmerId>|<start ISO>` for capacity checks)
@@ -307,6 +308,7 @@ Atomic sequence counters for generating sequential order numbers.
 | `checkouts` | `{ customerId: 1, idempotencyKey: 1 }` **unique** | Enforces idempotent checkout requests per customer |
 | `checkouts` | `{ createdAt: 1 }` | Checkout session ordering and lifecycle tracking |
 | `orders` | `{ orderNumber: 1 }` **unique** | Direct lookup by order number |
+| `orders` | `{ pickupCode: 1 }` **unique sparse** | Prevents pickup code collision and fast customer order lookup |
 | `orders` | `{ customerId: 1, idempotencyKey: 1 }` **unique partial** | Prevents duplicate order placement on network retries |
 | `orders` | `{ slotKey: 1, status: 1 }` | Fast slot capacity calculation and limits |
 | `orders` | `{ customerId: 1, createdAt: -1 }` | Customer order history |

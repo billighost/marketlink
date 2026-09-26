@@ -201,6 +201,14 @@ export async function ensureIndexes(db) {
     { unique: true, name: 'idx_orders_orderNumber_unique' }
   );
   await db.collection(COLLECTIONS.ORDERS).createIndex(
+    { pickupCode: 1 },
+    {
+      unique: true,
+      name: 'idx_orders_pickupCode_unique',
+      sparse: true,
+    }
+  );
+  await db.collection(COLLECTIONS.ORDERS).createIndex(
     { customerId: 1, createdAt: -1 },
     { name: 'idx_orders_customer_created' }
   );

@@ -1,0 +1,54 @@
+/* StallStrip — "At the market today" horizontal strip */
+
+.emptyContainer {
+  padding-block: var(--space-4);
+  width: 100%;
+}
+
+.skeletonCard {
+  width: var(--card-w-farmer);
+  min-width: var(--card-w-farmer);
+  flex-shrink: 0;
+  padding: var(--card-padding);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-sizing: border-box;
+}
+
+.skeletonAvatar {
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: var(--radius-full);
+  background-color: var(--color-hairline);
+}
+
+.skeletonLines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.skeletonHeading {
+  width: 80%;
+  height: calc(var(--text-h3) * var(--lh-h3));
+  border-radius: var(--radius-sm);
+  background-color: var(--color-hairline);
+}
+
+.skeletonSub {
+  width: 60%;
+  height: calc(var(--text-sm) * var(--lh-ui));
+  border-radius: var(--radius-sm);
+  background-color: var(--color-hairline);
+}
+
+.skeletonStatus {
+  width: 50%;
+  height: calc(var(--text-sm) * var(--lh-ui));
+  border-radius: var(--radius-sm);
+  background-color: var(--color-hairline);
+}

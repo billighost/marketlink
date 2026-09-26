@@ -78,11 +78,50 @@ const cloudinaryFolder = process.env.CLOUDINARY_FOLDER || 'marketlink';
 const port = parseInt(process.env.PORT || '4000', 10);
 const mongodbUri = process.env.MONGODB_URI;
 const jwtSecret = process.env.JWT_SECRET;
-const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000')
+const appBaseUrl = (
+  process.env.APP_BASE_URL ||
+  process.env.FRONTEND_URL ||
+  'http://localhost:3000'
+).replace(/\/+$/, '');
+
+const defaultOrigins = ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'];
+const envOrigins = (process.env.CORS_ORIGINS || '')
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
   .filter(Boolean);
-const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:5173';
+
+const corsOrigins = Array.from(
+  new Set([
+    ...defaultOrigins,
+    ...envOrigins,
+    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.trim().replace(/\/+$/, '')] : []),
+    ...(appBaseUrl ? [appBaseUrl] : []),
+  ])
+).filter(Boolean);
+
+/**
+ * Resolves the client frontend base URL for email links, redirects, etc.
+ * Uses the request's origin if valid and recognized, falling back to configured APP_BASE_URL or localhost:3000.
+ *
+ * @param {import('express').Request} [req]
+ * @returns {string} Clean base URL without trailing slash
+ */
+export function getClientBaseUrl(req) {
+  if (req) {
+    try {
+      const origin = req.get?.('origin') || (req.get?.('referer') ? new URL(req.get('referer')).origin : null);
+      if (origin) {
+        const clean = origin.replace(/\/+$/, '');
+        if (corsOrigins.includes(clean) || (isDevelopment && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(clean))) {
+          return clean;
+        }
+      }
+    } catch {
+      // Fallback on invalid URL parse
+    }
+  }
+  return appBaseUrl;
+}
 const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
 const trustProxy = process.env.TRUST_PROXY === 'true';
 const logSlowMs = parseInt(process.env.LOG_SLOW_MS || '150', 10);
@@ -135,6 +174,7 @@ export const env = {
   JWT_SECRET: jwtSecret,
   CORS_ORIGINS: corsOrigins,
   APP_BASE_URL: appBaseUrl,
+  getClientBaseUrl,
   RATE_LIMIT_DISABLED: rateLimitDisabled,
   TRUST_PROXY: trustProxy,
   LOG_SLOW_MS: logSlowMs,

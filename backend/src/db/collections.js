@@ -224,6 +224,7 @@ export const SCHEMAS = {
         reviewed: { bsonType: 'bool' },
         idempotencyKey: { bsonType: ['string', 'null'] },
         slotKey: { bsonType: ['string', 'null'] },
+        pickupCode: { bsonType: ['string', 'null'] },
         createdAt: { bsonType: 'date' },
         updatedAt: { bsonType: 'date' },
       },

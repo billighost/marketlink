@@ -1,0 +1,101 @@
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.linesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.lineRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.lineName {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink);
+  line-height: var(--lh-ui);
+}
+
+.multiplier {
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+  margin-left: var(--space-1);
+}
+
+.linePrice {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.totalSection {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-hairline);
+}
+
+.totalHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.totalLabelCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.totalLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  line-height: var(--lh-ui);
+}
+
+.totalContext {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-ui);
+}
+
+.totalAmount {
+  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-h3);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+  white-space: nowrap;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.totalAmount[data-stale="true"] {
+  opacity: 0.5;
+}
+
+.noticeBox {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.noticeText {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-ui);
+}

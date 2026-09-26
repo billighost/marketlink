@@ -180,7 +180,7 @@ export function ProductDetail() {
       message: `Reserved ${quantity} ${product.unit || 'item'}(s) for Saturday pickup!`,
       type: 'success',
       action: 'View Basket',
-      onAction: () => navigate('/buyer/cart'),
+      onAction: () => navigate('/buyer/basket'),
     });
   };
 

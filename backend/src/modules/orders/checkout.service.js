@@ -15,6 +15,7 @@ import { reserveStock, restoreStock, rollbackReservations } from './stock.js';
 import { toOrderSummary } from './orderShapes.js';
 import { createNotifications } from '../notifications/notify.js';
 import { mailer } from '../../utils/mailer.js';
+import { generatePickupCode } from '../../utils/pickupCode.js';
 
 /**
  * Executes customer checkout across one or more farmer groups.
@@ -402,22 +403,38 @@ export async function processCheckout({ user, idempotencyKey, groups, now = new 
         cancelReason: null,
         reviewed: false,
         idempotencyKey: `${idempotencyKey}:${farmer._id.toString()}`,
+        pickupCode: generatePickupCode(),
         createdAt: now,
         updatedAt: now,
       };
 
       ordersToInsert.push(orderDoc);
-      summaries.push(toOrderSummary(orderDoc, { now }));
     }
 
-    // 7. insertMany(orders, { ordered: true }) inside try/catch. On failure: rollback(reserved), mark checkout failed, 500 INTERNAL.
-    try {
-      await db.collection(COLLECTIONS.ORDERS).insertMany(ordersToInsert, { ordered: true });
-    } catch (insertErr) {
-      await rollbackReservations(reserved, db);
-      await db.collection(COLLECTIONS.CHECKOUTS).updateOne({ _id: checkoutId }, { $set: { status: 'failed' } });
-      console.error(`[CHECKOUT INSERT ERROR] [reqId: ${reqId}]`, insertErr);
-      throw AppError.internal('Failed to create orders. All inventory reservations rolled back.');
+    // 7. insertMany(orders, { ordered: true }) inside try/catch with collision retry on pickupCode (up to 5 attempts).
+    let inserted = false;
+    let insertAttempts = 0;
+    while (!inserted && insertAttempts < 5) {
+      insertAttempts++;
+      try {
+        await db.collection(COLLECTIONS.ORDERS).insertMany(ordersToInsert, { ordered: true });
+        inserted = true;
+      } catch (insertErr) {
+        if (insertErr.code === 11000 && (insertErr.message || '').includes('pickupCode') && insertAttempts < 5) {
+          for (const ord of ordersToInsert) {
+            ord.pickupCode = generatePickupCode();
+          }
+          continue;
+        }
+        await rollbackReservations(reserved, db);
+        await db.collection(COLLECTIONS.CHECKOUTS).updateOne({ _id: checkoutId }, { $set: { status: 'failed' } });
+        console.error(`[CHECKOUT INSERT ERROR] [reqId: ${reqId}]`, insertErr);
+        throw AppError.internal('Failed to create orders. All inventory reservations rolled back.');
+      }
+    }
+
+    for (const ord of ordersToInsert) {
+      summaries.push(toOrderSummary(ord, { now }));
     }
 
     // 8. updateOne(checkouts, { status: 'done', orderIds, completedAt })

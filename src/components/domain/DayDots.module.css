@@ -1,0 +1,49 @@
+/* DayDots — Seven day markers, Sunday first */
+
+.days {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.days span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+/* sm size: 24px (1.5rem) */
+.sm span {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* md size: 28px (1.75rem) */
+.md span {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.on {
+  background-color: var(--color-ink);
+  color: var(--color-white);
+  border: 1px solid var(--color-ink);
+}
+
+.off {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-ink-faint);
+}
+
+.today {
+  outline: 1px solid var(--color-ink-soft);
+  outline-offset: 2px;
+}

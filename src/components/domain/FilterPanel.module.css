@@ -1,0 +1,191 @@
+/* FilterPanel — one filter UI, two containers (rail & sheet) */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Rail layout at 1024px+ */
+.rail {
+  width: 100%;
+  padding-right: var(--space-4);
+  gap: var(--space-6);
+  position: sticky;
+  top: calc(var(--topbar-h-desk) + var(--space-6));
+  max-height: calc(100vh - var(--topbar-h-desk) - var(--space-10));
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* Sheet layout under 1024px */
+.sheet {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-2) 0 var(--space-6);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.group:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.groupTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  margin: 0;
+  line-height: var(--lh-normal);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--tap-min);
+}
+
+.toggleLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink);
+}
+
+/* Chip cluster */
+.chipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filterChip {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background-color: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
+}
+
+.filterChip:hover {
+  background-color: var(--color-canvas-soft, rgba(46, 43, 38, 0.04));
+  border-color: var(--color-ink-soft);
+}
+
+.filterChip:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Active chip: INK-FILLED, NEVER BEET */
+.filterChipActive {
+  background-color: var(--color-ink);
+  color: var(--color-white);
+  border: 1px solid var(--color-ink);
+}
+
+.filterChipActive:hover {
+  background-color: var(--color-ink-dark, var(--color-ink));
+  color: var(--color-white);
+  border-color: var(--color-ink-dark, var(--color-ink));
+}
+
+/* Reset button in rail */
+.railResetRow {
+  display: flex;
+  align-items: center;
+  padding-top: var(--space-2);
+}
+
+.resetButton {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: var(--space-2) 0;
+  min-height: var(--tap-min);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: var(--underline-offset);
+  cursor: pointer;
+}
+
+.resetButton:hover {
+  color: var(--color-ink-dark, var(--color-ink));
+}
+
+.resetButton:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Sheet Sticky Footer: the ONE beet button while sheet is open */
+.sheetFooter {
+  position: sticky;
+  bottom: 0;
+  background-color: var(--color-white);
+  padding: var(--space-3) 0 var(--space-2);
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.sheetApplyButton {
+  appearance: none;
+  width: 100%;
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--space-6);
+  background-color: var(--color-beet);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.sheetApplyButton:hover {
+  background-color: var(--color-beet-dark);
+}
+
+.sheetApplyButton:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

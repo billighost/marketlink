@@ -1,0 +1,54 @@
+/* MarketClock — Presentational market schedule clock */
+
+.clock {
+  display: flex;
+  flex-direction: column;
+}
+
+.line {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin: 0;
+  line-height: var(--lh-ui);
+}
+
+.market {
+  color: var(--color-ink);
+  font-weight: var(--weight-medium);
+}
+
+.open {
+  color: var(--color-success);
+  font-weight: var(--weight-medium);
+}
+
+.muted {
+  color: var(--color-ink-soft);
+}
+
+.sep {
+  color: var(--color-ink-faint);
+  user-select: none;
+}
+
+.track {
+  height: 2px;
+  background-color: var(--color-hairline);
+  border-radius: var(--radius-full);
+  margin-top: var(--space-2);
+  max-width: 14rem;
+  width: 100%;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  background-color: var(--color-success);
+  border-radius: inherit;
+  transition: width var(--duration-base) var(--ease-standard);
+}

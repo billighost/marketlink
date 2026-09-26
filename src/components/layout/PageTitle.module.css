@@ -1,0 +1,79 @@
+/* PageTitle — Single h1 block for buyer pages */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.back {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  text-decoration: none;
+  width: fit-content;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.back:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: var(--underline-offset);
+}
+
+.back:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-head);
+  font-size: var(--text-h1);
+  font-weight: var(--weight-head);
+  line-height: var(--lh-h1);
+  letter-spacing: var(--tracking-head);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.context {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  margin-top: var(--space-1);
+  margin-bottom: 0;
+  max-width: var(--measure);
+  line-height: var(--lh-ui);
+}
+
+.actions {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .actions {
+    display: flex;
+  }
+}
