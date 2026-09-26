@@ -101,115 +101,118 @@ export function Home() {
   }
 
   return (
-    <Page width="wide">
-      {/* Bespoke Header Area: Greeting + MarketClock + Search Field */}
-      <header className={styles.header}>
-        <div className={styles.headGroup}>
-          <h1 className={styles.greeting}>{getGreeting(greetingName)}</h1>
-          {metaLoading && !feedMeta ? (
-            <div className={styles.clockSkeleton} aria-hidden="true" />
-          ) : (
-            <MarketClock
-              marketName={feedMeta?.homeMarket?.name || 'Your market'}
-              openNow={feedMeta?.clock?.openNow}
-              windowLabel={feedMeta?.clock?.windowLabel}
-              nextOpenLabel={feedMeta?.clock?.nextOpenLabel}
-              closesAtLabel={feedMeta?.clock?.closesAtLabel}
-              progress={feedMeta?.clock?.todayProgress ?? 0}
+    <Page width="wide" className={styles.pageRoot}>
+      {/* Single wrapper — keeps Page's section-gap from blowing apart the header/feed */}
+      <div className={styles.pageBody}>
+        {/* Bespoke Header Area: Greeting + MarketClock + Search Field */}
+        <header className={styles.header}>
+          <div className={styles.headGroup}>
+            <h1 className={styles.greeting}>{getGreeting(greetingName)}</h1>
+            {metaLoading && !feedMeta ? (
+              <div className={styles.clockSkeleton} aria-hidden="true" />
+            ) : (
+              <MarketClock
+                marketName={feedMeta?.homeMarket?.name || 'Your market'}
+                openNow={feedMeta?.clock?.openNow}
+                windowLabel={feedMeta?.clock?.windowLabel}
+                nextOpenLabel={feedMeta?.clock?.nextOpenLabel}
+                closesAtLabel={feedMeta?.clock?.closesAtLabel}
+                progress={feedMeta?.clock?.todayProgress ?? 0}
+              />
+            )}
+          </div>
+
+          {/* Full-width Search Field */}
+          <form className={styles.searchForm} onSubmit={handleSearchSubmit} role="search">
+            <Search size={18} className={styles.searchIcon} aria-hidden="true" />
+            <input
+              type="search"
+              className={styles.searchInput}
+              placeholder="Search produce, stalls, markets"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search produce, stalls and markets"
             />
-          )}
-        </div>
+          </form>
+        </header>
 
-        {/* Full-width Search Field */}
-        <form className={styles.searchForm} onSubmit={handleSearchSubmit} role="search">
-          <Search size={18} className={styles.searchIcon} aria-hidden="true" />
-          <input
-            type="search"
-            className={styles.searchInput}
-            placeholder="Search produce, stalls, markets"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Search produce, stalls and markets"
-          />
-        </form>
-      </header>
+        {/* Conditional Active Pickup Banner */}
+        <PickupBanner order={activePickup} />
 
-      {/* Conditional Active Pickup Banner */}
-      <PickupBanner order={activePickup} />
+        {/* Curated and Endless Feed */}
+        <div className={styles.feed}>
+          {/* First row: At the market today (StallStrip) */}
+          <StallStrip marketId={selectedMarketId} />
 
-      {/* Curated and Endless Feed */}
-      <div className={styles.feed}>
-        {/* First row: At the market today (StallStrip) */}
-        <StallStrip marketId={selectedMarketId} />
-
-        {/* Server curated sections */}
-        {sections.map((section, idx) => (
-          <React.Fragment key={section.id}>
-            <div className={styles.sectionWrap}>
-              <HorizontalRow
-                title={section.title}
-                subtitle={section.subtitle}
-                seeAllLabel="See all"
-                onSeeAll={() => navigate(section.seeAllPath || '/buyer/products')}
-              >
-                {section.items.map((item) => {
-                  if (section.type === 'farmers') {
+          {/* Server curated sections */}
+          {sections.map((section, idx) => (
+            <React.Fragment key={section.id}>
+              <div className={styles.sectionWrap}>
+                <HorizontalRow
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  seeAllLabel="See all"
+                  onSeeAll={() => navigate(section.seeAllPath || '/buyer/products')}
+                >
+                  {section.items.map((item) => {
+                    if (section.type === 'farmers') {
+                      return (
+                        <FarmerCard
+                          key={item.id}
+                          farmer={item}
+                          variant={section.cardVariant || 'row'}
+                        />
+                      );
+                    }
                     return (
-                      <FarmerCard
+                      <ProductCard
                         key={item.id}
-                        farmer={item}
-                        variant={section.cardVariant || 'row'}
+                        product={item}
+                        variant={section.cardVariant || 'compact'}
                       />
                     );
-                  }
-                  return (
-                    <ProductCard
-                      key={item.id}
-                      product={item}
-                      variant={section.cardVariant || 'compact'}
-                    />
-                  );
-                })}
-              </HorizontalRow>
-            </div>
-
-            {/* Quiet assistant line after the 3rd server section */}
-            {idx === 2 && (
-              <div className={styles.assistantCallout}>
-                <p className={styles.assistantText}>
-                  Not sure what to cook?{' '}
-                  <Link to="/buyer/assistant" className={styles.assistantLink}>
-                    Ask MarketLink
-                  </Link>
-                  .
-                </p>
+                  })}
+                </HorizontalRow>
               </div>
-            )}
-          </React.Fragment>
-        ))}
 
-        {/* Skeletons while loading more feed batches */}
-        {loading && sections.length > 0 && (
-          <div className={styles.skeletonRow} aria-label="Loading more market items">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-        )}
+              {/* Quiet assistant line after the 3rd server section */}
+              {idx === 2 && (
+                <div className={styles.assistantCallout}>
+                  <p className={styles.assistantText}>
+                    Not sure what to cook?{' '}
+                    <Link to="/buyer/assistant" className={styles.assistantLink}>
+                      Ask MarketLink
+                    </Link>
+                    .
+                  </p>
+                </div>
+              )}
+            </React.Fragment>
+          ))}
 
-        {/* Empty feed state */}
-        {!loading && sections.length === 0 && (
-          <EmptyState
-            scene="market-closed"
-            title="Nothing on the stalls yet"
-            text="Farmers are still setting up for the next market day."
-            actionLabel="Browse markets"
-            actionTo="/buyer/markets"
-          />
-        )}
+          {/* Skeletons while loading more feed batches */}
+          {loading && sections.length > 0 && (
+            <div className={styles.skeletonRow} aria-label="Loading more market items">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+          )}
 
-        {/* Endless scroll sentinel */}
-        <div ref={sentinelRef} className={styles.sentinel} aria-hidden="true" />
+          {/* Empty feed state */}
+          {!loading && sections.length === 0 && (
+            <EmptyState
+              scene="market-closed"
+              title="Nothing on the stalls yet"
+              text="Farmers are still setting up for the next market day."
+              actionLabel="Browse markets"
+              actionTo="/buyer/markets"
+            />
+          )}
+
+          {/* Endless scroll sentinel */}
+          <div ref={sentinelRef} className={styles.sentinel} aria-hidden="true" />
+        </div>
       </div>
     </Page>
   );

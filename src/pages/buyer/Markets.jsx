@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { getMarkets } from '@/api/catalog';
 import { useQuery } from '@/hooks/useQuery';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -45,6 +46,7 @@ export function Markets() {
 
   const [selectedDay, setSelectedDay] = useState(dayParam);
   const [selectedMarketId, setSelectedMarketId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const selectedCardRef = useRef(null);
 
   const setViewMode = (mode) => {
@@ -84,9 +86,21 @@ export function Markets() {
     ({ signal }) => getMarkets({ day: selectedDay || undefined }, signal)
   );
 
-  const markets = useMemo(() => {
+  const allMarkets = useMemo(() => {
     return Array.isArray(marketsData) ? marketsData : marketsData?.data || [];
   }, [marketsData]);
+
+  // Client-side filter by search query
+  const markets = useMemo(() => {
+    if (!searchQuery.trim()) return allMarkets;
+    const q = searchQuery.toLowerCase();
+    return allMarkets.filter(
+      (m) =>
+        m.name?.toLowerCase().includes(q) ||
+        m.address?.toLowerCase().includes(q) ||
+        m.city?.toLowerCase().includes(q)
+    );
+  }, [allMarkets, searchQuery]);
 
   // Set default selected market for map view
   useEffect(() => {
@@ -119,16 +133,20 @@ export function Markets() {
     return markets.find((m) => m.id === selectedMarketId) || markets[0] || null;
   }, [markets, selectedMarketId]);
 
-  const countText =
-    markets.length === 1 ? '1 market near you' : `${markets.length} markets near you`;
+  const countText = searchQuery.trim()
+    ? markets.length === 1
+      ? '1 result'
+      : `${markets.length} results`
+    : allMarkets.length === 1
+    ? '1 market near you'
+    : `${allMarkets.length} markets near you`;
 
   return (
     <Page width="wide">
       <div className={styles.container}>
         <header className={styles.topBar}>
-          <PageTitle title="Markets" context={countText} />
-
-          <div className={styles.controlsWrap}>
+          <div className={styles.titleRow}>
+            <PageTitle title="Markets" context={countText} />
             {/* View switcher: List vs Map */}
             <div className={styles.segmentedWrap}>
               <SegmentedControl
@@ -141,6 +159,21 @@ export function Markets() {
                 ]}
               />
             </div>
+          </div>
+
+          <div className={styles.controlsWrap}>
+            {/* Search bar */}
+            <form className={styles.searchForm} role="search" onSubmit={(e) => e.preventDefault()}>
+              <Search size={17} className={styles.searchIcon} aria-hidden="true" />
+              <input
+                type="search"
+                className={styles.searchInput}
+                placeholder="Search markets by name or location"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search markets"
+              />
+            </form>
 
             {/* Day filter chips row */}
             <div className={styles.dayChips} role="tablist" aria-label="Filter markets by day">

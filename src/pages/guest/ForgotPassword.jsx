@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { MailCheck } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import PageHeader from '@/components/layout/PageHeader';
 import FormField from '@/components/ui/FormField';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import Illustration from '@/components/domain/Illustration';
 import { forgotPassword } from '@/api/auth';
 import styles from './ForgotPassword.module.css';
 
@@ -62,8 +62,8 @@ export function ForgotPassword() {
           {sent ? (
             /* Sent confirmation state */
             <div className={styles.sentState}>
-              <div className={styles.illustrationMoment} aria-hidden="true">
-                <Illustration name="paper-bag-pears" size="lg" />
+              <div className={styles.iconBadge} aria-hidden="true">
+                <MailCheck size={32} strokeWidth={1.85} />
               </div>
               <h2 className={styles.sentTitle}>Check your inbox</h2>
               <p className={styles.sentText}>

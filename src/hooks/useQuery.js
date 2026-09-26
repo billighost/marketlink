@@ -37,6 +37,8 @@ export function useQuery(key, fetcher, options = {}) {
   const abortControllerRef = useRef(null);
   const mountedRef = useRef(true);
   const lastKeyRef = useRef(serializedKey);
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
 
   const executeFetch = useCallback(
     async (isBackground = false) => {
@@ -58,34 +60,52 @@ export function useQuery(key, fetcher, options = {}) {
       }
 
       try {
-        // Reuse in-flight request if one is already pending for this key
-        let promise = inFlightRequests.get(serializedKey);
-        if (!promise) {
-          promise = fetcher(signal);
-          inFlightRequests.set(serializedKey, promise);
+        // Reuse in-flight request if one is already pending and not aborted
+        let inFlight = inFlightRequests.get(serializedKey);
+        let promise;
+
+        if (inFlight && !inFlight.controller.signal.aborted) {
+          promise = inFlight.promise;
+        } else {
+          promise = Promise.resolve()
+            .then(() => fetcherRef.current(signal))
+            .catch((err) => {
+              if (err.name === 'AbortError' || signal.aborted) return null;
+              throw err;
+            });
+          inFlightRequests.set(serializedKey, { promise, controller: abortControllerRef.current });
+          promise.finally(() => {
+            const current = inFlightRequests.get(serializedKey);
+            if (current && current.promise === promise) {
+              inFlightRequests.delete(serializedKey);
+            }
+          });
         }
 
         const result = await promise;
 
-        if (mountedRef.current && !signal.aborted) {
+        if (mountedRef.current && !signal.aborted && result !== null) {
           queryCache.set(serializedKey, { data: result, timestamp: Date.now() });
           setData(result);
           setError(null);
           setLoading(false);
+        } else if (mountedRef.current && signal.aborted) {
+          setLoading(false);
         }
       } catch (err) {
         if (err.name === 'AbortError' || signal.aborted) {
+          if (mountedRef.current) {
+            setLoading(false);
+          }
           return;
         }
         if (mountedRef.current) {
           setError(err);
           setLoading(false);
         }
-      } finally {
-        inFlightRequests.delete(serializedKey);
       }
     },
-    [serializedKey, enabled, keepPrevious, fetcher]
+    [serializedKey, enabled, keepPrevious]
   );
 
   useEffect(() => {
@@ -117,6 +137,7 @@ export function useQuery(key, fetcher, options = {}) {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      inFlightRequests.delete(serializedKey);
     };
   }, [serializedKey, enabled, executeFetch]);
 

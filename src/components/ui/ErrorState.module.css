@@ -1,39 +1,74 @@
+/* ==========================================================================
+   ErrorState — Clean, descriptive error state component
+   Adheres to MarketLink design system tokens (Red/Danger soft badges & typography)
+   ========================================================================== */
+
 .errorState {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: var(--space-10) var(--space-4) var(--space-12);
-  gap: var(--space-4);
+  padding: var(--space-10, 2.5rem) var(--space-4, 1rem) var(--space-12, 3rem);
+  gap: var(--space-3, 0.75rem);
   width: 100%;
-  max-width: var(--container-narrow);
-  margin: 0 auto;
+  max-width: 480px;
+  margin-inline: auto;
+  box-sizing: border-box;
 }
 
-.scene {
-  margin-inline: auto;
-  margin-bottom: var(--space-2);
+.iconBadge {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-danger-bg, #FBEAE8);
+  border: 1px solid rgba(179, 38, 30, 0.22);
+  box-shadow: 0 0 0 6px rgba(179, 38, 30, 0.06), 0 4px 14px rgba(179, 38, 30, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-danger, #B3261E);
+  margin-bottom: var(--space-2, 0.5rem);
+  transition: transform var(--duration-fast, 140ms) ease;
+}
+
+.errorState:hover .iconBadge {
+  transform: translateY(-2px);
+}
+
+.icon {
+  flex-shrink: 0;
 }
 
 .title {
-  font-family: var(--font-head);
-  font-size: var(--text-h3);
-  font-weight: var(--weight-head);
-  color: var(--color-ink);
-  line-height: var(--lh-tight);
+  font-family: var(--font-head, 'Idiqlat', Georgia, serif);
+  font-size: var(--text-h3, 1.3125rem);
+  font-weight: 600;
+  color: var(--color-ink, #2E2B26);
+  line-height: var(--lh-tight, 1.25);
   margin: 0;
 }
 
 .text {
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  color: var(--color-ink-soft);
-  max-width: var(--measure-narrow);
-  line-height: var(--lh-relaxed);
+  font-family: var(--font-body, 'Inter', -apple-system, sans-serif);
+  font-size: var(--text-body, 0.9375rem);
+  color: var(--color-ink-soft, #6B6259);
+  max-width: var(--measure-narrow, 46ch);
+  line-height: var(--lh-relaxed, 1.6);
   margin: 0;
 }
 
 .action {
-  margin-top: var(--space-2);
+  margin-top: var(--space-3, 0.75rem);
+}
+
+.retryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnIcon {
+  flex-shrink: 0;
 }

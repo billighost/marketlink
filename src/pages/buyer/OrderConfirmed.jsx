@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { CheckCircle2 } from 'lucide-react';
 import { getOrderDetail } from '@/api/orders';
 import { formatPrice } from '@/utils/format';
 import Page from '@/components/layout/Page';
-import Scene from '@/components/domain/Scene/Scene';
 import PickupCode from '@/components/domain/PickupCode';
 import Button from '@/components/ui/Button';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -66,9 +66,9 @@ export function OrderConfirmed() {
   return (
     <Page width="detail" className={styles.page}>
       <div className={styles.container}>
-        {/* Decorative Scene */}
-        <div className={styles.sceneWrap} aria-hidden="true">
-          <Scene name="no-orders-yet" size="md" />
+        {/* Success Confirmation Badge */}
+        <div className={styles.confirmedBadge} aria-hidden="true">
+          <CheckCircle2 size={36} strokeWidth={2} className={styles.confirmedIcon} />
         </div>
 
         {/* Heading & Subtitle */}

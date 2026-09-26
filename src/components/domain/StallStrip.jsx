@@ -46,15 +46,7 @@ export function StallStrip({ marketId }) {
   }, [farmersData]);
 
   if (!loading && sortedStalls.length === 0) {
-    return (
-      <div className={styles.emptyContainer}>
-        <EmptyState
-          scene="market-closed"
-          title="No stalls listed for this market"
-          text="Try another market, or check back before market day."
-        />
-      </div>
-    );
+    return null;
   }
 
   return (
