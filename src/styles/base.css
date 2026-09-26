@@ -277,11 +277,36 @@ button {
   text-align: left;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+button:focus,
+button:active,
+[role="button"]:focus,
+[role="button"]:active,
+a:focus,
+a:active,
+summary:focus,
+summary:active {
+  outline: none !important;
+}
+
+button:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+summary:focus:not(:focus-visible),
+[tabindex]:focus:not(:focus-visible),
+*:focus:not(:focus-visible) {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
 }
 
 a {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
 /* UI Chrome selection prevention */

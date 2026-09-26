@@ -54,6 +54,9 @@ export function FilterPanel({
   resultCount = 0,
   onClose,
 }) {
+  const cats = Array.isArray(categories) ? categories : Array.isArray(categories?.data) ? categories.data : [];
+  const mkts = Array.isArray(markets) ? markets : Array.isArray(markets?.data) ? markets.data : [];
+
   const currentCategory = value.category || 'All';
   const currentSort = value.sort || 'featured';
   const currentMarket = value.marketId || '';
@@ -129,7 +132,7 @@ export function FilterPanel({
           >
             All
           </button>
-          {categories.map((cat) => {
+          {cats.map((cat) => {
             const catName = typeof cat === 'string' ? cat : cat.name;
             const isSelected = currentCategory.toLowerCase() === catName.toLowerCase();
             return (
@@ -149,7 +152,7 @@ export function FilterPanel({
       </section>
 
       {/* 4. Market */}
-      {markets.length > 0 && (
+      {mkts.length > 0 && (
         <section className={styles.group}>
           <h4 className={styles.groupTitle}>Market</h4>
           <div className={styles.chipGrid} role="radiogroup" aria-label="Market options">
@@ -162,7 +165,7 @@ export function FilterPanel({
             >
               All markets
             </button>
-            {markets.map((m) => {
+            {mkts.map((m) => {
               const isSelected = currentMarket === m.id;
               return (
                 <button

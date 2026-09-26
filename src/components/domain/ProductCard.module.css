@@ -173,7 +173,7 @@
   margin-top: auto;
   min-height: var(--tap-min);
   min-width: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 @media (max-width: 380px) {
