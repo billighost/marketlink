@@ -91,6 +91,224 @@ export function formatSlotLabel(start, end, tz) {
   return `${dateStr}, ${timeStr}`;
 }
 
+const DAY_FULL_NAMES = {
+  sun: 'Sunday',
+  mon: 'Monday',
+  tue: 'Tuesday',
+  wed: 'Wednesday',
+  thu: 'Thursday',
+  fri: 'Friday',
+  sat: 'Saturday',
+};
+
+export const DAY_STRING_TO_NUM = {
+  sun: 0, sunday: 0,
+  mon: 1, monday: 1,
+  tue: 2, tuesday: 2, tues: 2,
+  wed: 3, wednesday: 3,
+  thu: 4, thursday: 4, thur: 4, thurs: 4,
+  fri: 5, friday: 5,
+  sat: 6, saturday: 6,
+};
+
+function formatHHMM(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function formatDisplayTime(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}:${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * Formats cutoff date as a human label in market timezone (e.g. "Reserve by Friday 18:00").
+ *
+ * @param {Date|string} cutoffDate
+ * @param {string} [tz='America/New_York']
+ * @returns {string|null}
+ */
+export function formatCutoffLabel(cutoffDate, tz = 'America/New_York') {
+  if (!cutoffDate) return null;
+  const d = cutoffDate instanceof Date ? cutoffDate : new Date(cutoffDate);
+  if (isNaN(d.getTime())) return null;
+
+  const day = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'long' }).format(d);
+  const timeParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    hourCycle: 'h23',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).formatToParts(d);
+  const hour = timeParts.find((p) => p.type === 'hour')?.value || '00';
+  const minute = timeParts.find((p) => p.type === 'minute')?.value || '00';
+
+  return `Reserve by ${day} ${hour}:${minute}`;
+}
+
+/**
+ * Converts operatingDays (strings or numbers) into a sorted array of unique integers (0=Sunday..6=Saturday).
+ *
+ * @param {Array<string|number>|any} operatingDays
+ * @returns {Array<number>}
+ */
+export function toOperatingDayNumbers(operatingDays) {
+  if (!Array.isArray(operatingDays)) return [];
+  const set = new Set();
+  for (const day of operatingDays) {
+    if (typeof day === 'number' && Number.isInteger(day) && day >= 0 && day <= 6) {
+      set.add(day);
+    } else if (typeof day === 'string') {
+      const normalized = day.trim().toLowerCase();
+      if (DAY_STRING_TO_NUM[normalized] !== undefined) {
+        set.add(DAY_STRING_TO_NUM[normalized]);
+      }
+    }
+  }
+  return Array.from(set).sort((a, b) => a - b);
+}
+
+/**
+ * Determines whether a farmer trades today in the given market timezone.
+ *
+ * @param {Array<number>} operatingDayNumbers
+ * @param {string} [tz='America/New_York']
+ * @param {Date} [now=new Date()]
+ * @returns {boolean}
+ */
+export function computeOpenToday(operatingDayNumbers, tz = 'America/New_York', now = new Date()) {
+  if (!Array.isArray(operatingDayNumbers) || operatingDayNumbers.length === 0) return false;
+  const nowDate = now instanceof Date ? now : new Date(now);
+  const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short' }).format(nowDate);
+  const todayNum = DAY_STRING_TO_NUM[p.toLowerCase()];
+  return todayNum !== undefined && operatingDayNumbers.includes(todayNum);
+}
+
+/**
+ * Pure function computing the market clock state in the market's timezone.
+ * Never throws on missing or malformed schedule data.
+ *
+ * @param {object} market
+ * @param {Date} [now=new Date()]
+ * @returns {object}
+ */
+export function computeMarketClock(market, now = new Date()) {
+  if (!market || !Array.isArray(market.schedule) || market.schedule.length === 0) {
+    return {
+      openNow: false,
+      todayWindow: null,
+      todayProgress: null,
+      closesAtLabel: null,
+      windowLabel: null,
+      nextOpenLabel: null,
+      nextOpenAt: null,
+    };
+  }
+
+  const tz = market.timezone || 'America/New_York';
+  const nowDate = now instanceof Date ? now : new Date(now);
+  const nowMs = nowDate.getTime();
+
+  const p = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+    hourCycle: 'h23',
+  }).formatToParts(nowDate);
+
+  const g = (t) => p.find((x) => x.type === t)?.value;
+  const year = Number(g('year'));
+  const month = Number(g('month'));
+  const day = Number(g('day'));
+  const todayWeekdayStr = (g('weekday') || '').toLowerCase().slice(0, 3);
+
+  const todaySched = market.schedule.find((s) => s && s.day === todayWeekdayStr);
+  let openNow = false;
+  let todayProgress = null;
+  let closesAtLabel = null;
+  let todayWindow = null;
+  let windowLabel = null;
+  let nextOpenLabel = null;
+  let nextOpenAt = null;
+
+  if (todaySched && typeof todaySched.openMin === 'number' && typeof todaySched.closeMin === 'number') {
+    const todayStartUtc = zonedTimeToUtc({ year, month, day, minutes: todaySched.openMin }, tz);
+    const todayEndUtc = zonedTimeToUtc({ year, month, day, minutes: todaySched.closeMin }, tz);
+
+    if (nowMs >= todayStartUtc.getTime() && nowMs < todayEndUtc.getTime()) {
+      openNow = true;
+      todayWindow = {
+        opensAt: formatHHMM(todaySched.openMin),
+        closesAt: formatHHMM(todaySched.closeMin),
+      };
+      const total = todayEndUtc.getTime() - todayStartUtc.getTime();
+      const elapsed = nowMs - todayStartUtc.getTime();
+      todayProgress = total > 0 ? Number(Math.min(1, Math.max(0, elapsed / total)).toFixed(4)) : 0;
+      closesAtLabel = formatHHMM(todaySched.closeMin);
+      const dayName = DAY_FULL_NAMES[todaySched.day] || todaySched.day;
+      windowLabel = `${dayName} ${formatDisplayTime(todaySched.openMin)}\u2013${formatDisplayTime(todaySched.closeMin)}`;
+    } else if (nowMs < todayStartUtc.getTime()) {
+      todayWindow = {
+        opensAt: formatHHMM(todaySched.openMin),
+        closesAt: formatHHMM(todaySched.closeMin),
+      };
+    }
+  }
+
+  if (!openNow) {
+    for (let d = 0; d <= 7; d++) {
+      const probeDate = new Date(nowMs + d * 86400000);
+      const prbParts = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        weekday: 'short',
+      }).formatToParts(probeDate);
+
+      const getP = (type) => prbParts.find((x) => x.type === type)?.value;
+      const pYear = Number(getP('year'));
+      const pMonth = Number(getP('month'));
+      const pDay = Number(getP('day'));
+      const pWeekday = (getP('weekday') || '').toLowerCase().slice(0, 3);
+
+      const sched = market.schedule.find((s) => s && s.day === pWeekday);
+      if (!sched || typeof sched.openMin !== 'number' || typeof sched.closeMin !== 'number') continue;
+
+      const startUtc = zonedTimeToUtc({ year: pYear, month: pMonth, day: pDay, minutes: sched.openMin }, tz);
+      if (startUtc.getTime() > nowMs) {
+        nextOpenAt = startUtc.toISOString();
+        const dayName = DAY_FULL_NAMES[sched.day] || sched.day;
+        windowLabel = `${dayName} ${formatDisplayTime(sched.openMin)}\u2013${formatDisplayTime(sched.closeMin)}`;
+        if (d === 0) {
+          nextOpenLabel = 'opens today';
+        } else if (d === 1) {
+          nextOpenLabel = 'opens tomorrow';
+        } else if (d === 2) {
+          nextOpenLabel = 'opens in 2 days';
+        } else {
+          nextOpenLabel = `opens ${dayName}`;
+        }
+        break;
+      }
+    }
+  }
+
+  return {
+    openNow,
+    todayWindow,
+    todayProgress,
+    closesAtLabel,
+    windowLabel,
+    nextOpenLabel,
+    nextOpenAt,
+  };
+}
+
 // In-memory cache for computed slots (30 seconds TTL)
 const slotsCache = new Map();
 
