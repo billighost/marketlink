@@ -25,16 +25,7 @@ async function bootstrap() {
     const db = await connectDb();
     console.log(`[DB] Connected successfully.`);
 
-    // 2. Ensure collections with validators and indexes
-    console.log(`[DB] Verifying collections and indexes...`);
-    await createCollections(db);
-    await ensureIndexes(db);
-    console.log(`[DB] Collections and indexes verified.`);
-
-    // 2b. Verify Gmail SMTP credentials
-    await verifyMailerConnection();
-
-    // 3. Create Express application
+    // 2. Create Express application & bind listener immediately
     const app = createApp();
     server = http.createServer(app);
 
@@ -43,19 +34,19 @@ async function bootstrap() {
     server.headersTimeout = 31000; // slightly longer than keepAliveTimeout
     server.keepAliveTimeout = 30000; // 30s idle keep-alive
 
-    // 3. Start HTTP listener immediately so dev server is instantly available
     server.listen(env.PORT, () => {
       console.log(`[SERVER] MarketLink API listening on http://localhost:${env.PORT}/api`);
       console.log(`[SERVER] Health check ready at http://localhost:${env.PORT}/api/health`);
     });
 
-    // 4. Ensure collections and indexes in background
+    // 3. Ensure collections, indexes, and mailer in background
     (async () => {
       try {
         console.log(`[DB] Verifying collections and indexes in background...`);
         await createCollections(db);
         await ensureIndexes(db);
         console.log(`[DB] Collections and indexes verified.`);
+        await verifyMailerConnection().catch((e) => console.warn('[MAILER] Verification warning:', e.message));
       } catch (err) {
         console.warn(`[DB] Collections/indexes verification notice:`, err.message);
       }
