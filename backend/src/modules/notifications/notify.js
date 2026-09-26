@@ -26,7 +26,7 @@ export async function createNotifications(items, dbInstance) {
     .collection(COLLECTIONS.USERS)
     .find(
       { _id: { $in: userIds }, status: 'active' },
-      { projection: { _id: 1, role: 1, email: 1, notificationPrefs: 1 } }
+      { projection: { _id: 1, role: 1, email: 1, name: 1, notificationPrefs: 1 } }
     )
     .toArray();
 
@@ -69,16 +69,65 @@ export async function createNotifications(items, dbInstance) {
       createdAt: now,
     });
 
-    // Mailer trigger for key alerts
-    try {
-      if (item.type === 'order_ready' && user.email) {
-        mailer.sendOrderReady(user.email, {
-          orderNumber: item.data?.orderNumber || '',
-          stallNumber: item.data?.stallNumber || '',
-        });
+    // Real mailer triggers for all notification alerts (fire-and-forget, never fails the transaction)
+    if (user.email) {
+      try {
+        if (item.type === 'order_ready') {
+          mailer.sendOrderReady(user.email, {
+            orderNumber: item.data?.orderNumber || '',
+            stallNumber: item.data?.stallNumber || '',
+            farmerName: item.data?.farmerName || '',
+          }).catch((err) => console.warn('[NOTIFY] Mailer warning (order_ready):', err.message));
+        } else if (item.type === 'order_accepted') {
+          mailer.sendOrderAccepted(user.email, {
+            orderNumber: item.data?.orderNumber || '',
+            farmerName: item.data?.farmerName || '',
+            pickupLabel: item.data?.pickupLabel || '',
+          }).catch((err) => console.warn('[NOTIFY] Mailer warning (order_accepted):', err.message));
+        } else if (item.type === 'order_completed') {
+          mailer.sendOrderCompleted(user.email, {
+            orderNumber: item.data?.orderNumber || '',
+            farmerName: item.data?.farmerName || '',
+          }).catch((err) => console.warn('[NOTIFY] Mailer warning (order_completed):', err.message));
+        } else if (item.type === 'order_declined') {
+          mailer.sendOrderDeclined(user.email, {
+            orderNumber: item.data?.orderNumber || '',
+            farmerName: item.data?.farmerName || '',
+          }, item.data?.reason || '').catch((err) => console.warn('[NOTIFY] Mailer warning (order_declined):', err.message));
+        } else if (item.type === 'order_cancelled') {
+          mailer.sendOrderCancelled(user.email, {
+            orderNumber: item.data?.orderNumber || '',
+            farmerName: item.data?.farmerName || '',
+          }, item.data?.who || item.data?.reason || '').catch((err) => console.warn('[NOTIFY] Mailer warning (order_cancelled):', err.message));
+        } else if (item.type === 'restock') {
+          mailer.sendRestockAlert(user.email, user, {
+            name: item.title.replace(' is back in stock!', ''),
+            id: item.data?.productId,
+          }).catch((err) => console.warn('[NOTIFY] Mailer warning (restock):', err.message));
+        } else if (item.type === 'review_reply') {
+          mailer.sendReviewReply(
+            user.email,
+            user,
+            item.title.replace(' replied to your review', ''),
+            item.body
+          ).catch((err) => console.warn('[NOTIFY] Mailer warning (review_reply):', err.message));
+        } else if (item.type === 'announcement') {
+          mailer.sendAnnouncement(user.email, user, {
+            title: item.title,
+            body: item.body,
+          }).catch((err) => console.warn('[NOTIFY] Mailer warning (announcement):', err.message));
+        } else if (item.type === 'account') {
+          if (item.title?.toLowerCase().includes('approved')) {
+            mailer.sendFarmerApproved(user.email, user)
+              .catch((err) => console.warn('[NOTIFY] Mailer warning (farmer_approved):', err.message));
+          } else if (item.title?.toLowerCase().includes('suspended')) {
+            mailer.sendFarmerSuspended(user.email, user, item.body)
+              .catch((err) => console.warn('[NOTIFY] Mailer warning (farmer_suspended):', err.message));
+          }
+        }
+      } catch (err) {
+        console.warn(`[NOTIFY] Mailer setup error for ${item.type}:`, err.message);
       }
-    } catch {
-      // Mailer logging failure must never fail the transaction
     }
   }
 

@@ -152,6 +152,10 @@ export async function approveFarmer(adminActor, farmerIdOrUserId) {
     throw AppError.notFound('User account not found');
   }
 
+  if (user.emailVerified === false) {
+    throw new AppError(409, 'EMAIL_NOT_VERIFIED', 'Farmer email must be verified before approval.');
+  }
+
   if (!['pending', 'rejected'].includes(user.status)) {
     throw new AppError(409, 'INVALID_STATE', `Farmer cannot be approved from status '${user.status}'.`);
   }

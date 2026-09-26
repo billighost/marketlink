@@ -34,6 +34,10 @@ import {
   createPasswordResetToken,
   findValidPasswordReset,
   completePasswordReset,
+  createEmailVerificationToken,
+  invalidatePriorVerificationTokens,
+  countRecentResendRequests,
+  verifyEmailWithToken,
 } from './auth.service.js';
 
 export const authRouter = Router();
@@ -97,6 +101,15 @@ const routes = [
         ip: req.ip,
       });
 
+      // Generate verification token and send branded confirmation email (best-effort)
+      const rawVerificationToken = generateRandomToken(32);
+      await createEmailVerificationToken(user._id, rawVerificationToken);
+      const verifyLink = `${env.APP_BASE_URL}/verify-email?token=${rawVerificationToken}`;
+
+      mailer.sendVerificationEmail(user, verifyLink).catch((err) => {
+        console.warn('[REGISTER] Failed to dispatch customer verification email:', err.message);
+      });
+
       const accessToken = signAccessToken({
         sub: user._id.toString(),
         role: user.role,
@@ -158,6 +171,15 @@ const routes = [
         rawToken: rawRefreshToken,
         userAgent: req.headers['user-agent'],
         ip: req.ip,
+      });
+
+      // Generate verification token and send branded confirmation email (best-effort)
+      const rawVerificationToken = generateRandomToken(32);
+      await createEmailVerificationToken(user._id, rawVerificationToken);
+      const verifyLink = `${env.APP_BASE_URL}/verify-email?token=${rawVerificationToken}`;
+
+      mailer.sendVerificationEmail(user, verifyLink).catch((err) => {
+        console.warn('[REGISTER] Failed to dispatch farmer verification email:', err.message);
       });
 
       const accessToken = signAccessToken({
@@ -447,6 +469,110 @@ const routes = [
       res.status(200).json({
         data: {
           message: 'Your password has been successfully reset. Please sign in with your new password.',
+        },
+      });
+    },
+  },
+
+  // ── 9. Verify Email (POST and GET) ──
+  {
+    method: 'post',
+    path: '/verify-email',
+    auth: 'public',
+    limiter: 'default',
+    summary: 'Verifies email address with single-use token',
+    body: 'verifyEmail',
+    handler: async (req, res) => {
+      const allowed = ['token'];
+      rejectUnknownFields(req.body, allowed);
+
+      const details = [];
+      const token = validateString(req.body.token, 'token', details, { required: true, min: 10, max: 128 });
+      assertValid(details);
+
+      const result = await verifyEmailWithToken(token);
+      if (!result.success) {
+        throw new AppError(422, 'INVALID_VERIFICATION_TOKEN', 'Invalid, expired, or already used email verification link.');
+      }
+
+      res.status(200).json({
+        data: {
+          message: 'Your email has been verified successfully.',
+          user: toApi(result.user),
+        },
+      });
+    },
+  },
+  {
+    method: 'get',
+    path: '/verify-email',
+    auth: 'public',
+    summary: 'Verifies email address via GET token query param',
+    handler: async (req, res) => {
+      const token = req.query.token;
+      if (!token || typeof token !== 'string') {
+        throw new AppError(422, 'INVALID_VERIFICATION_TOKEN', 'Verification token is required.');
+      }
+
+      const result = await verifyEmailWithToken(token);
+      if (!result.success) {
+        throw new AppError(422, 'INVALID_VERIFICATION_TOKEN', 'Invalid, expired, or already used email verification link.');
+      }
+
+      res.status(200).json({
+        data: {
+          message: 'Your email has been verified successfully.',
+          user: toApi(result.user),
+        },
+      });
+    },
+  },
+
+  // ── 10. Resend Verification Email ──
+  {
+    method: 'post',
+    path: '/resend-verification',
+    auth: 'public',
+    limiter: 'default',
+    summary: 'Resends email verification link if unverified (rate-limited)',
+    body: 'resendVerification',
+    handler: async (req, res) => {
+      const allowed = ['email'];
+      rejectUnknownFields(req.body, allowed);
+
+      const details = [];
+      const email = validateEmail(req.body.email, 'email', details, true);
+      assertValid(details);
+
+      const user = await findUserByEmail(email);
+
+      // Only dispatch if user exists and is not yet verified
+      if (user && user.emailVerified !== true) {
+        const recentAttempts = await countRecentResendRequests(user._id);
+        if (recentAttempts >= 3) {
+          throw new AppError(
+            429,
+            'TOO_MANY_REQUESTS',
+            'Verification email requests are limited to 3 per hour. Please check your inbox or try again later.'
+          );
+        }
+
+        // Invalidate prior unused tokens
+        await invalidatePriorVerificationTokens(user._id);
+
+        const rawVerificationToken = generateRandomToken(32);
+        await createEmailVerificationToken(user._id, rawVerificationToken);
+        const verifyLink = `${env.APP_BASE_URL}/verify-email?token=${rawVerificationToken}`;
+
+        await mailer.sendVerificationEmail(user, verifyLink).catch((err) => {
+          console.warn('[AUTH] Resend verification email warning:', err.message);
+        });
+      }
+
+      // Return identical generic success response to prevent email probing
+      res.status(200).json({
+        data: {
+          message: "If an unverified account with that email exists, we've sent a new verification link.",
         },
       });
     },

@@ -120,6 +120,8 @@ export async function registerCustomer({ name, phone, email, address, passwordHa
       weeklyPicks: false,
       restockAlerts: false,
     },
+    emailVerified: false,
+    emailVerifiedAt: null,
     createdAt: now,
     updatedAt: now,
     lastLoginAt: now,
@@ -164,6 +166,8 @@ export async function registerFarmer({
       weeklyPicks: false,
       restockAlerts: false,
     },
+    emailVerified: false,
+    emailVerifiedAt: null,
     createdAt: now,
     updatedAt: now,
     lastLoginAt: now,
@@ -475,3 +479,113 @@ export async function updateUserPassword(userId, newPasswordHash) {
     { $set: { passwordHash: newPasswordHash, updatedAt: new Date() } }
   );
 }
+
+/**
+ * Creates an email verification token record (24-hour expiry).
+ *
+ * @param {string|ObjectId} userId
+ * @param {string} rawToken
+ * @returns {Promise<any>}
+ */
+export async function createEmailVerificationToken(userId, rawToken) {
+  const db = getDb();
+  const objId = toObjectId(userId);
+  const tokenHash = sha256Hash(rawToken);
+  const now = new Date();
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+  return db.collection(COLLECTIONS.EMAIL_VERIFICATIONS).insertOne({
+    userId: objId,
+    tokenHash,
+    expiresAt,
+    usedAt: null,
+    createdAt: now,
+  });
+}
+
+/**
+ * Invalidates all existing unused verification tokens for a user.
+ *
+ * @param {string|ObjectId} userId
+ * @returns {Promise<any>}
+ */
+export async function invalidatePriorVerificationTokens(userId) {
+  const db = getDb();
+  const objId = toObjectId(userId);
+  return db.collection(COLLECTIONS.EMAIL_VERIFICATIONS).updateMany(
+    { userId: objId, usedAt: null },
+    { $set: { usedAt: new Date() } }
+  );
+}
+
+/**
+ * Counts verification tokens requested in the last hour for rate limiting.
+ *
+ * @param {string|ObjectId} userId
+ * @returns {Promise<number>}
+ */
+export async function countRecentResendRequests(userId) {
+  const db = getDb();
+  const objId = toObjectId(userId);
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  return db.collection(COLLECTIONS.EMAIL_VERIFICATIONS).countDocuments({
+    userId: objId,
+    createdAt: { $gte: oneHourAgo },
+  });
+}
+
+/**
+ * Verifies email token atomically:
+ * Finds unused, non-expired token, marks it used, and sets user.emailVerified = true.
+ *
+ * @param {string} rawToken
+ * @returns {Promise<{ success: boolean, user?: any, reason?: string }>}
+ */
+export async function verifyEmailWithToken(rawToken) {
+  const db = getDb();
+  const tokenHash = sha256Hash(rawToken);
+  const now = new Date();
+
+  // Atomic single-use lookup and consumption
+  const tokenDoc = await db.collection(COLLECTIONS.EMAIL_VERIFICATIONS).findOneAndUpdate(
+    {
+      tokenHash,
+      usedAt: null,
+      expiresAt: { $gt: now },
+    },
+    {
+      $set: { usedAt: now },
+    },
+    { returnDocument: 'after' }
+  );
+
+  if (!tokenDoc) {
+    // Check if token existed but was already used or expired
+    const expiredOrUsed = await db.collection(COLLECTIONS.EMAIL_VERIFICATIONS).findOne({ tokenHash });
+    if (expiredOrUsed) {
+      if (expiredOrUsed.usedAt) {
+        return { success: false, reason: 'TOKEN_ALREADY_USED' };
+      }
+      if (expiredOrUsed.expiresAt <= now) {
+        return { success: false, reason: 'TOKEN_EXPIRED' };
+      }
+    }
+    return { success: false, reason: 'TOKEN_INVALID' };
+  }
+
+  // Update user document to emailVerified: true
+  await db.collection(COLLECTIONS.USERS).updateOne(
+    { _id: tokenDoc.userId },
+    {
+      $set: {
+        emailVerified: true,
+        emailVerifiedAt: now,
+        updatedAt: now,
+      },
+    }
+  );
+
+  const updatedUser = await db.collection(COLLECTIONS.USERS).findOne({ _id: tokenDoc.userId });
+  return { success: true, user: updatedUser };
+}
+

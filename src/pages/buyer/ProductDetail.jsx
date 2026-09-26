@@ -24,6 +24,7 @@ export function ProductDetail({ inSheet = false, onClose }) {
   const { id } = useParams();
   const { openSheet } = useOpenSheet();
   const { isProductFavorite, toggleProduct } = useFavorites();
+  const [imgError, setImgError] = useState(false);
 
   const { data: product, loading, error } = useQuery(
     ['product-detail', id],
@@ -102,9 +103,19 @@ export function ProductDetail({ inSheet = false, onClose }) {
 
       {/* Main product illustration visual */}
       <div className={styles.visualContainer} data-aspect="4/3">
-        <div className={styles.illustrationWrapper}>
-          <Illustration name={product.art || 'basket'} size="xl" />
-        </div>
+        {product.imageUrl && !imgError ? (
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            loading="lazy"
+            className={styles.photo}
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className={styles.illustrationWrapper}>
+            <Illustration name={product.art || 'basket'} size="xl" />
+          </div>
+        )}
 
         {/* Floating Heart button */}
         <button

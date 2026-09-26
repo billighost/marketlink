@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, ArrowLeft, ShoppingBasket } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { sendAssistantMessage } from '@/api/assistant';
+import { Send, Sparkles, ArrowLeft } from 'lucide-react';
+import { streamAssistantMessage } from '@/api/assistant';
 import { getProductDetail } from '@/api/catalog';
 import { useAuth } from '@/context/AuthContext';
 import ProductCard from '@/components/domain/ProductCard';
@@ -15,7 +14,7 @@ const DEFAULT_SUGGESTIONS = [
 
 /**
  * Assistant chat sheet ("Ask MarketLink").
- * Connected to live backend POST /assistant/message.
+ * Connected to live backend POST /assistant/message with fast token streaming.
  */
 export function Assistant({ inSheet = true, onClose }) {
   const { user } = useAuth();
@@ -34,6 +33,7 @@ export function Assistant({ inSheet = true, onClose }) {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const activeAbortControllerRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,9 +43,25 @@ export function Assistant({ inSheet = true, onClose }) {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  // Clean up any ongoing streaming request on unmount
+  useEffect(() => {
+    return () => {
+      if (activeAbortControllerRef.current) {
+        activeAbortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   const handleSendMessage = async (textToSend) => {
     const text = (textToSend || inputValue).trim();
     if (!text || isTyping) return;
+
+    // Abort previous in-flight request if any
+    if (activeAbortControllerRef.current) {
+      activeAbortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    activeAbortControllerRef.current = abortController;
 
     const userMessage = {
       id: `user-${Date.now()}`,
@@ -54,61 +70,98 @@ export function Assistant({ inSheet = true, onClose }) {
       time: 'Just now',
     };
 
-    const newMessages = [...messages, userMessage];
+    const assistantMsgId = `assistant-${Date.now()}`;
+    const assistantPlaceholder = {
+      id: assistantMsgId,
+      sender: 'assistant',
+      text: '', // Empty text initially triggers typing dots inside the bubble
+      streaming: true,
+      time: 'Just now',
+    };
+
+    const newMessages = [...messages, userMessage, assistantPlaceholder];
     setMessages(newMessages);
     setInputValue('');
     setIsTyping(true);
 
     try {
-      // Build lightweight recent history
+      // Build lightweight recent history (last 4 turns)
       const history = messages
-        .filter((m) => m.id !== 'msg-welcome')
+        .filter((m) => m.id !== 'msg-welcome' && m.text)
         .slice(-4)
         .map((m) => ({
           role: m.sender === 'user' ? 'user' : 'assistant',
           content: m.text,
         }));
 
-      const res = await sendAssistantMessage(text, history);
+      let accumulatedText = '';
+      const res = await streamAssistantMessage(text, history, {
+        signal: abortController.signal,
+        onChunk: (chunk) => {
+          accumulatedText += chunk;
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMsgId ? { ...msg, text: accumulatedText } : msg
+            )
+          );
+        },
+      });
 
-      let actionCards = [];
+      // Load product cards if returned
       let loadedProducts = [];
-      if (res?.cards && Array.isArray(res.cards)) {
-        actionCards = res.cards.filter((c) => c.type === 'action');
-        const productCards = res.cards.filter((c) => c.type === 'product' && c.id);
+      const cards = res?.cards || [];
+      if (Array.isArray(cards)) {
+        const productCards = cards.filter((c) => c.type === 'product' && c.id);
         const resolved = await Promise.all(
           productCards.map((c) => getProductDetail(c.id).catch(() => null))
         );
         loadedProducts = resolved.filter(Boolean);
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `assistant-${Date.now()}`,
-          sender: 'assistant',
-          text: res?.reply || "I'm here to help with market schedules, produce prices, and order tracking.",
-          products: loadedProducts,
-          actionCards,
-          time: 'Just now',
-        },
-      ]);
+      const finalText = res?.reply || accumulatedText || "I'm here to help with market schedules, produce prices, and order tracking.";
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMsgId
+            ? {
+                ...msg,
+                text: finalText,
+                streaming: false,
+                products: loadedProducts,
+              }
+            : msg
+        )
+      );
 
       if (res?.suggestions && Array.isArray(res.suggestions) && res.suggestions.length > 0) {
         setSuggestions(res.suggestions);
       }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `assistant-${Date.now()}`,
-          sender: 'assistant',
-          text: "I'm having a little trouble looking that up right now, but I'm here to help with market schedules, produce prices, and order tracking.",
-          time: 'Just now',
-        },
-      ]);
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        return; // User navigated away or started a new query
+      }
+
+      let errorText = "I'm having a little trouble looking that up right now, but I'm here to help with market schedules, produce prices, and order tracking.";
+      if (err.status === 503 || err.code === 'ASSISTANT_BUSY') {
+        errorText = "The assistant is busy. Try again in a moment.";
+      } else if (!navigator.onLine || err.message?.includes('Failed to fetch')) {
+        errorText = "Unable to connect. Please check your internet connection.";
+      }
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMsgId
+            ? {
+                ...msg,
+                text: errorText,
+                streaming: false,
+              }
+            : msg
+        )
+      );
     } finally {
       setIsTyping(false);
+      activeAbortControllerRef.current = null;
     }
   };
 
@@ -156,7 +209,15 @@ export function Assistant({ inSheet = true, onClose }) {
             <div
               className={`${styles.bubble} ${msg.sender === 'user' ? styles.userBubble : styles.assistantBubble}`}
             >
-              <p className={styles.messageText}>{msg.text}</p>
+              {msg.streaming && !msg.text ? (
+                <div className={styles.typingBubble}>
+                  <span className={styles.dot} />
+                  <span className={styles.dot} />
+                  <span className={styles.dot} />
+                </div>
+              ) : (
+                <p className={styles.messageText}>{msg.text}</p>
+              )}
               {msg.products && msg.products.length > 0 && (
                 <div className={styles.productRow}>
                   {msg.products.map((p) => (
@@ -191,16 +252,6 @@ export function Assistant({ inSheet = true, onClose }) {
             <span className={styles.timestamp}>{msg.time}</span>
           </div>
         ))}
-
-        {isTyping && (
-          <div className={`${styles.messageWrapper} ${styles.assistantWrapper}`}>
-            <div className={`${styles.bubble} ${styles.assistantBubble} ${styles.typingBubble}`}>
-              <span className={styles.dot} />
-              <span className={styles.dot} />
-              <span className={styles.dot} />
-            </div>
-          </div>
-        )}
 
         <div ref={messagesEndRef} />
       </div>

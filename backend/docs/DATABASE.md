@@ -64,7 +64,12 @@ Farmer profile, exactly 1:1 with a `users` document where `role === 'farmer'`.
 - `stallNameLower`: String (lowercase stallName for anchored prefix suggestions)
 - `categorySlugs`: Array<String> (denormalized from active products for farmer browse filtering)
 - `rnd`: Double in `[0,1)` (assigned via Mulberry32 PRNG for deterministic random sampling)
-- `imageUrl`: String | null
+- `imageUrl`: String | null (legacy/fallback field mapped to bannerUrl)
+- `imagePublicId`: String | null
+- `logoUrl`: String | null (1:1 hand-painted stall signboard branding photo)
+- `logoPublicId`: String | null
+- `bannerUrl`: String | null (16:9 wide stall-scene photo)
+- `bannerPublicId`: String | null
 - `isTopSeller`: Boolean
 - `isNew`: Boolean
 - `createdAt`, `updatedAt`: Date
@@ -76,6 +81,8 @@ Physical farmers market locations.
 - `slug`: String (unique URL slug)
 - `address`: String
 - `location`: GeoJSON Point `{ type: 'Point', coordinates: [lng, lat] }`
+- `bannerUrl`: String | null (16:9 wide market-scene banner photo)
+- `bannerPublicId`: String | null
 - `schedule`: Array<{ day, openMin, closeMin }>
 - `timezone`: String (e.g. "America/New_York")
 - `note`: String (parking, entry instructions)

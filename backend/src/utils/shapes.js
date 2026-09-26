@@ -105,13 +105,17 @@ export function toProductDetail(p, { markets = [], farmerCutoff, nextPickupSlots
  * @returns {object}
  */
 export function toFarmerCard(f, { markets = [] } = {}) {
+  const bannerUrl = f.bannerUrl ?? f.imageUrl ?? null;
+  const logoUrl = f.logoUrl ?? null;
   return {
     id: f._id ? f._id.toString() : f.id,
     stallName: f.stallName,
     stallNumber: f.stallNumber || '',
     specialty: f.specialty || '',
     art: f.art,
-    imageUrl: f.imageUrl ?? null,
+    imageUrl: bannerUrl,
+    logoUrl,
+    bannerUrl,
     ratingAvg: f.ratingAvg ?? 0,
     ratingCount: f.ratingCount ?? 0,
     operatingDays: Array.isArray(f.operatingDays) ? f.operatingDays : [],
@@ -175,6 +179,7 @@ export function toMarketCard(m, { distanceMeters, nextOpening } = {}) {
     slug: m.slug,
     address: m.address,
     location: loc,
+    bannerUrl: m.bannerUrl ?? null,
     schedule: Array.isArray(m.schedule) ? m.schedule : [],
     farmerCount: m.farmerCount || 0,
     directionsUrls: directionsUrls(loc.lat, loc.lng),

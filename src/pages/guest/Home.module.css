@@ -879,59 +879,55 @@
   transform: translateX(3px);
 }
 
-/* ─── 5. HOW MARKETLINK WORKS ────────────────────────────────── */
+/* ─── 5. HOW MARKETLINK WORKS ───────────────────────────────── */
 .howItWorksSection {
-  background-color: #faf6ef;
-  background-image: radial-gradient(circle at 10% 20%, rgba(122, 46, 59, 0.03) 0%, transparent 40%),
-                    radial-gradient(circle at 90% 80%, rgba(92, 112, 72, 0.04) 0%, transparent 40%);
+  background-color: var(--color-canvas-soft, #FAF7F0);
+  border-top: 1px solid var(--color-wood-line, #E3D3B8);
+  border-bottom: 1px solid var(--color-wood-line, #E3D3B8);
   padding-block: clamp(3.5rem, 3rem + 3vw, 5.5rem);
-  border-bottom: 1px solid rgba(122, 46, 59, 0.08);
 }
 
 .howHeader {
   text-align: center;
-  max-width: 620px;
-  margin: 0 auto clamp(2rem, 1.5rem + 1.8vw, 3.25rem) auto;
+  max-width: 640px;
+  margin: 0 auto clamp(2rem, 1.5rem + 1.5vw, 3rem) auto;
 }
 
 .howEyebrow {
   display: inline-block;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #7a2e3b;
+  color: var(--color-beet, #7A2E3B);
   text-transform: uppercase;
-  background-color: rgba(122, 46, 59, 0.08);
-  padding: 4px 12px;
-  border-radius: 999px;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-2, 0.5rem);
 }
 
 .howTitle {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: clamp(1.6rem, 1.3rem + 1.1vw, 2.25rem);
-  font-weight: 700;
-  color: #2e2b26;
-  letter-spacing: -0.02em;
-  margin: 0 0 10px 0;
+  font-family: var(--font-head, 'Idiqlat', Georgia, serif);
+  font-size: clamp(1.8rem, 1.4rem + 1.5vw, 2.5rem);
+  font-weight: 400;
+  color: var(--color-ink, #2E2B26);
+  letter-spacing: -0.015em;
+  margin: 0 0 var(--space-3, 0.75rem) 0;
 }
 
 .howSubtitle {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.95rem;
-  color: #6b6259;
-  line-height: 1.55;
+  font-size: var(--text-base, 1rem);
+  line-height: 1.6;
+  color: var(--color-ink-soft, #6B6259);
   margin: 0;
 }
 
 .stepsGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4, 1.25rem);
+  gap: var(--space-5, 1.25rem);
 }
 
-@media (min-width: 600px) {
+@media (min-width: 560px) {
   .stepsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -944,155 +940,130 @@
 }
 
 .stepCard {
-  background-color: #ffffff;
-  border-radius: 14px;
-  padding: 26px 22px;
-  border: 1px solid rgba(122, 46, 59, 0.09);
-  box-shadow: 0 2px 12px rgba(46, 43, 38, 0.04);
+  background-color: var(--color-white, #FFFFFF);
+  border-radius: var(--radius-lg, 16px);
+  padding: var(--space-6, 1.5rem) var(--space-5, 1.25rem);
+  border: 1px solid var(--color-wood-line, #E3D3B8);
+  box-shadow: 0 4px 16px rgba(46, 43, 38, 0.04);
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: transform var(--duration-fast, 140ms) ease,
-              box-shadow var(--duration-fast, 140ms) ease,
-              border-color var(--duration-fast, 140ms) ease;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
 
 .stepCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(122, 46, 59, 0.08);
-  border-color: rgba(122, 46, 59, 0.22);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(46, 43, 38, 0.08);
+  border-color: var(--color-beet, #7A2E3B);
 }
 
 .stepCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: var(--space-4, 1rem);
 }
 
 .stepIconWrapper {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
-  background-color: #f7eef0;
-  color: #7a2e3b;
+  border-radius: 12px;
+  background-color: var(--color-beet-tint, #F7EEF0);
+  color: var(--color-beet, #7A2E3B);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 180ms ease, background-color 180ms ease, color 180ms ease;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 .stepCard:hover .stepIconWrapper {
-  background-color: #7a2e3b;
-  color: #ffffff;
-  transform: scale(1.05);
+  background-color: var(--color-beet, #7A2E3B);
+  color: #FFFFFF;
 }
 
 .stepBadge {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #6b6259;
-  background-color: rgba(46, 43, 38, 0.06);
-  padding: 4px 10px;
-  border-radius: 6px;
+  letter-spacing: 0.05em;
+  color: var(--color-wood, #B08655);
+  text-transform: uppercase;
+  background: var(--color-canvas, #F5EFE3);
+  padding: 3px 8px;
+  border-radius: 999px;
 }
 
 .stepTitle {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 1.08rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #2e2b26;
-  margin: 0 0 8px 0;
-  line-height: 1.3;
+  color: var(--color-ink, #2E2B26);
+  margin: 0 0 var(--space-2, 0.5rem) 0;
+  line-height: 1.35;
 }
 
 .stepDesc {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.85rem;
-  line-height: 1.55;
-  color: #6b6259;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-ink-soft, #6B6259);
   margin: 0;
 }
 
 /* ─── 6. CALL TO ACTION BANNER ───────────────────────────────── */
 .ctaBannerSection {
-  background: linear-gradient(135deg, #4a1521 0%, #5e212b 50%, #3b121a 100%);
-  padding-block: clamp(3.5rem, 3rem + 3vw, 5.5rem);
+  background-color: var(--color-white, #FFFFFF);
+  padding-block: clamp(3rem, 2.5rem + 2.5vw, 4.5rem);
+}
+
+.ctaCard {
+  background: linear-gradient(135deg, var(--color-beet, #7A2E3B) 0%, var(--color-beet-dark, #5E212B) 100%);
+  border-radius: var(--radius-xl, 20px);
+  padding: clamp(2.5rem, 2rem + 2vw, 4rem) clamp(1.5rem, 1.2rem + 1.8vw, 3.5rem);
+  text-align: center;
+  color: #FFFFFF;
+  box-shadow: 0 16px 36px rgba(122, 46, 59, 0.16);
   position: relative;
   overflow: hidden;
 }
 
-.ctaBannerSection::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: 20%;
-  width: 60%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(224, 122, 44, 0.08) 0%, transparent 60%);
-  pointer-events: none;
-}
-
-.ctaCard {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 20px;
-  padding: clamp(2.5rem, 2rem + 2vw, 4rem) clamp(1.5rem, 1rem + 2.5vw, 3.5rem);
-  text-align: center;
-  max-width: 840px;
-  width: 100%;
-  margin: 0 auto;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
-}
-
 .ctaContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .ctaBadge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  background-color: rgba(255, 255, 255, 0.14);
-  color: #f8d9df;
-  padding: 5px 14px;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  padding: 5px 12px;
   border-radius: 999px;
-  font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.ctaBadge svg {
-  color: #8ed47e;
+  margin-bottom: var(--space-3, 0.75rem);
 }
 
 .ctaTitle {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: clamp(1.65rem, 1.3rem + 1.4vw, 2.4rem);
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.02em;
-  margin: 0 0 14px 0;
-  line-height: 1.2;
+  font-family: var(--font-head, 'Idiqlat', Georgia, serif);
+  font-size: clamp(1.8rem, 1.4rem + 1.5vw, 2.75rem);
+  font-weight: 400;
+  color: #FFFFFF;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  margin: 0 auto var(--space-3, 0.75rem) auto;
+  max-width: 680px;
 }
 
 .ctaSubtitle {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: clamp(0.92rem, 0.85rem + 0.3vw, 1.05rem);
+  font-size: clamp(0.95rem, 0.9rem + 0.3vw, 1.1rem);
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.84);
-  max-width: 580px;
-  margin: 0 auto 28px auto;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 600px;
+  margin: 0 auto var(--space-6, 1.5rem) auto;
 }
 
 .ctaButtons {
@@ -1104,50 +1075,44 @@
 }
 
 .ctaPrimaryBtn {
+  background-color: var(--color-white, #FFFFFF);
+  color: var(--color-beet-dark, #5E212B);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background-color: #ffffff;
-  color: #5e212b !important;
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.92rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  padding: 13px 28px;
-  border-radius: 999px;
+  padding: 12px 26px;
+  border-radius: var(--radius-md, 8px);
   text-decoration: none;
-  border: 1.5px solid #ffffff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  transition: all 180ms ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: transform 140ms ease, box-shadow 140ms ease;
 }
 
 .ctaPrimaryBtn:hover {
-  background-color: #f7eef0;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-  color: #4a1521 !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  color: var(--color-beet, #7A2E3B);
 }
 
 .ctaSecondaryBtn {
+  background-color: transparent;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #ffffff !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.35);
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.92rem;
+  font-size: 0.9375rem;
   font-weight: 500;
-  padding: 13px 26px;
-  border-radius: 999px;
+  padding: 12px 24px;
+  border-radius: var(--radius-md, 8px);
   text-decoration: none;
-  backdrop-filter: blur(6px);
-  transition: all 180ms ease;
+  transition: background-color 140ms ease, border-color 140ms ease;
 }
 
 .ctaSecondaryBtn:hover {
-  background-color: rgba(255, 255, 255, 0.22);
-  border-color: #ffffff;
-  transform: translateY(-2px);
-  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.7);
 }
 

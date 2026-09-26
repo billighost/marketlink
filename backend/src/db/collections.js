@@ -45,6 +45,9 @@ export const COLLECTIONS = {
   REPORTS: 'reports',
   SETTINGS: 'settings',
   MEDIA_UPLOADS: 'mediaUploads',
+  EMAIL_VERIFICATIONS: 'emailVerifications',
+  EMAIL_LOG: 'emailLog',
+  IMAGE_GEN_JOBS: 'imageGenJobs',
 };
 
 export const SCHEMAS = {
@@ -68,6 +71,8 @@ export const SCHEMAS = {
         lastLoginAt: { bsonType: 'date' },
         failedLogins: { bsonType: ['int', 'number'] },
         lockUntil: { bsonType: ['date', 'null'] },
+        emailVerified: { bsonType: 'bool' },
+        emailVerifiedAt: { bsonType: ['date', 'null'] },
       },
     },
   },
@@ -105,6 +110,10 @@ export const SCHEMAS = {
         ratingSum: { bsonType: ['int', 'number'] },
         imageUrl: { bsonType: ['string', 'null'] },
         imagePublicId: { bsonType: ['string', 'null'] },
+        logoUrl: { bsonType: ['string', 'null'] },
+        logoPublicId: { bsonType: ['string', 'null'] },
+        bannerUrl: { bsonType: ['string', 'null'] },
+        bannerPublicId: { bsonType: ['string', 'null'] },
         slotOverrides: { bsonType: 'array' },
         maxOrdersPerSlot: { bsonType: ['int', 'number'] },
         createdAt: { bsonType: 'date' },
@@ -128,6 +137,8 @@ export const SCHEMAS = {
         facilities: { bsonType: 'array' },
         farmerCount: { bsonType: ['int', 'number'] },
         status: { enum: MARKET_STATUSES },
+        bannerUrl: { bsonType: ['string', 'null'] },
+        bannerPublicId: { bsonType: ['string', 'null'] },
         createdAt: { bsonType: 'date' },
         updatedAt: { bsonType: 'date' },
       },
@@ -444,6 +455,57 @@ export const SCHEMAS = {
         height: { bsonType: ['int', 'number'] },
         attachedTo: { bsonType: ['object', 'null'] },
         createdAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.EMAIL_VERIFICATIONS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['userId', 'tokenHash', 'expiresAt'],
+      properties: {
+        userId: { bsonType: 'objectId' },
+        tokenHash: { bsonType: 'string' },
+        expiresAt: { bsonType: 'date' },
+        usedAt: { bsonType: ['date', 'null'] },
+        createdAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.EMAIL_LOG]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['to', 'tag', 'status', 'createdAt'],
+      properties: {
+        to: { bsonType: 'string' },
+        tag: { bsonType: 'string' },
+        status: { enum: ['sent', 'failed', 'skipped_quota'] },
+        error: { bsonType: ['string', 'null', 'object'] },
+        createdAt: { bsonType: 'date' },
+      },
+    },
+  },
+
+  [COLLECTIONS.IMAGE_GEN_JOBS]: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['entityType', 'entityId', 'status', 'attempts', 'updatedAt'],
+      properties: {
+        entityType: { enum: ['product', 'farmer-logo', 'farmer-banner', 'market'] },
+        entityId: { bsonType: ['objectId', 'string'] },
+        status: { enum: ['pending', 'generated', 'done', 'failed', 'skipped'] },
+        promptUsed: { bsonType: ['string', 'null'] },
+        generationMode: { enum: ['agent', 'api', null] },
+        localFilePath: { bsonType: ['string', 'null'] },
+        cloudinaryPublicId: { bsonType: ['string', 'null'] },
+        cloudinaryUrl: { bsonType: ['string', 'null'] },
+        attempts: { bsonType: ['int', 'number'] },
+        lastError: { bsonType: ['string', 'null', 'object'] },
+        generatedAt: { bsonType: ['date', 'null'] },
+        uploadedAt: { bsonType: ['date', 'null'] },
+        createdAt: { bsonType: ['date', 'null'] },
+        updatedAt: { bsonType: 'date' },
       },
     },
   },

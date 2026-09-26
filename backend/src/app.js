@@ -34,7 +34,7 @@ import { reviewsRouter } from './modules/reviews/reviews.routes.js';
 import { favoritesRouter } from './modules/favorites/favorites.routes.js';
 import { notificationsRouter } from './modules/notifications/notifications.routes.js';
 import { homeRouter } from './modules/home/home.routes.js';
-import { assistantRouter } from './modules/assistant/assistant.routes.js';
+import { assistantRouter, adminAssistantRouter } from './modules/assistant/assistant.routes.js';
 import { farmerProfileRouter } from './modules/farmer/profile/farmerProfile.routes.js';
 import { farmerSlotsRouter } from './modules/farmer/slots/slots.routes.js';
 import { farmerProductsRouter, weeklyTemplateRouter } from './modules/farmer/products/farmerProducts.routes.js';
@@ -53,6 +53,7 @@ import { categoriesAdminRouter } from './modules/admin/settings/categoriesAdmin.
 import { announcementsAdminRouter } from './modules/admin/settings/announcementsAdmin.routes.js';
 import { settingsAdminRouter } from './modules/admin/settings/settings.routes.js';
 import { messagesAdminRouter } from './modules/admin/settings/messagesAdmin.routes.js';
+import { emailLogRouter } from './modules/admin/emailLog/emailLog.routes.js';
 
 export function createApp() {
   const app = express();
@@ -171,6 +172,10 @@ export function createApp() {
   app.use('/api/admin/settings', settingsAdminRouter);
   app.use('/api/admin/messages', messagesAdminRouter);
   app.use('/api/admin/reports', adminReportsRouter);
+  app.use('/api/admin/assistant', adminAssistantRouter);
+  app.use('/admin/assistant', adminAssistantRouter);
+  app.use('/api/admin/email-log', emailLogRouter);
+  app.use('/admin/email-log', emailLogRouter);
   app.use('/api/admin', adminPeopleRouter);
   app.use('/api/admin', adminModerationRouter);
 

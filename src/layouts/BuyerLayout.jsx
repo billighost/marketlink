@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import BuyerTopBar from '@/components/layout/BuyerTopBar';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
+import VerifyEmailBanner from '@/components/layout/VerifyEmailBanner';
 import BottomNav from '@/components/layout/BottomNav';
 import CartBar from '@/components/layout/CartBar';
 import styles from './BuyerLayout.module.css';
@@ -63,6 +64,7 @@ export function BuyerLayout() {
 
       {/* Slim site announcements */}
       {!isSheetOpen && <AnnouncementBar />}
+      {!isSheetOpen && <VerifyEmailBanner />}
 
       {/* Top Bar Header */}
       <BuyerTopBar />

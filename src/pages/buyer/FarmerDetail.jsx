@@ -21,6 +21,8 @@ export function FarmerDetail({ inSheet = true, onClose }) {
   const { id } = useParams();
   const { isFarmerFavorite, toggleFarmer } = useFavorites();
   const [activeTab, setActiveTab] = useState('stock');
+  const [logoError, setLogoError] = useState(false);
+  const [bannerError, setBannerError] = useState(false);
 
   const { data: farmer, loading, error } = useQuery(
     ['farmer-detail', id],
@@ -93,10 +95,33 @@ export function FarmerDetail({ inSheet = true, onClose }) {
         </div>
       )}
 
+      {/* Hero Stall Banner */}
+      {farmer.bannerUrl && !bannerError && (
+        <div className={styles.bannerWrapper} data-aspect="16/9">
+          <img
+            src={farmer.bannerUrl}
+            alt={`${farmer.stallName} banner`}
+            loading="lazy"
+            className={styles.bannerImg}
+            onError={() => setBannerError(true)}
+          />
+        </div>
+      )}
+
       {/* Hero Stall Header */}
       <header className={styles.hero}>
         <div className={styles.avatarWrapper}>
-          <Illustration name={farmer.art || 'stall'} size="md" />
+          {farmer.logoUrl && !logoError ? (
+            <img
+              src={farmer.logoUrl}
+              alt={`${farmer.stallName} logo`}
+              loading="lazy"
+              className={styles.avatarImg}
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+            <Illustration name={farmer.art || 'stall'} size="md" />
+          )}
         </div>
 
         <div className={styles.heroDetails}>

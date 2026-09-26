@@ -1,0 +1,508 @@
+# Stage 3 · Backend — additive changes for the buyer redesign
+
+You are working on **MarketLink**, an existing full-stack app. Stages 1 and 2 of a Customer-side
+redesign are done (white-first tokens, app shell, layout primitives, ten scene illustrations).
+
+This stage adds the **small number of backend fields** the redesigned Customer pages need, and
+nothing else. It is the only stage that touches `backend/`.
+
+**Every change in this stage is additive.** You will not remove a route, rename a field, change
+a type, or alter an existing value. The API contract in `backend/docs/API.md` was frozen at
+Stage 5 of the original build and 61 automated tests depend on it.
+
+Read this whole prompt. Then **verify what already exists** before writing anything.
+
+---
+
+# PART 1 · Project context
+
+## 1.1 What MarketLink is
+
+A platform connecting local farmers-market **Farmers** with **Customers**.
+
+A Farmer runs a **stall** at a **market** open on specific days in specific time windows. The
+Farmer publishes weekly stock. A Customer browses what is available, **reserves** items, picks
+a pickup slot, then **collects in person at the stall and pays there in cash**.
+
+**No payment gateway. No delivery.** Never add a field implying either.
+
+## 1.2 Backend stack
+
+- Node + **Express 5** + **native MongoDB driver** (no Mongoose, no ODM)
+- Module per feature: `backend/src/modules/<feature>/<feature>.routes.js` + `.service.js`
+- Response shape helpers live in `backend/src/utils/shapes.js`
+- Timezone-aware slot maths already exists in `backend/src/utils/slots.js` —
+  `zonedTimeToUtc()`, `formatSlotLabel()`, and the opening computation used by markets
+- JWT access token + refresh cookie; `backend/src/middleware/auth.js`
+- Port **4000**, everything under `/api`
+- Docs: `backend/docs/API.md` (frozen contract), `backend/docs/DATABASE.md`
+
+```bash
+cd backend
+npm run seed     # reset + seed
+npm run dev      # http://localhost:4000/api
+npm test         # 61 tests against marketlink_test
+npm run routes   # print the full route inventory
+```
+
+## 1.3 What already exists (verify before assuming)
+
+From a quick read of the code, these are already present — **confirm each one yourself with a
+real `curl` before deciding whether you need to add anything**:
+
+| Thing | Where | Status |
+|---|---|---|
+| `market.schedule` array of `{ day, opensAt, closesAt }` | `utils/shapes.js` `toMarketCard` | exists |
+| `market.nextOpening` | `markets.service.js` computes it | exists |
+| `farmer.operatingDays` | `utils/shapes.js` line ~117 | exists, **check the format** |
+| Pickup slot computation, DST-safe | `utils/slots.js` | exists |
+| `GET /farmers/:id/pickup-slots` | `farmers.routes.js` | exists |
+| `POST /cart/quote` | `cart.service.js` | exists, **check if it groups by farmer** |
+| `GET /orders/:id` order shape | `orders/orderShapes.js` | exists, **check for a pickup code** |
+
+**Your first task is a verification pass, not a coding pass.** Anything already present, you
+leave alone and record as "already present".
+
+## 1.4 Off-limits
+
+- Any **frontend** file. This stage is `backend/` and `backend/docs/` only.
+  (One exception: Task 6 adds thin wrappers in `src/api/` — nothing else in `src/`.)
+- Removing, renaming or retyping **any** existing route or response field
+- Adding a dependency to `backend/package.json`
+- Farmer-side or Admin-side behaviour. You may add a field a Farmer endpoint also returns, but
+  no Farmer or Admin **behaviour** changes.
+- Weakening, skipping or deleting any existing test
+
+---
+
+# PART 2 · Why these fields exist
+
+Each addition below exists to serve one concrete piece of the redesigned Customer UI. If you
+cannot tie a change to a UI need, do not make it.
+
+### The market clock
+
+Every Customer page shows one quiet line:
+
+```
+Riverbend Market · Saturday 8:00–13:00 · opens in 2 days
+Riverbend Market · open now · closes 13:00            ← plus a 2px progress rule
+```
+
+The SRS problem statement is *"customers rarely know in advance which Farmers will be at a
+market on a given day"*. This line is the answer, and it needs server-computed open/closed
+state because the client must not be the source of truth for time zones.
+
+### The stall day-dots
+
+The Stall page shows seven dots, `S M T W T F S`, filled for the days that stall trades. That
+needs `operatingDays` as a **stable array of integers 0–6**, not day-name strings whose casing
+and abbreviation the client has to guess at.
+
+### The grouped basket
+
+Pickup happens per stall in real life, so the basket groups items by stall, and each group shows
+**its own** pickup windows and **its own** cutoff time. The quote endpoint must return that
+grouping rather than making the client fan out one request per farmer.
+
+### The collection code
+
+The loop ends with the Customer standing at the stall. They need something to show. A short
+code on the order page and the confirmation page is that artifact, and it must come from the
+server so the Farmer side can read the same value.
+
+---
+
+# PART 3 · Your tasks
+
+## Task 0 · Verification pass (do this first, write no code)
+
+Start the backend and `curl` each of these as the seeded Customer
+(`george@example.com` / `market123` — log in first and use the returned access token):
+
+```bash
+curl -s localhost:4000/api/markets            -H "Authorization: Bearer $TOKEN" | head -c 2000
+curl -s localhost:4000/api/markets/$MARKET_ID -H "Authorization: Bearer $TOKEN" | head -c 2000
+curl -s localhost:4000/api/markets/$MARKET_ID/farmers -H "Authorization: Bearer $TOKEN" | head -c 2000
+curl -s localhost:4000/api/farmers/$FARMER_ID -H "Authorization: Bearer $TOKEN" | head -c 2000
+curl -s localhost:4000/api/feed/meta          -H "Authorization: Bearer $TOKEN" | head -c 2000
+curl -s localhost:4000/api/orders/$ORDER_ID   -H "Authorization: Bearer $TOKEN" | head -c 3000
+curl -s -X POST localhost:4000/api/cart/quote -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -d '{"items":[{"productId":"...","quantity":2}]}' | head -c 3000
+```
+
+Produce a table: **field wanted · already present? · exact current shape**.
+Only implement what is genuinely missing. Report the table before you start Task 1.
+
+## Task 1 · Market open state
+
+**Endpoints:** `GET /api/markets`, `GET /api/markets/:id`, and their `/api/public/...` mirrors.
+
+Add to the market shape in `backend/src/utils/shapes.js`:
+
+```js
+  clock: {
+    openNow: false,              // boolean, computed in the market's own timezone
+    todayWindow: null,           // { opensAt: "08:00", closesAt: "13:00" } or null if shut today
+    todayProgress: null,         // 0..1 through today's window, null when closed
+    closesAtLabel: null,         // "13:00" — preformatted in market tz, null when closed
+    windowLabel: "Saturday 8:00–13:00",   // next or current trading window, human readable
+    nextOpenLabel: "opens in 2 days",     // null when openNow is true
+    nextOpenAt: "2026-09-26T07:00:00.000Z" // ISO, null when openNow is true
+  }
+```
+
+Rules:
+
+- Compute in the **market's own IANA timezone** using the existing helpers in
+  `backend/src/utils/slots.js`. Do not use the server's local time and do not use `new Date()`
+  arithmetic without a timezone.
+- `todayProgress` is `(now - opensAt) / (closesAt - opensAt)` clamped to `[0, 1]`.
+- `nextOpenLabel` is relative and plain: `"opens in 2 days"`, `"opens tomorrow"`,
+  `"opens Saturday"`. Lower case, no exclamation.
+- When the market has no schedule at all, every field is `null` and `openNow` is `false`.
+  **Never throw** on a market with missing or malformed schedule data.
+- Put the computation in **one exported pure function** in `slots.js`, e.g.
+  `computeMarketClock(market, now = new Date())`, and unit-test it directly. Do not inline the
+  logic into two services.
+
+## Task 2 · Stall trading days and stock signal
+
+**Endpoints:** `GET /api/farmers`, `GET /api/farmers/:id`, `GET /api/markets/:id/farmers`, and
+their public mirrors.
+
+Add to the farmer shape:
+
+```js
+  operatingDayNumbers: [2, 6],   // ints 0=Sunday .. 6=Saturday, sorted ascending, always an array
+  openToday: true,               // boolean, in the market timezone
+  lowStockCount: 3,              // count of this farmer's products with availability 'low'
+  soldOutCount: 1                // count with availability 'out'
+```
+
+Rules:
+
+- **Keep `operatingDays` exactly as it is.** `operatingDayNumbers` is a new, additional field.
+  Anything already consuming `operatingDays` must not change behaviour.
+- Derive the numbers from whatever `operatingDays` currently holds. Handle the formats that
+  actually appear in the data — check `backend/src/db/seed.js` — and default to `[]` on anything
+  unrecognised rather than throwing.
+- `lowStockCount` / `soldOutCount` on the **list** endpoints must not cause an N+1. Use one
+  `$lookup` or one aggregation `$group` over products, not one query per farmer. Prove it with
+  `explain()`.
+
+## Task 3 · Feed meta carries the clock
+
+**Endpoint:** `GET /api/feed/meta`
+
+Add the same `clock` object (Task 1) for the Customer's currently selected market, so the Today
+page renders its market clock from the call it already makes and adds no second request.
+
+```js
+{
+  greetingName: "George",
+  homeMarket: { id, name, ... },
+  clock: { ...same shape as Task 1... },
+  line: "..."                      // keep the existing field exactly as it is
+}
+```
+
+## Task 4 · Grouped cart quote
+
+**Endpoint:** `POST /api/cart/quote`
+
+Keep every existing top-level field. **Add** a `groups` array alongside them:
+
+```js
+{
+  // ...everything the endpoint returns today, unchanged...
+  groups: [
+    {
+      farmer: { id, stallName, name, marketId, marketName },
+      items: [ { productId, name, unit, quantity, unitPriceCents, lineTotalCents, availability } ],
+      subtotalCents: 1240,
+      cutoffAt: "2026-09-25T17:00:00.000Z",   // ISO, the reserve-by deadline for this stall
+      cutoffLabel: "Reserve by Friday 18:00", // preformatted in market tz
+      pickupWindows: [
+        { id, startsAt, endsAt, label: "Sat 27 Sep, 8:00 to 10:00am", available: true, remaining: 6 }
+      ],
+      issues: []   // see below
+    }
+  ]
+}
+```
+
+`issues` is an array of `{ code, productId, message }` for anything wrong with this group:
+`OUT_OF_STOCK`, `INSUFFICIENT_STOCK`, `PRICE_CHANGED`, `PAST_CUTOFF`, `NO_SLOTS`. Messages are
+plain sentences a Customer can read: `"Only 2 bunches left."`, not `"ERR_QTY_EXCEEDS"`.
+
+Reuse the existing pickup-slot engine — `GET /farmers/:id/pickup-slots` already computes
+windows. Extract the shared logic into a service function both call rather than duplicating it.
+
+## Task 5 · Order collection code
+
+**Endpoints:** `POST /api/orders/checkout`, `GET /api/orders`, `GET /api/orders/:id`, and the
+Farmer order endpoints that read the same document.
+
+Add a `pickupCode` to the order document and to every order response shape.
+
+- **Six characters, uppercase**, from the alphabet `ABCDEFGHJKMNPQRSTUVWXYZ23456789`
+  (no `I`, `L`, `O`, `0`, `1` — they are misread aloud at a noisy stall).
+- Generated **once, at checkout**, stored on the order document. Never recomputed on read.
+- Unique per order. Add a unique index. On collision, retry up to 5 times, then fail the
+  checkout with a 500 rather than issuing a duplicate.
+- Returned to both the Customer and the Farmer who owns the order, so the two can match at the
+  stall. Never returned to any other user.
+- **Backfill existing seeded orders** in `backend/src/db/seed.js` so demo data has codes.
+  Also handle orders already in a developer database that predate the field: return `null`
+  rather than crashing, and let the UI hide the block.
+
+## Task 6 · Frontend API wrappers only
+
+The **only** frontend files you may touch. Add thin functions so stages 5–8 have something to
+call. No components, no pages, no styling.
+
+- `src/api/catalog.js` — nothing new needed if the clock rides on existing endpoints; confirm.
+- `src/api/orders.js` — ensure `getOrder` returns `pickupCode` through unchanged.
+- `src/api/cart.js` — if this file does not exist, create it with
+  `export async function postCartQuote(items, signal)` calling `POST /cart/quote`.
+  If quote logic currently lives in `orders.js`, extend it there instead and say which you chose.
+
+Each wrapper is five lines, matches the existing style in that folder, and has a JSDoc line.
+
+## Task 7 · Tests
+
+For every field you added, in `backend/tests/`:
+
+- Happy path returns the field with the right type
+- A market with **no schedule** returns `clock` with nulls and does not throw
+- A market **currently open** returns `openNow: true` with `todayProgress` between 0 and 1
+- A market **currently closed** returns `openNow: false` and a non-null `nextOpenLabel`
+- `operatingDayNumbers` is always an array, even for a farmer with malformed `operatingDays`
+- `POST /cart/quote` with items from **two different farmers** returns **two** groups
+- `POST /cart/quote` with an out-of-stock item returns an `issues` entry with a readable message
+- `pickupCode` is 6 chars, from the allowed alphabet, and **stable across two reads**
+- A Customer **cannot** read another Customer's order (`403` or `404`, whichever the codebase
+  already uses — match it, do not invent)
+- `computeMarketClock()` unit-tested directly across a DST boundary
+
+Write the timezone tests with a **fixed injected `now`**, never `new Date()`. A test that passes
+only on Tuesdays is worse than no test.
+
+## Task 8 · Docs
+
+- `backend/docs/API.md` — update every endpoint you changed, with a real example response body
+  copied from an actual `curl`, not invented.
+- `backend/docs/DATABASE.md` — document `orders.pickupCode` and its unique index.
+
+---
+
+# PART 4 · Your skills for this stage
+
+### Skill 1 · Verify before you build
+
+Task 0 exists because half of this list may already be implemented. Adding a second, slightly
+different `openNow` next to an existing one is worse than adding nothing. `curl` first.
+
+### Skill 2 · One pure function, two call sites
+
+`computeMarketClock(market, now)` takes data and a clock and returns a plain object. No database
+access inside it, no `new Date()` inside it. That makes it unit-testable without a server and
+stops the logic drifting between `markets.service.js` and `feed.service.js`.
+
+```js
+export function computeMarketClock(market, now = new Date()) { /* pure */ }
+```
+
+### Skill 3 · Inject `now`, never read it twice
+
+Every function that needs the current time takes it as a defaulted parameter. Two calls to
+`new Date()` inside one request can straddle a minute boundary and produce inconsistent output.
+Read it once at the top of the handler and thread it down.
+
+### Skill 4 · Aggregate, do not loop
+
+Counting low-stock products for twenty farmers is one aggregation, not twenty queries:
+
+```js
+db.collection('products').aggregate([
+  { $match: { farmerId: { $in: farmerIds } } },
+  { $group: {
+      _id: '$farmerId',
+      low: { $sum: { $cond: [{ $eq: ['$availability', 'low'] }, 1, 0] } },
+      out: { $sum: { $cond: [{ $eq: ['$availability', 'out'] }, 1, 0] } },
+  } },
+])
+```
+
+Then map the results onto the farmer list in memory. Prove there is no `COLLSCAN` with
+`explain('executionStats')`.
+
+### Skill 5 · Additive means the old shape still validates
+
+After every change, re-run the full suite. If a test fails, you removed or retyped something.
+The fix is never to edit the test — it is to make your change additive.
+
+### Skill 6 · Confusable characters matter offline
+
+The pickup code alphabet excludes `I L O 0 1` because a Customer will read it aloud across a
+market stall to someone holding a phone. This is a real design constraint, not fussiness.
+
+### Skill 7 · Never throw on bad data
+
+Every one of these computations runs on seeded demo data that may be incomplete. A market with
+`schedule: []`, a farmer with `operatingDays: null`, an order predating `pickupCode` — each must
+return a sane null, never a 500. Write the test that proves it.
+
+---
+
+# PART 5 · Hard rules — never do these
+
+1. **Never remove, rename or retype an existing route or response field.** Additive only.
+2. **Never edit, skip or delete an existing test** to make the suite pass.
+3. **Never compute a time without an explicit timezone.** Use `backend/src/utils/slots.js`.
+4. **Never call `new Date()` more than once per request.** Thread `now` down.
+5. **Never introduce an N+1.** One aggregation, proven with `explain()`.
+6. **Never add a backend dependency.**
+7. **Never touch a file in `src/` other than the three API wrappers in Task 6.**
+8. **Never return `pickupCode` to a user who is neither the ordering Customer nor the owning
+   Farmer.** Write the test that proves it.
+9. **Never add a field implying payment or delivery** — no `paymentStatus`, no `deliveryAddress`,
+   no `trackingNumber`. Payment is cash at pickup; there is no delivery.
+10. **Never throw on incomplete seed data.** Return nulls.
+11. **Never invent an example response in the docs.** Paste a real `curl` result.
+12. **Never report PASS without pasting real `npm test` output.**
+
+---
+
+# PART 6 · Definition of done
+
+- [ ] Task 0 verification table produced and reported **before** any code was written
+- [ ] `computeMarketClock()` exists as one pure exported function, unit-tested including DST
+- [ ] `clock` present on `GET /markets`, `GET /markets/:id`, `GET /feed/meta` and public mirrors
+- [ ] `operatingDayNumbers`, `openToday`, `lowStockCount`, `soldOutCount` on all farmer shapes
+- [ ] `operatingDays` unchanged and still returned
+- [ ] `POST /cart/quote` returns `groups` with per-stall cutoff, windows and readable issues
+- [ ] Every pre-existing top-level field of the quote response is untouched
+- [ ] `pickupCode` generated at checkout, stored, unique-indexed, returned to Customer and owning
+      Farmer only, `null` for legacy orders
+- [ ] Seed backfills `pickupCode`
+- [ ] New tests written for every bullet in Task 7
+- [ ] **All 61 pre-existing tests still pass**
+- [ ] `explain()` shows no `COLLSCAN` on any new or changed query
+- [ ] `API.md` and `DATABASE.md` updated with real example bodies
+- [ ] Frontend untouched except the Task 6 wrappers
+
+---
+
+# PART 7 · Verification gate
+
+**Nothing is done until it is proven by running it.** "Should work" is a failure.
+
+### C1 · Full suite from a clean database
+
+```bash
+cd backend && npm run seed && npm test
+```
+
+Paste the real pass/fail counts and duration. **All pre-existing tests must pass.** State the
+before count and the after count.
+
+### C2 · New tests
+
+List every test you added, by name, with the behaviour it proves.
+
+### C3 · Manual call per endpoint
+
+`curl` each changed endpoint as the Customer. Table of: method, path, status, trimmed body
+showing the new fields. Then repeat the order endpoints as the **owning Farmer**, and as a
+**different Customer** to prove `pickupCode` is not leaked.
+
+### C4 · No collection scans
+
+```js
+db.collection('markets').find(q).explain('executionStats')
+db.collection('products').aggregate(pipeline).explain('executionStats')
+```
+
+Report `COLLSCAN` present/absent, `totalDocsExamined`, `nReturned`, and measured response time
+for every new or changed query. Reads under 50ms, feeds and search under 80ms, writes under
+100ms (excluding bcrypt).
+
+### C5 · Contract is additive
+
+```bash
+cd backend && npm run routes > /tmp/routes_after.txt
+git stash && npm run routes > /tmp/routes_before.txt && git stash pop
+diff /tmp/routes_before.txt /tmp/routes_after.txt
+```
+
+Paste the diff. **No route removed or renamed.** Then diff a saved response body from before
+your change against one after, and confirm every old key is still present with the same type.
+
+### C6 · Timezone correctness
+
+Run the clock unit tests with injected times that cross a DST boundary in the market's zone.
+Paste the assertions and results. State which timezone the seeded markets use.
+
+### C7 · Bad-data resilience
+
+```bash
+cd backend && npm run seed:minimal
+```
+
+Then `curl` every changed endpoint. Nothing returns a 500. Paste the statuses.
+Then `npm run seed` to restore.
+
+### C8 · Docs
+
+```bash
+git diff --stat backend/docs/
+```
+
+Confirm `API.md` and `DATABASE.md` changed, and that each example body was copied from a real
+response.
+
+### Frontend untouched
+
+```bash
+git diff --stat src/
+```
+
+Only the Task 6 wrapper files may appear.
+
+---
+
+# PART 8 · Report format
+
+```
+Stage 3 status: PASS | FAIL
+
+## Task 0 — what already existed
+| field wanted | already present | current shape |
+|---|---|---|
+| ... | yes/no | ... |
+
+## What I changed
+- <file> — <one line>
+
+## Gate results
+C1 full suite:        before <n> pass / after <n> pass, <duration>
+C2 new tests:         <named list>
+C3 curl table:        <table, incl. cross-user pickupCode leak test>
+C4 explain:           <table: query, COLLSCAN?, docsExamined, nReturned, ms>
+C5 route diff:        <diff output — must show no removals>
+C6 timezone:          <test names + results + market tz>
+C7 minimal seed:      <status per endpoint>
+C8 docs:              <files changed>
+Frontend diff:        <git diff --stat src/>
+
+## Found but not fixed
+- <out-of-scope issues, file:line>
+
+## NOT verified
+- <anything unproven, and why>
+```
+
+If any gate fails, **fix it and re-run that gate.** A green suite achieved by editing a test is
+a FAIL — report it as one.

@@ -212,6 +212,42 @@ Resets user password with valid single-use token.
   - `403 FORBIDDEN` if caller lacks required permissions.
   - `422 VALIDATION_FAILED` if request body contains invalid or unknown fields.
 
+### POST /api/auth/verify-email
+Verifies email address with single-use token.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Request Schema**: `verifyEmail` (Strict unknown field rejection)
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+  - `422 VALIDATION_FAILED` if token is invalid, expired, or already used.
+
+### GET /api/auth/verify-email
+Verifies email address via GET token query param.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+  - `422 VALIDATION_FAILED` if token is invalid, expired, or already used.
+
+### POST /api/auth/resend-verification
+Resends email verification link if unverified (rate-limited).
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Request Schema**: `resendVerification` (Strict unknown field rejection)
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+  - `422 VALIDATION_FAILED` if request body contains invalid or unknown fields.
+  - `429 RATE_LIMITED` if resend rate limit (3/hour) is exceeded.
+
 ### GET /api/auth/_ping/customer
 RBAC verification ping for customer role.
 
@@ -367,6 +403,136 @@ List active product categories with product counts.
 
 ### GET /api/public/home
 Curated landing board, featured farmers, and announcements for guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/markets
+Browse markets for unauthenticated guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/markets/:id
+Get public market details for guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/markets/:id/farmers
+List attending farmers at market for guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/markets/:id/products
+Browse products available at market for guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/farmers
+Browse farmer stalls for unauthenticated guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/farmers/:id
+Get public farmer stall details for guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/farmers/:id/products
+Browse farmer products for unauthenticated guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/farmers/:id/reviews
+Read reviews for a farmer stall as guest.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/farmers/:id/pickup-slots
+Get available pickup slots for a farmer stall as guest.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/products
+Browse catalog products for unauthenticated guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/products/:id
+Get public product details for guests.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/products/:id/reviews
+Read reviews for a product as guest.
+
+- **Auth**: `public` (Roles: `Public`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/public/products/:id/related
+Get related products from same farmer or category for guests.
 
 - **Auth**: `public` (Roles: `Public`)
 - **Rate Limiter**: `default`
@@ -853,16 +1019,22 @@ Mark a specific notification as read.
 ## 18. Rule-Based Instant Assistant
 
 ### POST /api/assistant/message
-Natural language shopping assistant messaging.
+Natural language shopping assistant messaging with optional Server-Sent Events streaming (`?stream=1`).
 
 - **Auth**: `customer` (Roles: `customer`)
 - **Rate Limiter**: `assistant`
+- **Query Parameters**:
+  - `stream` (optional): `1` or `true` to enable Server-Sent Events (SSE) streaming (`Content-Type: text/event-stream`).
 - **Request Schema**: `assistantMessage` (Strict unknown field rejection)
 - **Responses**:
-  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `200 OK` on success:
+    - Standard JSON: `{ "data": { "reply": "...", "cards": [...], "suggestions": [...] } }`
+    - Streaming SSE (`?stream=1`): event stream emitting `data: {"chunk": "..."}` fragments and ending with `data: {"done": true, ...}`
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
   - `422 VALIDATION_FAILED` if request body contains invalid or unknown fields.
+  - `503 SERVICE_UNAVAILABLE` with code `ASSISTANT_BUSY` if all keys are cooling down and rule-based fallback fails.
+
 
 
 ## 19. Farmer Stall Profile & Settings
@@ -1496,6 +1668,16 @@ Platform sales and GMV metrics by date range.
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
 
+### GET /api/admin/reports/history
+List recent administrative CSV export generation history.
+
+- **Auth**: `admin` (Roles: `admin`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
 ### GET /api/admin/reports/export
 Export CSV streaming report for orders, products, or farmers.
 
@@ -1531,6 +1713,18 @@ List categories for administrative management.
 
 ### POST /api/admin/categories/reorder
 Reorder category display sequence.
+
+- **Auth**: `admin` (Roles: `admin`)
+- **Rate Limiter**: `default`
+- **Request Schema**: `reorderCategories` (Strict unknown field rejection)
+- **Responses**:
+  - `200 OK` / `201 Created` / `204 No Content` on success: `{ "data": ... }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+  - `422 VALIDATION_FAILED` if request body contains invalid or unknown fields.
+
+### PUT /api/admin/categories/order
+Reorder category display sequence via PUT.
 
 - **Auth**: `admin` (Roles: `admin`)
 - **Rate Limiter**: `default`
@@ -1688,4 +1882,26 @@ Update global platform settings.
   - `401 UNAUTHENTICATED` if token missing or invalid.
   - `403 FORBIDDEN` if caller lacks required permissions.
   - `422 VALIDATION_FAILED` if request body contains invalid or unknown fields.
+
+### GET /api/admin/assistant/status
+Get masked Gemini API key pool health and quota status.
+
+- **Auth**: `admin` (Roles: `admin`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` on success: `{ "data": [{ "index": 0, "maskedKey": "AQ.A...4WXw", "cooldownUntil": 0, "consecutiveErrors": 0, "requestsLastMinute": 0 }] }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+### GET /api/admin/email-log
+List email delivery logs with tag/status filter and cursor pagination.
+
+- **Auth**: `admin` (Roles: `admin`)
+- **Rate Limiter**: `default`
+- **Responses**:
+  - `200 OK` on success: `{ "data": { "items": [...], "nextCursor": null, "stats": { "sentToday": 0, "dailyLimit": 450 } } }`
+  - `401 UNAUTHENTICATED` if token missing or invalid.
+  - `403 FORBIDDEN` if caller lacks required permissions.
+
+
 

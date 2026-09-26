@@ -463,11 +463,12 @@ export async function processCheckout({ user, idempotencyKey, groups, now = new 
 
         await createNotifications(notifList, db);
 
-        // Mailer stub call
+        // Real mailer call
         if (customerEmail) {
           await mailer.sendOrderConfirmation(customerEmail, {
             orderNumber: firstOrder.orderNumber,
             pickupLabel: firstOrder.pickup?.label || '',
+            farmerName: firstOrder.farmerName || 'Your grower',
             totalCents: ordersToInsert.reduce((sum, o) => sum + o.totalCents, 0),
           });
         }

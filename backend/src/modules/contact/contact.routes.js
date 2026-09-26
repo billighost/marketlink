@@ -14,6 +14,7 @@ import {
 import { CONTACT_TOPICS } from '../../constants.js';
 import { createContactMessage } from './contact.service.js';
 import { defineRoutes } from '../../utils/defineRoutes.js';
+import { mailer } from '../../utils/mailer.js';
 
 export const contactRouter = Router();
 
@@ -47,6 +48,10 @@ defineRoutes(
           message,
           ip: req.ip,
         });
+
+        // Fire-and-forget contact acknowledgment email
+        mailer.sendContactAck(email, { name, email, topic, message })
+          .catch((err) => console.warn('[CONTACT] Mailer warning (contact_ack):', err.message));
 
         res.status(201).json({
           data: {
