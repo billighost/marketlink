@@ -20,7 +20,7 @@
   --stack-cart: calc(var(--cart-bar-height) + var(--stack-gap));
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1024px), (max-height: 480px) {
   .appShell {
     --stack-nav: 0px;
   }

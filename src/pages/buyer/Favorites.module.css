@@ -1,76 +1,228 @@
 .page {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: var(--container-max, 1400px);
-  margin: 0 auto;
-  gap: var(--space-4, 16px);
-  padding: 24px var(--page-pad, 20px) 48px;
+  padding-bottom: var(--space-12);
 }
 
-.header {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.tabsRow {
+  margin-bottom: var(--space-6);
 }
 
-.titleRow {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.title {
-  font-family: Georgia, 'Playfair Display', serif;
-  font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.2rem);
-  font-weight: 700;
-  color: #4a1521;
-  letter-spacing: -0.015em;
-  margin: 0;
-}
-
-.subtitle {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.88rem;
-  color: #6a6155;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  margin-top: 8px;
-}
-
-.productGrid {
+.produceGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 @media (min-width: 768px) {
-  .productGrid {
+  .produceGrid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    gap: var(--space-6);
   }
 }
 
-@media (min-width: 1100px) {
-  .productGrid {
+@media (min-width: 1024px) {
+  .produceGrid {
     grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
   }
 }
 
-.farmersList {
+.savedItemWrap {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
+.removeBtn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.removeBtn:hover {
+  color: var(--color-ink);
+  background: var(--color-canvas-soft);
+}
+
+.restockBtn {
+  margin-top: var(--space-2);
+  padding: var(--space-1-5) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: center;
+  transition: background-color var(--transition-fast);
+}
+
+.restockBtn:hover:not(:disabled) {
+  background: var(--color-hairline-soft);
+}
+
+.restockBtn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* Stalls Grid / List */
+.stallsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .stallsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .stallsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stallCardWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.dayDotsWrap {
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
+  border-top: none;
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+/* Markets List */
 .marketsList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
+}
+
+.marketRow {
+  position: relative;
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .marketRow {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.marketMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  min-width: 0;
+  flex: 1;
+}
+
+.marketHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.marketName {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.marketName:hover {
+  text-decoration: underline;
+}
+
+.homeBadge {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  padding: var(--space-0-5) var(--space-2);
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-full);
+  color: var(--color-ink);
+}
+
+.marketMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.marketActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.setHomeBtn {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  padding: var(--space-1-5) var(--space-3);
+  background: var(--color-white);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.setHomeBtn:hover {
+  background: var(--color-canvas-soft);
+}
+
+.unsaveTextBtn {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-1-5) var(--space-2);
+  border-radius: var(--radius-md);
+  transition: color var(--transition-fast);
+}
+
+.unsaveTextBtn:hover {
+  color: var(--color-ink);
 }

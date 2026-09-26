@@ -1,26 +1,22 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, ShoppingBasket } from 'lucide-react';
+import { Search, ShoppingBasket } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { getMarkets } from '@/api/catalog';
 import { useQuery } from '@/hooks/useQuery';
-import Illustration from '@/components/domain/Illustration';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import MarketDropdown from '@/components/layout/MarketDropdown';
 import styles from './BuyerTopBar.module.css';
 
 /**
- * Top bar for the signed-in Customer interface.
- * Responsive specifications:
- *  - Below 1024px (phone & tablet):
- *      Slim bar with market selector only (label above name, min-width 0, truncating).
- *      No avatar (profile lives in bottom nav), no extra buttons.
- *  - 1024px to 1279px (desktop/tablet landscape):
- *      Brand logo, compact market selector (name only, max-width),
- *      4 nav links (Market, Browse, Orders, Favorites), Cart button, and Avatar.
- *  - 1280px and up:
- *      Same structure with generous whitespace.
+ * Top bar for Customer (buyer) interface.
+ * - Under 1024px: Slim bar (56px) with Market selector (grows, truncates), Search icon, Basket icon + count.
+ * - 1024px and up: Desktop bar (68px) with Logo, 5 Nav links (Today, Browse, Stalls, Markets, Orders),
+ *   Market dropdown, Search icon, Basket button, and Avatar.
+ *
+ * Accent budget: Exactly ONE beet element in top bar (the active nav link).
+ * Hairline border reveals only when scrolled.
  */
 export function BuyerTopBar() {
   const { user } = useAuth();
@@ -29,8 +25,7 @@ export function BuyerTopBar() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
 
-  const { data: marketsData } = useQuery(['markets'], ({ signal }) => getMarkets({}, signal));
-  const markets = marketsData?.data || [];
+  useQuery(['markets'], ({ signal }) => getMarkets({}, signal));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,12 +38,7 @@ export function BuyerTopBar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const currentMarket =
-    user?.homeMarket ||
-    (user?.homeMarketId ? markets.find((m) => m.id === user.homeMarketId) : null) ||
-    markets[0] || { name: 'Farmers Market' };
-
-  const currentPath = location.state?.background?.pathname || location.pathname;
+  const currentPath = location.pathname;
 
   const getInitials = () => {
     if (user?.firstName && user?.name) {
@@ -65,26 +55,13 @@ export function BuyerTopBar() {
     return 'C';
   };
 
-  const handleOpenCart = () => {
-    navigate('/buyer/cart', {
-      state: { background: location.state?.background || location },
-    });
-  };
-
-  const handleOpenMarkets = () => {
-    navigate('/buyer/markets');
-  };
-
   return (
     <header className={`${styles.header} ${scrolled ? styles.headerScrolled : ''}`} role="banner">
       <div className={styles.container}>
-        {/* Left: Brand logo (desktop only >=1024px) */}
+        {/* Brand logo (desktop only >=1024px) */}
         <Link to="/buyer" className={styles.brand} aria-label="MarketLink home">
           <MarketLinkLogo size="sm" />
         </Link>
-
-        {/* Center / Mobile Left: Market selector dropdown */}
-        <MarketDropdown variant="buyer" />
 
         {/* Desktop Nav Links (>=1024px only) */}
         <nav className={styles.desktopNav} aria-label="Customer navigation">
@@ -92,7 +69,7 @@ export function BuyerTopBar() {
             to="/buyer"
             className={`${styles.navLink} ${currentPath === '/buyer' ? styles.navLinkActive : ''}`}
           >
-            Market
+            Today
           </Link>
           <Link
             to="/buyer/products"
@@ -101,39 +78,55 @@ export function BuyerTopBar() {
             Browse
           </Link>
           <Link
+            to="/buyer/stalls"
+            className={`${styles.navLink} ${currentPath.startsWith('/buyer/stalls') ? styles.navLinkActive : ''}`}
+          >
+            Stalls
+          </Link>
+          <Link
+            to="/buyer/markets"
+            className={`${styles.navLink} ${currentPath.startsWith('/buyer/markets') ? styles.navLinkActive : ''}`}
+          >
+            Markets
+          </Link>
+          <Link
             to="/buyer/orders"
             className={`${styles.navLink} ${currentPath.startsWith('/buyer/orders') ? styles.navLinkActive : ''}`}
           >
             Orders
           </Link>
-          <Link
-            to="/buyer/favorites"
-            className={`${styles.navLink} ${currentPath.startsWith('/buyer/favorites') ? styles.navLinkActive : ''}`}
-          >
-            Favorites
-          </Link>
         </nav>
 
-        {/* Desktop Action Group (>=1024px only) */}
+        {/* Action group: on mobile MarketDropdown flexes on left; Search and Basket on right */}
         <div className={styles.actions}>
-          {/* Desktop Cart Button */}
+          <div className={styles.marketWrapper}>
+            <MarketDropdown variant="buyer" />
+          </div>
+
           <button
             type="button"
-            onClick={handleOpenCart}
+            onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+            className={styles.searchButton}
+            aria-label="Search the market"
+          >
+            <Search size={20} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+
+          <Link
+            to="/buyer/basket"
             className={styles.cartButton}
-            aria-label={`Shopping cart with ${count} items`}
+            aria-label={`Shopping basket with ${count} items`}
             data-cart-target-desktop
           >
             <ShoppingBasket size={20} strokeWidth={1.75} aria-hidden="true" />
-            <span className={styles.cartText}>Cart</span>
+            <span className={styles.cartText}>Basket</span>
             {count > 0 && (
               <span className={styles.badge} data-cart-badge aria-hidden="true">
                 {count > 9 ? '9+' : count}
               </span>
             )}
-          </button>
+          </Link>
 
-          {/* Desktop Avatar button linking to Profile */}
           <Link
             to="/buyer/profile"
             className={styles.avatarButton}

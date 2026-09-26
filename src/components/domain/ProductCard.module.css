@@ -176,7 +176,7 @@
   flex-wrap: nowrap;
 }
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
   .content {
     padding: var(--space-2);
     gap: var(--space-1);

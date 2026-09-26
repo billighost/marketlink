@@ -40,17 +40,21 @@ For complete rules, contrast ratios, and component usage, see:
 ## 3. Project Structure
 
 ```
-marketlink-frontend/
+marketlink/
 ├─ index.html                     (Google Fonts Idiqlat & Inter, viewport-fit=cover)
 ├─ package.json                   (React 18+, Vite, react-router-dom, lucide-react)
-├─ vite.config.js                 (Alias "@" -> src)
+├─ vite.config.js                 (Alias "@" -> src, bundle splitting)
 ├─ docs/
-│  └─ DESIGN_SYSTEM.md            (Complete 16-section Design System specification)
+│  └─ DESIGN_SYSTEM.md            (Complete Design System & Page-First specification)
 ├─ public/
 │  └─ favicon.svg                 (MarketLink Beet sprout favicon)
+├─ backend/                       (Node.js + Express 5 + native MongoDB API, port 4000)
+│  ├─ src/                        (Server, routes, services, MongoDB connection)
+│  ├─ docs/                       (DATABASE.md & API.md)
+│  └─ README.md                   (Backend setup, schema & troubleshooting)
 └─ src/
    ├─ main.jsx                    (Entry point)
-   ├─ App.jsx                     (Router & AuthProvider root)
+   ├─ App.jsx                     (Router, Auth, Cart, Toast & Favorites root)
    │
    ├─ styles/
    │  ├─ tokens.css               (CSS custom property tokens)
@@ -61,82 +65,90 @@ marketlink-frontend/
    ├─ routes/
    │  ├─ paths.js                 (Route constants for guest, buyer, vendor, admin)
    │  ├─ ProtectedRoute.jsx       (Role guard)
-   │  └─ AppRoutes.jsx            (Route definitions)
+   │  └─ AppRoutes.jsx            (Page-first route definitions & redirects)
    │
-   ├─ context/
-   │  └─ AuthContext.jsx          (Role state management stub)
-   │
-   ├─ data/
-   │  └─ placeholders.js          (Realistic local farmers market dummy data)
-   ├─ hooks/
-   │  └─ useDocumentTitle.js      (Document title helper)
-   ├─ utils/
-   │  └─ format.js                (Currency and date formatters)
+   ├─ context/                    (AuthContext, CartContext, FavoritesContext, ToastContext)
+   ├─ hooks/                      (useQuery, useFeed, useHotkey, useDocumentTitle...)
+   ├─ utils/                      (format.js, sortStalls.js, greeting.js, time.js)
    │
    ├─ layouts/                    (Outer layouts for each audience)
-   │  ├─ GuestLayout.jsx + .module.css
-   │  ├─ BuyerLayout.jsx + .module.css
-   │  ├─ VendorLayout.jsx + .module.css
-   │  └─ AdminLayout.jsx + .module.css
+   │  ├─ BuyerLayout.jsx          (White-first Customer frame with CommandPalette)
+   │  ├─ GuestLayout.jsx          (Public visitor shell)
+   │  ├─ VendorLayout.jsx         (Farmer management frame)
+   │  └─ AdminLayout.jsx          (Platform operator dashboard)
    │
    ├─ components/
-   │  ├─ ui/                      (Reusable UI primitives: Button, Card, FormField...)
-   │  ├─ layout/                  (Structural pieces: TopBar, Sidebar, PageHeader...)
-   │  └─ domain/                  (Domain cards: ProductCard, MarketCard...)
+   │  ├─ ui/                      (Button, Card, EmptyState, ErrorState, Stars, Tabs...)
+   │  ├─ layout/                  (Page, PageTitle, Section, MarketClock, BuyerTopBar, BottomNav...)
+   │  └─ domain/                  (Scene system, ProductCard, FarmerCard, MarketCard, StallGroup...)
    │
    └─ pages/
+      ├─ buyer/                   (19 Customer pages: Today, Browse, Produce, Stalls, Basket...)
       ├─ guest/                   (Public unauthenticated routes: Home, About, Login...)
-      ├─ buyer/                   (Customer persona routes)
       ├─ vendor/                  (Farmer persona routes)
       └─ admin/                   (Admin persona routes)
 ```
 
 ---
 
-## 4. Role Switching & Previews
+## 4. Customer (Buyer) Route Map
 
-To preview the unauthenticated guest experience, run `npm run dev` and navigate to `http://localhost:3000` to browse all guest pages (`/`, `/about`, `/contact`, `/login`, `/register`, `/forgot-password`, `/unauthorized`).
+Every destination in the Customer workspace is a real, bookmarkable, refreshable page:
 
-The `/login` screen also provides convenient quick-switch buttons to test each persona:
-- **Continue as Customer** (navigates to `/buyer`)
-- **Continue as Farmer** (navigates to `/vendor`)
-- **Continue as Admin** (navigates to `/admin`)
-- **Sign Out** returns to the Guest public area.
+| Route Path | Page | Description |
+|---|---|---|
+| `/buyer` | Today at the Market | Live MarketClock, stall strip, curated local feed |
+| `/buyer/products` | Browse Produce | Filter rail, category chips, cursor-based produce catalog |
+| `/buyer/products/:id` | Produce Detail | Pricing per unit, stock availability, stall link, reviews |
+| `/buyer/stalls` | Stalls Index | Active stalls sorted by open status and scarcity |
+| `/buyer/stalls/:id` | Stall Detail | Stall operating days, pickup windows, weekly inventory |
+| `/buyer/markets` | Markets Index | Nearby farmers markets with List and Map views |
+| `/buyer/markets/:id` | Market Detail | Market hours, stall roster, interactive Leaflet map |
+| `/buyer/basket` | Basket | Grouped by farm stall with cutoffs and pickup windows |
+| `/buyer/checkout` | Review Pickup | Slot selection per stall, cash-at-stall reservation |
+| `/buyer/orders` | Orders | Active & Past orders tabs with collection countdowns |
+| `/buyer/orders/:id` | Order Detail | 4-letter collection code, progress timeline, market map |
+| `/buyer/orders/:id/confirmed`| Confirmed | Order placed confirmation and collection instructions |
+| `/buyer/saved` | Saved | Saved produce items, farm stalls, and markets |
+| `/buyer/profile` | You (Account) | Customer overview and settings links |
+| `/buyer/profile/details` | Personal Details | Name, phone number, and physical address |
+| `/buyer/profile/markets` | Saved Markets | Home market configuration |
+| `/buyer/profile/notifications`| Notifications | SMS & Email preference toggles |
+| `/buyer/profile/reviews` | Your Reviews | Reviews left by the customer with edit actions |
+| `/buyer/notifications` | Notifications Feed | Order status updates and restock alerts |
+| `/buyer/assistant` | Ask MarketLink | Interactive local food and market assistant |
+| `/buyer/help` | Help & FAQ | 4-step market collection guide & common questions |
+| `/buyer/*` | Buyer 404 | Graceful not-found page with quick return action |
 
 ---
 
-## 5. Backend Architecture & Running Both Services
+## 5. Seeded Credentials & Roles
 
-The MarketLink backend lives in the `backend/` directory alongside the front-end application:
+The seeded database (`npm run seed` in `backend/`) provides demo accounts for all roles:
 
+| Role | Email | Password | Primary Workspace |
+|---|---|---|---|
+| **Customer (Buyer)** | `george@example.com` | `market123` | `/buyer` |
+| **Farmer (Vendor)** | `sarah@riverbend.farm` | `market123` | `/vendor` |
+| **Platform Admin** | `admin@marketlink.local` | `market123` | `/admin` |
+
+*Note: All market maps use **OpenStreetMap** with Leaflet. **No external API key is required.***
+
+---
+
+## 6. Running Both Services
+
+### Terminal 1: Backend
+```bash
+cd backend
+npm install
+npm run seed      # Seeds database with realistic demo accounts and products
+npm run dev       # Starts backend on http://localhost:4000/api
 ```
-MarketLink/
-├─ src/                  # React front-end application (Vite on port 5173 / 3000)
-├─ backend/              # Node.js + Express 5 + native MongoDB API (port 4000)
-│  ├─ src/               # Server, routes, services, MongoDB connection
-│  ├─ docs/              # DATABASE.md & API.md
-│  └─ README.md          # Full backend setup, credentials & troubleshooting
+
+### Terminal 2: Frontend
+```bash
+npm install
+npm run dev       # Starts Vite development server on http://localhost:3000
 ```
-
-### Running Both Together
-
-1. **Start the Backend**:
-   ```bash
-   cd backend
-   npm install
-   npm run seed    # Seeds database with realistic demo accounts and products
-   npm run dev     # Runs API on http://localhost:4000/api
-   ```
-
-2. **Start the Frontend** (in a separate terminal at the repository root):
-   ```bash
-   npm install
-   npm run dev     # Starts Vite development server
-   ```
-
-3. **Backend Tests**:
-   ```bash
-   cd backend
-   npm test        # Runs all 61 automated tests against marketlink_test
-   ```
 

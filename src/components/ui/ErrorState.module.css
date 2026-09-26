@@ -4,22 +4,15 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: var(--space-8) var(--space-4);
-  gap: var(--space-3);
+  padding: var(--space-10) var(--space-4) var(--space-12);
+  gap: var(--space-4);
   width: 100%;
   max-width: var(--container-narrow);
   margin: 0 auto;
 }
 
-.iconWrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-canvas);
-  color: var(--color-carrot);
+.scene {
+  margin-inline: auto;
   margin-bottom: var(--space-2);
 }
 
@@ -34,9 +27,9 @@
 
 .text {
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body);
   color: var(--color-ink-soft);
-  max-width: 360px;
+  max-width: var(--measure-narrow);
   line-height: var(--lh-relaxed);
   margin: 0;
 }

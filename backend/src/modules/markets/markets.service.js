@@ -268,10 +268,33 @@ export async function listFarmersAtMarket(marketId, { sort = 'rating', cursor, l
     });
   }
 
+  const fIds = farmers.map((f) => f._id);
+  const stockCounts = fIds.length > 0
+    ? await db
+        .collection(COLLECTIONS.PRODUCTS)
+        .aggregate([
+          { $match: { farmerId: { $in: fIds }, listed: true } },
+          {
+            $group: {
+              _id: '$farmerId',
+              low: { $sum: { $cond: [{ $eq: ['$availability', 'low'] }, 1, 0] } },
+              out: { $sum: { $cond: [{ $eq: ['$availability', 'out'] }, 1, 0] } },
+            },
+          },
+        ])
+        .toArray()
+    : [];
+  const stockMap = new Map(stockCounts.map((s) => [s._id.toString(), s]));
+
   const marketLookup = new Map(markets.map((m) => [m._id.toString(), m]));
   const data = farmers.map((f) => {
     const fMarkets = (f.marketIds || []).map((id) => marketLookup.get(id.toString())).filter(Boolean);
-    return toFarmerCard(f, { markets: fMarkets });
+    const counts = stockMap.get(f._id.toString());
+    return toFarmerCard(f, {
+      markets: fMarkets,
+      lowStockCount: counts?.low ?? 0,
+      soldOutCount: counts?.out ?? 0,
+    });
   });
 
   return {

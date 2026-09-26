@@ -1,91 +1,113 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Check, Calendar, MapPin, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { getOrderDetail } from '@/api/orders';
 import { formatPrice } from '@/utils/format';
+import Page from '@/components/layout/Page';
+import Scene from '@/components/domain/Scene/Scene';
+import PickupCode from '@/components/domain/PickupCode';
 import Button from '@/components/ui/Button';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './OrderConfirmed.module.css';
 
 /**
- * Order confirmation view shown after placing a pre-order.
- * Can be rendered as an in-sheet step or at /buyer/order-confirmed.
+ * Order confirmation page (/buyer/orders/:id/confirmed).
+ * Displays collection code, collection instructions, and order total.
  */
-export function OrderConfirmed({
-  orderNumber = 'ML-1045',
-  total = 21.50,
-  pickupSlot = 'Sat 8 – 10 am',
-  marketName = 'Elm Street Market',
-  farmerNames = 'Riverbend Farm & Oak & Mill Bakery',
-  onClose,
-  inSheet = true,
-}) {
+export function OrderConfirmed() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  useDocumentTitle('Reserved · MarketLink');
 
-  const handleViewOrders = () => {
-    navigate('/buyer/orders', { replace: true });
-  };
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(Boolean(id));
 
-  const handleKeepBrowsing = () => {
-    navigate('/buyer', { replace: true });
-  };
+  useEffect(() => {
+    if (!id) {
+      navigate('/buyer/orders', { replace: true });
+      return;
+    }
+
+    let active = true;
+    getOrderDetail(id)
+      .then((data) => {
+        if (active) {
+          setOrder(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          navigate('/buyer/orders', { replace: true });
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id, navigate]);
+
+  if (loading) {
+    return (
+      <Page width="detail" className={styles.page}>
+        <div className={styles.loadingBox}>
+          <div className={styles.skeletonLine} />
+        </div>
+      </Page>
+    );
+  }
+
+  if (!order) return null;
+
+  const totalCents = order.totalCents != null ? order.totalCents : order.total;
+  const farmerName = order.farmer?.stallName || order.farmerNames || 'Market Stall';
+  const pickupLabel = order.pickup?.label || order.pickupSlotLabel || 'Market pickup';
+  const orderNumber = order.orderNumber || order.number || 'MK-ORDER';
 
   return (
-    <div className={`${styles.container} ${!inSheet ? styles.standalone : ''}`}>
-      {/* Animated Checkmark Icon */}
-      <div className={styles.iconCircle}>
-        <Check size={36} strokeWidth={2.5} className={styles.checkIcon} aria-hidden="true" />
-      </div>
-
-      <div className={styles.header}>
-        <h2 className={styles.title}>Pre-order placed.</h2>
-        <p className={styles.orderNumber}>Order {orderNumber}</p>
-      </div>
-
-      {/* Pickup Summary Card */}
-      <div className={styles.summaryCard}>
-        <div className={styles.summaryRow}>
-          <Calendar size={18} className={styles.metaIcon} aria-hidden="true" />
-          <div className={styles.metaText}>
-            <span className={styles.metaLabel}>Pickup window</span>
-            <span className={styles.metaValue}>{pickupSlot}</span>
-          </div>
+    <Page width="detail" className={styles.page}>
+      <div className={styles.container}>
+        {/* Decorative Scene */}
+        <div className={styles.sceneWrap} aria-hidden="true">
+          <Scene name="no-orders-yet" size="md" />
         </div>
 
-        <div className={styles.summaryRow}>
-          <MapPin size={18} className={styles.metaIcon} aria-hidden="true" />
-          <div className={styles.metaText}>
-            <span className={styles.metaLabel}>{marketName}</span>
-            <span className={styles.metaValue}>{farmerNames}</span>
+        {/* Heading & Subtitle */}
+        <div className={styles.header}>
+          <h1 className={styles.title}>Reserved</h1>
+          <p className={styles.subtitle}>
+            Collect {pickupLabel} at {farmerName}.
+          </p>
+        </div>
+
+        {/* Physical Handoff Artifact: Collection Code */}
+        {order.pickupCode && (
+          <div className={styles.codeWrap}>
+            <PickupCode code={order.pickupCode} size="lg" />
           </div>
+        )}
+
+        {/* Order Identifier & Total to pay at the stall */}
+        <p className={styles.orderMeta}>
+          Order {orderNumber} · {formatPrice(totalCents)} to pay at the stall
+        </p>
+
+        {/* Actions: View order is the ONE beet element */}
+        <div className={styles.actions}>
+          <Button
+            variant="primary"
+            size="lg"
+            to={`/buyer/orders/${order.id}`}
+            className={styles.viewOrderBtn}
+          >
+            View order
+          </Button>
+
+          <Link to="/buyer" className={styles.backLink}>
+            Back to today
+          </Link>
         </div>
       </div>
-
-      {/* Helpful Guidance */}
-      <p className={styles.guidance}>
-        We've notified the farmers to harvest and pack your items. Remember, you pay{' '}
-        <strong>{formatPrice(total)}</strong> directly at the stalls on Saturday.
-      </p>
-
-      {/* Actions */}
-      <div className={styles.actions}>
-        <Button
-          variant="primary"
-          size="lg"
-          className={styles.primaryButton}
-          onClick={handleViewOrders}
-        >
-          <span>View your orders</span>
-          <ArrowRight size={18} aria-hidden="true" />
-        </Button>
-
-        <button
-          type="button"
-          className={styles.secondaryLink}
-          onClick={handleKeepBrowsing}
-        >
-          Keep browsing the market
-        </button>
-      </div>
-    </div>
+    </Page>
   );
 }
 
