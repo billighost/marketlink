@@ -807,88 +807,108 @@ export function Overview() {
               </section>
 
               {/* SECTION: TOP HARVEST PERFORMERS & QUICK RESTOCK STEPPER */}
-              <section className={styles.sectionCard}>
+              {/* SECTION: 4. 🏆 Best-Selling Products */}
+              <section className={styles.sectionCard} aria-label="Best-selling products">
                 <div className={styles.cardHeaderRow}>
                   <div className={styles.cardTitleGroup}>
-                    <Flame size={20} color="#E07A2C" />
-                    <h2 className={styles.cardTitle}>Top Harvest Produce & Quick Stock</h2>
+                    <span style={{ fontSize: '1.25rem' }} aria-hidden="true">🏆</span>
+                    <div>
+                      <h2 className={styles.cardTitle}>Your Top Products</h2>
+                      <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                        Ranked by monthly customer orders & demand
+                      </span>
+                    </div>
                   </div>
-                  <Link to="/vendor/stock" className={styles.btnOutlineSmall}>
-                    <span>Full Stock Sheet</span>
+                  <Link to="/vendor/insights" className={styles.btnOutlineSmall}>
+                    <span>View Analytics</span>
                     <ChevronRight size={14} />
                   </Link>
                 </div>
 
-                <div className={styles.productListRow}>
-                  {(overviewData?.topProducts || []).slice(0, 5).map((prod) => (
-                    <div key={prod.id} className={styles.productQuickCard}>
-                      <div className={styles.productLeftInfo}>
-                        <div className={styles.productIconBox} aria-hidden="true">
-                          {prod.name.toLowerCase().includes('tomato')
-                            ? '🍅'
-                            : prod.name.toLowerCase().includes('carrot')
-                            ? '🥕'
-                            : prod.name.toLowerCase().includes('potato')
-                            ? '🥔'
-                            : prod.name.toLowerCase().includes('squash')
-                            ? '🎃'
-                            : prod.name.toLowerCase().includes('kale') || prod.name.toLowerCase().includes('green')
-                            ? '🥬'
-                            : prod.name.toLowerCase().includes('honey')
-                            ? '🍯'
-                            : prod.name.toLowerCase().includes('bread') || prod.name.toLowerCase().includes('sourdough')
-                            ? '🍞'
-                            : '🌱'}
-                        </div>
-                        <div className={styles.productNameCol}>
-                          <span className={styles.prodTitle}>{prod.name}</span>
-                          <span className={styles.prodMetaPrice}>
-                            {formatPrice(prod.priceCents)} / {prod.unit} • {prod.salesCount || 0} sold
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className={styles.productStockControls}>
-                        <span
-                          className={`${styles.stockCountBadge} ${
-                            prod.quantity === 0
-                              ? styles.stockSoldOut
-                              : prod.quantity <= 5
-                              ? styles.stockLow
-                              : ''
-                          }`}
-                        >
-                          {prod.quantity === 0 ? 'Sold Out' : `${prod.quantity} ${prod.unit} left`}
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() => handleQuickRestock(prod.id, 5)}
-                          className={styles.stepperBtn}
-                          title="Quick restock +5 units"
-                        >
-                          +5
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleQuickRestock(prod.id, 10)}
-                          className={styles.stepperBtn}
-                          title="Quick restock +10 units"
-                        >
-                          +10
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleToggleSoldOut(prod.id, prod.quantity === 0)}
-                          className={styles.btnOutlineSmall}
-                          style={{ fontSize: '0.75rem', padding: '4px 8px' }}
-                        >
-                          {prod.quantity === 0 ? 'Restock' : 'Sold out'}
-                        </button>
-                      </div>
+                {/* Dynamic Headline Callout calculated from real order data */}
+                {(overviewData?.bestSellingHeadline || (overviewData?.bestSellingProducts?.[0]?.name)) && (
+                  <div className={styles.bestSellerHeadlineBanner}>
+                    <span style={{ fontSize: '1.25rem' }} aria-hidden="true">🥇</span>
+                    <div>
+                      <strong style={{ fontSize: '0.9rem', color: '#065f46', display: 'block' }}>
+                        {overviewData.bestSellingHeadline ||
+                          `${overviewData.bestSellingProducts[0].name} generated ${overviewData.bestSellingProducts[0].orderPercentage}% of your orders this month.`}
+                      </strong>
+                      <span style={{ fontSize: '0.75rem', color: '#047857' }}>
+                        Calculated from real order volume in your database
+                      </span>
                     </div>
-                  ))}
+                  </div>
+                )}
+
+                <div className={styles.productListRow}>
+                  {(overviewData?.bestSellingProducts || overviewData?.topProducts || []).slice(0, 5).map((prod, index) => {
+                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                    const orderPct = prod.orderPercentage || 0;
+
+                    return (
+                      <div key={prod.id || prod.productId || index} className={styles.productQuickCard}>
+                        <div className={styles.productLeftInfo}>
+                          <div className={styles.productIconBox} aria-label={`Rank ${index + 1}`}>
+                            <span style={{ fontSize: '1.2rem' }}>{medal}</span>
+                          </div>
+                          <div className={styles.productNameCol}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              <span className={styles.prodTitle}>{prod.name}</span>
+                              {orderPct > 0 && (
+                                <span className={styles.orderPctPill}>
+                                  {orderPct}% of orders
+                                </span>
+                              )}
+                            </div>
+                            <span className={styles.prodMetaPrice}>
+                              {formatPrice(prod.priceCents)} / {prod.unit || 'unit'} • {prod.ordersCount ? `${prod.ordersCount} orders` : `${prod.salesCount || prod.quantity || 0} sold`}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className={styles.productStockControls}>
+                          <span
+                            className={`${styles.stockCountBadge} ${
+                              prod.quantity === 0
+                                ? styles.stockSoldOut
+                                : prod.quantity <= 5
+                                ? styles.stockLow
+                                : ''
+                            }`}
+                          >
+                            {prod.quantity === 0 ? 'Sold Out' : `${prod.quantity} ${prod.unit || 'unit'} left`}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => handleQuickRestock(prod.id || prod.productId, 5)}
+                            className={styles.stepperBtn}
+                            title="Quick restock +5 units"
+                          >
+                            +5
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickRestock(prod.id || prod.productId, 10)}
+                            className={styles.stepperBtn}
+                            title="Quick restock +10 units"
+                          >
+                            +10
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSoldOut(prod.id || prod.productId, prod.quantity === 0)}
+                            className={styles.btnOutlineSmall}
+                            style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                          >
+                            {prod.quantity === 0 ? 'Restock' : 'Sold out'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             </div>

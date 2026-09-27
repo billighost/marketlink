@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { getAdminMessages, handleAdminMessage } from '@/api/admin';
+import { getAdminMessages, handleAdminMessage, deleteAdminMessage } from '@/api/admin';
 import { useAdmin } from '@/layouts/AdminLayout';
 import { useToast } from '@/components/ui/Toast';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import { formatDateShort } from '@/utils/format';
+import { Trash2 } from 'lucide-react';
 import styles from './MessagesTab.module.css';
 
 export default function MessagesTab() {
@@ -17,6 +19,8 @@ export default function MessagesTab() {
   const [loading, setLoading] = useState(true);
   const [replyInputs, setReplyInputs] = useState({});
   const [handlingId, setHandlingId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchMessagesList = useCallback(async () => {
     try {
@@ -78,6 +82,24 @@ export default function MessagesTab() {
     }
   };
 
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteAdminMessage(deleteTarget.id);
+      showToast('Support message deleted.', 'success');
+      setDeleteTarget(null);
+      if (refreshOverview) {
+        await refreshOverview();
+      }
+      await fetchMessagesList();
+    } catch (err) {
+      showToast(err.message || 'Failed to delete message', 'error');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.subTabs} role="tablist" aria-label="Support message status">
@@ -122,9 +144,18 @@ export default function MessagesTab() {
                   <span>·</span>
                   <span>{formatDateShort(msg.createdAt)}</span>
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                   {msg.orderNumber && <span className={styles.orderBadge}>Order #{msg.orderNumber}</span>}
                   <span className={styles.topicBadge}>{msg.topic || 'General'}</span>
+                  <button
+                    type="button"
+                    className={styles.deleteBtn}
+                    onClick={() => setDeleteTarget(msg)}
+                    title="Delete message"
+                    aria-label={`Delete message from ${msg.name}`}
+                  >
+                    <Trash2 size={13} aria-hidden="true" />
+                  </button>
                 </div>
               </div>
 
@@ -170,6 +201,19 @@ export default function MessagesTab() {
           ))
         )}
       </div>
+
+      {deleteTarget && (
+        <ConfirmDialog
+          open={Boolean(deleteTarget)}
+          title="Delete Support Inquiry?"
+          body={`Are you sure you want to permanently delete this message from ${deleteTarget.name} (${deleteTarget.email})?`}
+          confirmLabel="Delete Message"
+          variant="danger"
+          isLoading={deleting}
+          onConfirm={handleConfirmDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 }

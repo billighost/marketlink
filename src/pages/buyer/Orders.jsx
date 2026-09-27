@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
+import { Navigation, ArrowRight } from 'lucide-react';
 import { getOrders } from '@/api/orders';
 import Page from '@/components/layout/Page';
 import PageTitle from '@/components/layout/PageTitle';
@@ -104,6 +105,64 @@ export function Orders() {
             { value: 'past', label: `Past (${counts.past})` },
           ]}
         />
+      </div>
+
+      {/* Market Route Planner Banner */}
+      <div style={{
+        margin: '0 0 var(--space-4)',
+        padding: 'var(--space-3) var(--space-4)',
+        backgroundColor: 'rgba(45, 106, 79, 0.08)',
+        border: '1px solid rgba(45, 106, 79, 0.25)',
+        borderRadius: 'var(--radius-lg)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 'var(--space-3)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: 'var(--radius-full)',
+            backgroundColor: '#1b4332',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Navigation size={18} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 'var(--weight-bold)', color: 'var(--color-ink)', fontSize: 'var(--text-sm)' }}>
+              🗺️ Market Route Planner
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-soft)' }}>
+              {counts.active > 1
+                ? `Walking route ready across your ${counts.active} active stall pickups.`
+                : 'Turn your stall pickups into a connected market walking route with map.'}
+            </div>
+          </div>
+        </div>
+        <Link
+          to="/buyer/route"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 'var(--space-1)',
+            padding: '6px 14px',
+            backgroundColor: '#1b4332',
+            color: '#ffffff',
+            borderRadius: 'var(--radius-md)',
+            fontWeight: 'var(--weight-semibold)',
+            fontSize: 'var(--text-xs)',
+            textDecoration: 'none',
+          }}
+        >
+          <span>View Market Route</span>
+          <ArrowRight size={14} />
+        </Link>
       </div>
 
       <div className={styles.listSection}>

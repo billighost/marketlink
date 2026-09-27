@@ -1160,12 +1160,44 @@ export async function runSeed(force = false, targetDb = null) {
     {
       _id: new ObjectId(),
       userId: georgeUser._id,
-      type: 'order_ready',
-      title: 'Order Ready for Pickup!',
-      body: 'Your pre-order ML-1041 is packed and ready at Riverbend Farm (Stall 4).',
-      data: { orderId: orderDocs[0]._id.toString(), orderNumber: 'ML-1041' },
+      type: 'restock',
+      title: 'Your favorite farmer just restocked',
+      body: '🍅 Tomatoes are back at Green Valley Farm.',
+      data: {
+        farmerName: 'Green Valley Farm',
+        productName: 'Tomatoes',
+        emoji: '🍅',
+        productId: pTom?._id?.toString() || '',
+      },
       readAt: null,
-      createdAt: addHours(now, -2),
+      createdAt: addHours(now, -1),
+    },
+    {
+      _id: new ObjectId(),
+      userId: georgeUser._id,
+      type: 'order_ready',
+      title: 'Your pickup is ready',
+      body: '🧺 Order #2048 is ready at Stall B12.',
+      data: {
+        orderId: orderDocs[0]._id.toString(),
+        orderNumber: '2048',
+        stallNumber: 'Stall B12',
+      },
+      readAt: null,
+      createdAt: addHours(now, -3),
+    },
+    {
+      _id: new ObjectId(),
+      userId: georgeUser._id,
+      type: 'market_reminder',
+      title: 'Market reminder',
+      body: '📍 Bodija Market opens tomorrow at 8:00 AM.',
+      data: {
+        marketName: 'Bodija Market',
+        opensAt: '8:00 AM',
+      },
+      readAt: null,
+      createdAt: addHours(now, -6),
     },
     {
       _id: new ObjectId(),
@@ -1179,7 +1211,7 @@ export async function runSeed(force = false, targetDb = null) {
     },
   ];
   await db.collection(COLLECTIONS.NOTIFICATIONS).insertMany(notificationDocs);
-  console.log(`✓ Seeded ${notificationDocs.length} notifications.`);
+  console.log(`✓ Seeded ${notificationDocs.length} intelligent notifications.`);
 
   // ── 12. Announcements (2) ──────────────────────────────────────────────────
   const announcementDocs = [

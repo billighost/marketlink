@@ -17,6 +17,7 @@ import { processCheckout } from './checkout.service.js';
 import {
   listCustomerOrders,
   getCustomerOrderDetail,
+  getCustomerRoutePlan,
   modifyCustomerOrder,
   cancelCustomerOrder,
   getReorderPreview,
@@ -195,6 +196,20 @@ const routes = [
           nextCursor: result.nextCursor,
           limit: result.limit,
         },
+      });
+    },
+  },
+
+  // GET /orders/route-plan (Customer Market Route Planner)
+  {
+    method: 'get',
+    path: '/route-plan',
+    auth: 'customer',
+    summary: 'Plan Saturday Market Route connecting active orders, farmers, and map',
+    handler: async (req, res) => {
+      const plan = await getCustomerRoutePlan(req.user.id);
+      res.status(200).json({
+        data: plan,
       });
     },
   },

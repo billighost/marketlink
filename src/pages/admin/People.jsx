@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { getAdminFarmers, getAdminCustomers } from '@/api/admin';
+import { getAdminFarmers, getAdminCustomers, deleteAdminPerson } from '@/api/admin';
 import { useAdmin } from '@/layouts/AdminLayout';
 import { useToast } from '@/components/ui/Toast';
 import AdminPage from '@/components/admin/AdminPage';
@@ -11,8 +11,10 @@ import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import Tabs from '@/components/ui/Tabs';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
-import { RotateCcw, AlertTriangle } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { RotateCcw, AlertTriangle, Plus } from 'lucide-react';
 import PersonDetailSheet from './PersonDetailSheet';
+import PersonEditorSheet from './PersonEditorSheet';
 import { createFarmerColumns, createCustomerColumns, renderStatusBadge } from './peopleColumns';
 import usePeopleActions from './usePeopleActions';
 import styles from './People.module.css';
@@ -48,6 +50,15 @@ export function People() {
 
   // Detail Sheet
   const [selectedPerson, setSelectedPerson] = useState(null);
+
+  // Editor Sheet (Create / Edit)
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingPerson, setEditingPerson] = useState(null);
+  const [editorInitialRole, setEditorInitialRole] = useState('farmer');
+
+  // Deletion state
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Debounce search input (250ms)
   useEffect(() => {
@@ -212,6 +223,40 @@ export function People() {
     });
   }, [customersList]);
 
+  const handleOpenCreate = (targetRole) => {
+    setEditingPerson(null);
+    setEditorInitialRole(targetRole || (activeTab === 'farmers' ? 'farmer' : 'customer'));
+    setIsEditorOpen(true);
+  };
+
+  const handleOpenEdit = (person) => {
+    setEditingPerson(person);
+    setIsEditorOpen(true);
+  };
+
+  const handleDeleteRequest = (person) => {
+    setDeleteTarget(person);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteAdminPerson(deleteTarget.id);
+      showToast('Account deleted successfully.', 'success');
+      if (selectedPerson?.id === deleteTarget.id) {
+        setSelectedPerson(null);
+      }
+      setDeleteTarget(null);
+      await fetchPeople();
+      if (refreshOverview) await refreshOverview();
+    } catch (err) {
+      showToast(err?.message || 'Failed to delete account.', 'error');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // Columns configuration
   const farmerColumns = useMemo(
     () =>
@@ -223,6 +268,8 @@ export function People() {
         triggerSuspendFarmer,
         triggerReinstateFarmer,
         setSelectedPerson,
+        onEditPerson: handleOpenEdit,
+        onDeletePerson: handleDeleteRequest,
       }),
     [busyId]
   );
@@ -234,6 +281,8 @@ export function People() {
         triggerDeactivateCustomer,
         triggerActivateCustomer,
         setSelectedPerson,
+        onEditPerson: handleOpenEdit,
+        onDeletePerson: handleDeleteRequest,
       }),
     [busyId]
   );
@@ -270,6 +319,16 @@ export function People() {
     <AdminPage
       title="People"
       context={`${farmerCounts.total} farmers · ${customerCounts.total} customers`}
+      action={
+        <Button
+          variant="primary"
+          size="md"
+          onClick={() => handleOpenCreate()}
+        >
+          <Plus size={16} aria-hidden="true" style={{ marginRight: 'var(--space-1)' }} />
+          <span>Add Account</span>
+        </Button>
+      }
     >
       <div className={styles.container}>
         {/* Navigation Tabs */}
@@ -374,7 +433,40 @@ export function People() {
           onReinstateFarmer={triggerReinstateFarmer}
           onDeactivateCustomer={triggerDeactivateCustomer}
           onActivateCustomer={triggerActivateCustomer}
+          onEditPerson={handleOpenEdit}
+          onDeletePerson={handleDeleteRequest}
         />
+
+        {/* Person Editor Sheet (Create / Edit) */}
+        <PersonEditorSheet
+          open={isEditorOpen}
+          person={editingPerson}
+          initialRole={editorInitialRole}
+          onClose={() => setIsEditorOpen(false)}
+          onSaved={async () => {
+            setIsEditorOpen(false);
+            if (selectedPerson && editingPerson && selectedPerson.id === editingPerson.id) {
+              setSelectedPerson(null);
+            }
+            await fetchPeople();
+            if (refreshOverview) await refreshOverview();
+          }}
+          showToast={showToast}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        {deleteTarget && (
+          <ConfirmDialog
+            open={Boolean(deleteTarget)}
+            title={`Delete ${deleteTarget.role === 'farmer' ? 'Farmer & Stall' : 'Customer'} Account?`}
+            body={`Are you sure you want to permanently delete "${deleteTarget.stallName || deleteTarget.name}" (${deleteTarget.email})? This will revoke active sessions and delete all associated records.`}
+            confirmLabel="Delete Account"
+            variant="danger"
+            isLoading={deleting}
+            onConfirm={handleConfirmDelete}
+            onClose={() => setDeleteTarget(null)}
+          />
+        )}
 
         {/* Confirmation Dialog */}
         {dialogConfig && (

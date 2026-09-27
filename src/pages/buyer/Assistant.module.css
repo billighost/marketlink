@@ -252,8 +252,8 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-full);
-  background: var(--color-beet-tint);
-  color: var(--color-beet);
+  background: #ecfdf5;
+  color: #059669;
   flex-shrink: 0;
 }
 
@@ -279,19 +279,23 @@
   justify-content: center;
   height: var(--control-h-sm);
   padding-inline: var(--space-4);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  background: linear-gradient(135deg, #15803d 0%, #047857 100%);
+  color: #ffffff;
+  border: none;
   border-radius: var(--radius-md);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   text-decoration: none;
-  transition: background-color var(--duration-fast) var(--ease-standard);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(21, 128, 61, 0.2);
+  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
   align-self: flex-start;
 }
 
 .actionCardBtn:hover {
-  background: var(--color-primary-hover);
+  background: linear-gradient(135deg, #166534 0%, #065f46 100%);
+  box-shadow: 0 4px 10px rgba(21, 128, 61, 0.3);
 }
 
 /* Fallback card pill for orders or unresolvable entities */

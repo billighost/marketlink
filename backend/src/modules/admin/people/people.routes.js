@@ -13,6 +13,9 @@ import {
   reinstateFarmer,
   deactivateCustomer,
   activateCustomer,
+  createPerson,
+  updatePerson,
+  deletePerson,
 } from './people.service.js';
 import { defineRoutes } from '../../../utils/defineRoutes.js';
 
@@ -36,6 +39,48 @@ const routes = [
           data: combined,
           meta: { count: combined.length },
         });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'post',
+    path: '/people',
+    auth: 'admin',
+    summary: 'Create a new user account (farmer or customer)',
+    handler: async (req, res, next) => {
+      try {
+        const result = await createPerson(req.user, req.body);
+        res.status(201).json({ data: result });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'patch',
+    path: '/people/:id',
+    auth: 'admin',
+    summary: 'Update person details and linked stall profile',
+    handler: async (req, res, next) => {
+      try {
+        const result = await updatePerson(req.user, req.params.id, req.body);
+        res.json({ data: result });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+  {
+    method: 'delete',
+    path: '/people/:id',
+    auth: 'admin',
+    summary: 'Permanently delete user account and associated stall/products',
+    handler: async (req, res, next) => {
+      try {
+        const result = await deletePerson(req.user, req.params.id);
+        res.json({ data: result });
       } catch (err) {
         next(err);
       }

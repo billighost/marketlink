@@ -33,14 +33,23 @@ export function PickupBanner({ order }) {
         <p className={styles.description}>{description}</p>
       </div>
 
-      <Link
-        to={`/buyer/orders/${order.id}`}
-        className={styles.viewLink}
-        aria-label={`View order ${order.orderNumber || ''} details`}
-      >
-        <span>View order</span>
-        <ArrowRight size={16} aria-hidden="true" />
-      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+        <Link
+          to="/buyer/route"
+          className={styles.viewLink}
+          aria-label="View market pickup route"
+        >
+          <span>Market Route</span>
+        </Link>
+        <Link
+          to={`/buyer/orders/${order.id}`}
+          className={styles.viewLink}
+          aria-label={`View order ${order.orderNumber || ''} details`}
+        >
+          <span>View order</span>
+          <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      </div>
     </section>
   );
 }

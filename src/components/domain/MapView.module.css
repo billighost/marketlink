@@ -305,6 +305,47 @@
   height: 24px;
 }
 
+/* Market Route: Start pin (Green entrance) */
+:global(.marketlink-pin-badge.route-start) {
+  background-color: #2d6a4f;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(45, 106, 79, 0.45);
+}
+
+/* Market Route: Stop pin (Forest green with step number) */
+:global(.marketlink-pin-badge.route-stop) {
+  background-color: #1b4332;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(27, 67, 50, 0.45);
+}
+
+/* Market Route: Finish pin (Golden checkpoint) */
+:global(.marketlink-pin-badge.route-finish) {
+  background-color: #b08968;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(176, 137, 104, 0.45);
+}
+
+:global(.marketlink-pin-num) {
+  transform: rotate(45deg);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+:global(.marketlink-pin-text) {
+  transform: rotate(45deg);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
 /* Highlighted pin from Smart Basket: pulsing ring */
 :global(.marketlink-pin-badge.highlighted) {
   box-shadow: 0 0 0 4px rgba(122, 46, 59, 0.25);

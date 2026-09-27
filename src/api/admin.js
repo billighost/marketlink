@@ -57,6 +57,26 @@ export async function activateCustomer(id) {
   });
 }
 
+export async function createAdminPerson(data) {
+  return apiFetch('/admin/people', {
+    method: 'POST',
+    body: data,
+  });
+}
+
+export async function updateAdminPerson(id, data) {
+  return apiFetch(`/admin/people/${id}`, {
+    method: 'PATCH',
+    body: data,
+  });
+}
+
+export async function deleteAdminPerson(id) {
+  return apiFetch(`/admin/people/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 /**
  * Markets
  */
@@ -217,6 +237,12 @@ export async function handleAdminMessage(id, reply = '') {
   return apiFetch(`/admin/messages/${id}/handle`, {
     method: 'POST',
     body: { reply },
+  });
+}
+
+export async function deleteAdminMessage(id) {
+  return apiFetch(`/admin/messages/${id}`, {
+    method: 'DELETE',
   });
 }
 

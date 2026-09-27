@@ -143,6 +143,9 @@ export async function getFarmerOverview(farmerId) {
       .toArray(),
   ]);
 
+  // Compute best-selling products from real orders
+  const bestSellingData = await getFarmerBestSellingProducts(fId);
+
   // Compute pipeline counts
   const pipeline = {
     placed: 0,
@@ -245,6 +248,9 @@ export async function getFarmerOverview(farmerId) {
     nextMarket,
     stallName: farmer.stallName || 'My Stall',
     stallNumber: farmer.stallNumber || '',
+    bestSellingProducts: bestSellingData.topProducts,
+    bestSellingHeadline: bestSellingData.headline,
+    bestSellingDetails: bestSellingData,
     healthScore: Math.min(100, Math.round(
       (pipeline.completed / Math.max(1, pipeline.placed + pipeline.accepted + pipeline.ready + pipeline.completed + pipeline.cancelled)) * 100
     )),
@@ -254,5 +260,149 @@ export async function getFarmerOverview(farmerId) {
       const fulfilled = pipeline.completed;
       return Math.round((fulfilled / total) * 1000) / 10; // one decimal
     })(),
+  };
+}
+
+/**
+ * Computes best-selling products from real order data with rank medals and order share percentages.
+ *
+ * @param {string|ObjectId} farmerId
+ * @param {object} [options]
+ * @returns {Promise<object>}
+ */
+export async function getFarmerBestSellingProducts(farmerId, { now = new Date() } = {}) {
+  const db = getDb();
+  const fId = toObjectId(farmerId);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // 1. Fetch non-cancelled orders for this farmer in the current calendar month
+  let orders = await db
+    .collection(COLLECTIONS.ORDERS)
+    .find({
+      farmerId: fId,
+      createdAt: { $gte: startOfMonth },
+      status: { $nin: ['cancelled', 'declined'] },
+    })
+    .project({ items: 1, totalCents: 1, createdAt: 1 })
+    .toArray();
+
+  let period = 'this month';
+
+  // 2. If no orders this month yet, check last 30 days
+  if (orders.length === 0) {
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    orders = await db
+      .collection(COLLECTIONS.ORDERS)
+      .find({
+        farmerId: fId,
+        createdAt: { $gte: thirtyDaysAgo },
+        status: { $nin: ['cancelled', 'declined'] },
+      })
+      .project({ items: 1, totalCents: 1, createdAt: 1 })
+      .toArray();
+
+    if (orders.length > 0) {
+      period = 'in the last 30 days';
+    } else {
+      // 3. Fall back to all farmer orders
+      orders = await db
+        .collection(COLLECTIONS.ORDERS)
+        .find({
+          farmerId: fId,
+          status: { $nin: ['cancelled', 'declined'] },
+        })
+        .project({ items: 1, totalCents: 1, createdAt: 1 })
+        .toArray();
+      period = 'all-time';
+    }
+  }
+
+  const totalOrders = orders.length;
+  const productStats = new Map();
+
+  for (const ord of orders) {
+    const seenInOrder = new Set();
+    for (const item of (ord.items || [])) {
+      const key = item.productId ? item.productId.toString() : (item.name || 'item');
+      if (!productStats.has(key)) {
+        productStats.set(key, {
+          productId: item.productId ? item.productId.toString() : '',
+          name: item.name || 'Produce',
+          ordersCount: 0,
+          quantity: 0,
+          revenueCents: 0,
+          priceCents: item.priceCents || 0,
+          unit: item.unit || 'unit',
+        });
+      }
+      const stat = productStats.get(key);
+      stat.quantity += (item.quantity || 0);
+      stat.revenueCents += (item.lineTotalCents || (item.priceCents || 0) * (item.quantity || 0));
+      if (!seenInOrder.has(key)) {
+        stat.ordersCount += 1;
+        seenInOrder.add(key);
+      }
+    }
+  }
+
+  // Sort by order count descending, then by quantity sold
+  let ranked = Array.from(productStats.values()).sort((a, b) => {
+    if (b.ordersCount !== a.ordersCount) return b.ordersCount - a.ordersCount;
+    return b.quantity - a.quantity;
+  });
+
+  // If no order items found but farmer has catalog products, pull catalog products as fallback
+  if (ranked.length === 0) {
+    const catalogProds = await db
+      .collection(COLLECTIONS.PRODUCTS)
+      .find({ farmerId: fId, archived: { $ne: true } })
+      .sort({ salesCount: -1, quantityAvailable: -1 })
+      .limit(5)
+      .toArray();
+
+    ranked = catalogProds.map((p) => ({
+      productId: p._id.toString(),
+      name: p.name,
+      ordersCount: p.salesCount || 0,
+      quantity: p.salesCount || 0,
+      revenueCents: (p.salesCount || 0) * (p.priceCents || 0),
+      priceCents: p.priceCents,
+      unit: p.unit || 'unit',
+    }));
+  }
+
+  const medals = ['🥇', '🥈', '🥉'];
+  const topProducts = ranked.slice(0, 5).map((p, index) => {
+    const orderPercentage = totalOrders > 0
+      ? Math.round((p.ordersCount / totalOrders) * 100)
+      : (p.ordersCount > 0 ? 100 : 0);
+
+    return {
+      rank: index + 1,
+      medal: medals[index] || `#${index + 1}`,
+      name: p.name,
+      productId: p.productId,
+      quantity: p.quantity,
+      revenueCents: p.revenueCents,
+      ordersCount: p.ordersCount,
+      orderPercentage,
+      priceCents: p.priceCents,
+      unit: p.unit,
+    };
+  });
+
+  const topProduct = topProducts[0];
+  const headline = (topProduct && totalOrders > 0)
+    ? `${topProduct.name} generated ${topProduct.orderPercentage}% of your orders this month.`
+    : (topProduct && topProduct.ordersCount > 0)
+    ? `${topProduct.name} generated ${topProduct.orderPercentage}% of your orders.`
+    : 'No orders recorded yet this month.';
+
+  return {
+    title: 'Your Top Products',
+    period,
+    totalOrders,
+    topProducts,
+    headline,
   };
 }

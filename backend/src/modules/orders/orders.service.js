@@ -416,3 +416,244 @@ export async function getReorderPreview(orderId, customerId) {
 
   return { items };
 }
+
+/**
+ * Plans an optimal market pickup route for a customer across multiple stalls.
+ * Connects orders, farmers, and map coordinates into a unified walking route.
+ *
+ * @param {string|ObjectId} customerId
+ * @param {object} [options]
+ * @param {Date} [options.now=new Date()]
+ * @returns {Promise<object>}
+ */
+export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}) {
+  const db = getDb();
+  const cid = toObjectId(customerId);
+
+  // Load customer's active orders
+  const activeOrders = await db
+    .collection(COLLECTIONS.ORDERS)
+    .find({
+      customerId: cid,
+      status: { $in: ['placed', 'accepted', 'ready'] },
+    })
+    .sort({ createdAt: -1 })
+    .toArray();
+
+  const demoStops = [
+    {
+      step: 1,
+      id: 'demo-green-valley',
+      stallName: 'Green Valley',
+      stallNumber: 'Stall A12',
+      farmerId: 'demo-farmer-1',
+      orderNumber: 'ML-1042',
+      pickupCode: 'ML-4819',
+      status: 'ready',
+      statusLabel: 'Ready for pickup',
+      category: 'Organic Vegetables & Eggs',
+      items: [
+        { name: 'Heritage Tomatoes', quantity: 2, unit: 'kg', priceCents: 900, art: 'tomatoes' },
+        { name: 'Free-Range Eggs', quantity: 1, unit: 'doz', priceCents: 450, art: 'egg-carton' },
+      ],
+      itemCount: 3,
+      totalCents: 1350,
+      pickupLabel: 'Saturday 8:00 AM – 1:00 PM',
+      lat: 51.4542,
+      lng: -2.5884,
+      collected: false,
+    },
+    {
+      step: 2,
+      id: 'demo-mama-grace',
+      stallName: 'Mama Grace',
+      stallNumber: 'Stall B05',
+      farmerId: 'demo-farmer-2',
+      orderNumber: 'ML-1043',
+      pickupCode: 'ML-9124',
+      status: 'ready',
+      statusLabel: 'Ready for pickup',
+      category: 'Roots & Local Greens',
+      items: [
+        { name: 'Sweet Potatoes', quantity: 3, unit: 'kg', priceCents: 1200, art: 'potatoes' },
+        { name: 'Fresh Spinach', quantity: 2, unit: 'bunch', priceCents: 500, art: 'spinach' },
+      ],
+      itemCount: 5,
+      totalCents: 1700,
+      pickupLabel: 'Saturday 8:00 AM – 1:00 PM',
+      lat: 51.4546,
+      lng: -2.5878,
+      collected: false,
+    },
+    {
+      step: 3,
+      id: 'demo-fresh-harvest',
+      stallName: 'Fresh Harvest',
+      stallNumber: 'Stall C08',
+      farmerId: 'demo-farmer-3',
+      orderNumber: 'ML-1044',
+      pickupCode: 'ML-3371',
+      status: 'accepted',
+      statusLabel: 'Being packed',
+      category: 'Berries & Orchard Fruits',
+      items: [
+        { name: 'Organic Strawberries', quantity: 1, unit: 'punnet', priceCents: 650, art: 'strawberries' },
+      ],
+      itemCount: 1,
+      totalCents: 650,
+      pickupLabel: 'Saturday 8:00 AM – 1:00 PM',
+      lat: 51.4550,
+      lng: -2.5871,
+      collected: false,
+    },
+  ];
+
+  const demoMarket = {
+    name: 'Bodija Market',
+    address: 'Bodija Market Pavilion, Ibadan',
+    entranceLabel: 'Main West Gate',
+    exitLabel: 'North Gate & Parking',
+    centerLat: 51.4545,
+    centerLng: -2.5879,
+    startPoint: { lat: 51.4538, lng: -2.5890, label: 'START — Main Entrance' },
+    finishPoint: { lat: 51.4554, lng: -2.5866, label: 'FINISH — Market Exit' },
+  };
+
+  // If no active orders, return demo route with hasRealOrders: false
+  if (!activeOrders || activeOrders.length === 0) {
+    return {
+      hasRealOrders: false,
+      routeTitle: 'Your Saturday Market Route',
+      dayName: 'Saturday',
+      market: demoMarket,
+      stops: demoStops,
+      summary: {
+        totalStops: 3,
+        totalItems: 9,
+        estimatedWalkMinutes: 4,
+        totalCents: 3700,
+      },
+      demoStops,
+    };
+  }
+
+  // Otherwise, group real active orders into a cohesive walking route
+  const farmerIds = [...new Set(activeOrders.map((o) => o.farmerId).filter(Boolean))];
+  const marketIds = [...new Set(activeOrders.map((o) => o.marketId).filter(Boolean))];
+
+  const [farmersList, marketsList] = await Promise.all([
+    db.collection(COLLECTIONS.FARMERS).find({ _id: { $in: farmerIds.map(toObjectId) } }).toArray(),
+    db.collection(COLLECTIONS.MARKETS).find({ _id: { $in: marketIds.map(toObjectId) } }).toArray(),
+  ]);
+
+  const farmerMap = new Map(farmersList.map((f) => [f._id.toString(), f]));
+  const marketMap = new Map(marketsList.map((m) => [m._id.toString(), m]));
+
+  const primaryMarket = marketsList[0] || null;
+  const primaryMarketName = primaryMarket?.name || 'Local Market';
+  const primaryMarketAddress = primaryMarket?.address || '';
+  const mCoords = primaryMarket?.location?.coordinates || [-2.5879, 51.4545];
+  const centerLng = typeof mCoords[0] === 'number' ? mCoords[0] : -2.5879;
+  const centerLat = typeof mCoords[1] === 'number' ? mCoords[1] : 51.4545;
+
+  // Determine pickup day name (e.g. Saturday)
+  let dayName = 'Saturday';
+  const firstPickupDate = activeOrders[0]?.pickup?.start || activeOrders[0]?.createdAt;
+  if (firstPickupDate) {
+    try {
+      const d = new Date(firstPickupDate);
+      if (!isNaN(d.getTime())) {
+        dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+      }
+    } catch {}
+  }
+
+  // Sort orders by stallNumber to simulate a natural market aisle walking flow
+  const sortedOrders = [...activeOrders].sort((a, b) => {
+    const stallA = (a.pickup?.stallNumber || '').toLowerCase();
+    const stallB = (b.pickup?.stallNumber || '').toLowerCase();
+    return stallA.localeCompare(stallB);
+  });
+
+  const stops = sortedOrders.map((order, idx) => {
+    const f = farmerMap.get(order.farmerId?.toString()) || {};
+    const stallNum = order.pickup?.stallNumber || f.stallNumber || `Stall ${String.fromCharCode(65 + (idx % 26))}${((idx + 1) * 3) % 20 + 1}`;
+    const name = order.farmerName || f.stallName || 'Farm Stall';
+
+    // Disperse stalls naturally in an arc/corridor from entrance to exit
+    const spreadFraction = sortedOrders.length > 1 ? (idx + 1) / (sortedOrders.length + 1) : 0.5;
+    const latOffset = (spreadFraction - 0.5) * 0.0016;
+    const lngOffset = Math.sin(spreadFraction * Math.PI) * 0.0012 * (idx % 2 === 0 ? 1 : -1);
+
+    const lat = centerLat + latOffset;
+    const lng = centerLng + lngOffset;
+
+    const items = (order.items || []).map((it) => ({
+      name: it.name,
+      quantity: it.quantity,
+      unit: it.unit || 'unit',
+      priceCents: it.priceCents || 0,
+      art: it.art || 'carrot',
+    }));
+
+    const itemCount = items.reduce((sum, it) => sum + (it.quantity || 1), 0);
+
+    return {
+      step: idx + 1,
+      id: order._id.toString(),
+      orderId: order._id.toString(),
+      stallName: name,
+      stallNumber: stallNum.startsWith('Stall') ? stallNum : `Stall ${stallNum}`,
+      farmerId: f._id ? f._id.toString() : (order.farmerId?.toString() || ''),
+      orderNumber: order.orderNumber || `ML-${1000 + idx}`,
+      pickupCode: order.pickupCode || 'ML-4819',
+      status: order.status,
+      statusLabel: order.status === 'ready' ? 'Ready for pickup' : order.status === 'accepted' ? 'Being packed' : 'Order placed',
+      category: f.specialty || 'Fresh Produce',
+      items,
+      itemCount,
+      totalCents: order.totalCents || 0,
+      pickupLabel: order.pickup?.label || `${dayName} Market Pickup`,
+      lat: parseFloat(lat.toFixed(6)),
+      lng: parseFloat(lng.toFixed(6)),
+      phone: f.phone || '',
+      collected: false,
+    };
+  });
+
+  const totalItems = stops.reduce((sum, s) => sum + s.itemCount, 0);
+  const totalCents = stops.reduce((sum, s) => sum + s.totalCents, 0);
+
+  return {
+    hasRealOrders: true,
+    routeTitle: `Your ${dayName} Market Route`,
+    dayName,
+    market: {
+      id: primaryMarket?._id ? primaryMarket._id.toString() : '',
+      name: primaryMarketName,
+      address: primaryMarketAddress,
+      entranceLabel: 'Main Entrance',
+      exitLabel: 'Market Exit',
+      centerLat,
+      centerLng,
+      startPoint: {
+        lat: parseFloat((centerLat - 0.0010).toFixed(6)),
+        lng: parseFloat((centerLng - 0.0008).toFixed(6)),
+        label: 'START — Main Market Entrance',
+      },
+      finishPoint: {
+        lat: parseFloat((centerLat + 0.0010).toFixed(6)),
+        lng: parseFloat((centerLng + 0.0008).toFixed(6)),
+        label: 'FINISH — Collection Complete',
+      },
+    },
+    stops,
+    summary: {
+      totalStops: stops.length,
+      totalItems,
+      estimatedWalkMinutes: Math.max(3, stops.length * 2),
+      totalCents,
+    },
+    demoStops,
+  };
+}

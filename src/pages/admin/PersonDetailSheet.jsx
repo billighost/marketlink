@@ -13,6 +13,8 @@ export function PersonDetailSheet({
   onReinstateFarmer,
   onDeactivateCustomer,
   onActivateCustomer,
+  onEditPerson,
+  onDeletePerson,
 }) {
   const initial = (
     selectedPerson?.stallName ||
@@ -121,6 +123,16 @@ export function PersonDetailSheet({
 
           {/* Action Buttons */}
           <div className={styles.detailActions}>
+            {onEditPerson && (
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={() => onEditPerson(selectedPerson)}
+              >
+                Edit Account Details
+              </button>
+            )}
+
             {isFarmer ? (
               <>
                 {selectedPerson.status === 'pending' && (
@@ -180,6 +192,17 @@ export function PersonDetailSheet({
                   </button>
                 )}
               </>
+            )}
+
+            {onDeletePerson && (
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                style={{ marginLeft: 'auto' }}
+                onClick={() => onDeletePerson(selectedPerson)}
+              >
+                Delete Account
+              </button>
             )}
           </div>
         </div>

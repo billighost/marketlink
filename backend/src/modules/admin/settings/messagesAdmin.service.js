@@ -90,3 +90,29 @@ export async function handleContactMessage(adminActor, messageId, replyText) {
   const updated = await db.collection(COLLECTIONS.CONTACT_MESSAGES).findOne({ _id: mid });
   return toMessageDto(updated);
 }
+
+export async function deleteContactMessage(adminActor, messageId) {
+  if (!messageId || !ObjectId.isValid(messageId)) {
+    throw AppError.notFound('Message not found');
+  }
+
+  const db = getDb();
+  const mid = toObjectId(messageId);
+
+  const msg = await db.collection(COLLECTIONS.CONTACT_MESSAGES).findOne({ _id: mid });
+  if (!msg) {
+    throw AppError.notFound('Message not found');
+  }
+
+  await db.collection(COLLECTIONS.CONTACT_MESSAGES).deleteOne({ _id: mid });
+
+  await writeAudit(
+    adminActor,
+    'message.delete',
+    { type: 'contactMessage', id: mid },
+    { topic: msg.topic, email: msg.email }
+  );
+
+  return { success: true, id: messageId };
+}
+

@@ -187,3 +187,25 @@
   border-radius: var(--radius-sm);
   border: var(--border);
 }
+
+.deleteBtn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-ink-muted);
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+  margin-left: var(--space-1);
+}
+
+.deleteBtn:hover {
+  background-color: var(--color-danger-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+

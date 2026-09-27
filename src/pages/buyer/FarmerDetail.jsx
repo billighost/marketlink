@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Check, Heart, CalendarOff } from 'lucide-react';
+import { ArrowLeft, Check, Heart, CalendarOff, Clock, MapPin, AlertCircle } from 'lucide-react';
 import {
   getFarmerDetail,
   getFarmerProducts,
@@ -249,6 +249,83 @@ export function FarmerDetail() {
     });
   }, [allProducts, selectedCategory]);
 
+  // In-stock products count
+  const inStockCount = useMemo(() => {
+    return allProducts.filter((p) => p.availability !== 'out' && p.inventory !== 0).length;
+  }, [allProducts]);
+
+  // Next opening day text
+  const nextDayName = useMemo(() => {
+    if (todayIndex != null && operatingDays.length > 0) {
+      for (let offset = 1; offset <= 7; offset += 1) {
+        const checkDay = (todayIndex + offset) % 7;
+        if (operatingDays.includes(checkDay)) {
+          return DAY_NAMES[checkDay];
+        }
+      }
+    }
+    return operatingDays.length > 0 ? DAY_NAMES[operatingDays[0]] : 'next market day';
+  }, [todayIndex, operatingDays]);
+
+  // MarketLink Availability Mode: 🟢 OPEN TODAY | 🟡 LIMITED AVAILABILITY | 🔴 CLOSED TODAY
+  const effectiveAvailability = useMemo(() => {
+    const rawMode = farmer?.availabilityMode || farmer?.availabilityStatus?.mode;
+    let mode = rawMode;
+
+    if (!mode || mode === 'auto') {
+      if (
+        farmer?.acceptingOrders === false ||
+        farmer?.status === 'paused' ||
+        farmer?.listingEnabled === false ||
+        openState.type === 'not-here'
+      ) {
+        mode = 'closed';
+      } else if (inStockCount > 0 && inStockCount <= 6) {
+        mode = 'limited';
+      } else if (openState.type === 'open' || openState.type === 'here' || farmer?.openToday) {
+        mode = 'open';
+      } else {
+        mode = 'closed';
+      }
+    }
+
+    let badge = '🟢 OPEN TODAY';
+    let tag = 'Accepting Orders';
+    let note = farmer?.availabilityNote || farmer?.availabilityStatus?.note || null;
+
+    if (mode === 'limited') {
+      badge = '🟡 LIMITED AVAILABILITY';
+      tag = 'Low Stock';
+      if (!note) {
+        note = `Only ${inStockCount || 6} products currently available.`;
+      }
+    } else if (mode === 'closed') {
+      badge = '🔴 CLOSED TODAY';
+      tag = 'Not Taking Orders';
+      if (!note) {
+        note = 'Customers cannot shop from this farmer today.';
+      }
+    }
+
+    return {
+      mode,
+      badge,
+      tag,
+      note,
+    };
+  }, [farmer, openState, inStockCount]);
+
+  // Operating Hours display string
+  const hoursString = useMemo(() => {
+    if (marketClock?.todayWindow?.opensAt && marketClock?.todayWindow?.closesAt) {
+      return `${marketClock.todayWindow.opensAt} – ${marketClock.todayWindow.closesAt}`;
+    }
+    if (farmer?.pickupWindows?.[0]?.startsAt && farmer?.pickupWindows?.[0]?.endsAt) {
+      return `${farmer.pickupWindows[0].startsAt} – ${farmer.pickupWindows[0].endsAt}`;
+    }
+    return '8:00 AM – 3:00 PM';
+  }, [marketClock, farmer]);
+
   // Reviews
   const reviews = useMemo(() => {
     const list = Array.isArray(reviewsData) ? reviewsData : reviewsData?.data || [];
@@ -365,30 +442,61 @@ export function FarmerDetail() {
           </Link>
         </div>
 
-        {/* Farmer unavailable state */}
-        {isUnavailable && (
-          <div className={styles.unavailableBanner} role="status">
-            <div className={styles.unavailableIconWrap} aria-hidden="true">
-              <CalendarOff size={22} />
+        {/* ─── MarketLink Availability Mode Card ─── */}
+        <section
+          className={`${styles.availabilityModeCard} ${
+            effectiveAvailability.mode === 'open'
+              ? styles.availCardOpen
+              : effectiveAvailability.mode === 'limited'
+              ? styles.availCardLimited
+              : styles.availCardClosed
+          }`}
+          role="status"
+          aria-label={`Stall availability: ${effectiveAvailability.badge}`}
+        >
+          <div className={styles.availHeaderRow}>
+            <div className={styles.availStatusBadge}>
+              <span className={styles.availPulseDot} aria-hidden="true" />
+              <span className={styles.availBadgeText}>{effectiveAvailability.badge}</span>
             </div>
-            <div className={styles.unavailableBody}>
-              <h3 className={styles.unavailableTitle}>Stall taking a seasonal break</h3>
-              <p className={styles.unavailableText}>
-                {farmer.stallName || 'This producer'} is currently taking a seasonal break and not accepting pre-orders. You can explore other active growers at this market.
-              </p>
-              <div className={styles.unavailableActions}>
-                <Link to="/buyer/farmers" className={styles.unavailableActionBtn}>
-                  Browse active growers
-                </Link>
-                {marketId && (
-                  <Link to={`/buyer/markets/${marketId}`} className={styles.unavailableActionBtnOutline}>
-                    View attending stalls at this market
-                  </Link>
-                )}
-              </div>
-            </div>
+            <span className={styles.availModeTag}>{effectiveAvailability.tag}</span>
           </div>
-        )}
+
+          <div className={styles.availBody}>
+            <div className={styles.availMetaMain}>
+              <h2 className={styles.availFarmName}>{farmer.stallName}</h2>
+              <div className={styles.availLocationRow}>
+                <MapPin size={15} aria-hidden="true" />
+                <span>{marketName}</span>
+              </div>
+              {effectiveAvailability.mode === 'open' && (
+                <div className={styles.availHoursRow}>
+                  <Clock size={15} aria-hidden="true" />
+                  <span>{hoursString}</span>
+                </div>
+              )}
+            </div>
+
+            {effectiveAvailability.mode === 'limited' && (
+              <div className={styles.availCalloutBox}>
+                <AlertCircle size={16} aria-hidden="true" />
+                <p className={styles.availCalloutText}>
+                  {effectiveAvailability.note || `Only ${inStockCount || 6} products currently available.`}
+                </p>
+              </div>
+            )}
+
+            {effectiveAvailability.mode === 'closed' && (
+              <div className={styles.availClosedCalloutBox}>
+                <CalendarOff size={16} aria-hidden="true" />
+                <p className={styles.availCalloutText}>
+                  {effectiveAvailability.note || 'Customers cannot shop from this farmer today.'}
+                  {nextDayName && ` · Next trading schedule on ${nextDayName}`}
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
 
         <div className={styles.layout}>
           {/* 1. Identity */}

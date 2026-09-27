@@ -297,3 +297,139 @@
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
 }
+
+/* Person Editor Form Styles */
+.editorForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-bottom: var(--space-4);
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionHeaderTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+  margin: 0;
+  padding-top: var(--space-2);
+}
+
+.roleToggleGroup {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.roleToggleBtn {
+  flex: 1;
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-white);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.roleToggleBtn:hover:not(:disabled) {
+  border-color: var(--color-ink-muted);
+  background-color: var(--color-canvas-soft);
+}
+
+.roleToggleBtnActive {
+  background-color: var(--color-moss-light, #e8f5e9);
+  border-color: var(--color-moss, #2e7d32);
+  color: var(--color-moss-dark, #1b5e20);
+  font-weight: var(--weight-semibold);
+}
+
+.roleToggleBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formInput,
+.formSelect {
+  width: 100%;
+  height: var(--control-h-md, 2.5rem);
+  padding: 0 var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.formInput:focus,
+.formSelect:focus {
+  border-color: var(--color-beet);
+}
+
+.formInput:disabled,
+.formSelect:disabled {
+  background-color: var(--color-canvas-soft);
+  cursor: not-allowed;
+}
+
+.toggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background-color: var(--color-canvas-soft);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.toggleLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  display: block;
+}
+
+.toggleSublabel {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  display: block;
+  margin-top: calc(2 * 1px);
+}
+
+.formFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-2);
+}

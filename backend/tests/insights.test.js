@@ -138,5 +138,27 @@ describe('Farmer Insights and Overview Suite (T4.141 - T4.160)', () => {
     assert.ok(typeof data.ratingCount === 'number');
     assert.ok(Array.isArray(data.recentOrders));
     assert.ok(Array.isArray(data.recentReviews));
+    assert.ok(Array.isArray(data.bestSellingProducts));
+    assert.ok(typeof data.bestSellingHeadline === 'string');
+  });
+
+  it('T4.144: GET /api/farmer/best-sellers returns top products and dynamic headline calculated from real data', async () => {
+    const res = await request('/api/farmer/best-sellers', {
+      headers: { Authorization: `Bearer ${farmerToken}` },
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    const data = body.data;
+
+    assert.equal(data.title, 'Your Top Products');
+    assert.ok(typeof data.headline === 'string');
+    assert.ok(typeof data.totalOrders === 'number');
+    assert.ok(Array.isArray(data.topProducts));
+    if (data.topProducts.length > 0) {
+      assert.equal(data.topProducts[0].rank, 1);
+      assert.equal(data.topProducts[0].medal, '🥇');
+      assert.ok(typeof data.topProducts[0].orderPercentage === 'number');
+      assert.ok(data.headline.includes(data.topProducts[0].name) || data.headline.includes('generated'));
+    }
   });
 });

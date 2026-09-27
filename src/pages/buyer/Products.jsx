@@ -409,6 +409,7 @@ export function Products() {
               {currentMarketName ? ` at ${currentMarketName}` : ''}
             </p>
           </div>
+
           <button
             type="button"
             className={styles.smartBasketHeaderBtn}

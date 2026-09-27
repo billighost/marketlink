@@ -82,6 +82,9 @@ export function MyStall() {
   const [cutoffHours, setCutoffHours] = useState(2);
   const [maxOrdersPerSlot, setMaxOrdersPerSlot] = useState(20);
   const [acceptingOrders, setAcceptingOrders] = useState(true);
+  const [availabilityMode, setAvailabilityMode] = useState('open');
+  const [availabilityNote, setAvailabilityNote] = useState('');
+  const [editingNote, setEditingNote] = useState(false);
 
   // Closed dates state
   const [slotOverrides, setSlotOverrides] = useState([]);
@@ -139,6 +142,8 @@ export function MyStall() {
         setCutoffHours(p.cutoffMinutesBefore ? Math.round(p.cutoffMinutesBefore / 60) : 2);
         setMaxOrdersPerSlot(p.maxOrdersPerSlot ?? 20);
         setAcceptingOrders(p.acceptingOrders !== false);
+        setAvailabilityMode(p.availabilityMode || (p.acceptingOrders !== false ? 'open' : 'closed'));
+        setAvailabilityNote(p.availabilityNote || '');
         setSlotOverrides(p.slotOverrides || []);
         setAddress(p.address || '');
         if (p.location?.coordinates && p.location.coordinates.length === 2) {
@@ -158,25 +163,42 @@ export function MyStall() {
 
   const [togglingAvailability, setTogglingAvailability] = useState(false);
 
-  const handleToggleAcceptingOrders = async () => {
-    const nextVal = !acceptingOrders;
+  const handleSetAvailabilityMode = async (newMode, customNote = null) => {
     setTogglingAvailability(true);
     try {
-      await updateFarmerProfile({ acceptingOrders: nextVal });
-      setAcceptingOrders(nextVal);
+      const payload = {
+        availabilityMode: newMode,
+        acceptingOrders: newMode !== 'closed',
+      };
+      if (customNote !== null) {
+        payload.availabilityNote = customNote;
+      }
+      await updateFarmerProfile(payload);
+      setAvailabilityMode(newMode);
+      setAcceptingOrders(newMode !== 'closed');
+      if (customNote !== null) {
+        setAvailabilityNote(customNote);
+      }
       setToastMessage(
-        nextVal
-          ? 'Stall is active! Accepting pre-orders & live in Smart Basket.'
-          : 'Stall set to Seasonal Break. Not taking pre-orders right now.'
+        newMode === 'open'
+          ? 'Availability set to 🟢 OPEN TODAY!'
+          : newMode === 'limited'
+          ? 'Availability set to 🟡 LIMITED AVAILABILITY!'
+          : 'Availability set to 🔴 CLOSED TODAY.'
       );
       setToastType('success');
       refreshProfile();
     } catch (err) {
-      setToastMessage(err?.message || 'Failed to update stall availability.');
+      setToastMessage(err?.message || 'Failed to update availability mode.');
       setToastType('error');
     } finally {
       setTogglingAvailability(false);
     }
+  };
+
+  const handleToggleAcceptingOrders = async () => {
+    const nextVal = !acceptingOrders;
+    await handleSetAvailabilityMode(nextVal ? 'open' : 'closed');
   };
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -795,47 +817,177 @@ export function MyStall() {
 
       {/* Bento Grid Configuration Hub */}
       <section className={styles.bentoGrid} aria-label="Stall configuration sections">
-        {/* Card 0: Market Availability & Pre-order Intake Toggle */}
-        <article className={styles.bentoCard} style={{ gridColumn: '1 / -1', background: acceptingOrders ? 'linear-gradient(135deg, rgba(43, 138, 62, 0.04), rgba(84, 23, 34, 0.03))' : 'linear-gradient(135deg, rgba(224, 109, 40, 0.06), rgba(84, 23, 34, 0.04))' }}>
-          <div className={styles.cardHeader}>
+        {/* Card 0: MarketLink Availability Mode */}
+        <article
+          className={styles.bentoCard}
+          style={{
+            gridColumn: '1 / -1',
+            background:
+              availabilityMode === 'open'
+                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(5, 150, 105, 0.03))'
+                : availabilityMode === 'limited'
+                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.04))'
+                : 'linear-gradient(135deg, rgba(239, 68, 68, 0.06), rgba(84, 23, 34, 0.04))',
+            borderColor:
+              availabilityMode === 'open'
+                ? 'rgba(16, 185, 129, 0.3)'
+                : availabilityMode === 'limited'
+                ? 'rgba(245, 158, 11, 0.35)'
+                : 'rgba(239, 68, 68, 0.25)',
+          }}
+        >
+          <div className={styles.cardHeader} style={{ flexWrap: 'wrap', gap: '12px' }}>
             <div className={styles.cardTitleWrap}>
-              <span className={styles.cardIcon} style={{ background: acceptingOrders ? 'rgba(43, 138, 62, 0.1)' : 'rgba(224, 109, 40, 0.1)', color: acceptingOrders ? '#2b8a3e' : '#e06d28' }}>
+              <span
+                className={styles.cardIcon}
+                style={{
+                  background:
+                    availabilityMode === 'open'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : availabilityMode === 'limited'
+                      ? 'rgba(245, 158, 11, 0.15)'
+                      : 'rgba(239, 68, 68, 0.15)',
+                  color:
+                    availabilityMode === 'open'
+                      ? '#059669'
+                      : availabilityMode === 'limited'
+                      ? '#d97706'
+                      : '#dc2626',
+                }}
+              >
                 <Store size={18} />
               </span>
               <div>
-                <h3 className={styles.cardTitle}>Market Availability & Order Intake</h3>
-                <span style={{ fontSize: 'var(--text-xs)', color: acceptingOrders ? '#2b8a3e' : '#e06d28', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: acceptingOrders ? '#2b8a3e' : '#e06d28', display: 'inline-block' }} />
-                  {acceptingOrders ? 'Taking Pre-Orders · Active in Catalog & Smart Basket' : 'Seasonal Break · Pre-Orders Paused'}
+                <h3 className={styles.cardTitle}>MarketLink Availability Mode</h3>
+                <span
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    color:
+                      availabilityMode === 'open'
+                        ? '#059669'
+                        : availabilityMode === 'limited'
+                        ? '#d97706'
+                        : '#dc2626',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    marginTop: '2px',
+                  }}
+                >
+                  {availabilityMode === 'open' && '🟢 OPEN TODAY · Accepting all orders'}
+                  {availabilityMode === 'limited' && '🟡 LIMITED AVAILABILITY · Low inventory alert'}
+                  {availabilityMode === 'closed' && '🔴 CLOSED TODAY · Not taking orders'}
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              className={styles.cardActionBtn}
-              onClick={handleToggleAcceptingOrders}
-              disabled={togglingAvailability}
-              style={{
-                background: acceptingOrders ? 'rgba(84, 23, 34, 0.08)' : 'var(--color-primary)',
-                color: acceptingOrders ? 'var(--color-primary)' : '#fff',
-                borderColor: 'transparent',
-                fontWeight: 700,
-                padding: 'var(--space-2) var(--space-4)',
-              }}
-            >
-              {togglingAvailability
-                ? 'Updating...'
-                : acceptingOrders
-                ? 'Pause Taking Orders'
-                : 'Resume Taking Orders'}
-            </button>
+
+            {/* Quick 3-Mode Segmented Buttons */}
+            <div style={{ display: 'inline-flex', gap: '6px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => handleSetAvailabilityMode('open')}
+                disabled={togglingAvailability}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-lg)',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: availabilityMode === 'open' ? '2px solid #059669' : '1px solid #d1d5db',
+                  background: availabilityMode === 'open' ? '#059669' : '#fff',
+                  color: availabilityMode === 'open' ? '#fff' : '#374151',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                🟢 Open Today
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleSetAvailabilityMode('limited', availabilityNote || 'Only 6 products currently available.');
+                  setEditingNote(true);
+                }}
+                disabled={togglingAvailability}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-lg)',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: availabilityMode === 'limited' ? '2px solid #d97706' : '1px solid #d1d5db',
+                  background: availabilityMode === 'limited' ? '#d97706' : '#fff',
+                  color: availabilityMode === 'limited' ? '#fff' : '#374151',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                🟡 Limited Availability
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetAvailabilityMode('closed')}
+                disabled={togglingAvailability}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-lg)',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: availabilityMode === 'closed' ? '2px solid #dc2626' : '1px solid #d1d5db',
+                  background: availabilityMode === 'closed' ? '#dc2626' : '#fff',
+                  color: availabilityMode === 'closed' ? '#fff' : '#374151',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                🔴 Closed Today
+              </button>
+            </div>
           </div>
+
           <div className={styles.cardContent} style={{ paddingTop: 'var(--space-2)' }}>
             <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--color-ink-soft)', lineHeight: 1.5 }}>
-              {acceptingOrders
-                ? 'Your stall is currently open and accepting customer pre-orders. Items in stock are automatically eligible for customer Smart Baskets.'
-                : 'Your stall is on a seasonal break or temporary pause. Buyers will see a friendly break notice, and your produce is paused from Smart Basket generation until you reopen.'}
+              {availabilityMode === 'open' &&
+                'Your stall is shown as 🟢 OPEN TODAY on customer stall pages with your market name and opening hours (8:00 AM – 3:00 PM).'}
+              {availabilityMode === 'limited' &&
+                (availabilityNote || 'Your stall is shown as 🟡 LIMITED AVAILABILITY ("Only 6 products currently available").')}
+              {availabilityMode === 'closed' &&
+                'Your stall is shown as 🔴 CLOSED TODAY. Customers immediately see that you are closed today and when your next market day is.'}
             </p>
+
+            {availabilityMode === 'limited' && (
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  value={availabilityNote}
+                  placeholder="e.g. Only 6 products currently available."
+                  onChange={(e) => setAvailabilityNote(e.target.value)}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #f59e0b',
+                    flex: '1',
+                    maxWidth: '360px',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleSetAvailabilityMode('limited', availabilityNote)}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    background: '#d97706',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Save Note
+                </button>
+              </div>
+            )}
           </div>
         </article>
 

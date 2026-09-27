@@ -10,6 +10,7 @@ import { COLLECTIONS } from '../../db/collections.js';
 import { toObjectId } from '../../utils/ids.js';
 import { AppError } from '../../utils/errors.js';
 import { encodeCursor, decodeCursor, buildKeysetPredicate } from '../../utils/cursor.js';
+import { ensureMarketReminder } from './marketReminder.service.js';
 
 /**
  * Lists notifications for a user with cursor pagination and unread counts.
@@ -36,6 +37,11 @@ export async function listNotifications(userId, { cursor, limit = 20, unread } =
     const { predicate } = buildKeysetPredicate('createdAt', 'desc', decoded.k[0], decoded.id);
     filter.$and = [predicate];
   }
+
+  // Ensure user has market opening reminder if scheduled
+  try {
+    await ensureMarketReminder(uid, db);
+  } catch {}
 
   // Parallel fetch: notification items and indexed unread count
   const [docs, unreadCount] = await Promise.all([
@@ -66,6 +72,7 @@ export async function listNotifications(userId, { cursor, limit = 20, unread } =
     type: d.type,
     title: d.title,
     body: d.body,
+    message: d.body || d.message || '',
     data: d.data || {},
     readAt: d.readAt instanceof Date ? d.readAt.toISOString() : (d.readAt || null),
     createdAt: d.createdAt instanceof Date ? d.createdAt.toISOString() : d.createdAt,

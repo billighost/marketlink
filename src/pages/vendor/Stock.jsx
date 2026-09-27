@@ -5,6 +5,8 @@ import {
   setFarmerProductSoldOut,
   setFarmerProductAvailable,
   updateFarmerProduct,
+  deleteFarmerProduct,
+  createFarmerProduct,
   applyWeeklyTemplate,
 } from '@/api/farmer';
 import { useVendor } from '@/layouts/VendorLayout';
@@ -39,6 +41,9 @@ import {
   DollarSign,
   AlertTriangle,
   Flame,
+  Trash2,
+  Edit3,
+  Copy,
 } from 'lucide-react';
 import styles from './Stock.module.css';
 
@@ -78,6 +83,9 @@ export function Stock() {
   // Toast feedback
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+
+  // Deletion confirm state
+  const [deleteTargetProduct, setDeleteTargetProduct] = useState(null);
 
   // Handle URL query parameters for direct open
   useEffect(() => {
@@ -282,6 +290,52 @@ export function Stock() {
     setEditingProductId(null);
     if (searchParams.get('action') || searchParams.get('edit')) {
       setSearchParams({}, { replace: true });
+    }
+  };
+
+  // Direct Delete handler
+  const handleConfirmDeleteProduct = async () => {
+    if (!deleteTargetProduct) return;
+    try {
+      await deleteFarmerProduct(deleteTargetProduct.id);
+      setToastMessage(`"${deleteTargetProduct.name}" deleted from catalog.`);
+      setToastType('success');
+      setDeleteTargetProduct(null);
+      fetchProducts();
+      refreshCounts();
+    } catch (err) {
+      setToastMessage(`Failed to delete product: ${err?.message}`);
+      setToastType('error');
+    }
+  };
+
+  // 1-Click Duplicate/Clone Produce
+  const handleDuplicateProduct = async (product) => {
+    try {
+      const catId = typeof product.category === 'object' ? (product.category?.id || product.category?._id) : (product.categoryId || product.category);
+      const newProductData = {
+        name: `${product.name} (Copy)`,
+        categoryId: catId,
+        priceCents: product.priceCents,
+        unit: product.unit || 'each',
+        quantity: product.quantity || 0,
+        quantityAvailable: product.quantity || 0,
+        lowStockThreshold: product.lowStockThreshold ?? 3,
+        description: product.description || '',
+        tags: product.tags || [],
+        art: product.art || 'basket',
+        imageUrl: product.imageUrl || null,
+        imagePublicId: product.imagePublicId || null,
+        weekly: product.weekly || { enabled: false, defaultQty: 0 },
+      };
+      await createFarmerProduct(newProductData);
+      setToastMessage(`Created copy of "${product.name}".`);
+      setToastType('success');
+      fetchProducts();
+      refreshCounts();
+    } catch (err) {
+      setToastMessage(`Failed to clone product: ${err?.message}`);
+      setToastType('error');
     }
   };
 
@@ -653,6 +707,50 @@ export function Stock() {
                         label={`Mark ${p.name} sold out`}
                       />
                     </div>
+
+                    {/* Direct CRUD Actions */}
+                    <div className={styles.cardActionRow}>
+                      <button
+                        type="button"
+                        className={styles.cardActionBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingProductId(p.id);
+                          setSheetMode('edit');
+                        }}
+                        title="Edit produce details"
+                        aria-label={`Edit ${p.name}`}
+                      >
+                        <Edit3 size={12} aria-hidden="true" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.cardActionBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDuplicateProduct(p);
+                        }}
+                        title="Clone produce to create a new variation"
+                        aria-label={`Duplicate ${p.name}`}
+                      >
+                        <Copy size={12} aria-hidden="true" />
+                        <span>Clone</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.cardActionBtn} ${styles.cardActionBtnDanger}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteTargetProduct(p);
+                        }}
+                        title="Delete produce from catalog"
+                        aria-label={`Delete ${p.name}`}
+                      >
+                        <Trash2 size={12} aria-hidden="true" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -770,6 +868,50 @@ export function Stock() {
                     />
                     <span className={styles.toggleLabel}>Sold out</span>
                   </div>
+
+                  {/* List Item CRUD Actions */}
+                  <div className={styles.cardActionRow} style={{ borderTop: 'none', paddingTop: 0 }}>
+                    <button
+                      type="button"
+                      className={styles.cardActionBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingProductId(p.id);
+                        setSheetMode('edit');
+                      }}
+                      title="Edit produce details"
+                      aria-label={`Edit ${p.name}`}
+                    >
+                      <Edit3 size={12} aria-hidden="true" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.cardActionBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDuplicateProduct(p);
+                      }}
+                      title="Clone produce to create a new variation"
+                      aria-label={`Duplicate ${p.name}`}
+                    >
+                      <Copy size={12} aria-hidden="true" />
+                      <span>Clone</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.cardActionBtn} ${styles.cardActionBtnDanger}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTargetProduct(p);
+                      }}
+                      title="Delete produce from catalog"
+                      aria-label={`Delete ${p.name}`}
+                    >
+                      <Trash2 size={12} aria-hidden="true" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -874,6 +1016,26 @@ export function Stock() {
             cancelLabel="Cancel"
             onConfirm={handleApplyTemplate}
             onCancel={handleCloseSheet}
+          />
+        </BottomSheet>
+      )}
+
+      {/* Delete Produce Confirmation Sheet */}
+      {deleteTargetProduct && (
+        <BottomSheet
+          isOpen={true}
+          onClose={() => setDeleteTargetProduct(null)}
+          size="peek"
+          title="Delete Produce"
+        >
+          <ConfirmStep
+            title={`Delete "${deleteTargetProduct.name}"?`}
+            message="This permanently deletes this produce item and removes it from buyer catalog listings and active order options."
+            confirmLabel="Delete Item"
+            confirmVariant="danger"
+            cancelLabel="Cancel"
+            onConfirm={handleConfirmDeleteProduct}
+            onCancel={() => setDeleteTargetProduct(null)}
           />
         </BottomSheet>
       )}

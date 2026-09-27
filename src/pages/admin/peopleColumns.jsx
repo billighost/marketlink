@@ -30,6 +30,8 @@ export function createFarmerColumns({
   triggerSuspendFarmer,
   triggerReinstateFarmer,
   setSelectedPerson,
+  onEditPerson,
+  onDeletePerson,
 }) {
   return [
     {
@@ -167,6 +169,20 @@ export function createFarmerColumns({
               </button>
             )}
 
+            {onEditPerson && (
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditPerson(r);
+                }}
+                aria-label={`Edit ${r.stallName || r.name}`}
+              >
+                Edit
+              </button>
+            )}
+
             <button
               type="button"
               className={styles.actionBtn}
@@ -178,6 +194,20 @@ export function createFarmerColumns({
             >
               Details
             </button>
+
+            {onDeletePerson && (
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeletePerson(r);
+                }}
+                aria-label={`Delete ${r.stallName || r.name}`}
+              >
+                Delete
+              </button>
+            )}
           </div>
         );
       },
@@ -190,6 +220,8 @@ export function createCustomerColumns({
   triggerDeactivateCustomer,
   triggerActivateCustomer,
   setSelectedPerson,
+  onEditPerson,
+  onDeletePerson,
 }) {
   return [
     {
@@ -281,6 +313,20 @@ export function createCustomerColumns({
               </button>
             )}
 
+            {onEditPerson && (
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditPerson(r);
+                }}
+                aria-label={`Edit ${r.name}`}
+              >
+                Edit
+              </button>
+            )}
+
             <button
               type="button"
               className={styles.actionBtn}
@@ -292,6 +338,20 @@ export function createCustomerColumns({
             >
               Details
             </button>
+
+            {onDeletePerson && (
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeletePerson(r);
+                }}
+                aria-label={`Delete ${r.name}`}
+              >
+                Delete
+              </button>
+            )}
           </div>
         );
       },

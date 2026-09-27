@@ -60,13 +60,18 @@ export function FarmerCard({
           <h3 className={styles.stallHeading}>{farmer.stallName}</h3>
           <p className={styles.stallSub}>{farmerSub || '\u00A0'}</p>
           <div className={styles.stallStatus}>
-            {farmer.openToday ? (
-              <>
-                <span className={styles.herbDot} aria-hidden="true" />
-                <span className={styles.openText}>Open today</span>
-              </>
+            {farmer.availabilityMode === 'limited' || farmer.availabilityStatus?.mode === 'limited' || (farmer.openToday && hasLowStock) ? (
+              <span className={styles.limitedBadge} title={farmer.availabilityNote || 'Limited availability'}>
+                🟡 Limited
+              </span>
+            ) : farmer.availabilityMode === 'closed' || farmer.availabilityStatus?.mode === 'closed' || !farmer.openToday ? (
+              <span className={styles.closedBadge}>
+                🔴 Closed today
+              </span>
             ) : (
-              <span className={styles.notOpenText}>Not here today</span>
+              <span className={styles.openBadge}>
+                🟢 Open today
+              </span>
             )}
           </div>
           <div className={styles.lowStockRow}>

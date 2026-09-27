@@ -207,8 +207,8 @@ export function OrderDetail({ orderId: propOrderId, onClose, onUpdated }) {
             alignItems: 'center',
             gap: 'var(--space-2-5)',
             padding: 'var(--space-3) var(--space-4)',
-            background: 'linear-gradient(135deg, rgba(84, 23, 34, 0.06), rgba(224, 109, 40, 0.08))',
-            border: '1px solid rgba(84, 23, 34, 0.2)',
+            background: 'linear-gradient(135deg, rgba(22, 163, 74, 0.08), rgba(16, 185, 129, 0.12))',
+            border: '1px solid rgba(22, 163, 74, 0.25)',
             borderRadius: 'var(--radius-lg)',
             margin: 'var(--space-3) 0 var(--space-4) 0',
           }}
@@ -218,7 +218,7 @@ export function OrderDetail({ orderId: propOrderId, onClose, onUpdated }) {
               width: '32px',
               height: '32px',
               borderRadius: 'var(--radius-md)',
-              background: 'var(--color-primary)',
+              background: 'linear-gradient(135deg, #15803d, #047857)',
               color: '#fff',
               display: 'flex',
               alignItems: 'center',
@@ -229,7 +229,7 @@ export function OrderDetail({ orderId: propOrderId, onClose, onUpdated }) {
             <Sparkles size={16} aria-hidden="true" />
           </div>
           <div>
-            <strong style={{ fontSize: 'var(--text-sm)', color: 'var(--color-primary)', display: 'block' }}>
+            <strong style={{ fontSize: 'var(--text-sm)', color: '#15803d', display: 'block' }}>
               Smart Basket Pre-Order
             </strong>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-soft)' }}>

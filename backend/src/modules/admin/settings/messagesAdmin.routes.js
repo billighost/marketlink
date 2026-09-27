@@ -6,6 +6,7 @@ import { Router } from 'express';
 import {
   listContactMessages,
   handleContactMessage,
+  deleteContactMessage,
 } from './messagesAdmin.service.js';
 import { defineRoutes } from '../../../utils/defineRoutes.js';
 
@@ -38,6 +39,22 @@ const routes = [
     handler: async (req, res, next) => {
       try {
         const result = await handleContactMessage(req.user, req.params.id, req.body?.reply);
+        res.json({ data: result });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+
+  // DELETE /api/admin/messages/:id
+  {
+    method: 'delete',
+    path: '/:id',
+    auth: 'admin',
+    summary: 'Delete contact inquiry message',
+    handler: async (req, res, next) => {
+      try {
+        const result = await deleteContactMessage(req.user, req.params.id);
         res.json({ data: result });
       } catch (err) {
         next(err);
