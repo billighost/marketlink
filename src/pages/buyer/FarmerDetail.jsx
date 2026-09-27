@@ -71,12 +71,12 @@ export function FarmerDetail() {
   useDocumentTitle(farmer?.stallName ? `${farmer.stallName} · MarketLink` : 'Stall · MarketLink');
 
   // Market ID for schedule and clock
-  const marketId = farmer?.marketId || farmer?.marketIds?.[0] || farmer?.market?.id;
+  const marketId = farmer?.markets?.[0]?.id || farmer?.marketId || farmer?.marketIds?.[0] || farmer?.market?.id;
 
   // 2. Fetch Market Detail for clock and timezone
   const { data: market } = useQuery(
     ['market-detail', marketId],
-    ({ signal }) => getMarketDetail(marketId, signal),
+    ({ signal }) => getMarketDetail(marketId, signal).catch(() => null),
     { enabled: Boolean(marketId) }
   );
 

@@ -15,22 +15,25 @@ export const Button = React.forwardRef(function Button(
     to,
     href,
     disabled = false,
+    loading = false,
     className = '',
     type = 'button',
     ...rest
   },
   ref
 ) {
+  const isButtonDisabled = disabled || loading;
   const classes = [
     styles.button,
     styles[variant],
     styles[size],
+    loading ? styles.loading : '',
     className,
   ].filter(Boolean).join(' ');
 
   if (Component === Link || Component === 'Link' || (to && Component === 'button')) {
     return (
-      <Link to={to} ref={ref} className={classes} aria-disabled={disabled} {...rest}>
+      <Link to={to} ref={ref} className={classes} aria-disabled={isButtonDisabled} {...rest}>
         {children}
       </Link>
     );
@@ -38,7 +41,7 @@ export const Button = React.forwardRef(function Button(
 
   if (Component === 'a' || href) {
     return (
-      <a href={href} ref={ref} className={classes} aria-disabled={disabled} {...rest}>
+      <a href={href} ref={ref} className={classes} aria-disabled={isButtonDisabled} {...rest}>
         {children}
       </a>
     );
@@ -49,7 +52,8 @@ export const Button = React.forwardRef(function Button(
       ref={ref}
       type={type}
       className={classes}
-      disabled={disabled}
+      disabled={isButtonDisabled}
+      aria-busy={loading ? 'true' : undefined}
       {...rest}
     >
       {children}

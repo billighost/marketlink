@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { CheckCircle2 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import PageHeader from '@/components/layout/PageHeader';
 import FormField from '@/components/ui/FormField';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import Illustration from '@/components/domain/Illustration';
 import { resetPassword } from '@/api/auth';
 import styles from './ResetPassword.module.css';
 
@@ -90,8 +90,8 @@ export function ResetPassword() {
         <Card className={styles.card}>
           {success ? (
             <div className={styles.sentState}>
-              <div className={styles.illustrationMoment} aria-hidden="true">
-                <Illustration name="basket-produce" size="lg" />
+              <div className={styles.iconBadge} aria-hidden="true">
+                <CheckCircle2 size={36} strokeWidth={2} />
               </div>
               <h2 className={styles.sentTitle}>Password updated</h2>
               <p className={styles.sentText}>

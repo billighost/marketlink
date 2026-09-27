@@ -25,7 +25,7 @@ async function bootstrap() {
     const db = await connectDb();
     console.log(`[DB] Connected successfully.`);
 
-    // 2. Create Express application & bind listener immediately
+    // 2. Create Express application and start HTTP listener immediately
     const app = createApp();
     server = http.createServer(app);
 
@@ -39,7 +39,23 @@ async function bootstrap() {
       console.log(`[SERVER] Health check ready at http://localhost:${env.PORT}/api/health`);
     });
 
-    
+    // 3. Ensure collections with validators and indexes in background
+    (async () => {
+      try {
+        console.log(`[DB] Verifying collections and indexes...`);
+        await createCollections(db);
+        await ensureIndexes(db);
+        console.log(`[DB] Collections and indexes verified.`);
+      } catch (err) {
+        console.warn(`[DB] Collections/indexes verification notice:`, err.message);
+      }
+    })();
+
+    // 4. Verify Gmail SMTP credentials in background
+    verifyMailerConnection().catch((err) => {
+      console.warn(`[MAILER] Verification notice:`, err.message);
+    });
+
 
     // 5. Non-blocking media cleanup job
     runMediaCleanup(db).catch((err) => {

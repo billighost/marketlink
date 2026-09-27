@@ -1,37 +1,37 @@
-import React, { useRef, useState } from 'react';
-import { Plus, Check } from 'lucide-react';
+import React, { useRef, useState, useCallback } from 'react';
+import { Check, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { flyToCart, bumpCartIcon, popBadge } from '@/utils/flyToCart';
-import QuantityStepper from '@/components/ui/QuantityStepper';
 import styles from './AddToCartButton.module.css';
 
 /**
- * Add-to-cart button with micro-animation and stepper transition.
- * Variants:
- *  - 'icon': Compact round button for product cards (transforms into compact stepper once in cart)
- *  - 'wide': Full-width button for product detail sheet / modal
+ * Proper Add to Cart button for cards and detail views.
+ * Supports adding custom staged quantity, micro-animations,
+ * visual feedback, and live cart item count indicator.
  */
 export function AddToCartButton({
   productId,
   farmerId,
   productName = 'item',
-  variant = 'icon',
+  quantity = 1,
+  onAddSuccess,
+  variant = 'card',
   disabled = false,
   className = '',
 }) {
-  const { getQuantity, add, setQuantity } = useCart();
-  const quantity = getQuantity(productId);
+  const { getQuantity, add } = useCart();
+  const cartQty = getQuantity(productId);
   const buttonRef = useRef(null);
   const [animating, setAnimating] = useState(false);
 
-  const handleAddFirst = (e) => {
+  const handleAddToCart = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (disabled) return;
 
     setAnimating(true);
-    add(productId, { farmerId });
+    add(productId, { farmerId }, quantity);
 
     if (buttonRef.current) {
       flyToCart(buttonRef.current, () => {
@@ -40,72 +40,40 @@ export function AddToCartButton({
       });
     }
 
+    onAddSuccess?.();
+
     setTimeout(() => {
       setAnimating(false);
-    }, 450);
-  };
-
-  const handleQuantityChange = (newQty) => {
-    setQuantity(productId, newQty);
-  };
+    }, 1200);
+  }, [disabled, add, productId, farmerId, quantity, onAddSuccess]);
 
   if (disabled) {
-    if (variant === 'wide') {
-      return (
-        <button
-          type="button"
-          disabled
-          className={`${styles.wideButton} ${styles.disabled} ${className}`}
-        >
-          Sold out
-        </button>
-      );
-    }
     return (
       <button
         type="button"
         disabled
-        className={`${styles.iconButton} ${styles.disabled} ${className}`}
+        className={`${styles.addToCartBtn} ${variant === 'wide' ? styles.wide : ''} ${styles.disabled} ${className}`}
         aria-label={`${productName} is sold out`}
       >
-        <Plus size={18} aria-hidden="true" />
+        Sold out
       </button>
     );
   }
 
-  // Active in cart: render QuantityStepper
-  if (quantity > 0) {
-    return (
-      <div className={`${styles.stepperWrapper} ${variant === 'wide' ? styles.stepperWide : ''}`}>
-        <QuantityStepper
-          value={quantity}
-          onChange={handleQuantityChange}
-          min={0}
-          max={99}
-          size={variant === 'wide' ? 'md' : 'sm'}
-          ariaLabel={`Quantity for ${productName}`}
-        />
-      </div>
-    );
-  }
-
-  // Not in cart: render Add Button
-  if (variant === 'wide') {
+  if (animating) {
     return (
       <button
         ref={buttonRef}
         type="button"
-        onClick={handleAddFirst}
-        className={`${styles.wideButton} ${animating ? styles.animating : ''} ${className}`}
-        aria-label={`Add ${productName} to cart`}
+        className={`${styles.addToCartBtn} ${variant === 'wide' ? styles.wide : ''} ${styles.animating} ${className}`}
+        aria-label={`Added ${quantity} ${productName} to cart`}
       >
-        {animating ? (
-          <>
-            <Check size={18} aria-hidden="true" />
-            <span>Added</span>
-          </>
-        ) : (
-          <span>Pre-order for pickup</span>
+        <Check size={16} strokeWidth={2.5} className={styles.checkIcon} aria-hidden="true" />
+        <span>Added!</span>
+        {cartQty > 0 && (
+          <span className={styles.cartBadge} aria-label={`${cartQty} in cart`}>
+            {cartQty}
+          </span>
         )}
       </button>
     );
@@ -115,14 +83,16 @@ export function AddToCartButton({
     <button
       ref={buttonRef}
       type="button"
-      onClick={handleAddFirst}
-      className={`${styles.iconButton} ${animating ? styles.animating : ''} ${className}`}
-      aria-label={`Add ${productName} to cart`}
+      onClick={handleAddToCart}
+      className={`${styles.addToCartBtn} ${variant === 'wide' ? styles.wide : ''} ${className}`}
+      aria-label={`Add ${quantity} ${productName} to cart`}
     >
-      {animating ? (
-        <Check size={18} aria-hidden="true" />
-      ) : (
-        <Plus size={18} aria-hidden="true" />
+      <ShoppingCart size={15} strokeWidth={2} aria-hidden="true" />
+      <span>Add to cart</span>
+      {cartQty > 0 && (
+        <span className={styles.cartBadge} title={`${cartQty} in cart`}>
+          {cartQty}
+        </span>
       )}
     </button>
   );

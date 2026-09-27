@@ -27,9 +27,22 @@
   background: var(--color-canvas);
 }
 
-.sceneWrap {
+.confirmedBadge {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--color-herb-bg, #EAEFE2);
+  border: 1px solid rgba(92, 112, 72, 0.25);
+  box-shadow: 0 0 0 8px rgba(92, 112, 72, 0.08), 0 4px 16px rgba(46, 43, 38, 0.06);
   display: flex;
+  align-items: center;
   justify-content: center;
+  color: var(--color-herb, #5C7048);
+  margin-inline: auto;
+}
+
+.confirmedIcon {
+  flex-shrink: 0;
 }
 
 .header {

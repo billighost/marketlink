@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ShieldAlert } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import Illustration from '@/components/domain/Illustration';
 import styles from './Unauthorized.module.css';
 
 /**
- * Friendly market-style 403 page
+ * Friendly, professional 403 page
  */
 export function Unauthorized() {
   useDocumentTitle('Closed for the Day · MarketLink');
@@ -17,8 +17,9 @@ export function Unauthorized() {
     <div className={styles.page}>
       <div className={styles.container}>
         <Card className={styles.card}>
-          <div className={styles.illustrationMoment} aria-hidden="true">
-            <Illustration name="closed-stall" size="xl" />
+          <div className={styles.statusBadge} aria-hidden="true">
+            <span className={styles.badgeCode}>403</span>
+            <ShieldAlert size={28} strokeWidth={1.85} className={styles.badgeIcon} />
           </div>
           <h1 className={styles.title}>Closed for the day</h1>
           <p className={styles.text}>

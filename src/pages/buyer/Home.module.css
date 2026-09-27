@@ -1,37 +1,70 @@
-/* Home.module.css — The Today page ("Today at the market") */
+/* Home.module.css — Redesigned Today at the market page */
 
-.header {
+/* Override Page's section-gap to 0 so we control all spacing internally */
+.pageRoot {
+  gap: 0 !important;
+  padding-block-start: var(--space-4) !important;
+}
+
+/* Body: tight vertical stack with controlled gaps */
+.pageBody {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   width: 100%;
 }
 
+/* === HERO HEADER === */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  background: linear-gradient(160deg, var(--color-canvas) 0%, color-mix(in srgb, var(--color-canvas) 40%, white) 100%);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.8) inset, 0 2px 8px rgba(46, 43, 38, 0.04);
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding: var(--space-6) var(--space-6) var(--space-5);
+    gap: var(--space-4);
+  }
+}
+
 .headGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .greeting {
   font-family: var(--font-head);
-  font-size: var(--text-h1);
+  font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.25rem);
   font-weight: var(--weight-head);
   letter-spacing: var(--tracking-head);
   color: var(--color-ink);
-  line-height: var(--lh-h1);
+  line-height: 1.15;
   margin: 0;
 }
 
 .clockSkeleton {
   height: calc(var(--text-sm) * var(--lh-ui));
-  width: 40%;
+  width: 55%;
   border-radius: var(--radius-sm);
-  background-color: var(--color-hairline);
+  background: linear-gradient(90deg, var(--color-hairline) 25%, rgba(46, 43, 38, 0.04) 50%, var(--color-hairline) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
   min-height: calc(var(--text-sm) * var(--lh-ui));
 }
 
-/* Full-width Search Form */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .searchForm {
   position: relative;
   width: 100%;
@@ -44,36 +77,39 @@
   left: var(--space-4);
   color: var(--color-ink-soft);
   pointer-events: none;
+  flex-shrink: 0;
 }
 
 .searchInput {
   width: 100%;
-  height: var(--control-h);
-  border: 1px solid var(--color-border);
+  height: 46px;
+  border: 1.5px solid rgba(46, 43, 38, 0.18);
   background-color: var(--color-white);
   border-radius: var(--radius-md);
-  padding: 0 var(--space-4) 0 calc(var(--space-4) + var(--space-6));
+  padding: 0 var(--space-4) 0 calc(var(--space-4) + 18px + var(--space-3));
   font-family: var(--font-body);
   font-size: var(--text-input);
   color: var(--color-ink);
-  transition: border-color var(--duration-fast) var(--ease-standard);
+  transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
   box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(46, 43, 38, 0.06);
 }
 
 .searchInput:focus {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  border-color: var(--color-beet);
+  box-shadow: 0 0 0 3px var(--color-beet-tint), 0 1px 3px rgba(46, 43, 38, 0.06);
+  outline: none;
 }
 
 .searchInput::placeholder {
   color: var(--color-ink-faint);
 }
 
-/* Feed Container */
+/* === FEED === */
 .feed {
   display: flex;
   flex-direction: column;
-  gap: var(--section-gap);
+  gap: 0;
   width: 100%;
 }
 
@@ -83,31 +119,38 @@
   flex-direction: column;
 }
 
-/* Quiet Assistant Callout */
+/* === ASSISTANT CALLOUT === */
 .assistantCallout {
-  padding-block: var(--space-4);
+  padding-block: var(--space-5) var(--space-4);
   text-align: center;
   max-width: var(--container-narrow);
   margin-inline: auto;
+  width: 100%;
 }
 
 .assistantText {
   font-family: var(--font-body);
-  font-size: var(--text-body);
+  font-size: var(--text-sm);
   color: var(--color-ink-soft);
   margin: 0 auto;
   line-height: var(--lh-body);
+  display: inline-block;
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
 }
 
 .assistantLink {
-  color: var(--color-ink);
-  text-decoration: underline;
-  text-underline-offset: var(--underline-offset);
+  color: var(--color-beet);
+  text-decoration: none;
   font-weight: var(--weight-medium);
+  border-bottom: 1px solid currentColor;
+  transition: color var(--duration-fast) var(--ease-standard);
 }
 
 .assistantLink:hover {
-  color: var(--color-ink);
+  color: var(--color-beet-dark);
 }
 
 .assistantLink:focus-visible {
@@ -115,12 +158,14 @@
   outline-offset: var(--focus-offset);
 }
 
-/* Loading Skeletons */
+/* === SKELETONS === */
 .skeletonRow {
   display: flex;
   gap: var(--space-4);
   overflow: hidden;
   width: 100%;
+  padding-inline: var(--page-pad);
+  padding-top: var(--space-4);
 }
 
 .sentinel {

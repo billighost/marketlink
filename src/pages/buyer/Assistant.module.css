@@ -1,21 +1,93 @@
-.container {
+/* ==========================================================================
+   Ask MarketLink — chat assistant
+   Layout: PageTitle (rendered by parent) + chatShell, which holds either the
+   empty-state greeting or the scrolling message list, plus a composer that
+   docks to the bottom of the viewport above the bottom nav.
+   ========================================================================== */
+
+.chatShell {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 12rem);
-  padding-bottom: var(--space-20);
+  /* Roughly the viewport minus the page header, PageTitle block and page
+     padding, so the composer settles at the bottom even on a short thread.
+     Adjust if the surrounding app shell changes height. */
+  min-height: calc(100dvh - 13rem);
 }
-.messagesArea {
+
+/* ---------- Empty state ---------- */
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-2);
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  background: var(--color-beet-tint);
+  color: var(--color-beet);
+}
+
+.emptyText {
+  margin: 0;
+  max-width: var(--measure-narrow);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--lh-ui);
+  color: var(--color-text-muted);
+}
+
+.suggestionsList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  max-width: var(--measure-narrow);
+}
+
+.promptChip {
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  background: var(--color-white);
+  border: var(--border-input);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+.promptChip:hover {
+  background: var(--color-canvas-soft);
+  border-color: var(--color-border-input-hover);
+}
+
+/* ---------- Message list ---------- */
+
+.messageList {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  flex: 1;
-  margin-bottom: var(--space-6);
+  padding-block: var(--space-2) var(--space-4);
 }
+
 .messageWrapper {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   width: 100%;
+  max-width: 100%;
 }
 .userWrapper { align-items: flex-end; }
 .assistantWrapper { align-items: flex-start; }
@@ -25,36 +97,58 @@
   border-radius: var(--radius-lg);
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  line-height: var(--leading-relaxed);
-  word-break: break-word;
+  line-height: var(--lh-ui);
+  max-width: 85%;
 }
+
+.messageText {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
 .userBubble {
-  background: var(--color-canvas-soft);
-  color: var(--color-ink);
-  max-width: 80%;
-  border-bottom-right-radius: var(--radius-xs);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-bottom-right-radius: var(--radius-sm);
 }
 .assistantBubble {
   background: var(--color-white);
   border: 1px solid var(--color-hairline);
   color: var(--color-ink);
-  max-width: 85%;
-  border-bottom-left-radius: var(--radius-xs);
+  border-bottom-left-radius: var(--radius-sm);
 }
-.messageText { margin: 0; }
 
-/* Navigation Chips */
+/* Streaming cursor */
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 0.9em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  opacity: 0.6;
+  animation: cursorBlink 1s step-end infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor { animation: none; opacity: 0.4; }
+}
+@keyframes cursorBlink {
+  0%, 49% { opacity: 0.6; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Navigation chips under an assistant message */
 .chipsRow {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
-  margin-top: var(--space-2);
 }
 .chipLink {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1-5);
+  gap: var(--space-1);
   padding: var(--space-1) var(--space-3);
   font-family: var(--font-body);
   font-size: var(--text-xs);
@@ -64,55 +158,16 @@
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-full);
   text-decoration: none;
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 .chipLink:hover { background: var(--color-hairline-soft); }
-
-/* Suggested Prompts */
-.suggestionsBlock {
-  margin: var(--space-6) 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2-5);
-}
-.suggestionsHeading {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-}
-.suggestionsList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.promptBtn {
-  text-align: left;
-  padding: var(--space-2-5) var(--space-4);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink);
-  background: var(--color-white);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-.promptBtn:hover { background: var(--color-canvas-soft); }
 
 /* Typing indicator */
 .typingBubble {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1-5);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-white);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--radius-lg);
-  width: fit-content;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-1);
 }
 .dot {
   width: 0.375rem;
@@ -123,90 +178,118 @@
 }
 .dot:nth-child(2) { animation-delay: 0.2s; }
 .dot:nth-child(3) { animation-delay: 0.4s; }
-
 @keyframes typingPulse {
   0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
   40% { opacity: 1; transform: scale(1.15); }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .dot { animation: none; opacity: 0.7; }
 }
 
-/* Failure Bubble */
+/* Failure bubble */
 .failureBubble {
-  background: var(--color-canvas-soft);
+  background: var(--color-danger-bg);
   border: 1px solid var(--color-hairline);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-2);
   max-width: 85%;
 }
-.failureText { margin: 0; font-size: var(--text-sm); color: var(--color-ink); }
+.failureIcon { color: var(--color-danger); flex-shrink: 0; }
+.failureText {
+  margin: 0;
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
 .retryBtn {
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
-  padding: var(--space-1) var(--space-2-5);
+  padding: var(--space-1) var(--space-3);
   background: var(--color-white);
-  border: 1px solid var(--color-hairline);
+  border: var(--border-input);
   border-radius: var(--radius-md);
   color: var(--color-ink);
   cursor: pointer;
   flex-shrink: 0;
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 .retryBtn:hover { background: var(--color-canvas-soft); }
 
-/* Sticky Composer */
-.composerForm {
+/* ---------- Composer ---------- */
+
+.composer {
   position: sticky;
-  bottom: calc(var(--bottom-nav-height, 4rem) + var(--space-2));
-  background: var(--color-canvas);
-  padding: var(--space-2) 0;
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  z-index: var(--z-fixed);
-}
-.inputWrapper {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.input {
-  width: 100%;
-  height: 2.75rem;
-  padding: 0 var(--space-4);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink);
+  bottom: calc(var(--bottom-nav-height, 4rem) + var(--space-3) + env(safe-area-inset-bottom, 0px));
   background: var(--color-white);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--radius-lg);
-  outline: none;
+  padding-top: var(--space-2);
 }
-.input:focus { border-color: var(--color-ink); }
+
+.inputBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-canvas-soft);
+  border: var(--border-input);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-control);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-h);
+  padding-inline: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-input);
+  color: var(--color-ink);
+  background: transparent;
+  border: none;
+}
+.input:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-beet-tint);
+  border-radius: var(--radius-md);
+}
+.input::placeholder { color: var(--color-text-disabled); }
+.input:disabled { color: var(--color-text-disabled); }
 
 .sendBtn {
-  height: 2.75rem;
-  padding: 0 var(--space-4);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-white);
-  background: var(--color-beet);
-  border: none;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
   flex-shrink: 0;
-  transition: opacity var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  transition: opacity var(--duration-fast) var(--ease-standard);
 }
-.sendBtn:hover:not(:disabled) { opacity: 0.9; }
-.sendBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.sendBtn:hover:not(:disabled) { background: var(--color-primary-hover); }
+.sendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ---------- Small screens (down to ~300px) ---------- */
+
+@media (max-width: 360px) {
+  .bubble,
+  .failureBubble {
+    max-width: 92%;
+  }
+  .inputBar {
+    padding: var(--space-1);
+    gap: var(--space-1);
+  }
+  .input {
+    padding-inline: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .promptChip {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+  }
+}

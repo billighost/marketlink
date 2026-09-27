@@ -88,16 +88,12 @@ export function Orders() {
     fetchTabOrders(currentTab, nextCursor, true);
   };
 
-  const subtitle = `${counts.active} active · ${counts.past} past`;
-
   return (
     <Page width="detail" className={styles.page}>
-      <PageTitle
-        title="Orders"
-        context={subtitle}
-      />
+      {/* Counts already live on the tabs below — no need to repeat them in a subtitle */}
+      <PageTitle title="Orders" />
 
-      <div className={styles.tabsWrap}>
+      <div className={styles.controls}>
         <SegmentedControl
           name="orders-tab"
           value={currentTab}
@@ -111,7 +107,8 @@ export function Orders() {
 
       <div className={styles.listSection}>
         {loading ? (
-          <div className={styles.skeletonList}>
+          <div className={styles.skeletonList} aria-hidden="true">
+            <div className={styles.skeletonCard} />
             <div className={styles.skeletonCard} />
             <div className={styles.skeletonCard} />
           </div>

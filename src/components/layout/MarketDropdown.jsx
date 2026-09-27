@@ -34,8 +34,8 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
   const markets = marketsData?.data || [];
 
   const currentMarket =
+    (selectedMarketId ? markets.find((m) => m.id === selectedMarketId || m._id === selectedMarketId) : null) ||
     user?.homeMarket ||
-    (selectedMarketId ? markets.find((m) => m.id === selectedMarketId) : null) ||
     markets[0] || { name: 'Farmers Market', address: '' };
 
   // Filter markets using debounced search query (client-side for zero extra network requests)
@@ -89,7 +89,7 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
   }, [isOpen]);
 
   const handleSelectMarket = async (marketId) => {
-    if (marketId === currentMarket?.id || marketId === selectedMarketId) {
+    if (marketId === selectedMarketId) {
       setIsOpen(false);
       return;
     }

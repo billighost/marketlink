@@ -1,6 +1,7 @@
-/* SegmentedControl — responsive pill switch */
+/* SegmentedControl — responsive pill switch with a sliding active indicator */
 
 .control {
+  position: relative;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
@@ -12,7 +13,31 @@
   gap: var(--space-1);
 }
 
+/* The one element that moves; options themselves stay transparent */
+.indicator {
+  position: absolute;
+  top: var(--space-1);
+  bottom: var(--space-1);
+  left: 0;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  transition: transform var(--duration-base) var(--ease-standard),
+              width var(--duration-base) var(--ease-standard),
+              opacity var(--duration-fast) var(--ease-standard);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicator {
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+}
+
 .option {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -24,8 +49,7 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   min-width: 0;
-  transition: background-color var(--duration-fast) var(--ease-standard),
-              color var(--duration-fast) var(--ease-standard);
+  transition: color var(--duration-fast) var(--ease-standard);
 }
 
 .option:active {
@@ -45,17 +69,16 @@
   min-width: 0;
 }
 
-.active {
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-}
-
 .active .label {
   color: var(--color-ink);
   font-weight: var(--weight-semibold);
 }
 
-.option:focus-within {
+/* :focus-within fires on any focus, including a mouse click — that's what was
+   putting a beet-coloured ring around the tab on every click. :focus-visible
+   on the (visually hidden) radio itself only fires for keyboard navigation,
+   so :has() is used here to light up the label only in that case. */
+.option:has(input:focus-visible) {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
 }

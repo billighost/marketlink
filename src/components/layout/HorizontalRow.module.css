@@ -1,18 +1,18 @@
 /* HorizontalRow — section with horizontal scroll */
 .section {
-  padding-top: var(--space-10);
+  padding-top: var(--space-6);
   width: 100%;
 }
 
 @media (min-width: 768px) {
   .section {
-    padding-top: var(--space-12);
+    padding-top: var(--space-8);
   }
 }
 
 @media (min-width: 1024px) {
   .section {
-    padding-top: var(--space-16);
+    padding-top: var(--space-10);
   }
 }
 

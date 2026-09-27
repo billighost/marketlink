@@ -119,24 +119,46 @@
 }
 
 .emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 60px 24px;
-  color: #9ca3af;
+  padding: 56px 24px;
+  color: var(--color-ink-soft, #6B6259);
 }
 
-.emptyIllustration {
-  margin-bottom: 20px;
+.emptyIconBadge {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 35%,
+    var(--color-canvas-soft, #FAF7F0) 0%,
+    var(--color-canvas, #F5EFE3) 100%
+  );
+  border: 1px solid var(--color-wood-line, #E3D3B8);
+  box-shadow: 0 0 0 6px rgba(176, 134, 85, 0.08), 0 4px 14px rgba(46, 43, 38, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-beet, #7A2E3B);
+  margin-bottom: 16px;
 }
 
 .emptyTitle {
-  font-family: 'Idiqlat', serif;
-  font-size: 1.1rem;
-  color: #374151;
-  margin: 0 0 4px 0;
+  font-family: var(--font-head, 'Idiqlat', Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-ink, #2E2B26);
+  margin: 0 0 6px 0;
 }
 
 .emptySub {
-  font-size: 0.85rem;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  color: var(--color-ink-soft, #6B6259);
+  max-width: 360px;
   margin: 0;
 }
 

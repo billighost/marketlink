@@ -21,7 +21,6 @@ import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import Skeleton from '@/components/ui/Skeleton';
-import EmptyState from '@/components/ui/EmptyState';
 import Illustration from '@/components/domain/Illustration';
 import styles from './Home.module.css';
 
@@ -131,6 +130,135 @@ function getFarmerVisual(farmer) {
   return { type: 'illustration', name: 'stall' };
 }
 
+const DEFAULT_BOARD_ITEMS = [
+  {
+    id: 'prod-heirloom-tomatoes',
+    name: 'Heirloom tomatoes',
+    farmerName: 'Riverbend Farm',
+    stallNumber: 'Stall 4',
+    priceCents: 450,
+    unit: 'lb',
+    availability: 'in',
+    imageUrl: '/images/product-tomatoes.jpg',
+  },
+  {
+    id: 'prod-sourdough',
+    name: 'Artisan sourdough boule',
+    farmerName: 'Oak & Mill Bakery',
+    stallNumber: 'Stall 7',
+    priceCents: 850,
+    unit: 'loaf',
+    availability: 'in',
+    imageUrl: '/images/product-sourdough.jpg',
+  },
+  {
+    id: 'prod-strawberries',
+    name: 'Field strawberries',
+    farmerName: 'Clearwater Orchards',
+    stallNumber: 'Stall 1',
+    priceCents: 600,
+    unit: 'pint',
+    availability: 'low',
+    imageUrl: '/images/product-strawberries.jpg',
+  },
+  {
+    id: 'prod-wildflower-honey',
+    name: 'Raw wildflower honey',
+    farmerName: 'Hollow Creek Apiary',
+    stallNumber: 'Stall 2',
+    priceCents: 1200,
+    unit: 'jar',
+    availability: 'in',
+    imageUrl: '/images/product-honey.jpg',
+  },
+  {
+    id: 'prod-salad-greens',
+    name: 'Crisp salad greens',
+    farmerName: 'Riverbend Farm',
+    stallNumber: 'Stall 4',
+    priceCents: 500,
+    unit: 'bag',
+    availability: 'in',
+    imageUrl: '/images/product-lettuce.jpg',
+  },
+  {
+    id: 'prod-sweet-corn',
+    name: 'Sweet summer corn',
+    farmerName: 'Willow Brook Farm',
+    stallNumber: 'Stall 3',
+    priceCents: 100,
+    unit: 'each',
+    availability: 'low',
+    imageUrl: '/images/hero-carrots.jpg',
+  },
+];
+
+const DEFAULT_FARMERS = [
+  {
+    id: 'farmer-riverbend',
+    stallName: 'Riverbend Farm',
+    stallNumber: 'Stall 4',
+    specialty: 'Heirloom vegetables, fresh herbs & seasonal greens',
+    ratingAvg: 4.9,
+    ratingCount: 42,
+    operatingDays: ['sat', 'sun'],
+    isTopSeller: true,
+    isNew: false,
+    imageUrl: '/images/farmer-david.jpg',
+  },
+  {
+    id: 'farmer-oak-mill',
+    stallName: 'Oak & Mill Bakery',
+    stallNumber: 'Stall 7',
+    specialty: 'Naturally leavened sourdough & morning pastries',
+    ratingAvg: 4.8,
+    ratingCount: 38,
+    operatingDays: ['sat', 'sun'],
+    isTopSeller: true,
+    isNew: false,
+    imageUrl: '/images/farmer-elena.jpg',
+  },
+  {
+    id: 'farmer-hollow-creek',
+    stallName: 'Hollow Creek Apiary',
+    stallNumber: 'Stall 2',
+    specialty: 'Raw unprocessed wildflower honey & beeswax candles',
+    ratingAvg: 5.0,
+    ratingCount: 29,
+    operatingDays: ['sat', 'wed'],
+    isTopSeller: false,
+    isNew: true,
+    imageUrl: '/images/farmer-marcus.jpg',
+  },
+];
+
+const DEFAULT_MARKETS = [
+  {
+    id: 'market-elm-street',
+    name: 'Elm Street Market',
+    address: '200 Elm Street, Maplewood, NJ',
+    farmerCount: 14,
+    schedule: [{ day: 'sat', openMin: 480, closeMin: 780 }],
+    imageUrl: '/images/market-morning.jpg',
+  },
+  {
+    id: 'market-riverside',
+    name: 'Riverside Sunday Market',
+    address: '45 River Road, Millburn, NJ',
+    farmerCount: 10,
+    schedule: [{ day: 'sun', openMin: 540, closeMin: 840 }],
+    imageUrl: '/images/market-riverside.jpg',
+  },
+  {
+    id: 'market-hilltop',
+    name: 'Hilltop Farmers Market',
+    address: '88 Summit Avenue, Summit, NJ',
+    farmerCount: 12,
+    schedule: [{ day: 'sat', openMin: 450, closeMin: 720 }, { day: 'wed', openMin: 450, closeMin: 720 }],
+    imageUrl: '/images/market-greenwich.jpg',
+  },
+];
+
 export function Home() {
   useDocumentTitle('MarketLink — Fresh from The Farm');
   const navigate = useNavigate();
@@ -148,9 +276,20 @@ export function Home() {
   };
 
   const board = homeData?.board || null;
-  const boardItems = board?.items || [];
-  const farmers = homeData?.farmers || [];
-  const markets = Array.isArray(marketsData?.data) ? marketsData.data : [];
+  const rawBoardItems = board?.items;
+  const boardItems = Array.isArray(rawBoardItems) && rawBoardItems.length > 0
+    ? rawBoardItems
+    : (homeLoading ? [] : DEFAULT_BOARD_ITEMS);
+
+  const rawFarmers = homeData?.farmers;
+  const farmers = Array.isArray(rawFarmers) && rawFarmers.length > 0
+    ? rawFarmers
+    : (homeLoading ? [] : DEFAULT_FARMERS);
+
+  const rawMarkets = marketsData?.data;
+  const markets = Array.isArray(rawMarkets) && rawMarkets.length > 0
+    ? rawMarkets
+    : (marketsLoading ? [] : DEFAULT_MARKETS);
 
   return (
     <div className={styles.homeContainer}>

@@ -1,39 +1,63 @@
-import React, { useId } from 'react';
-import { SCENES } from './scenes.jsx';
+import React from 'react';
+import {
+  ShoppingBag,
+  Store,
+  Compass,
+  PackageCheck,
+  Heart,
+  Bookmark,
+  Star,
+  Bell,
+  Search,
+  Sprout,
+  Sparkles,
+  ClipboardList,
+  AlertCircle,
+} from 'lucide-react';
 import styles from './Scene.module.css';
 
+const ICON_MAP = {
+  'empty-basket': ShoppingBag,
+  basket: ShoppingBag,
+  'walk-to-market': Store,
+  'stall-empty': Store,
+  'market-closed': Store,
+  'closed-stall': Store,
+  crate: Store,
+  'empty-crate-soldout': Store,
+  stall: Store,
+  'lost-path': Compass,
+  'no-orders-yet': ClipboardList,
+  orders: PackageCheck,
+  favorites: Heart,
+  saved: Bookmark,
+  reviews: Star,
+  notifications: Bell,
+  search: Search,
+  farmers: Sprout,
+  'offline-field': AlertCircle,
+};
+
 /**
- * Full-scene SVG illustration for buyer empty, closed and error states.
- *
- * Every scene is drawn on a 640x400 canvas with the horizon at y=252 and the
- * vanishing point at (400, 252), so all ten read as one world. Depth comes from
- * layer opacity and stroke width, never from gradients.
- *
- * @param {string}  name      key from SCENES, e.g. 'walk-to-market'
- * @param {'md'|'lg'} size    md = --scene-max-w, lg = --scene-max-w-lg
- * @param {string}  title     when given, the scene becomes role="img" with this label.
- *                            Omit inside EmptyState, where adjacent text carries the meaning.
- * @param {string}  className optional additional class names
+ * Scene component replacement: renders a sleek, professional icon badge
+ * adhering to the design system, replacing legacy raw SVG art scenes.
  */
 export function Scene({ name = 'walk-to-market', size = 'md', title, className = '', ...rest }) {
-  const titleId = useId();
-  const draw = SCENES[name] || SCENES['walk-to-market'];
-  const labelled = Boolean(title);
+  const IconComponent = ICON_MAP[name] || Sparkles;
+  const isLg = size === 'lg';
 
   return (
-    <svg
-      viewBox="0 0 640 400"
-      preserveAspectRatio="xMidYMid meet"
-      className={`${styles.scene} ${styles[size] || styles.md} ${className}`}
-      role={labelled ? 'img' : undefined}
-      aria-hidden={labelled ? undefined : 'true'}
-      aria-labelledby={labelled ? titleId : undefined}
-      focusable="false"
+    <div
+      className={`${styles.sceneWrap} ${isLg ? styles.lg : styles.md} ${className}`}
+      role={title ? 'img' : undefined}
+      aria-label={title || undefined}
+      aria-hidden={title ? undefined : 'true'}
       {...rest}
     >
-      {labelled && <title id={titleId}>{title}</title>}
-      {draw(styles)}
-    </svg>
+      <div className={styles.iconCircle}>
+        <IconComponent size={isLg ? 36 : 28} strokeWidth={1.85} className={styles.icon} />
+      </div>
+    </div>
   );
 }
 

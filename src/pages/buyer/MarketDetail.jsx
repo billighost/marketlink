@@ -87,15 +87,15 @@ export function MarketDetail() {
   // 2. Fetch Stalls at this market
   const { data: farmersData, loading: farmersLoading } = useQuery(
     ['market-farmers', id],
-    ({ signal }) => getMarketFarmers(id, {}, signal),
-    { enabled: Boolean(id) }
+    ({ signal }) => getMarketFarmers(id, {}, signal).catch(() => ({ data: [] })),
+    { enabled: Boolean(id) && !marketError }
   );
 
   // 3. Fetch Products fresh at this market
   const { data: productsData } = useQuery(
     ['market-products', id],
-    ({ signal }) => getMarketProducts(id, { limit: 12 }, signal),
-    { enabled: Boolean(id) }
+    ({ signal }) => getMarketProducts(id, { limit: 12 }, signal).catch(() => ({ data: [] })),
+    { enabled: Boolean(id) && !marketError }
   );
 
   // 4. Fetch Saved Markets to know if this market is saved
@@ -268,27 +268,23 @@ export function MarketDetail() {
           />
         </Section>
 
-        {/* Stalls at this market */}
-        <Section title="Stalls at this market" subtitle={stallsCountText}>
-          {farmersLoading && stalls.length === 0 ? (
-            <div className={styles.stallsGrid}>
-              <Skeleton height="10rem" borderRadius="var(--radius-lg)" />
-              <Skeleton height="10rem" borderRadius="var(--radius-lg)" />
-            </div>
-          ) : stalls.length === 0 ? (
-            <EmptyState
-              scene="market-closed"
-              title="No stalls listed for this market"
-              text="Check back before market day."
-            />
-          ) : (
-            <div className={styles.stallsGrid}>
-              {stalls.map((farmer) => (
-                <FarmerCard key={farmer.id} farmer={farmer} variant="stall" />
-              ))}
-            </div>
-          )}
-        </Section>
+        {/* Stalls at this market — do not render section if no stalls are available */}
+        {(farmersLoading ? stalls.length > 0 || farmersLoading : stalls.length > 0) && (
+          <Section title="Stalls at this market" subtitle={stallsCountText}>
+            {farmersLoading && stalls.length === 0 ? (
+              <div className={styles.stallsGrid}>
+                <Skeleton height="10rem" borderRadius="var(--radius-lg)" />
+                <Skeleton height="10rem" borderRadius="var(--radius-lg)" />
+              </div>
+            ) : (
+              <div className={styles.stallsGrid}>
+                {stalls.map((farmer) => (
+                  <FarmerCard key={farmer.id} farmer={farmer} variant="stall" />
+                ))}
+              </div>
+            )}
+          </Section>
+        )}
 
         {/* Fresh at this market */}
         {freshProducts.length > 0 && (

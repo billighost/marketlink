@@ -1,10 +1,18 @@
+/*
+  Page.module.css already puts var(--section-gap) between this component's
+  direct children (48px) and its own bottom padding-block. The old version of
+  this file ALSO added a bottom padding here and ALSO added a margin-bottom on
+  the tabs wrapper — so the gaps were stacking on top of each other. Redefining
+  --section-gap here (rather than setting `gap` directly) overrides just the
+  value Page reads, so nothing has to fight over the padding-bottom decl.
+*/
 .page {
-  padding-bottom: var(--space-12);
+  --section-gap: var(--space-5);
 }
 
-.tabsWrap {
-  margin-bottom: var(--space-6);
-  max-width: 20rem;
+.controls {
+  width: 100%;
+  max-width: 22rem;
 }
 
 .listSection {
@@ -25,19 +33,19 @@
 }
 
 .skeletonCard {
-  height: 6rem;
+  height: 5.5rem;
   background: var(--color-canvas);
   border-radius: var(--radius-lg);
 }
 
 .emptyWrap {
-  padding: var(--space-8) 0;
+  padding: var(--space-6) 0;
 }
 
 .loadMoreRow {
   display: flex;
   justify-content: center;
-  padding-top: var(--space-4);
+  padding-top: var(--space-2);
 }
 
 .loadMoreBtn {
@@ -50,6 +58,7 @@
   color: var(--color-ink);
   cursor: pointer;
   min-height: var(--control-h);
+  width: 100%;
   transition: border-color var(--duration-fast) var(--ease-standard);
 }
 
@@ -65,4 +74,12 @@
 .loadMoreBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Room to spare once the layout isn't fighting the phone-width case */
+@media (min-width: 480px) {
+  .loadMoreBtn {
+    width: auto;
+    min-width: 12rem;
+  }
 }

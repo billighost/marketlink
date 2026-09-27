@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Inbox } from 'lucide-react';
 import styles from './IncomingOrdersTab.module.css';
 
 const MOCK_ORDERS = [
@@ -23,12 +24,9 @@ const IncomingOrdersTab = () => {
         
         {orders.length === 0 ? (
           <div className={styles.emptyState}>
-            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className={styles.emptyIllustration}>
-              <circle cx="60" cy="60" r="48" fill="var(--color-canvas, #F5EFE3)" />
-              <rect x="35" y="45" width="50" height="30" rx="4" stroke="var(--color-wood-line, #E3D3B8)" strokeWidth="3" />
-              <path d="M35 55L60 70L85 55" stroke="var(--color-wood-line, #E3D3B8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="95" cy="40" r="4" fill="var(--color-success, #5C7048)" />
-            </svg>
+            <div className={styles.emptyIconBadge} aria-hidden="true">
+              <Inbox size={28} strokeWidth={1.85} />
+            </div>
             <h3 className={styles.emptyTitle}>No incoming orders yet</h3>
             <p className={styles.emptySub}>When customers place pre-orders, they will appear here.</p>
           </div>

@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Compass, ArrowLeft } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import Illustration from '@/components/domain/Illustration';
 import styles from './NotFound.module.css';
 
 /**
- * Friendly market-style 404 page
+ * Friendly, professional 404 page for missing routes
  */
 export function NotFound() {
   useDocumentTitle('Stall Not Found · MarketLink');
@@ -17,10 +17,11 @@ export function NotFound() {
     <div className={styles.page}>
       <div className={styles.container}>
         <Card className={styles.card}>
-          <div className={styles.illustrationMoment} aria-hidden="true">
-            <Illustration name="empty-crate-soldout" size="xl" />
+          <div className={styles.statusBadge} aria-hidden="true">
+            <span className={styles.badgeCode}>404</span>
+            <Compass size={28} strokeWidth={1.85} className={styles.badgeIcon} />
           </div>
-          <h1 className={styles.title}>This stall isn't here today.</h1>
+          <h1 className={styles.title}>This stall isn't here today</h1>
           <p className={styles.text}>
             The page you're looking for has moved, packed up early, or never existed on Elm Street.
           </p>
@@ -31,6 +32,7 @@ export function NotFound() {
               variant="primary"
               size="md"
             >
+              <ArrowLeft size={16} style={{ marginRight: '6px' }} />
               Back to Elm Street
             </Button>
           </div>

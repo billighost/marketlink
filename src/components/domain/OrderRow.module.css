@@ -28,15 +28,17 @@
 
 .topRow {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-1) var(--space-3);
 }
 
 .statusGroup {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .dot {
@@ -74,6 +76,7 @@
   font-variant-numeric: tabular-nums;
   font-weight: var(--weight-medium);
   color: var(--color-ink);
+  flex-shrink: 0;
 }
 
 .middleRow {
@@ -90,9 +93,10 @@
 
 .bottomRow {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
-  gap: var(--space-3);
+  gap: var(--space-1) var(--space-3);
   padding-top: var(--space-1);
 }
 
@@ -110,4 +114,13 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.15em;
   color: var(--color-ink);
+  flex-shrink: 0;
+}
+
+/* Down to very narrow phones (~300px), trim the card's own padding rather
+   than letting content get squeezed against the design system's spacing */
+@media (max-width: 380px) {
+  .card {
+    padding: var(--space-3) var(--space-4);
+  }
 }
