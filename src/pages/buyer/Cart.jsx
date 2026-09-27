@@ -34,6 +34,17 @@ export function Cart() {
   const totalCents = quote?.totalCents ?? 0;
   const canProceed = Boolean(quote?.canCheckout) && hasItems && !loadingQuote;
 
+  // Summarise collection windows across all groups for the summary card
+  const collectionText = React.useMemo(() => {
+    if (!groups.length) return 'collect at the stall';
+    const slots = groups
+      .map((g) => g.selectedSlot?.label || g.selectedSlot?.start || null)
+      .filter(Boolean);
+    if (!slots.length) return 'collect at the stall';
+    const unique = [...new Set(slots)];
+    return unique.length === 1 ? `collect ${unique[0]}` : 'multiple pickup windows';
+  }, [groups]);
+
   // Scan for blocking issues across groups and lines
   const { stockIssues, cutoffIssues, removedIssues } = React.useMemo(() => {
     const sIssues = [];
