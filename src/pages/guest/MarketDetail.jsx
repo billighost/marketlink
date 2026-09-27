@@ -245,12 +245,27 @@ export function MarketDetail() {
       .filter(Boolean)
       .join(', ') || 'Saturday';
 
-  const categories = ['All', ...new Set(products.map((p) => p.category).filter(Boolean))];
+  const getCategoryName = (p) => {
+    if (!p) return '';
+    if (typeof p.category === 'object' && p.category !== null) {
+      return p.category.name || p.category.slug || '';
+    }
+    return p.categoryName || (typeof p.category === 'string' ? p.category : '') || p.categorySlug || '';
+  };
+
+  const categories = [
+    'All',
+    ...Array.from(new Set(products.map(getCategoryName).filter(Boolean))).sort(),
+  ];
 
   const filteredProducts =
     selectedCategory === 'All'
       ? products
-      : products.filter((p) => p.category === selectedCategory);
+      : products.filter((p) => {
+          const name = getCategoryName(p);
+          const slug = typeof p.category === 'object' ? p.category?.slug : p.categorySlug;
+          return name === selectedCategory || slug === selectedCategory;
+        });
 
   const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     `${market.name} ${market.address}`

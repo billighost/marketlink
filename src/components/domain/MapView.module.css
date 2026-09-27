@@ -11,10 +11,23 @@
   background-color: var(--color-canvas);
 }
 
+.mapWrapper.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
+  border-radius: 0;
+  border: none;
+}
+
 .mapContainer {
   width: 100%;
   height: 100%;
   outline: none;
+  background-color: var(--color-canvas);
 }
 
 .mapContainer:focus-visible {
@@ -35,6 +48,41 @@
   color: var(--color-ink-soft);
   gap: var(--space-2);
 }
+
+/* ---------- Loading state ---------- */
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-canvas);
+  pointer-events: none;
+}
+
+.loadingPulse {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border);
+  animation: mapPulse 1.1s ease-in-out infinite;
+}
+
+@keyframes mapPulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 0.8; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingPulse {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ---------- Directions overlay (top-right) ---------- */
 
 .directionsOverlay {
   position: absolute;
@@ -67,7 +115,124 @@
   background-color: var(--color-beet-tint);
 }
 
-/* Custom DivIcon marker styling */
+.directionsButton:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* ---------- Control cluster (bottom-right): zoom, locate, recenter, fullscreen ---------- */
+
+.controlCluster {
+  position: absolute;
+  bottom: var(--space-3);
+  right: var(--space-3);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: var(--border);
+  box-shadow: var(--shadow-menu);
+  background-color: var(--color-white);
+}
+
+.controlButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: 0;
+  border: none;
+  background-color: var(--color-white);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+
+.controlGroup .controlButton + .controlButton {
+  border-top: 1px solid var(--color-hairline);
+}
+
+.controlButton:hover:not(:disabled) {
+  background-color: var(--color-canvas-soft);
+}
+
+.controlButton:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+  z-index: 1;
+  position: relative;
+}
+
+.controlButton:disabled {
+  color: var(--color-ink-faint);
+  cursor: default;
+}
+
+.controlButtonBusy {
+  color: var(--color-beet);
+  animation: controlSpin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .controlButtonBusy {
+    animation: none;
+  }
+}
+
+@keyframes controlSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Locate status ---------- */
+
+.statusLive {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.statusPill {
+  position: absolute;
+  left: var(--space-3);
+  top: var(--space-3);
+  z-index: 1000;
+  max-width: calc(100% - var(--space-6));
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-white);
+  border: var(--border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-menu);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.statusPillError {
+  color: var(--color-beet-dark);
+  border-color: var(--color-beet);
+}
+
+/* ---------- Custom DivIcon marker styling ---------- */
+
 :global(.marketlink-map-pin) {
   display: flex;
   align-items: center;
@@ -122,6 +287,23 @@
   50% { box-shadow: 0 0 0 8px rgba(122, 46, 59, 0.10); }
 }
 
+/* "You are here" pin: round, not teardrop, with a soft halo */
+:global(.marketlink-pin-badge.you-are-here) {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: none;
+  background-color: var(--color-info, #2563eb);
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2);
+  border: 2px solid var(--color-white);
+}
+
+:global(.marketlink-pin-badge.you-are-here .marketlink-pin-inner) {
+  transform: none;
+  width: 6px;
+  height: 6px;
+}
+
 :global(.marketlink-pin-inner) {
   transform: rotate(45deg);
   width: 10px;
@@ -129,7 +311,6 @@
   border-radius: 50%;
   background-color: var(--color-white);
 }
-
 
 :global(.marketlink-popup .leaflet-popup-content-wrapper) {
   border-radius: var(--radius-md);
@@ -149,4 +330,61 @@
 :global(.marketlink-popup-title) {
   font-weight: var(--weight-semibold);
   margin-bottom: var(--space-1);
+}
+
+/* Leaflet's own scale control, restyled to match tokens */
+:global(.leaflet-control-scale-line) {
+  background-color: var(--color-white);
+  border: var(--border);
+  border-top: var(--border);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  padding: 1px var(--space-1);
+  box-shadow: var(--shadow-menu);
+}
+
+:global(.leaflet-bottom.leaflet-left) {
+  margin-bottom: var(--space-3);
+  margin-left: var(--space-3);
+}
+
+/* ---------- Small screens (down to 300px) ---------- */
+
+@media (max-width: 380px) {
+  .directionsOverlay {
+    top: var(--space-2);
+    right: var(--space-2);
+  }
+
+  .directionsButton span {
+    display: none;
+  }
+
+  .directionsButton {
+    padding: var(--space-2);
+  }
+
+  .controlCluster {
+    bottom: var(--space-2);
+    right: var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .controlButton {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .statusPill {
+    left: var(--space-2);
+    top: var(--space-2);
+    font-size: 0.6875rem;
+    max-width: calc(100% - 5.5rem);
+  }
+
+  :global(.leaflet-bottom.leaflet-left) {
+    margin-bottom: var(--space-2);
+    margin-left: var(--space-2);
+  }
 }
