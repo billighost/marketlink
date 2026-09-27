@@ -1,4 +1,4 @@
-﻿/* MarketCard — Full-width row card (redesigned) */
+/* MarketCard — Full-width row card (redesigned) */
 
 .card {
   position: relative;
@@ -117,4 +117,33 @@
 /* Day dots */
 .daysWrapper {
   margin-top: var(--space-1);
+}
+
+.mapActions {
+  margin-top: var(--space-3);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.goToMarketBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-3);
+  height: var(--control-h-sm);
+  background-color: var(--color-beet);
+  color: var(--color-on-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+  position: relative;
+  z-index: 2;
+}
+
+.goToMarketBtn:hover {
+  background-color: var(--color-beet-dark);
+  color: var(--color-on-primary);
 }

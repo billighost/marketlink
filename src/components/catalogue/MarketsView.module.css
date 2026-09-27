@@ -160,26 +160,56 @@
   }
 }
 
-/* === MAP VIEW === */
-.mapViewWrap {
+/* === MAP VIEW REDESIGN === */
+.mapViewLayout {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  height: calc(100vh - 200px); /* Fill most of the screen */
+  min-height: 600px;
 }
 
-.mapWrapper {
+@media (min-width: 1024px) {
+  .mapViewLayout {
+    flex-direction: row-reverse;
+  }
+}
+
+.mapSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow-y: auto;
+  max-height: 400px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* For sidebar styling: width fixed, scrollable */
+@media (min-width: 1024px) {
+  .mapSidebar {
+    width: 380px;
+    flex-shrink: 0;
+    max-height: 100%;
+    padding-right: var(--space-2);
+  }
+}
+
+.mapSidebarCard {
   width: 100%;
-  height: 26.25rem;
-  border: 1px solid var(--color-border);
+}
+
+.mapMainArea {
+  flex-grow: 1;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  position: relative;
+  border: 1px solid var(--color-border);
   background-color: var(--color-canvas);
+  min-height: 400px;
 }
 
-.selectedCardWrap {
-  max-width: 37.5rem;
+.mapWrapperFull {
   width: 100%;
+  height: 100%;
 }
 
 /* === SKELETON === */

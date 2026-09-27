@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { getMarkets } from '@/api/catalog';
@@ -30,23 +30,21 @@ const DAY_OPTIONS = [
 export function MarketsView({ audience = 'guest' }) {
   const routes = useCatalogueRoutes(audience);
   const [searchParams, setSearchParams] = useSearchParams();
-  const viewMode = searchParams.get('view') === 'map' ? 'map' : 'list';
+  const viewMode = searchParams.get('view') === 'list' ? 'list' : 'map';
   const dayParam = searchParams.get('day') || undefined;
 
   const [selectedDay, setSelectedDay] = useState(dayParam);
   const [selectedMarketId, setSelectedMarketId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const selectedCardRef = useRef(null);
+  const mapViewRef = useRef(null); // exposed imperative handle from MapView
 
   const setViewMode = (mode) => {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
-        if (mode === 'map') {
-          next.set('view', 'map');
-        } else {
-          next.delete('view');
-        }
+        // Always set explicitly so the URL reflects reality
+        next.set('view', mode);
         return next;
       },
       { replace: true }
@@ -146,8 +144,8 @@ export function MarketsView({ audience = 'guest' }) {
               value={viewMode}
               onChange={setViewMode}
               options={[
-                { value: 'list', label: 'List' },
                 { value: 'map', label: 'Map' },
+                { value: 'list', label: 'List' },
               ]}
             />
           </div>
@@ -233,30 +231,44 @@ export function MarketsView({ audience = 'guest' }) {
 
       {/* Map View */}
       {!loading && markets.length > 0 && viewMode === 'map' && (
-        <div className={styles.mapViewWrap}>
-          <div className={styles.mapWrapper}>
-            <MapView
-              markers={mapMarkers}
-              selectedId={selectedMarketId}
-              onSelect={handleMarkerSelect}
-              height="420px"
-              zoom={12}
-              interactive={true}
-              showDirectionsLink={false}
-              ariaLabel="Map of nearby farmers markets"
-            />
-          </div>
-
-          {/* Selected market card directly below map */}
-          {selectedMarket && (
-            <div ref={selectedCardRef} className={styles.selectedCardWrap}>
-              <MarketCard
-                market={selectedMarket}
-                isSelected={true}
-                audience={audience}
+        <div className={styles.mapViewLayout}>
+          {/* Main Map Area */}
+          <div className={styles.mapMainArea}>
+            <div className={styles.mapWrapperFull}>
+              <MapView
+                markers={mapMarkers}
+                selectedId={selectedMarketId}
+                onSelect={handleMarkerSelect}
+                height="100%"
+                zoom={11}
+                interactive={true}
+                showDirectionsLink={false}
+                ariaLabel="Map of nearby farmers markets"
               />
             </div>
-          )}
+          </div>
+
+          {/* Sidebar with all market cards */}
+          <div className={styles.mapSidebar}>
+            {markets.map((market) => {
+              const id = market.id || market._id;
+              const isSelected = id === selectedMarketId;
+              return (
+                <div
+                  key={id}
+                  ref={isSelected ? selectedCardRef : null}
+                  className={styles.mapSidebarCard}
+                >
+                  <MarketCard
+                    market={market}
+                    isSelected={isSelected}
+                    audience={audience}
+                    variant="map"
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

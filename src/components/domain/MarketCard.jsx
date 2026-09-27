@@ -23,6 +23,7 @@ export function MarketCard({
   isSelected = false,
   className = '',
   audience = 'buyer',
+  variant = 'list',
 }) {
   const routes = useCatalogueRoutes(audience);
   if (!market) return null;
@@ -69,12 +70,14 @@ export function MarketCard({
       aria-label={`${market.name}${city ? `, ${city}` : ''}`}
       onClick={handleClick}
     >
-      <Link
-        to={routes.market(marketId)}
-        className={styles.stretchedLink}
-        tabIndex={0}
-        aria-label={`View ${market.name}`}
-      />
+      {variant === 'list' && (
+        <Link
+          to={routes.market(marketId)}
+          className={styles.stretchedLink}
+          tabIndex={0}
+          aria-label={`View ${market.name}`}
+        />
+      )}
 
       <div className={styles.header}>
         <h3 className={styles.name}>{market.name}</h3>
@@ -126,6 +129,18 @@ export function MarketCard({
       <div className={styles.daysWrapper}>
         <DayDots days={days} size="sm" />
       </div>
+
+      {variant === 'map' && (
+        <div className={styles.mapActions}>
+          <Link
+            to={routes.market(marketId)}
+            className={styles.goToMarketBtn}
+            onClick={(e) => e.stopPropagation()}
+          >
+            Go to market
+          </Link>
+        </div>
+      )}
     </article>
   );
 }

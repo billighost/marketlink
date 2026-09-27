@@ -189,7 +189,7 @@
   white-space: nowrap;
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
-.signUpBtn:hover { background: var(--color-beet-dark); }
+.signUpBtn:hover { background: var(--color-beet-dark); color: var(--color-on-primary); }
 .signUpBtn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
 @media (min-width: 1024px) { .signUpBtn { display: inline-flex; } }
@@ -402,7 +402,7 @@
   text-decoration: none;
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
-.drawerSignUp:hover { background: var(--color-beet-dark); }
+.drawerSignUp:hover { background: var(--color-beet-dark); color: var(--color-on-primary); }
 .drawerSignUp:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
 /* Body scroll lock — :global is required here: the noScroll class is set on

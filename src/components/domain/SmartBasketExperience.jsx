@@ -31,7 +31,7 @@ import {
 } from '@/api/smartBasket';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
-import { formatPrice } from '@/utils/format';
+import { formatPrice, formatNaira } from '@/utils/format';
 import Illustration from '@/components/domain/Illustration';
 import styles from './SmartBasketExperience.module.css';
 
