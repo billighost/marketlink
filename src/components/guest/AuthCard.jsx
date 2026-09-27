@@ -25,16 +25,6 @@ import styles from './AuthCard.module.css';
 export function AuthCard({ title, lead, children, footer, wide = false, className = '' }) {
   return (
     <div className={styles.wrap}>
-      {/* Immersive background from previous auth showcase */}
-      <div className={styles.bgOverlay} aria-hidden="true">
-        <img
-          src="/images/market-morning.jpg"
-          alt=""
-          className={styles.bgImg}
-        />
-        <div className={styles.scrim} />
-      </div>
-
       <div className={`${styles.card} ${wide ? styles.cardWide : ''} ${className}`}>
         {/* Logo */}
         <Link to={PATHS.HOME} className={styles.logoLink} aria-label="MarketLink home">

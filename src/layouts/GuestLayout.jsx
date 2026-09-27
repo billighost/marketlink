@@ -23,6 +23,15 @@ export function GuestLayout() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  const isAuthPage = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/verify-email',
+    '/unauthorized',
+  ].includes(location.pathname);
+
   return (
     <div className={styles.layout}>
       {/* Accessible skip link */}
@@ -31,7 +40,7 @@ export function GuestLayout() {
       </a>
 
       {/* Slim site announcements */}
-      <AnnouncementBar />
+      {!isAuthPage && <AnnouncementBar />}
 
       {/* Persistent guest header */}
       <TopBar />
@@ -42,10 +51,10 @@ export function GuestLayout() {
       </main>
 
       {/* Persistent footer */}
-      <Footer withWave={false} />
+      {!isAuthPage && <Footer withWave={false} />}
 
       {/* Floating Back to Top Button */}
-      <BackToTop showAfter={350} />
+      {!isAuthPage && <BackToTop showAfter={350} />}
     </div>
   );
 }

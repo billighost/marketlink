@@ -31,6 +31,15 @@ export function TopBar() {
   const navigate = useNavigate();
   const { isAuthenticated, user, role } = useAuth();
 
+  const isAuthPage = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/verify-email',
+    '/unauthorized',
+  ].includes(location.pathname);
+
   const isBuyer = isAuthenticated && (role === 'buyer' || role === 'customer');
   const profilePath = isBuyer ? (PATHS.BUYER_PROFILE || '/buyer/profile') : (PATHS.LOGIN || '/login');
 
@@ -140,15 +149,19 @@ export function TopBar() {
               <Search size={18} strokeWidth={1.8} aria-hidden="true" />
             </button>
 
-            {/* Sign in — text link */}
-            <Link to={PATHS.LOGIN || '/login'} className={styles.signInLink}>
-              Sign in
-            </Link>
+            {/* Sign in — text link (hidden if already on login page) */}
+            {location.pathname !== (PATHS.LOGIN || '/login') && (
+              <Link to={PATHS.LOGIN || '/login'} className={styles.signInLink}>
+                Sign in
+              </Link>
+            )}
 
-            {/* Sign up — the one beet element on desktop */}
-            <Link to={PATHS.REGISTER || '/register'} className={styles.signUpBtn}>
-              Sign up
-            </Link>
+            {/* Sign up — the one beet element on desktop (hidden on auth pages per spec) */}
+            {!isAuthPage && (
+              <Link to={PATHS.REGISTER || '/register'} className={styles.signUpBtn}>
+                Sign up
+              </Link>
+            )}
 
             {/* Hamburger — mobile only */}
             <button
