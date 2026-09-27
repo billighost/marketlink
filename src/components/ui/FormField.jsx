@@ -46,20 +46,24 @@ export const FormField = forwardRef(function FormField(
         </label>
       )}
 
-      <div className={`${styles.controlWrapper} ${error ? styles.controlWrapperError : ''}`}>
-        {as === 'select' ? (
-          <select {...controlProps}>
-            {children}
-          </select>
-        ) : as === 'textarea' ? (
-          <textarea rows={rest.rows || 4} {...controlProps} />
-        ) : (
-          <input type={type} {...controlProps} />
-        )}
-        {rightAccessory && (
-          <div className={styles.accessory}>{rightAccessory}</div>
-        )}
-      </div>
+      {children && as !== 'select' ? (
+        children
+      ) : (
+        <div className={`${styles.controlWrapper} ${error ? styles.controlWrapperError : ''}`}>
+          {as === 'select' ? (
+            <select {...controlProps}>
+              {children}
+            </select>
+          ) : as === 'textarea' ? (
+            <textarea rows={rest.rows || 4} {...controlProps} />
+          ) : (
+            <input type={type} {...controlProps} />
+          )}
+          {rightAccessory && (
+            <div className={styles.accessory}>{rightAccessory}</div>
+          )}
+        </div>
+      )}
 
       {hint && !error && (
         <p id={hintId} className={styles.hint}>

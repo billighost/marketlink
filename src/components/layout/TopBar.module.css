@@ -187,13 +187,19 @@
 .actionsGroup {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
 @media (max-width: 480px) {
   .actionsGroup {
-    gap: 3px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .actionsGroup {
+    gap: 4px;
   }
 }
 
@@ -204,7 +210,7 @@
 }
 
 /* =========================================================
-   ICON BUTTONS
+   ICON BUTTONS (Cart, Bookmark)
    ========================================================= */
 
 .iconBtn {
@@ -217,68 +223,84 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  background: transparent;
-  color: #3e3936;
+  border: 1px solid rgba(46, 43, 38, 0.1);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #374151;
+  box-shadow: 0 1px 3px rgba(46, 43, 38, 0.04);
   cursor: pointer;
   text-decoration: none;
-  transition: color 150ms ease, background-color 150ms ease, transform 120ms ease;
+  transition: all 160ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 360px) {
+  .iconBtn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 8px;
+  }
 }
 
 @media (min-width: 1024px) {
   .iconBtn {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    min-height: 42px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 10px;
   }
 }
 
 .iconBtn:hover {
   color: var(--color-beet, #7a2e3b);
-  background: rgba(122, 46, 59, 0.06);
+  background: #fdfaf7;
+  border-color: rgba(122, 46, 59, 0.22);
+  transform: translateY(-0.5px);
 }
 
 .iconBtn:active {
-  transform: scale(0.95);
+  transform: scale(0.94);
+}
+
+/* Bookmark button: hidden on mobile (<768px) to keep header clean and spacious */
+.bookmarkBtn {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  .bookmarkBtn {
+    display: inline-flex !important;
+  }
 }
 
 /* Cart Badge */
 .cartBadge {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 16px;
-  height: 16px;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
   padding: 0 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #fffdfa;
+  border: 2px solid #ffffff;
   border-radius: 999px;
   background: var(--color-beet, #7a2e3b);
   color: #ffffff;
   font-family: var(--font-body, "Inter", sans-serif);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 750;
   line-height: 1;
+  box-shadow: 0 2px 5px rgba(122, 46, 59, 0.35);
+  pointer-events: none;
 }
 
-/* Hide bookmark, cart, and profile buttons on mobile/tablet screens (<1024px) */
-@media (max-width: 1023px) {
-  .bookmarkBtn,
-  .cartBtn,
-  .profileBtn {
-    display: none !important;
-  }
-
-  .actionsGroup {
-    gap: 8px;
-  }
-}
-
-/* Profile Button (Desktop only) */
+/* Profile Button */
 .profileBtn {
   width: 38px;
   height: 38px;
@@ -287,32 +309,52 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  border-radius: 9px;
-  background: var(--color-beet, #7a2e3b);
-  color: #ffffff;
+  border: 1px solid rgba(122, 46, 59, 0.18);
+  border-radius: 10px;
+  background: #fdf5f6;
+  color: var(--color-beet, #7a2e3b);
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(122, 46, 59, 0.16);
-  transition: background-color 150ms ease, transform 120ms ease;
+  box-shadow: 0 1px 3px rgba(122, 46, 59, 0.08);
+  transition: all 160ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 360px) {
+  .profileBtn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 8px;
+  }
 }
 
 @media (min-width: 1024px) {
   .profileBtn {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    min-height: 42px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 10px;
+    background: var(--color-beet, #7a2e3b);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 2px 6px rgba(122, 46, 59, 0.2);
   }
 }
 
 .profileBtn:hover {
-  background: var(--color-beet-dark, #5e212b);
+  background: var(--color-beet, #7a2e3b);
+  color: #ffffff;
+  border-color: var(--color-beet, #7a2e3b);
   transform: translateY(-0.5px);
+  box-shadow: 0 3px 8px rgba(122, 46, 59, 0.25);
 }
 
 .profileBtn:active {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
 /* Mobile Menu Button */
@@ -325,13 +367,25 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid rgba(46, 43, 38, 0.12);
+  border: 1px solid rgba(46, 43, 38, 0.1);
   border-radius: 10px;
   background: #ffffff;
   color: #2e2b26;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(46, 43, 38, 0.05);
-  transition: all 150ms ease;
+  box-shadow: 0 1px 3px rgba(46, 43, 38, 0.04);
+  transition: all 160ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 360px) {
+  .menuButton {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 8px;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -342,8 +396,9 @@
 
 .menuButton:hover {
   color: var(--color-beet, #7a2e3b);
-  background: rgba(122, 46, 59, 0.05);
+  background: #fdfaf7;
   border-color: rgba(122, 46, 59, 0.2);
+  transform: translateY(-0.5px);
 }
 
 .menuButton:active {

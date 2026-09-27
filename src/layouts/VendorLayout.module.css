@@ -10,20 +10,39 @@
 }
 
 @media (min-width: 1024px) {
-.sidebar {
+  .sidebar {
     display: flex;
     flex-direction: column;
     width: 260px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 40;
     flex-shrink: 0;
-    min-height: 100vh;
     border-right: 1px solid rgba(122, 46, 59, 0.12);
     background: linear-gradient(180deg, #FFFFFF 0%, #FAF5F6 100%);
-    position: sticky;
-    top: 0;
-    height: 100vh;
     padding: var(--space-6) var(--space-4);
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(122, 46, 59, 0.25) transparent;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background: rgba(122, 46, 59, 0.25);
+    border-radius: 4px;
+  }
+
+  .mainWrapper {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    max-width: calc(100% - 260px);
   }
 }
 
@@ -64,10 +83,20 @@
 }
 
 .stallCardHeader {
+  display: block;
+  text-decoration: none;
   background: rgba(122, 46, 59, 0.05);
   border: 1px solid rgba(122, 46, 59, 0.1);
   border-radius: var(--radius-lg, 12px);
   padding: 10px 12px;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.stallCardHeader:hover {
+  background: rgba(122, 46, 59, 0.09);
+  border-color: rgba(122, 46, 59, 0.25);
+  transform: translateY(-1px);
 }
 
 .stallMeta {

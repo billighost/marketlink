@@ -6,16 +6,17 @@ import styles from './Toast.module.css';
  * Bottom toast notification, above the nav and sheets.
  * Auto-dismisses after duration (default 2s).
  */
-export function Toast({ message, action, onAction, duration = 2000, onDismiss }) {
+export function Toast({ message, action, onAction, duration = 2000, onDismiss, onClose }) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(false);
       onDismiss?.();
+      onClose?.();
     }, duration);
     return () => clearTimeout(timer);
-  }, [duration, onDismiss]);
+  }, [duration, onDismiss, onClose]);
 
   if (!visible) return null;
 

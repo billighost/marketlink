@@ -10,40 +10,59 @@
 .triggerBtn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2, 8px);
-  padding: 6px 12px;
-  background-color: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md, 8px);
+  gap: 6px;
+  padding: 0 10px 0 6px;
+  background-color: #f8f6f2;
+  border: 1px solid rgba(46, 43, 38, 0.09);
+  border-radius: 999px;
   cursor: pointer;
   text-align: left;
-  min-height: var(--tap-min, 44px);
+  height: 38px;
+  min-height: 38px;
   color: var(--color-ink, #2e2b26);
   transition: all var(--duration-fast, 120ms) var(--ease-standard, ease);
   user-select: none;
   max-width: 100%;
 }
 
+@media (max-width: 360px) {
+  .triggerBtn {
+    height: 34px;
+    min-height: 34px;
+    padding: 0 8px 0 4px;
+    gap: 4px;
+  }
+}
+
 .triggerBtn:hover {
-  background-color: var(--color-canvas-soft, #faf7f0);
-  border-color: rgba(46, 43, 38, 0.08);
+  background-color: #efe9df;
+  border-color: rgba(122, 46, 59, 0.2);
 }
 
 .triggerBtnOpen {
-  background-color: var(--color-canvas-soft, #faf7f0);
-  border-color: rgba(122, 46, 59, 0.2);
+  background-color: #efe9df;
+  border-color: rgba(122, 46, 59, 0.35);
+  box-shadow: 0 0 0 2px rgba(122, 46, 59, 0.1);
 }
 
 .iconBox {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background-color: rgba(122, 46, 59, 0.08);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #ffffff;
   color: var(--color-beet, #7a2e3b);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
+}
+
+@media (max-width: 360px) {
+  .iconBox {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 .textWrap {
@@ -53,31 +72,45 @@
 }
 
 .subLabel {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.68rem;
-  color: var(--color-ink-soft, #6b6259);
-  font-weight: 500;
-  line-height: 1.1;
-  white-space: nowrap;
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .subLabel {
+    display: block;
+    font-family: var(--font-body, 'Inter', sans-serif);
+    font-size: 0.62rem;
+    color: var(--color-ink-soft, #6b6259);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
 }
 
 .marketName {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.84rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-ink, #2e2b26);
   display: flex;
   align-items: center;
-  gap: 4px;
-  line-height: 1.25;
+  gap: 3px;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 220px;
+  max-width: clamp(70px, 18vw, 150px);
+}
+
+@media (min-width: 1024px) {
+  .marketName {
+    max-width: 200px;
+    font-size: 0.85rem;
+  }
 }
 
 .chevron {
-  color: var(--color-ink-soft, #6b6259);
+  color: var(--color-ink-soft, #8c827a);
   transition: transform var(--duration-fast, 120ms) ease;
   flex-shrink: 0;
 }

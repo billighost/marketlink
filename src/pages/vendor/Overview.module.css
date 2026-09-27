@@ -937,6 +937,24 @@
   color: #111827;
 }
 
+@media (max-width: 1023px) {
+  .quickActionsBar {
+    position: static;
+    flex-direction: column;
+    width: 100%;
+    margin-top: var(--space-6, 24px);
+    margin-bottom: var(--space-8, 32px);
+    gap: var(--space-3, 12px);
+  }
+
+  .fabPrimaryBtn,
+  .fabSecondaryBtn {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+}
+
 /* Reply modal */
 .replyModalBox {
   display: flex;

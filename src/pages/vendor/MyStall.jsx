@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   getFarmerProfile,
   updateFarmerProfile,
@@ -36,6 +36,10 @@ import {
   Calendar,
   Layers,
   Edit3,
+  ArrowRight,
+  ArrowLeft,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import styles from './MyStall.module.css';
 
@@ -137,6 +141,139 @@ export function MyStall() {
       setLoading(false);
     }
   }, []);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [wizardStep, setWizardStep] = useState(1);
+  const [wizardData, setWizardData] = useState({
+    stallName: '',
+    contactPerson: '',
+    phone: '',
+    specialty: '',
+    story: '',
+    since: new Date().getFullYear(),
+    stallNumber: '',
+    marketIds: [],
+    operatingDays: ['sat'],
+    pickupWindows: [
+      { day: 'sat', startMin: 540, endMin: 780, label: '9:00 AM – 1:00 PM' },
+    ],
+    cutoffHours: 2,
+    maxOrdersPerSlot: 20,
+    address: '',
+    locationCoords: { lat: 51.4545, lng: -2.5879 },
+    imageUrl: '',
+  });
+
+  const handleOpenWizard = () => {
+    setWizardData({
+      stallName: stallName || '',
+      contactPerson: contactPerson || '',
+      phone: phone || '',
+      specialty: specialty || '',
+      story: story || '',
+      since: since || new Date().getFullYear(),
+      stallNumber: stallNumber || '',
+      marketIds: marketIds || [],
+      operatingDays: operatingDays?.length ? operatingDays : ['sat'],
+      pickupWindows: pickupWindows?.length
+        ? pickupWindows
+        : [{ day: 'sat', startMin: 540, endMin: 780, label: '9:00 AM – 1:00 PM' }],
+      cutoffHours: cutoffHours || 2,
+      maxOrdersPerSlot: maxOrdersPerSlot || 20,
+      address: address || '',
+      locationCoords: locationCoords || { lat: 51.4545, lng: -2.5879 },
+      imageUrl: imageUrl || '',
+    });
+    setWizardStep(1);
+    setSheetErrors({});
+    setActiveSheet('wizard');
+  };
+
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'create' || action === 'wizard') {
+      handleOpenWizard();
+    }
+  }, [searchParams]);
+
+  const handleSaveWizard = async () => {
+    const errors = {};
+    if (!wizardData.stallName.trim() || wizardData.stallName.trim().length < 2) {
+      errors.stallName = 'Stall name must be at least 2 characters.';
+    }
+    if (!wizardData.contactPerson.trim() || wizardData.contactPerson.trim().length < 2) {
+      errors.contactPerson = 'Please enter grower or contact person name.';
+    }
+    if (!wizardData.phone.trim() || wizardData.phone.trim().length < 7) {
+      errors.phone = 'Please provide a contact phone (minimum 7 digits).';
+    }
+    if (wizardData.marketIds.length === 0) {
+      errors.marketIds = 'Please select at least 1 farmers market you attend.';
+    }
+    if (wizardData.operatingDays.length === 0) {
+      errors.operatingDays = 'Please select at least 1 operating pickup day.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setSheetErrors(errors);
+      if (errors.stallName || errors.contactPerson || errors.phone) {
+        setWizardStep(1);
+      } else if (errors.marketIds) {
+        setWizardStep(2);
+      } else if (errors.operatingDays) {
+        setWizardStep(3);
+      }
+      return;
+    }
+
+    setSaving(true);
+    setSheetErrors({});
+
+    try {
+      const payload = {
+        stallName: wizardData.stallName.trim(),
+        contactPerson: wizardData.contactPerson.trim(),
+        phone: wizardData.phone.trim(),
+        specialty: wizardData.specialty.trim() || undefined,
+        story: wizardData.story.trim() || undefined,
+        since: Number(wizardData.since) || new Date().getFullYear(),
+        stallNumber: wizardData.stallNumber.trim() || undefined,
+        marketIds: wizardData.marketIds,
+        operatingDays: wizardData.operatingDays,
+        pickupWindows: wizardData.pickupWindows.filter((w) =>
+          wizardData.operatingDays.includes(w.day)
+        ),
+        cutoffMinutesBefore: Math.max(30, Number(wizardData.cutoffHours) * 60),
+        maxOrdersPerSlot: Math.min(200, Math.max(1, Number(wizardData.maxOrdersPerSlot))),
+        address: wizardData.address.trim() || undefined,
+        location: wizardData.locationCoords,
+        imageUrl: wizardData.imageUrl || undefined,
+      };
+
+      const res = await updateFarmerProfile(payload);
+      setProfile(res?.data || null);
+      setToastMessage('🎉 Stall successfully created & published!');
+      setToastType('success');
+      setActiveSheet('none');
+      if (searchParams.get('action')) {
+        setSearchParams({}, { replace: true });
+      }
+      refreshProfile();
+      loadProfile();
+    } catch (err) {
+      if (err?.details && Array.isArray(err.details)) {
+        const mapped = {};
+        err.details.forEach((d) => {
+          if (d.field) mapped[d.field] = d.message;
+        });
+        setSheetErrors(mapped);
+      } else {
+        setSheetErrors({ general: err?.message || 'Failed to create stall profile.' });
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     loadProfile();
@@ -378,19 +515,54 @@ export function MyStall() {
         </div>
 
         <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.createStallBtn}
+            onClick={handleOpenWizard}
+          >
+            <Sparkles size={16} aria-hidden="true" />
+            <span>{stallName ? 'Setup Wizard' : 'Create My Stall'}</span>
+          </button>
           <Link
             to={publicStorefrontUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.previewBtn}
           >
-            <ExternalLink size={15} />
+            <ExternalLink size={15} aria-hidden="true" />
             <span>View Public Stall</span>
           </Link>
         </div>
       </header>
 
       {error && <div className={styles.errorBox}>{error}</div>}
+
+      {/* Onboarding Banner when stall not created or incomplete */}
+      {(!stallName || readiness < 100) && (
+        <section className={styles.onboardingBanner} aria-label="Stall setup status">
+          <div className={styles.onboardingLeft}>
+            <div className={styles.onboardingIconBox}>
+              <Sparkles size={24} aria-hidden="true" />
+            </div>
+            <div className={styles.onboardingText}>
+              <strong>{stallName ? 'Complete Your Stall Profile' : 'Create & Launch Your Farm Stall'}</strong>
+              <p>
+                {stallName
+                  ? `Your stall setup is ${readiness}% complete. Finalize your markets and pickup windows to maximize customer discovery.`
+                  : 'Welcome to MarketLink! Set up your grower identity, connect to regional markets, and start accepting customer pre-orders.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={styles.onboardingActionBtn}
+            onClick={handleOpenWizard}
+          >
+            <Store size={16} aria-hidden="true" />
+            <span>{stallName ? 'Continue Stall Setup' : 'Create My Stall Now'}</span>
+          </button>
+        </section>
+      )}
 
       {/* Hero Stall Visual Showcase Banner */}
       <section className={styles.heroBanner}>
@@ -1248,6 +1420,585 @@ export function MyStall() {
               <Camera size={18} aria-hidden="true" />
               <span>{imageUrl ? 'Replace Photo' : 'Upload Stall Photo'} (≤ 1 MB)</span>
             </Button>
+          </div>
+        </BottomSheet>
+      )}
+
+      {/* ─── STALL SETUP / CREATION WIZARD ─── */}
+      {activeSheet === 'wizard' && (
+        <BottomSheet
+          isOpen={true}
+          onClose={() => {
+            setActiveSheet('none');
+            if (searchParams.get('action')) {
+              setSearchParams({}, { replace: true });
+            }
+          }}
+          size="tall"
+          title={stallName ? 'Complete Stall Setup Wizard' : 'Create & Launch Your Farm Stall'}
+        >
+          <div className={styles.wizardWrap}>
+            {/* Steps Progress Row */}
+            <div className={styles.wizardHeader}>
+              <div className={styles.wizardStepsRow} role="tablist">
+                {[
+                  { step: 1, title: '1. Identity & Heritage' },
+                  { step: 2, title: '2. Markets & Pin' },
+                  { step: 3, title: '3. Pickup Schedule' },
+                  { step: 4, title: '4. Photo & Launch' },
+                ].map((s) => {
+                  const isActive = wizardStep === s.step;
+                  const isDone = wizardStep > s.step;
+                  return (
+                    <button
+                      key={s.step}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      className={`${styles.stepPill} ${
+                        isActive
+                          ? styles.stepPillActive
+                          : isDone
+                          ? styles.stepPillCompleted
+                          : ''
+                      }`}
+                      onClick={() => setWizardStep(s.step)}
+                    >
+                      <span className={styles.stepBadgeNum}>
+                        {isDone ? '✓' : s.step}
+                      </span>
+                      <span>{s.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {sheetErrors.general && (
+              <div className={styles.errorBox} role="alert">
+                {sheetErrors.general}
+              </div>
+            )}
+
+            {/* Step 1: Farm & Stall Identity */}
+            {wizardStep === 1 && (
+              <div className={styles.stepContent}>
+                <div>
+                  <h3 className={styles.stepTitle}>Farm & Grower Identity</h3>
+                  <p className={styles.stepSubtitle}>
+                    This is how your farm appears to customer shoppers across MarketLink.
+                  </p>
+                </div>
+
+                <FormField
+                  label="Stall Name"
+                  required
+                  error={sheetErrors.stallName}
+                  hint="The commercial or farm name displayed on your stall banner."
+                >
+                  <input
+                    type="text"
+                    value={wizardData.stallName}
+                    onChange={(e) =>
+                      setWizardData({ ...wizardData, stallName: e.target.value })
+                    }
+                    placeholder="e.g. Riverbend Organic Farm"
+                    className={styles.input}
+                    required
+                  />
+                </FormField>
+
+                <div className={styles.twoCol}>
+                  <FormField
+                    label="Primary Grower / Contact Person"
+                    required
+                    error={sheetErrors.contactPerson}
+                  >
+                    <input
+                      type="text"
+                      value={wizardData.contactPerson}
+                      onChange={(e) =>
+                        setWizardData({ ...wizardData, contactPerson: e.target.value })
+                      }
+                      placeholder="e.g. Elena Vance"
+                      className={styles.input}
+                      required
+                    />
+                  </FormField>
+
+                  <FormField
+                    label="Direct Phone Number"
+                    required
+                    error={sheetErrors.phone}
+                    hint="For urgent customer pickup questions."
+                  >
+                    <input
+                      type="tel"
+                      value={wizardData.phone}
+                      onChange={(e) =>
+                        setWizardData({ ...wizardData, phone: e.target.value })
+                      }
+                      placeholder="e.g. 555-0192"
+                      className={styles.input}
+                      required
+                    />
+                  </FormField>
+                </div>
+
+                <div className={styles.twoCol}>
+                  <FormField
+                    label="Harvest Specialty"
+                    error={sheetErrors.specialty}
+                    hint="e.g. Heirloom Apples, Stone Fruits & Root Vegetables"
+                  >
+                    <input
+                      type="text"
+                      value={wizardData.specialty}
+                      onChange={(e) =>
+                        setWizardData({ ...wizardData, specialty: e.target.value })
+                      }
+                      placeholder="e.g. Certified Organic Berries & Greens"
+                      className={styles.input}
+                    />
+                  </FormField>
+
+                  <FormField
+                    label="Farming Since (Year)"
+                    error={sheetErrors.since}
+                  >
+                    <input
+                      type="number"
+                      value={wizardData.since}
+                      onChange={(e) =>
+                        setWizardData({
+                          ...wizardData,
+                          since: parseInt(e.target.value, 10) || new Date().getFullYear(),
+                        })
+                      }
+                      min={1900}
+                      max={new Date().getFullYear()}
+                      className={styles.input}
+                    />
+                  </FormField>
+                </div>
+
+                <FormField
+                  label="Your Farm Story & Soil Philosophy"
+                  hint="Share what makes your growing practices special."
+                >
+                  <textarea
+                    value={wizardData.story}
+                    onChange={(e) =>
+                      setWizardData({ ...wizardData, story: e.target.value })
+                    }
+                    placeholder="We farm 14 acres along the river valley using organic no-till regenerative methods..."
+                    rows={3}
+                    maxLength={600}
+                    className={styles.textarea}
+                  />
+                </FormField>
+              </div>
+            )}
+
+            {/* Step 2: Markets & Location */}
+            {wizardStep === 2 && (
+              <div className={styles.stepContent}>
+                <div>
+                  <h3 className={styles.stepTitle}>Attended Markets & Physical Location</h3>
+                  <p className={styles.stepSubtitle}>
+                    Select where market patrons can find your stall in person.
+                  </p>
+                </div>
+
+                <FormField
+                  label="Attending Farmers Markets"
+                  required
+                  error={sheetErrors.marketIds}
+                  hint="Select up to 5 regional markets where you have an active stall booth."
+                >
+                  <div className={styles.wizardMarketsGrid}>
+                    {allMarkets.map((m) => {
+                      const isChecked = wizardData.marketIds.includes(m.id);
+                      return (
+                        <div
+                          key={m.id}
+                          className={`${styles.wizardMarketCard} ${
+                            isChecked ? styles.wizardMarketCardActive : ''
+                          }`}
+                          onClick={() => {
+                            if (isChecked) {
+                              setWizardData({
+                                ...wizardData,
+                                marketIds: wizardData.marketIds.filter((id) => id !== m.id),
+                              });
+                            } else {
+                              if (wizardData.marketIds.length >= 5) return;
+                              setWizardData({
+                                ...wizardData,
+                                marketIds: [...wizardData.marketIds, m.id],
+                              });
+                            }
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            readOnly
+                            className={styles.wizardMarketCheck}
+                          />
+                          <div className={styles.wizardMarketInfo}>
+                            <strong>{m.name}</strong>
+                            <span>{m.address}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </FormField>
+
+                <div className={styles.twoCol}>
+                  <FormField label="Stall / Booth Identifier (Optional)">
+                    <input
+                      type="text"
+                      value={wizardData.stallNumber}
+                      onChange={(e) =>
+                        setWizardData({ ...wizardData, stallNumber: e.target.value })
+                      }
+                      placeholder="e.g. Center Aisle #12"
+                      className={styles.input}
+                    />
+                  </FormField>
+
+                  <FormField label="Physical Farm or Stall Address">
+                    <input
+                      type="text"
+                      value={wizardData.address}
+                      onChange={(e) =>
+                        setWizardData({ ...wizardData, address: e.target.value })
+                      }
+                      placeholder="e.g. 1024 Meadowbrook Road"
+                      className={styles.input}
+                    />
+                  </FormField>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Pickup Schedule & Ordering */}
+            {wizardStep === 3 && (
+              <div className={styles.stepContent}>
+                <div>
+                  <h3 className={styles.stepTitle}>Operating Days & Pickup Windows</h3>
+                  <p className={styles.stepSubtitle}>
+                    When customers place orders, they will select one of these pickup slots at checkout.
+                  </p>
+                </div>
+
+                <FormField
+                  label="Days Open for Collection"
+                  required
+                  error={sheetErrors.operatingDays}
+                >
+                  <div className={styles.wizardDaysRow}>
+                    {DAYS_OF_WEEK.map((d) => {
+                      const isSelected = wizardData.operatingDays.includes(d.id);
+                      return (
+                        <button
+                          key={d.id}
+                          type="button"
+                          className={`${styles.wizardDayBtn} ${
+                            isSelected ? styles.wizardDayBtnActive : ''
+                          }`}
+                          onClick={() => {
+                            if (isSelected) {
+                              setWizardData({
+                                ...wizardData,
+                                operatingDays: wizardData.operatingDays.filter(
+                                  (id) => id !== d.id
+                                ),
+                              });
+                            } else {
+                              setWizardData({
+                                ...wizardData,
+                                operatingDays: [...wizardData.operatingDays, d.id],
+                              });
+                            }
+                          }}
+                        >
+                          {d.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </FormField>
+
+                <div className={styles.wizardPresetsRow}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    Quick-add common market pickup hours:
+                  </span>
+                  <button
+                    type="button"
+                    className={styles.presetBtn}
+                    onClick={() => {
+                      const next = [
+                        ...wizardData.pickupWindows.filter(
+                          (w) => !(w.day === 'sat' && w.startMin === 540)
+                        ),
+                        { day: 'sat', startMin: 540, endMin: 780, label: '9:00 AM – 1:00 PM' },
+                      ];
+                      const days = wizardData.operatingDays.includes('sat')
+                        ? wizardData.operatingDays
+                        : [...wizardData.operatingDays, 'sat'];
+                      setWizardData({ ...wizardData, pickupWindows: next, operatingDays: days });
+                    }}
+                  >
+                    <span>+ Saturday Morning (9:00 AM – 1:00 PM)</span>
+                    <Plus size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.presetBtn}
+                    onClick={() => {
+                      const next = [
+                        ...wizardData.pickupWindows.filter(
+                          (w) => !(w.day === 'sun' && w.startMin === 600)
+                        ),
+                        { day: 'sun', startMin: 600, endMin: 840, label: '10:00 AM – 2:00 PM' },
+                      ];
+                      const days = wizardData.operatingDays.includes('sun')
+                        ? wizardData.operatingDays
+                        : [...wizardData.operatingDays, 'sun'];
+                      setWizardData({ ...wizardData, pickupWindows: next, operatingDays: days });
+                    }}
+                  >
+                    <span>+ Sunday Midday (10:00 AM – 2:00 PM)</span>
+                    <Plus size={14} />
+                  </button>
+                </div>
+
+                <div className={styles.activeWindowsList}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    Configured Windows ({wizardData.pickupWindows.length}):
+                  </span>
+                  {wizardData.pickupWindows.map((w, idx) => {
+                    const dayObj = DAYS_OF_WEEK.find((d) => d.id === w.day);
+                    const startH = Math.floor(w.startMin / 60);
+                    const startM = w.startMin % 60;
+                    const endH = Math.floor(w.endMin / 60);
+                    const endM = w.endMin % 60;
+                    const formatTime = (h, m) =>
+                      `${h > 12 ? h - 12 : h || 12}:${m < 10 ? '0' : ''}${m} ${h >= 12 ? 'PM' : 'AM'}`;
+                    return (
+                      <div key={idx} className={styles.activeWindowRow}>
+                        <span>
+                          <strong>{dayObj?.label}:</strong> {formatTime(startH, startM)} – {formatTime(endH, endM)}
+                        </span>
+                        <button
+                          type="button"
+                          className={styles.windowRemoveBtn}
+                          onClick={() => {
+                            setWizardData({
+                              ...wizardData,
+                              pickupWindows: wizardData.pickupWindows.filter((_, i) => i !== idx),
+                            });
+                          }}
+                          aria-label="Remove window"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className={styles.twoCol}>
+                  <FormField
+                    label="Pre-Order Cutoff Notice"
+                    hint="Hours before pickup when customer orders close."
+                  >
+                    <select
+                      value={wizardData.cutoffHours}
+                      onChange={(e) =>
+                        setWizardData({
+                          ...wizardData,
+                          cutoffHours: parseInt(e.target.value, 10),
+                        })
+                      }
+                      className={styles.select}
+                    >
+                      <option value={1}>1 hour before</option>
+                      <option value={2}>2 hours before (Recommended)</option>
+                      <option value={6}>6 hours before</option>
+                      <option value={12}>12 hours before (Friday evening)</option>
+                      <option value={24}>24 hours before</option>
+                    </select>
+                  </FormField>
+
+                  <FormField
+                    label="Slot Capacity"
+                    hint="Maximum pre-orders per pickup window."
+                  >
+                    <input
+                      type="number"
+                      value={wizardData.maxOrdersPerSlot}
+                      onChange={(e) =>
+                        setWizardData({
+                          ...wizardData,
+                          maxOrdersPerSlot: Math.min(
+                            200,
+                            Math.max(1, parseInt(e.target.value, 10) || 1)
+                          ),
+                        })
+                      }
+                      min={1}
+                      max={200}
+                      className={styles.input}
+                    />
+                  </FormField>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Photo & Live Storefront Preview */}
+            {wizardStep === 4 && (
+              <div className={styles.stepContent}>
+                <div>
+                  <h3 className={styles.stepTitle}>Storefront Photo & Preview</h3>
+                  <p className={styles.stepSubtitle}>
+                    Review your stall card before launching it to regional buyers.
+                  </p>
+                </div>
+
+                {/* Live Public Card Preview */}
+                <div className={styles.livePreviewBox}>
+                  <div className={styles.livePreviewBanner}>
+                    {wizardData.imageUrl ? (
+                      <img
+                        src={wizardData.imageUrl}
+                        alt="Preview"
+                        className={styles.livePreviewBannerImg}
+                      />
+                    ) : (
+                      <div className={styles.livePreviewBannerOverlay} />
+                    )}
+                    <span className={styles.livePreviewBannerTitle}>
+                      {wizardData.stallName || 'Your Farm Stall Name'}
+                    </span>
+                  </div>
+                  <div className={styles.livePreviewBody}>
+                    <div className={styles.livePreviewMetaRow}>
+                      <span className={styles.livePreviewSpecialty}>
+                        {wizardData.specialty || 'Fresh Farm Produce'}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#6B7280' }}>
+                        Est. {wizardData.since}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#059669', fontWeight: 600 }}>
+                        ★ 5.0 (New Stall)
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#7A2E3B', fontWeight: 600 }}>
+                        {wizardData.marketIds.length} {wizardData.marketIds.length === 1 ? 'Market' : 'Markets'}
+                      </span>
+                    </div>
+                    {wizardData.story && (
+                      <p className={styles.livePreviewStory}>
+                        "{wizardData.story}"
+                      </p>
+                    )}
+                    <div style={{ fontSize: '12px', color: '#4B5563', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <Clock size={13} />
+                      <span>
+                        Open {wizardData.operatingDays.map((d) => d.toUpperCase()).join(', ')} • Pickup Available
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Photo Upload or Preset Picker */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '4px' }}>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handlePhotoUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="md"
+                    onClick={() => fileInputRef.current?.click()}
+                    loading={uploading}
+                  >
+                    <Camera size={16} />
+                    <span>{wizardData.imageUrl ? 'Change Photo' : 'Upload Stall Photo'}</span>
+                  </Button>
+                  {!wizardData.imageUrl && (
+                    <button
+                      type="button"
+                      className={styles.presetBtn}
+                      style={{ margin: 0, padding: '8px 14px' }}
+                      onClick={() =>
+                        setWizardData({
+                          ...wizardData,
+                          imageUrl: '/images/market-morning.jpg',
+                        })
+                      }
+                    >
+                      <span>Use Default Market Morning Banner</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Wizard Navigation Footer */}
+            <div className={styles.wizardFooterNav}>
+              {wizardStep > 1 ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setWizardStep(wizardStep - 1)}
+                >
+                  <ArrowLeft size={16} />
+                  <span>Back</span>
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="md"
+                  onClick={() => setActiveSheet('none')}
+                >
+                  Cancel
+                </Button>
+              )}
+
+              {wizardStep < 4 ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  onClick={() => setWizardStep(wizardStep + 1)}
+                >
+                  <span>Next Step</span>
+                  <ArrowRight size={16} />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="lg"
+                  onClick={handleSaveWizard}
+                  disabled={saving}
+                  loading={saving}
+                >
+                  <Sparkles size={16} />
+                  <span>{stallName ? 'Save & Update Stall' : 'Create & Launch Stall'}</span>
+                </Button>
+              )}
+            </div>
           </div>
         </BottomSheet>
       )}

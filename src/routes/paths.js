@@ -48,6 +48,13 @@ export const PATHS = {
   BUYER_HELP:              '/buyer/help',
   BUYER_PROFILE_REVIEWS:   '/buyer/profile/reviews',
   VENDOR: '/vendor',
+  VENDOR_STOCK: '/vendor/stock',
+  VENDOR_ORDERS: '/vendor/orders',
+  VENDOR_ORDER_DETAIL: '/vendor/orders/:id',
+  VENDOR_INSIGHTS: '/vendor/insights',
+  VENDOR_REVIEWS: '/vendor/reviews',
+  VENDOR_STALL: '/vendor/stall',
+  VENDOR_SETTINGS: '/vendor/settings',
   ADMIN: '/admin',
 };
 

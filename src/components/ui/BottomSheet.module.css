@@ -42,7 +42,8 @@
 
 /* Size variants */
 .peek {
-  max-height: var(--sheet-max-height);
+  max-height: 85dvh;
+  height: auto;
 }
 
 .tall {
@@ -97,8 +98,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2px 14px 10px 14px;
-  border-bottom: 1px solid #f1ece6;
+  padding: 6px 18px 12px 18px;
+  border-bottom: 1px solid #f0eae1;
   flex-shrink: 0;
   touch-action: none;
   user-select: none;
@@ -112,10 +113,10 @@
 
 .sheetTitle {
   font-family: var(--font-body, system-ui, -apple-system, sans-serif);
-  font-size: 0.98rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: #1f2937;
-  letter-spacing: -0.01em;
+  color: var(--color-ink, #2E2B26);
+  letter-spacing: -0.015em;
   margin: 0;
   text-align: center;
   flex: 1;
@@ -195,6 +196,25 @@
   overscroll-behavior-y: contain;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(122, 46, 59, 0.2) transparent;
+}
+
+.body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.body::-webkit-scrollbar-thumb {
+  background: rgba(122, 46, 59, 0.2);
+  border-radius: 999px;
+}
+
+.body::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 46, 59, 0.4);
 }
 
 /* Sticky footer */
@@ -215,11 +235,14 @@
 
   /* Peek -> centred dialog */
   .peek {
-    max-width: var(--container-form);
+    width: 100%;
+    max-width: min(520px, calc(100vw - 32px));
     margin: auto;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-xl, 20px);
     animation: fadeScaleIn 240ms var(--ease-standard);
-    border: 1px solid var(--color-border);
+    border: 1px solid rgba(46, 43, 38, 0.12);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
   }
 
   /* Tall, full & twoStop -> right-side drawer */

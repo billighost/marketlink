@@ -31,6 +31,7 @@ import ProductDetail from '@/pages/guest/ProductDetail';
 import VendorOverview from '@/pages/vendor/Overview';
 import VendorStock from '@/pages/vendor/Stock';
 import VendorOrders from '@/pages/vendor/Orders';
+import VendorOrderDetail from '@/pages/vendor/OrderDetail';
 import VendorInsights from '@/pages/vendor/Insights';
 import VendorReviews from '@/pages/vendor/Reviews';
 import VendorMyStall from '@/pages/vendor/MyStall';
@@ -117,8 +118,10 @@ export function AppRoutes() {
         <Route index element={<VendorOverview />} />
         <Route path="stock" element={<VendorStock />} />
         <Route path="orders" element={<VendorOrders />} />
+        <Route path="orders/:id" element={<VendorOrderDetail />} />
         <Route path="insights" element={<VendorInsights />} />
         <Route path="reviews" element={<VendorReviews />} />
+        <Route path="stall" element={<VendorMyStall />} />
         <Route path="settings" element={<VendorMyStall />} />
       </Route>
 

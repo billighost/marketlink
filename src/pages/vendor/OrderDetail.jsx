@@ -14,7 +14,7 @@ import Button from '@/components/ui/Button';
 import ConfirmStep from '@/components/ui/ConfirmStep';
 import Skeleton from '@/components/ui/Skeleton';
 import { formatPrice } from '@/utils/format';
-import { Phone, Clock, FileText, AlertTriangle } from 'lucide-react';
+import { Phone, Clock, FileText, AlertTriangle, ArrowLeft } from 'lucide-react';
 import styles from './OrderDetail.module.css';
 
 /**
@@ -25,6 +25,7 @@ export function OrderDetail({ orderId: propOrderId, onClose, onUpdated }) {
   const params = useParams();
   const navigate = useNavigate();
   const { refreshCounts } = useVendor();
+  const isStandalone = !propOrderId;
 
   const orderId = propOrderId || params.id;
 
@@ -156,7 +157,18 @@ export function OrderDetail({ orderId: propOrderId, onClose, onUpdated }) {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${isStandalone ? styles.standaloneContainer : ''}`}>
+      {isStandalone && (
+        <button
+          type="button"
+          onClick={() => navigate('/vendor/orders')}
+          className={styles.backButton}
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+          <span>Back to All Orders</span>
+        </button>
+      )}
+
       {/* Header Info */}
       <div className={styles.header}>
         <div className={styles.orderNumberRow}>

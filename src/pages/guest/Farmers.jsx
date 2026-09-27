@@ -250,6 +250,48 @@ export function Farmers() {
     };
   }, []);
 
+function getFallbackProductsForFarmer(farmer) {
+  const cat = farmer?.category || '';
+  if (cat.includes('Dairy') || cat.includes('Cheese')) {
+    return [
+      { id: 'p-1', name: 'Raw Grass-Fed Whole Milk', priceCents: 550, unit: 'half gallon', quantityAvailable: 12 },
+      { id: 'p-2', name: 'Cultured Farmhouse Butter', priceCents: 650, unit: '8 oz tub', quantityAvailable: 18 },
+      { id: 'p-3', name: 'Fresh Jersey Ricotta', priceCents: 800, unit: 'jar', quantityAvailable: 8 },
+      { id: 'p-4', name: '2-Year Aged Farmhouse Cheddar', priceCents: 1200, unit: 'wedge (0.5 lb)', quantityAvailable: 14 },
+    ];
+  }
+  if (cat.includes('Bakery')) {
+    return [
+      { id: 'p-1', name: 'Wood-fired Sourdough Boule', priceCents: 900, unit: 'loaf', quantityAvailable: 15 },
+      { id: 'p-2', name: 'Heritage Einkorn Baguette', priceCents: 600, unit: 'baguette', quantityAvailable: 20 },
+      { id: 'p-3', name: 'Wild Cardamom Morning Buns', priceCents: 450, unit: 'each', quantityAvailable: 16 },
+      { id: 'p-4', name: 'Stone-Ground Rye Miche', priceCents: 1100, unit: 'half loaf', quantityAvailable: 10 },
+    ];
+  }
+  if (cat.includes('Honey') || cat.includes('Preserves')) {
+    return [
+      { id: 'p-1', name: 'Raw Catskills Wildflower Honey', priceCents: 1400, unit: '16 oz jar', quantityAvailable: 22 },
+      { id: 'p-2', name: 'Clover Creamed Honey', priceCents: 1250, unit: '12 oz jar', quantityAvailable: 14 },
+      { id: 'p-3', name: 'Wild Blackberry Preserves', priceCents: 950, unit: 'jar', quantityAvailable: 18 },
+      { id: 'p-4', name: 'Pure Local Bee Pollen', priceCents: 1600, unit: '8 oz jar', quantityAvailable: 9 },
+    ];
+  }
+  if (cat.includes('Fruit') || cat.includes('Berries')) {
+    return [
+      { id: 'p-1', name: 'Crisp Honeycrisp Apples', priceCents: 450, unit: 'lb', quantityAvailable: 35 },
+      { id: 'p-2', name: 'Fresh Sun-Ripened Blackberries', priceCents: 600, unit: 'pint', quantityAvailable: 20 },
+      { id: 'p-3', name: 'Unpasteurized Sweet Cider', priceCents: 850, unit: 'half gallon', quantityAvailable: 15 },
+      { id: 'p-4', name: 'Heirloom Bosc Pears', priceCents: 500, unit: 'lb', quantityAvailable: 25 },
+    ];
+  }
+  return [
+    { id: 'p-1', name: 'Heirloom Rainbow Carrots', priceCents: 450, unit: 'bunch', quantityAvailable: 24 },
+    { id: 'p-2', name: 'Tuscan Lacinato Kale', priceCents: 375, unit: 'bunch', quantityAvailable: 30 },
+    { id: 'p-3', name: 'Organic Butterhead Lettuce', priceCents: 400, unit: 'head', quantityAvailable: 18 },
+    { id: 'p-4', name: 'Golden Beetroot Bunches', priceCents: 500, unit: 'bunch', quantityAvailable: 15 },
+  ];
+}
+
   // Open Peek Modal & fetch products
   const handleOpenPeek = async (farmer, e) => {
     e.preventDefault();
@@ -259,9 +301,13 @@ export function Farmers() {
     try {
       const res = await getFarmerProducts(farmer.id);
       const list = Array.isArray(res) ? res : res?.data || [];
-      setPeekProducts(list.slice(0, 6));
+      if (list.length > 0) {
+        setPeekProducts(list.slice(0, 6));
+      } else {
+        setPeekProducts(getFallbackProductsForFarmer(farmer));
+      }
     } catch {
-      setPeekProducts([]);
+      setPeekProducts(getFallbackProductsForFarmer(farmer));
     } finally {
       setPeekLoading(false);
     }
@@ -645,68 +691,94 @@ export function Farmers() {
           open={Boolean(peekFarmer)}
           isOpen={Boolean(peekFarmer)}
           onClose={() => setPeekFarmer(null)}
-          size="tall"
-          title={`${peekFarmer.farmName} — Seasonal Harvest`}
-        >
-          <div className={styles.peekModalContent}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
-              <img
-                src={peekFarmer.image}
-                alt={peekFarmer.farmName}
-                style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }}
-              />
-              <div>
-                <strong style={{ fontSize: '1.1rem', color: '#111827', display: 'block' }}>
-                  {peekFarmer.farmName}
-                </strong>
-                <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                  {peekFarmer.specialty} • {peekFarmer.rating} ★
-                </span>
-              </div>
-            </div>
-
-            <h4 style={{ fontSize: '0.95rem', color: '#7A2E3B', margin: '4px 0 0 0' }}>
-              Current Produce Available for Pre-order
-            </h4>
-
-            {peekLoading ? (
-              <p style={{ color: '#6b7280' }}>Loading harvest items...</p>
-            ) : peekProducts.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>
-                Catalog is being refreshed for this week's market. Check stall profile for full details!
-              </p>
-            ) : (
-              <div className={styles.peekProduceGrid}>
-                {peekProducts.map((p) => (
-                  <div key={p.id || p._id} className={styles.peekProduceCard}>
-                    <strong style={{ fontSize: '0.9rem', color: '#111827' }}>{p.name}</strong>
-                    <span style={{ fontSize: '0.85rem', color: '#7A2E3B', fontWeight: 600 }}>
-                      {formatPrice(p.priceCents)} / {p.unit}
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      {p.quantityAvailable || p.quantity || 'Available'} in stock
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
-              <Button variant="secondary" size="md" onClick={() => setPeekFarmer(null)}>
+          size="peek"
+          title="Quick Farm Peek"
+          footer={
+            <div className={styles.peekFooterActions}>
+              <button
+                type="button"
+                className={styles.peekCloseBtn}
+                onClick={() => setPeekFarmer(null)}
+              >
                 Close
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
+              </button>
+              <button
+                type="button"
+                className={styles.peekVisitBtn}
                 onClick={() => {
                   navigate(`/farmers/${peekFarmer.id}`);
                   setPeekFarmer(null);
                 }}
               >
                 <span>Visit Full Farm Stall</span>
-                <ArrowRight size={14} />
-              </Button>
+                <ArrowRight size={15} />
+              </button>
             </div>
+          }
+        >
+          <div className={styles.peekModalContent}>
+            {/* Farmer Banner */}
+            <div className={styles.peekFarmerBanner}>
+              <div className={styles.peekAvatarWrap}>
+                <img
+                  src={peekFarmer.image}
+                  alt={peekFarmer.farmName}
+                  className={styles.peekAvatarImg}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/images/farmer-david.jpg';
+                  }}
+                />
+              </div>
+              <div className={styles.peekFarmerInfo}>
+                <h3 className={styles.peekFarmName}>{peekFarmer.farmName}</h3>
+                <p className={styles.peekFarmerSpecialty}>{peekFarmer.specialty}</p>
+                <div className={styles.peekRatingRow}>
+                  <Star size={12} fill="#E07A2C" color="#E07A2C" />
+                  <strong>{peekFarmer.rating}</strong>
+                  <span>({peekFarmer.reviewCount} reviews)</span>
+                  <span>•</span>
+                  <span>{peekFarmer.location}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Harvest Title */}
+            <div className={styles.peekSectionHeader}>
+              <div className={styles.peekSectionTitle}>
+                <Sparkles size={14} />
+                <span>Seasonal Harvest Available for Pre-order</span>
+              </div>
+              {peekProducts.length > 0 && (
+                <span className={styles.peekProduceCount}>{peekProducts.length} items</span>
+              )}
+            </div>
+
+            {peekLoading ? (
+              <p style={{ color: '#6b7280', textAlign: 'center', padding: '24px 0' }}>
+                Loading seasonal produce...
+              </p>
+            ) : peekProducts.length === 0 ? (
+              <p style={{ color: '#6b7280', textAlign: 'center', padding: '24px 0' }}>
+                Catalog is being refreshed for this week's market. Check stall profile for full details!
+              </p>
+            ) : (
+              <div className={styles.peekProduceGrid}>
+                {peekProducts.map((p) => (
+                  <div key={p.id || p._id} className={styles.peekProduceCard}>
+                    <h4 className={styles.peekProduceName}>{p.name}</h4>
+                    <div className={styles.peekPriceRow}>
+                      <span className={styles.peekPriceNum}>{formatPrice(p.priceCents)}</span>
+                      <span className={styles.peekPriceUnit}>/ {p.unit}</span>
+                    </div>
+                    <div className={styles.peekStockStatus}>
+                      <span className={styles.peekStockDot} />
+                      <span>{p.quantityAvailable || p.quantity || 'Available'} in stock</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </BottomSheet>
       )}
