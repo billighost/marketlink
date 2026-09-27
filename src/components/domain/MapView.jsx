@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -236,6 +237,17 @@ export function MapView({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isFullscreen]);
 
+  // Lock the page behind the fullscreen map so it can't scroll underneath it.
+  useEffect(() => {
+    if (!isFullscreen) return undefined;
+    document.documentElement.classList.add('noScroll');
+    document.body.classList.add('noScroll');
+    return () => {
+      document.documentElement.classList.remove('noScroll');
+      document.body.classList.remove('noScroll');
+    };
+  }, [isFullscreen]);
+
   const handleZoomIn = () => mapRef.current?.zoomIn();
   const handleZoomOut = () => mapRef.current?.zoomOut();
 
@@ -290,7 +302,7 @@ export function MapView({
     ? `https://www.google.com/maps/dir/?api=1&destination=${singleMarker.lat},${singleMarker.lng}`
     : null;
 
-  return (
+  const content = (
     <div
       className={`${styles.mapWrapper} ${isFullscreen ? styles.fullscreen : ''} ${className}`}
       style={isFullscreen ? undefined : { height }}
@@ -415,6 +427,19 @@ export function MapView({
       )}
     </div>
   );
+
+  // While fullscreen, escape any ancestor that creates its own stacking
+  // context (position: sticky and position: fixed both do, unconditionally).
+  // Left in place, the map's z-index would only ever be compared against
+  // siblings inside that ancestor's context — never against page content
+  // that comes later in the DOM, like a product grid or reviews list, which
+  // would then paint over it regardless of z-index. Portaling to <body>
+  // gives it a clean, top-level stacking context instead.
+  if (isFullscreen && typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 }
 
 export default MapView;
