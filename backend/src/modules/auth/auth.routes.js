@@ -305,6 +305,27 @@ const routes = [
 
       // Reuse detection: token was already revoked or rotated
       if (session.revokedAt || session.replacedBy) {
+        // Concurrency grace period (15 seconds in dev/prod; 0 in test mode)
+        const gracePeriodMs = env.isTest ? 0 : 15000;
+        const revokedTime = session.revokedAt ? new Date(session.revokedAt).getTime() : 0;
+        const isWithinGracePeriod = session.replacedBy && (Date.now() - revokedTime < gracePeriodMs);
+
+        if (isWithinGracePeriod) {
+          const user = await findUserById(session.userId);
+          if (user && user.status !== 'inactive' && user.status !== 'suspended' && user.status !== 'rejected') {
+            const accessToken = signAccessToken({
+              sub: user._id.toString(),
+              role: user.role,
+            });
+            return res.status(200).json({
+              data: {
+                accessToken,
+                user: toApi(user),
+              },
+            });
+          }
+        }
+
         await revokeAllUserSessions(session.userId);
         res.clearCookie('refreshToken', { path: '/api/auth' });
         throw AppError.unauthorized(

@@ -20,6 +20,7 @@ export async function logout() {
   } finally {
     clearAccessToken();
     try {
+      localStorage.removeItem('marketlink_user');
       localStorage.setItem('marketlink_signed_out', Date.now().toString());
     } catch {
       // ignore

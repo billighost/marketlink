@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import {
   Mail,
   Lock,
@@ -21,7 +21,16 @@ export function Login() {
   useDocumentTitle('Sign In — MarketLink');
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, isAuthenticated, role: userRole } = useAuth();
+
+  const targetFrom = location.state?.from?.pathname;
+  const destination = targetFrom && targetFrom !== PATHS.LOGIN && targetFrom !== PATHS.REGISTER && targetFrom !== PATHS.UNAUTHORIZED
+    ? targetFrom
+    : homePathFor(userRole);
+
+  if (isAuthenticated) {
+    return <Navigate to={destination} replace />;
+  }
 
   const [formData, setFormData] = useState({
     email: '',

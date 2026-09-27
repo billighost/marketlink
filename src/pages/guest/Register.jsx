@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, Navigate } from 'react-router-dom';
 import {
   User,
   Store,
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, homePathFor } from '@/context/AuthContext';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './Register.module.css';
 
@@ -48,6 +48,12 @@ export function Register() {
   useDocumentTitle('Create Account — MarketLink');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { isAuthenticated, role: userRole } = useAuth();
+
+  if (isAuthenticated) {
+    return <Navigate to={homePathFor(userRole)} replace />;
+  }
+
   const roleParam = searchParams.get('role')?.toLowerCase();
 
   const [step, setStep] = useState(1);
