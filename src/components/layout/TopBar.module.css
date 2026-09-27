@@ -7,11 +7,11 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: var(--z-sticky);
+  /* Must be above Leaflet's tile pane (z:200) + overlay pane (z:400) + tooltip pane (z:650). */
+  z-index: 800;
   width: 100%;
   height: var(--topbar-h);
   background: var(--color-white);
-  /* Border is transparent at rest so box height never changes */
   border-bottom: 1px solid transparent;
   transition: border-color var(--duration-base) var(--ease-standard);
 }

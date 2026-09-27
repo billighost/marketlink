@@ -109,11 +109,35 @@ export function MarketsView({ audience = 'guest' }) {
       }));
   }, [markets]);
 
-  const handleMarkerSelect = (id) => {
+  const handleMarkerSelect = (markerOrId) => {
+    const id = typeof markerOrId === 'object' ? markerOrId.id : markerOrId;
     setSelectedMarketId(id);
     if (selectedCardRef.current) {
       selectedCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+    // Open the marker's tooltip
+    if (mapViewRef.current?.openMarkerPopup) {
+      mapViewRef.current.openMarkerPopup(id);
+    }
+  };
+
+  const handleSidebarCardSelect = (market) => {
+    const id = market.id || market._id;
+    setSelectedMarketId(id);
+    // Fly map to this market's location
+    if (market.location?.lat && market.location?.lng && mapViewRef.current?.flyTo) {
+      mapViewRef.current.flyTo(
+        Number(market.location.lat),
+        Number(market.location.lng),
+        14
+      );
+    }
+    // Open the marker tooltip after a short delay to let flyTo settle
+    window.setTimeout(() => {
+      if (mapViewRef.current?.openMarkerPopup) {
+        mapViewRef.current.openMarkerPopup(id);
+      }
+    }, 600);
   };
 
   const selectedMarket = useMemo(() => {
@@ -236,6 +260,7 @@ export function MarketsView({ audience = 'guest' }) {
           <div className={styles.mapMainArea}>
             <div className={styles.mapWrapperFull}>
               <MapView
+                ref={mapViewRef}
                 markers={mapMarkers}
                 selectedId={selectedMarketId}
                 onSelect={handleMarkerSelect}
@@ -264,6 +289,7 @@ export function MarketsView({ audience = 'guest' }) {
                     isSelected={isSelected}
                     audience={audience}
                     variant="map"
+                    onSelect={handleSidebarCardSelect}
                   />
                 </div>
               );

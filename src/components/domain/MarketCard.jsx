@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DayDots from '@/components/domain/DayDots';
 import { useCatalogueRoutes } from '@/components/catalogue/routes';
 import styles from './MarketCard.module.css';
@@ -58,9 +58,14 @@ export function MarketCard({
     market.operatingDayNumbers ||
     (Array.isArray(market.schedule) ? market.schedule.map((s) => s.day) : []);
 
+  const navigate = useNavigate();
+
   const handleClick = (e) => {
     if (onSelect) {
       onSelect(market);
+    } else if (variant === 'list') {
+      // stretchedLink handles this, but as a fallback:
+      navigate(routes.market(marketId));
     }
   };
 
