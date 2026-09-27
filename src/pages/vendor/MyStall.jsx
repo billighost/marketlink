@@ -95,6 +95,7 @@ export function MyStall() {
 
   // Photo
   const [imageUrl, setImageUrl] = useState('');
+  const [imagePublicId, setImagePublicId] = useState(null);
 
   // Errors & Toast
   const [sheetErrors, setSheetErrors] = useState({});
@@ -122,7 +123,17 @@ export function MyStall() {
         setStory(p.story || '');
         setSince(p.since || new Date().getFullYear());
         setStallNumber(p.stallNumber || '');
-        setMarketIds((p.marketIds || []).map((m) => (typeof m === 'object' ? m.id : m)));
+        setMarketIds(
+          (p.marketIds || [])
+            .map((m) => {
+              if (!m) return null;
+              if (typeof m === 'string') return m;
+              if (m._id) return m._id.toString();
+              if (m.id) return m.id.toString();
+              return m.toString();
+            })
+            .filter(Boolean)
+        );
         setOperatingDays(p.operatingDays || []);
         setPickupWindows(p.pickupWindows || []);
         setCutoffHours(p.cutoffMinutesBefore ? Math.round(p.cutoffMinutesBefore / 60) : 2);
@@ -136,6 +147,7 @@ export function MyStall() {
           setLocationCoords({ lat: p.location.lat, lng: p.location.lng });
         }
         setImageUrl(p.imageUrl || '');
+        setImagePublicId(p.imagePublicId || null);
       }
     } catch (err) {
       setError(err?.message || 'Could not load stall profile.');
@@ -187,55 +199,138 @@ export function MyStall() {
     address: '',
     locationCoords: { lat: 51.4545, lng: -2.5879 },
     imageUrl: '',
+    imagePublicId: null,
   });
 
-  const handleOpenWizard = () => {
+  const handleOpenWizard = useCallback(() => {
+    const p = profile;
+    const currentMarketIds = (p?.marketIds || marketIds || [])
+      .map((m) => {
+        if (!m) return null;
+        if (typeof m === 'string') return m;
+        if (m._id) return m._id.toString();
+        if (m.id) return m.id.toString();
+        return m.toString();
+      })
+      .filter(Boolean);
+
+    const currentDays = p?.operatingDays?.length
+      ? p.operatingDays
+      : operatingDays?.length
+      ? operatingDays
+      : ['sat'];
+
+    const currentWindows = p?.pickupWindows?.length
+      ? p.pickupWindows
+      : pickupWindows?.length
+      ? pickupWindows
+      : [{ day: 'sat', startMin: 540, endMin: 780, label: '9:00 AM – 1:00 PM' }];
+
     setWizardData({
-      stallName: stallName || '',
-      contactPerson: contactPerson || '',
-      phone: phone || '',
-      specialty: specialty || '',
-      story: story || '',
-      since: since || new Date().getFullYear(),
-      stallNumber: stallNumber || '',
-      marketIds: marketIds || [],
-      operatingDays: operatingDays?.length ? operatingDays : ['sat'],
-      pickupWindows: pickupWindows?.length
-        ? pickupWindows
-        : [{ day: 'sat', startMin: 540, endMin: 780, label: '9:00 AM – 1:00 PM' }],
-      cutoffHours: cutoffHours || 2,
-      maxOrdersPerSlot: maxOrdersPerSlot || 20,
-      address: address || '',
-      locationCoords: locationCoords || { lat: 51.4545, lng: -2.5879 },
-      imageUrl: imageUrl || '',
+      stallName: p?.stallName || stallName || '',
+      contactPerson: p?.contactPerson || contactPerson || '',
+      phone: p?.phone || phone || '',
+      specialty: p?.specialty || specialty || '',
+      story: p?.story || story || '',
+      since: p?.since || since || new Date().getFullYear(),
+      stallNumber: p?.stallNumber || stallNumber || '',
+      marketIds: currentMarketIds,
+      operatingDays: currentDays,
+      pickupWindows: currentWindows,
+      cutoffHours: p?.cutoffMinutesBefore ? Math.round(p.cutoffMinutesBefore / 60) : (cutoffHours || 2),
+      maxOrdersPerSlot: p?.maxOrdersPerSlot ?? maxOrdersPerSlot ?? 20,
+      address: p?.address || address || '',
+      locationCoords: p?.location?.coordinates?.length === 2
+        ? { lat: p.location.coordinates[1], lng: p.location.coordinates[0] }
+        : locationCoords || { lat: 51.4545, lng: -2.5879 },
+      imageUrl: p?.imageUrl || imageUrl || '',
+      imagePublicId: p?.imagePublicId || imagePublicId || null,
     });
     setWizardStep(1);
     setSheetErrors({});
     setActiveSheet('wizard');
-  };
+  }, [profile, stallName, contactPerson, phone, specialty, story, since, stallNumber, marketIds, operatingDays, pickupWindows, cutoffHours, maxOrdersPerSlot, address, locationCoords, imageUrl, imagePublicId]);
 
   useEffect(() => {
     const action = searchParams.get('action');
     if (action === 'create' || action === 'wizard') {
       handleOpenWizard();
     }
-  }, [searchParams]);
+  }, [searchParams, handleOpenWizard]);
+
+  const handleNextStep = () => {
+    const errors = {};
+    if (wizardStep === 1) {
+      if (!wizardData.stallName?.trim() || wizardData.stallName.trim().length < 2) {
+        errors.stallName = 'Stall name must be at least 2 characters.';
+      }
+      if (!wizardData.contactPerson?.trim() || wizardData.contactPerson.trim().length < 2) {
+        errors.contactPerson = 'Please enter grower or contact person name.';
+      }
+      if (!wizardData.phone?.trim() || wizardData.phone.trim().length < 7) {
+        errors.phone = 'Please provide a contact phone (minimum 7 digits).';
+      }
+    } else if (wizardStep === 2) {
+      if (!wizardData.marketIds || wizardData.marketIds.length === 0) {
+        errors.marketIds = 'Please select at least 1 farmers market you attend.';
+      }
+    } else if (wizardStep === 3) {
+      if (!wizardData.operatingDays || wizardData.operatingDays.length === 0) {
+        errors.operatingDays = 'Please select at least 1 operating pickup day.';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setSheetErrors(errors);
+      return;
+    }
+
+    setSheetErrors({});
+    setWizardStep((prev) => Math.min(4, prev + 1));
+  };
+
+  const handleToggleOperatingDay = (dayId) => {
+    const isSelected = wizardData.operatingDays.includes(dayId);
+    let nextDays;
+    let nextWindows = [...wizardData.pickupWindows];
+
+    if (isSelected) {
+      nextDays = wizardData.operatingDays.filter((id) => id !== dayId);
+      nextWindows = nextWindows.filter((w) => w.day !== dayId);
+    } else {
+      nextDays = [...wizardData.operatingDays, dayId];
+      if (!nextWindows.some((w) => w.day === dayId)) {
+        nextWindows.push({
+          day: dayId,
+          startMin: 540,
+          endMin: 780,
+          label: '9:00 AM – 1:00 PM',
+        });
+      }
+    }
+
+    setWizardData({
+      ...wizardData,
+      operatingDays: nextDays,
+      pickupWindows: nextWindows,
+    });
+  };
 
   const handleSaveWizard = async () => {
     const errors = {};
-    if (!wizardData.stallName.trim() || wizardData.stallName.trim().length < 2) {
+    if (!wizardData.stallName?.trim() || wizardData.stallName.trim().length < 2) {
       errors.stallName = 'Stall name must be at least 2 characters.';
     }
-    if (!wizardData.contactPerson.trim() || wizardData.contactPerson.trim().length < 2) {
+    if (!wizardData.contactPerson?.trim() || wizardData.contactPerson.trim().length < 2) {
       errors.contactPerson = 'Please enter grower or contact person name.';
     }
-    if (!wizardData.phone.trim() || wizardData.phone.trim().length < 7) {
+    if (!wizardData.phone?.trim() || wizardData.phone.trim().length < 7) {
       errors.phone = 'Please provide a contact phone (minimum 7 digits).';
     }
-    if (wizardData.marketIds.length === 0) {
+    if (!wizardData.marketIds || wizardData.marketIds.length === 0) {
       errors.marketIds = 'Please select at least 1 farmers market you attend.';
     }
-    if (wizardData.operatingDays.length === 0) {
+    if (!wizardData.operatingDays || wizardData.operatingDays.length === 0) {
       errors.operatingDays = 'Please select at least 1 operating pickup day.';
     }
 
@@ -255,25 +350,58 @@ export function MyStall() {
     setSheetErrors({});
 
     try {
+      // Build safe pickup windows matched to operating days
+      const validWindows = (wizardData.pickupWindows || [])
+        .filter((w) => wizardData.operatingDays.includes(w.day))
+        .map((w) => ({
+          day: w.day,
+          startMin: Math.round(Number(w.startMin)),
+          endMin: Math.round(Number(w.endMin)),
+        }));
+
+      const finalPickupWindows = [...validWindows];
+      for (const day of wizardData.operatingDays) {
+        if (!finalPickupWindows.some((w) => w.day === day)) {
+          finalPickupWindows.push({
+            day,
+            startMin: 540,
+            endMin: 780,
+          });
+        }
+      }
+
       const payload = {
         stallName: wizardData.stallName.trim(),
         contactPerson: wizardData.contactPerson.trim(),
         phone: wizardData.phone.trim(),
-        specialty: wizardData.specialty.trim() || undefined,
-        story: wizardData.story.trim() || undefined,
+        specialty: wizardData.specialty?.trim() || undefined,
+        story: wizardData.story?.trim() || undefined,
         since: Number(wizardData.since) || new Date().getFullYear(),
-        stallNumber: wizardData.stallNumber.trim() || undefined,
-        marketIds: wizardData.marketIds,
+        stallNumber: wizardData.stallNumber?.trim() || undefined,
+        marketIds: wizardData.marketIds.filter(Boolean),
         operatingDays: wizardData.operatingDays,
-        pickupWindows: wizardData.pickupWindows.filter((w) =>
-          wizardData.operatingDays.includes(w.day)
-        ),
-        cutoffMinutesBefore: Math.max(30, Number(wizardData.cutoffHours) * 60),
-        maxOrdersPerSlot: Math.min(200, Math.max(1, Number(wizardData.maxOrdersPerSlot))),
-        address: wizardData.address.trim() || undefined,
-        location: wizardData.locationCoords,
-        imageUrl: wizardData.imageUrl || undefined,
+        pickupWindows: finalPickupWindows,
+        cutoffMinutesBefore: Math.max(30, Math.min(4320, Math.round(Number(wizardData.cutoffHours || 2) * 60))),
+        maxOrdersPerSlot: Math.min(200, Math.max(1, Math.round(Number(wizardData.maxOrdersPerSlot || 20)))),
+        address: wizardData.address?.trim() || undefined,
+        location:
+          wizardData.locationCoords &&
+          typeof wizardData.locationCoords.lat === 'number' &&
+          typeof wizardData.locationCoords.lng === 'number'
+            ? {
+                lat: Number(wizardData.locationCoords.lat),
+                lng: Number(wizardData.locationCoords.lng),
+              }
+            : undefined,
       };
+
+      // Only send real uploaded URLs to the backend attachment validator
+      if (wizardData.imageUrl && !wizardData.imageUrl.startsWith('/images/')) {
+        payload.imageUrl = wizardData.imageUrl;
+        if (wizardData.imagePublicId) {
+          payload.imagePublicId = wizardData.imagePublicId;
+        }
+      }
 
       const res = await updateFarmerProfile(payload);
       setProfile(res?.data || null);
@@ -284,7 +412,7 @@ export function MyStall() {
         setSearchParams({}, { replace: true });
       }
       refreshProfile();
-      loadProfile();
+      await loadProfile();
     } catch (err) {
       if (err?.details && Array.isArray(err.details)) {
         const mapped = {};
@@ -292,6 +420,15 @@ export function MyStall() {
           if (d.field) mapped[d.field] = d.message;
         });
         setSheetErrors(mapped);
+        if (mapped.stallName || mapped.contactPerson || mapped.phone || mapped.since) {
+          setWizardStep(1);
+        } else if (mapped.marketIds || mapped.address || mapped.location) {
+          setWizardStep(2);
+        } else if (mapped.operatingDays || mapped.pickupWindows || mapped.cutoffMinutesBefore || mapped.maxOrdersPerSlot) {
+          setWizardStep(3);
+        } else if (mapped.imageUrl) {
+          setWizardStep(4);
+        }
       } else {
         setSheetErrors({ general: err?.message || 'Failed to create stall profile.' });
       }
@@ -470,16 +607,29 @@ export function MyStall() {
     setUploading(true);
     try {
       const res = await uploadFarmerImage(file, 'farmer');
-      const uploadedUrl = res?.data?.imageUrl || res?.data?.url || '';
+      const uploadedUrl = res?.data?.url || res?.data?.imageUrl || '';
+      const publicId = res?.data?.publicId || null;
       setImageUrl(uploadedUrl);
-      if (uploadedUrl) {
-        await updateFarmerProfile({ imageUrl: uploadedUrl, imagePublicId: res?.data?.publicId || null });
+      setImagePublicId(publicId);
+
+      if (activeSheet === 'wizard') {
+        setWizardData((prev) => ({
+          ...prev,
+          imageUrl: uploadedUrl,
+          imagePublicId: publicId,
+        }));
+        setToastMessage('Stall photo uploaded!');
+        setToastType('success');
+      } else {
+        if (uploadedUrl) {
+          await updateFarmerProfile({ imageUrl: uploadedUrl, imagePublicId: publicId });
+        }
+        setToastMessage('Stall photo updated.');
+        setToastType('success');
+        setActiveSheet('none');
+        refreshProfile();
+        loadProfile();
       }
-      setToastMessage('Stall photo updated.');
-      setToastType('success');
-      setActiveSheet('none');
-      refreshProfile();
-      loadProfile();
     } catch (err) {
       setSheetErrors({ general: err?.message || 'Upload failed.' });
     } finally {
@@ -1531,7 +1681,13 @@ export function MyStall() {
                           ? styles.stepPillCompleted
                           : ''
                       }`}
-                      onClick={() => setWizardStep(s.step)}
+                      onClick={() => {
+                        if (s.step <= wizardStep) {
+                          setWizardStep(s.step);
+                        } else {
+                          handleNextStep();
+                        }
+                      }}
                     >
                       <span className={styles.stepBadgeNum}>
                         {isDone ? '✓' : s.step}
@@ -1687,10 +1843,11 @@ export function MyStall() {
                 >
                   <div className={styles.wizardMarketsGrid}>
                     {allMarkets.map((m) => {
-                      const isChecked = wizardData.marketIds.includes(m.id);
+                      const mId = (m.id || m._id)?.toString();
+                      const isChecked = wizardData.marketIds.includes(mId);
                       return (
                         <div
-                          key={m.id}
+                          key={mId}
                           className={`${styles.wizardMarketCard} ${
                             isChecked ? styles.wizardMarketCardActive : ''
                           }`}
@@ -1698,13 +1855,21 @@ export function MyStall() {
                             if (isChecked) {
                               setWizardData({
                                 ...wizardData,
-                                marketIds: wizardData.marketIds.filter((id) => id !== m.id),
+                                marketIds: wizardData.marketIds.filter((id) => id !== mId),
                               });
                             } else {
                               if (wizardData.marketIds.length >= 5) return;
+                              const updatedMarkets = [...wizardData.marketIds, mId];
+                              const updates = { marketIds: updatedMarkets };
+                              if (!wizardData.address && m.address) {
+                                updates.address = m.address;
+                              }
+                              if (m.location?.lat && m.location?.lng) {
+                                updates.locationCoords = { lat: m.location.lat, lng: m.location.lng };
+                              }
                               setWizardData({
                                 ...wizardData,
-                                marketIds: [...wizardData.marketIds, m.id],
+                                ...updates,
                               });
                             }
                           }}
@@ -1712,7 +1877,7 @@ export function MyStall() {
                           <input
                             type="checkbox"
                             checked={isChecked}
-                            readOnly
+                            onChange={() => {}}
                             className={styles.wizardMarketCheck}
                           />
                           <div className={styles.wizardMarketInfo}>
@@ -1778,21 +1943,7 @@ export function MyStall() {
                           className={`${styles.wizardDayBtn} ${
                             isSelected ? styles.wizardDayBtnActive : ''
                           }`}
-                          onClick={() => {
-                            if (isSelected) {
-                              setWizardData({
-                                ...wizardData,
-                                operatingDays: wizardData.operatingDays.filter(
-                                  (id) => id !== d.id
-                                ),
-                              });
-                            } else {
-                              setWizardData({
-                                ...wizardData,
-                                operatingDays: [...wizardData.operatingDays, d.id],
-                              });
-                            }
-                          }}
+                          onClick={() => handleToggleOperatingDay(d.id)}
                         >
                           {d.label}
                         </button>
@@ -2049,7 +2200,7 @@ export function MyStall() {
                   type="button"
                   variant="primary"
                   size="md"
-                  onClick={() => setWizardStep(wizardStep + 1)}
+                  onClick={handleNextStep}
                 >
                   <span>Next Step</span>
                   <ArrowRight size={16} />

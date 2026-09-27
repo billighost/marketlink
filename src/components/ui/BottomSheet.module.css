@@ -271,6 +271,7 @@
     cursor: default;
   }
 
+  .grabberZone,
   .handle {
     display: none;
   }

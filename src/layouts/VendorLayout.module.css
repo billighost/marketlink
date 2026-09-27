@@ -84,18 +84,22 @@
 }
 
 .farmerBadge {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: var(--weight-semibold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
   background: linear-gradient(135deg, #7A2E3B 0%, #5E212B 100%);
   color: #ffffff;
-  padding: 2px 7px;
-  border-radius: var(--radius-full);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  white-space: nowrap;
   box-shadow: 0 1px 4px rgba(122, 46, 59, 0.3);
   flex-shrink: 0;
+  margin-left: auto;
+  transition: transform 0.18s ease;
+}
+
+.brandLink:hover .farmerBadge {
+  transform: scale(1.08);
 }
 
 
@@ -522,6 +526,14 @@
 .codeSearchForm {
   display: flex;
   gap: 10px;
+}
+
+.codeSearchBtn {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 20px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .codeInputWrap {

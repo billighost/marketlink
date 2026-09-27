@@ -844,9 +844,15 @@ export function Stock() {
         >
           <WeeklyTemplate
             onClose={handleCloseSheet}
-            onSaved={() => {
-              setToastMessage('Weekly harvest schedule updated.');
+            onSaved={(info) => {
+              if (info?.applied) {
+                setToastMessage('Weekly schedule saved and stock refreshed!');
+              } else {
+                setToastMessage('Weekly harvest schedule updated.');
+              }
               setToastType('success');
+              fetchProducts();
+              refreshCounts();
             }}
           />
         </BottomSheet>

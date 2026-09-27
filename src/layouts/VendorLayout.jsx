@@ -182,7 +182,9 @@ export default function VendorLayout() {
           <div className={styles.sidebarHeader}>
             <Link to="/vendor" className={styles.brandLink}>
               <MarketLinkLogo size="sm" />
-              <span className={styles.farmerBadge}>Farmer Portal</span>
+              <span className={styles.farmerBadge} title="Farmer Stall Portal" aria-label="Farmer Stall Portal">
+                <Store size={14} strokeWidth={2.3} aria-hidden="true" />
+              </span>
             </Link>
 
             <Link
@@ -430,6 +432,7 @@ export default function VendorLayout() {
           <BottomSheet
             isOpen={isCodeModalOpen}
             onClose={() => setIsCodeModalOpen(false)}
+            size="peek"
             title="Verify Customer Pickup Code"
           >
             <div className={styles.codeModalBody}>
@@ -450,7 +453,7 @@ export default function VendorLayout() {
                     autoFocus
                   />
                 </div>
-                <Button type="submit" variant="primary" loading={codeSearching}>
+                <Button type="submit" variant="primary" loading={codeSearching} className={styles.codeSearchBtn}>
                   Search
                 </Button>
               </form>
