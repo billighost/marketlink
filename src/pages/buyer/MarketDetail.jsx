@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, Bookmark } from 'lucide-react';
+import { ArrowLeft, Check, Bookmark, Store } from 'lucide-react';
 import {
   getMarketDetail,
   getMarketFarmers,
@@ -224,6 +224,28 @@ export function MarketDetail() {
               progress={clock?.todayProgress ?? 0}
             />
           </div>
+
+          {!clock?.openNow && (
+            <div className={styles.closedBanner} role="status">
+              <div className={styles.closedIconWrap} aria-hidden="true">
+                <Store size={22} />
+              </div>
+              <div className={styles.closedBody}>
+                <h3 className={styles.closedTitle}>Market is closed today</h3>
+                <p className={styles.closedText}>
+                  {market.name} is not trading today. Next market collection opens <strong>{clock?.nextOpenLabel || 'on the next scheduled market day'}</strong>. You can pre-order online for collection or find markets open today.
+                </p>
+                <div className={styles.closedActions}>
+                  <Link to="/buyer/products" className={styles.closedActionBtn}>
+                    Pre-order for next market day
+                  </Link>
+                  <Link to="/buyer/markets?openNow=true" className={styles.closedActionBtnOutline}>
+                    Browse markets open today
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Visit this market: opening days + location share one section */}

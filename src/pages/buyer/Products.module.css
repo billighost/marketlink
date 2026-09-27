@@ -13,6 +13,49 @@
   padding-inline: var(--page-pad);
 }
 
+.emptySuggestionsWrap {
+  margin-top: var(--space-4, 16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.emptySuggestionsLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-ink-soft, #6b645c);
+  font-weight: var(--weight-medium, 500);
+}
+
+.emptyPillsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+
+.emptyPillBtn {
+  background: var(--color-canvas, #fbf7f4);
+  color: var(--color-ink, #24201c);
+  border: 1px solid var(--color-border, #e5ded7);
+  border-radius: var(--radius-full, 9999px);
+  padding: 4px 12px;
+  font-family: var(--font-body);
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--weight-medium, 500);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.emptyPillBtn:hover {
+  background: var(--color-canvas-soft, #f2ece7);
+  border-color: var(--color-beet, #541722);
+  color: var(--color-beet, #541722);
+}
+
+
 @media (max-width: 359px) {
   .container {
     padding-inline: var(--space-3);

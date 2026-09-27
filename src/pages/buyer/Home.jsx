@@ -17,6 +17,7 @@ import PickupBanner from '@/components/domain/PickupBanner';
 import HomeSkeleton from '@/components/layout/HomeSkeleton';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
+import { getViewedProducts, clearViewedProducts } from '@/utils/recentViews';
 import styles from './Home.module.css';
 
 /**
@@ -63,6 +64,16 @@ export function Home() {
     'there';
 
   const activePickup = homeSummary?.readyForPickup || homeSummary?.nextPickup;
+
+  const [recentViews, setRecentViews] = useState(() => getViewedProducts());
+
+  useEffect(() => {
+    const handleViewsUpdate = (e) => {
+      setRecentViews(e.detail || getViewedProducts());
+    };
+    window.addEventListener('marketlink:recent-views-updated', handleViewsUpdate);
+    return () => window.removeEventListener('marketlink:recent-views-updated', handleViewsUpdate);
+  }, []);
 
   // IntersectionObserver to load endless feed sections as user scrolls down
   useEffect(() => {
@@ -161,6 +172,26 @@ export function Home() {
           {/* First row: At the market today (StallStrip) */}
           <StallStrip marketId={selectedMarketId} />
 
+          {/* Recently Viewed: only rendered when customer has actual browsing activity (>= 2 items) */}
+          {recentViews && recentViews.length >= 2 && (
+            <div className={styles.sectionWrap}>
+              <HorizontalRow
+                title="Recently Viewed"
+                subtitle="Produce you explored recently"
+                seeAllLabel="Clear"
+                onSeeAll={clearViewedProducts}
+              >
+                {recentViews.map((item) => (
+                  <ProductCard
+                    key={item.id}
+                    product={item}
+                    variant="compact"
+                  />
+                ))}
+              </HorizontalRow>
+            </div>
+          )}
+
           {/* Server curated sections */}
           {sections.map((section, idx) => {
             const isFarmerSection =
@@ -181,12 +212,22 @@ export function Home() {
                     title={section.title}
                     subtitle={section.subtitle}
                     seeAllLabel="See all"
-                    onSeeAll={() =>
+                    onSeeAll={() => {
+                      if (section.seeAll?.path) {
+                        const qs = section.seeAll.query
+                          ? '?' + new URLSearchParams(section.seeAll.query).toString()
+                          : '';
+                        const target = section.seeAll.path.startsWith('/buyer')
+                          ? `${section.seeAll.path}${qs}`
+                          : `/buyer${section.seeAll.path}${qs}`;
+                        navigate(target);
+                        return;
+                      }
                       navigate(
                         section.seeAllPath ||
                           (isFarmerSection ? '/buyer/stalls' : '/buyer/products')
-                      )
-                    }
+                      );
+                    }}
                   >
                     {section.items.map((item) => {
                       if (isFarmerSection || item.stallName) {

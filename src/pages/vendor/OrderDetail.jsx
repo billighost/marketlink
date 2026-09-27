@@ -14,7 +14,7 @@ import Button from '@/components/ui/Button';
 import ConfirmStep from '@/components/ui/ConfirmStep';
 import Skeleton from '@/components/ui/Skeleton';
 import { formatPrice } from '@/utils/format';
-import { Phone, Clock, FileText, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Phone, Clock, FileText, AlertTriangle, ArrowLeft, Sparkles } from 'lucide-react';
 import styles from './OrderDetail.module.css';
 
 /**
@@ -198,6 +198,46 @@ export function OrderDetail({ orderId: propOrderId, onClose, onUpdated }) {
           </div>
         )}
       </div>
+
+      {/* Smart Basket Banner if applicable */}
+      {(order.isSmartBasket || order.source === 'smart_basket') && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2-5)',
+            padding: 'var(--space-3) var(--space-4)',
+            background: 'linear-gradient(135deg, rgba(84, 23, 34, 0.06), rgba(224, 109, 40, 0.08))',
+            border: '1px solid rgba(84, 23, 34, 0.2)',
+            borderRadius: 'var(--radius-lg)',
+            margin: 'var(--space-3) 0 var(--space-4) 0',
+          }}
+        >
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--color-primary)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Sparkles size={16} aria-hidden="true" />
+          </div>
+          <div>
+            <strong style={{ fontSize: 'var(--text-sm)', color: 'var(--color-primary)', display: 'block' }}>
+              Smart Basket Pre-Order
+            </strong>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-soft)' }}>
+              Curated by MarketLink AI based on customer budget and live stall inventory.
+            </span>
+          </div>
+        </div>
+      )}
 
       {actionError && (
         <div className={styles.actionError} role="alert">

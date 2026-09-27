@@ -143,14 +143,152 @@ async function buildBatch0(db, user, seed, now) {
       sections.push({
         id: 'recently-bought',
         type: 'productRow',
-        title: 'Recently bought',
+        title: 'Buy Again',
+        subtitle: 'Reorder fresh items from your previous orders',
         seeAll: { path: '/orders', query: { tab: 'past' } },
         items: orderedBought,
       });
     }
   }
 
-  // 3. Top-selling Farmers (farmerRow)
+  // 3. Because you liked this farmer (from favorites or frequent order affinity)
+  let likedFarmerId = null;
+  const favFarmer = await db
+    .collection(COLLECTIONS.FAVORITES)
+    .findOne({ userId: toObjectId(user.id), targetType: 'farmer' });
+
+  if (favFarmer) {
+    likedFarmerId = favFarmer.targetId;
+  } else {
+    const frequentFarmerOrder = await db
+      .collection(COLLECTIONS.ORDERS)
+      .aggregate([
+        { $match: { customerId: toObjectId(user.id), status: { $in: ['completed', 'ready', 'accepted'] } } },
+        { $group: { _id: '$farmerId', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 1 },
+      ])
+      .toArray();
+    if (frequentFarmerOrder.length > 0) {
+      likedFarmerId = frequentFarmerOrder[0]._id;
+    }
+  }
+
+  if (likedFarmerId) {
+    const likedFarmer = await db
+      .collection(COLLECTIONS.FARMERS)
+      .findOne({ _id: likedFarmerId, listingEnabled: true });
+
+    if (likedFarmer) {
+      const favProds = await db
+        .collection(COLLECTIONS.PRODUCTS)
+        .find({
+          farmerId: likedFarmer._id,
+          listed: true,
+          availability: { $in: ['in', 'low'] },
+        })
+        .limit(8)
+        .toArray();
+
+      if (favProds.length >= 3) {
+        sections.push({
+          id: 'from-favorite',
+          type: 'productRow',
+          title: `Because you liked ${likedFarmer.stallName}`,
+          subtitle: likedFarmer.specialty
+            ? `${likedFarmer.specialty} freshly picked for your basket`
+            : 'Fresh produce directly from the stall',
+          seeAll: { path: `/stalls/${likedFarmer._id}` },
+          items: favProds.map(toProductCard),
+        });
+      }
+    }
+  }
+
+  // 4. Fresh from your favorite market (from favorites or preferred homeMarketId)
+  let favoriteMarketId = null;
+  const favMarket = await db
+    .collection(COLLECTIONS.FAVORITES)
+    .findOne({ userId: toObjectId(user.id), targetType: 'market' });
+
+  if (favMarket) {
+    favoriteMarketId = favMarket.targetId;
+  } else {
+    const userDoc = await db.collection(COLLECTIONS.USERS).findOne({ _id: toObjectId(user.id) });
+    if (userDoc?.homeMarketId) {
+      favoriteMarketId = toObjectId(userDoc.homeMarketId);
+    }
+  }
+
+  if (favoriteMarketId) {
+    const marketDoc = allMarkets.find((m) => m._id.toString() === favoriteMarketId.toString());
+    if (marketDoc) {
+      const marketProds = await db
+        .collection(COLLECTIONS.PRODUCTS)
+        .find({
+          marketIds: marketDoc._id,
+          listed: true,
+          availability: { $in: ['in', 'low'] },
+        })
+        .sort({ salesCount: -1, featuredScore: -1 })
+        .limit(10)
+        .toArray();
+
+      if (marketProds.length >= 3) {
+        sections.push({
+          id: 'favorite-market-fresh',
+          type: 'productRow',
+          title: `Fresh from ${marketDoc.name}`,
+          subtitle: `Seasonal harvest available at ${marketDoc.name}`,
+          seeAll: { path: '/products', query: { market: marketDoc._id.toString() } },
+          items: marketProds.map(toProductCard),
+        });
+      }
+    }
+  }
+
+  // 5. Available this weekend (farmers operating on sat or sun)
+  const slotMap = await getNextSlotsForAllFarmers();
+  const weekendFarmers = await db
+    .collection(COLLECTIONS.FARMERS)
+    .find({ operatingDays: { $in: ['sat', 'sun'] }, listingEnabled: true }, { projection: { _id: 1 } })
+    .toArray();
+
+  if (weekendFarmers.length > 0) {
+    const weekendFarmerIds = weekendFarmers.map((f) => f._id);
+    const weekendProds = await db
+      .collection(COLLECTIONS.PRODUCTS)
+      .find({
+        farmerId: { $in: weekendFarmerIds },
+        listed: true,
+        availability: { $in: ['in', 'low'] },
+      })
+      .sort({ salesCount: -1, featuredScore: -1 })
+      .limit(10)
+      .toArray();
+
+    if (weekendProds.length >= 3) {
+      const weekendCards = weekendProds.map((p) => {
+        const card = toProductCard(p);
+        const slot = slotMap.get(p.farmerId.toString());
+        if (slot && slot.cutoffAt) {
+          card.cutoffAt = typeof slot.cutoffAt === 'string' ? slot.cutoffAt : slot.cutoffAt.toISOString();
+        }
+        return card;
+      });
+
+      sections.push({
+        id: 'available-this-weekend',
+        type: 'productRow',
+        title: 'Available this weekend',
+        subtitle: 'Pre-order before cutoff for Saturday & Sunday collection',
+        seeAll: { path: '/products', query: { day: 'sat' } },
+        items: weekendCards,
+      });
+    }
+  }
+
+  // 6. Top-selling Farmers (farmerRow)
   const topFarmers = await db
     .collection(COLLECTIONS.FARMERS)
     .find({ listingEnabled: true, isTopSeller: true })
@@ -167,8 +305,7 @@ async function buildBatch0(db, user, seed, now) {
     });
   }
 
-  // 4. Order soon (productRow, cutoff <= 24h away)
-  const slotMap = await getNextSlotsForAllFarmers();
+  // 7. Order soon (productRow, cutoff <= 24h away)
   const soonFarmerIds = [];
   const nowMs = now.getTime();
 
@@ -213,7 +350,7 @@ async function buildBatch0(db, user, seed, now) {
     }
   }
 
-  // 5. New this week (productRow)
+  // 8. New this week (productRow)
   const weekAgo = new Date(nowMs - 7 * 86400000);
   const newProds = await db
     .collection(COLLECTIONS.PRODUCTS)
@@ -233,32 +370,6 @@ async function buildBatch0(db, user, seed, now) {
       title: 'New this week',
       items: newProds.map(toProductCard),
     });
-  }
-
-  // 6. From favorite farmer (if caller has favourites)
-  const fav = await db
-    .collection(COLLECTIONS.FAVORITES)
-    .findOne({ userId: toObjectId(user.id), targetType: 'farmer' });
-
-  if (fav) {
-    const favProds = await db
-      .collection(COLLECTIONS.PRODUCTS)
-      .find({
-        farmerId: fav.targetId,
-        listed: true,
-        availability: { $in: ['in', 'low'] },
-      })
-      .limit(8)
-      .toArray();
-
-    if (favProds.length >= 3) {
-      sections.push({
-        id: 'from-favorite',
-        type: 'productRow',
-        title: 'From your favorite',
-        items: favProds.map(toProductCard),
-      });
-    }
   }
 
   return sections;
@@ -286,12 +397,32 @@ async function getUserProfile(db, user) {
     .toArray();
 
   let topCategorySlug = topCatAgg.length > 0 ? topCatAgg[0]._id : null;
-  let topCategoryName = 'fresh produce';
+  let topCategoryName = null;
 
   if (!topCategorySlug) {
-    topCategorySlug = 'vegetables';
-    topCategoryName = 'Vegetables';
-  } else {
+    const favProducts = await db
+      .collection(COLLECTIONS.FAVORITES)
+      .find({ userId: userObjId, targetType: 'product' })
+      .toArray();
+
+    if (favProducts.length > 0) {
+      const favProdIds = favProducts.map((f) => f.targetId);
+      const favCatAgg = await db
+        .collection(COLLECTIONS.PRODUCTS)
+        .aggregate([
+          { $match: { _id: { $in: favProdIds } } },
+          { $group: { _id: '$categorySlug', count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+          { $limit: 1 },
+        ])
+        .toArray();
+      if (favCatAgg.length > 0) {
+        topCategorySlug = favCatAgg[0]._id;
+      }
+    }
+  }
+
+  if (topCategorySlug) {
     const cat = await db.collection(COLLECTIONS.CATEGORIES).findOne({ slug: topCategorySlug });
     if (cat) topCategoryName = cat.name;
   }

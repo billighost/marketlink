@@ -302,4 +302,30 @@ export const FEED_TEMPLATES = [
       };
     },
   },
+  {
+    id: 'weekendHarvest',
+    type: 'productRow',
+    title: () => 'Available this weekend',
+    async build(ctx) {
+      const satSunFarmers = await ctx.db
+        .collection(COLLECTIONS.FARMERS)
+        .find({ operatingDays: { $in: ['sat', 'sun'] }, listingEnabled: true }, { projection: { _id: 1 } })
+        .toArray();
+      if (!satSunFarmers || satSunFarmers.length === 0) return null;
+
+      const ids = satSunFarmers.map((f) => f._id);
+      const items = await walkRandom(
+        ctx.db,
+        COLLECTIONS.PRODUCTS,
+        { listed: true, farmerId: { $in: ids }, availability: { $in: ['in', 'low'] } },
+        { seed: ctx.seed + 14, batch: ctx.batch, count: 8, exclude: Array.from(ctx.exclude) }
+      );
+      if (items.length < 3) return null;
+
+      return {
+        items: items.map(toProductCard),
+        seeAll: { path: '/products', query: { day: 'sat' } },
+      };
+    },
+  },
 ];

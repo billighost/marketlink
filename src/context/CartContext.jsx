@@ -172,6 +172,7 @@ export function CartProvider({ children }) {
     const farmerId = typeof meta === 'object' ? meta?.farmerId : null;
     const slotStart = typeof meta === 'object' ? (meta?.slotStart || meta?.slotId) : meta;
     const qtyToAdd = typeof count === 'number' && count > 0 ? count : (meta?.quantity || 1);
+    const isSmartBasket = Boolean(meta?.isSmartBasket || meta?.source === 'smart_basket');
 
     setItems((prev) => {
       const existing = prev.find((item) => item.productId === productId);
@@ -183,11 +184,23 @@ export function CartProvider({ children }) {
                 quantity: item.quantity + qtyToAdd,
                 farmerId: farmerId || item.farmerId,
                 slotStart: slotStart || item.slotStart,
+                isSmartBasket: isSmartBasket || item.isSmartBasket,
+                source: isSmartBasket ? 'smart_basket' : item.source,
               }
             : item
         );
       }
-      return [...prev, { productId, quantity: qtyToAdd, farmerId, slotStart }];
+      return [
+        ...prev,
+        {
+          productId,
+          quantity: qtyToAdd,
+          farmerId,
+          slotStart,
+          isSmartBasket,
+          source: isSmartBasket ? 'smart_basket' : 'standard',
+        },
+      ];
     });
   }, []);
 
@@ -279,14 +292,27 @@ export function CartProvider({ children }) {
             items: [],
           });
         }
+
+        if (item.isSmartBasket || item.source === 'smart_basket') {
+          groupsMap.get(fId).isSmartBasket = true;
+          groupsMap.get(fId).source = 'smart_basket';
+        }
+
         groupsMap.get(fId).items.push({
           productId: item.productId,
           quantity: item.quantity,
         });
       }
 
+      const hasSmartBasket = items.some((i) => i.isSmartBasket || i.source === 'smart_basket');
       const groups = Array.from(groupsMap.values());
-      const res = await apiCheckout({ groups }, activeKey);
+      const res = await apiCheckout(
+        {
+          groups,
+          ...(hasSmartBasket ? { source: 'smart_basket', isSmartBasket: true } : {}),
+        },
+        activeKey
+      );
 
       // Invalidate relevant queries
       invalidateQueries('/orders');

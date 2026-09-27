@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Check, Heart } from 'lucide-react';
+import { ArrowLeft, Check, Heart, CalendarOff } from 'lucide-react';
 import {
   getFarmerDetail,
   getFarmerProducts,
@@ -349,6 +349,11 @@ export function FarmerDetail() {
   const initials = getStallInitials(farmer.stallName);
   const farmerPersonName = farmer.ownerName || farmer.farmerName || farmer.contactPerson || '';
 
+  const isUnavailable = Boolean(
+    farmer &&
+    (farmer.listingEnabled === false || farmer.status === 'paused' || farmer.acceptingOrders === false)
+  );
+
   return (
     <Page width="detail">
       <div className={styles.container}>
@@ -359,6 +364,31 @@ export function FarmerDetail() {
             <span>Back to stalls</span>
           </Link>
         </div>
+
+        {/* Farmer unavailable state */}
+        {isUnavailable && (
+          <div className={styles.unavailableBanner} role="status">
+            <div className={styles.unavailableIconWrap} aria-hidden="true">
+              <CalendarOff size={22} />
+            </div>
+            <div className={styles.unavailableBody}>
+              <h3 className={styles.unavailableTitle}>Stall taking a seasonal break</h3>
+              <p className={styles.unavailableText}>
+                {farmer.stallName || 'This producer'} is currently taking a seasonal break and not accepting pre-orders. You can explore other active growers at this market.
+              </p>
+              <div className={styles.unavailableActions}>
+                <Link to="/buyer/farmers" className={styles.unavailableActionBtn}>
+                  Browse active growers
+                </Link>
+                {marketId && (
+                  <Link to={`/buyer/markets/${marketId}`} className={styles.unavailableActionBtnOutline}>
+                    View attending stalls at this market
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className={styles.layout}>
           {/* 1. Identity */}

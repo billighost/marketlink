@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   Sparkles,
+  Clock,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
@@ -36,13 +37,24 @@ export function Login() {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
+  const searchParams = new URLSearchParams(location.search);
+  const isSessionExpired =
+    searchParams.get('reason') === 'expired' ||
+    sessionStorage.getItem('marketlink_session_expired') === 'true';
+
+  const storedReturn = sessionStorage.getItem('marketlink_return_url');
+  const queryRedirect = searchParams.get('redirect');
   const targetFrom = location.state?.from?.pathname;
-  const destination = targetFrom && targetFrom !== PATHS.LOGIN && targetFrom !== PATHS.REGISTER && targetFrom !== PATHS.UNAUTHORIZED
-    ? targetFrom
+
+  const candidateDestination = queryRedirect || storedReturn || targetFrom;
+  const destination = candidateDestination && candidateDestination !== PATHS.LOGIN && candidateDestination !== PATHS.REGISTER && candidateDestination !== PATHS.UNAUTHORIZED
+    ? candidateDestination
     : homePathFor(userRole);
 
   useEffect(() => {
     if (isAuthenticated) {
+      sessionStorage.removeItem('marketlink_session_expired');
+      sessionStorage.removeItem('marketlink_return_url');
       navigate(destination, { replace: true });
     }
   }, [isAuthenticated, destination, navigate]);
@@ -95,12 +107,13 @@ export function Login() {
     try {
       const data = await login(formData.email.trim(), formData.password);
       const role = data?.user?.role;
-      const targetFrom = location.state?.from?.pathname;
-      const destination = targetFrom && targetFrom !== PATHS.LOGIN && targetFrom !== PATHS.UNAUTHORIZED
-        ? targetFrom
+      sessionStorage.removeItem('marketlink_session_expired');
+      sessionStorage.removeItem('marketlink_return_url');
+      const finalDest = candidateDestination && candidateDestination !== PATHS.LOGIN && candidateDestination !== PATHS.UNAUTHORIZED
+        ? candidateDestination
         : homePathFor(role);
 
-      navigate(destination, { replace: true });
+      navigate(finalDest, { replace: true });
     } catch (err) {
       if (err.code === 'TOO_MANY_ATTEMPTS') {
         setErrorMessage('Too many failed sign-in attempts. Your account is temporarily locked for 15 minutes.');
@@ -201,6 +214,17 @@ export function Login() {
                 Access your Saturday pre-orders, saved regional stalls, and weekly harvest manifests.
               </p>
             </div>
+
+            {/* Session Expired Notice */}
+            {isSessionExpired && (
+              <div role="status" className={styles.expiredNotice}>
+                <Clock size={18} className={styles.expiredIcon} aria-hidden="true" />
+                <div>
+                  <strong>Session Expired</strong>
+                  <p>Your session has expired for your security. Please sign in to resume where you left off — your basket is safe.</p>
+                </div>
+              </div>
+            )}
 
             {/* Error Banner */}
             {errorMessage && (

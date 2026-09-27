@@ -49,6 +49,7 @@ export function Orders() {
   const { refreshCounts } = useVendor();
 
   const [activeTab, setActiveTab] = useState('placed');
+  const [smartBasketOnly, setSmartBasketOnly] = useState(false);
   const [orders, setOrders] = useState([]);
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
@@ -166,19 +167,23 @@ export function Orders() {
     }
   };
 
-  // Filter orders by search term (customer name, order number, items)
+  // Filter orders by search term and smart basket filter
   const filteredOrders = useMemo(() => {
-    if (!searchTerm.trim()) return orders;
+    let list = orders;
+    if (smartBasketOnly) {
+      list = list.filter((ord) => ord.isSmartBasket || ord.source === 'smart_basket');
+    }
+    if (!searchTerm.trim()) return list;
     const term = searchTerm.toLowerCase().trim();
 
-    return orders.filter((ord) => {
+    return list.filter((ord) => {
       const numMatch = ord.orderNumber?.toLowerCase().includes(term);
       const nameMatch = ord.customerName?.toLowerCase().includes(term);
       const phoneMatch = ord.customerPhone?.includes(term);
       const itemsMatch = (ord.items || []).some((it) => it.name?.toLowerCase().includes(term));
       return numMatch || nameMatch || phoneMatch || itemsMatch;
     });
-  }, [orders, searchTerm]);
+  }, [orders, searchTerm, smartBasketOnly]);
 
   // Aggregate operations telemetry
   const telemetry = useMemo(() => {
@@ -296,27 +301,68 @@ export function Orders() {
         </div>
       </section>
 
-      {/* Search Input for Fast Market Lookups */}
-      <div className={styles.searchWrapper}>
-        <Search size={16} className={styles.searchIcon} aria-hidden="true" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Look up order by customer name, #ML-XXXX, phone, or crop..."
-          className={styles.searchInput}
-          aria-label="Search orders"
-        />
-        {searchTerm && (
-          <button
-            type="button"
-            className={styles.clearSearchBtn}
-            onClick={() => setSearchTerm('')}
-            aria-label="Clear search"
-          >
-            <X size={14} />
-          </button>
-        )}
+      {/* Search Input and Smart Basket Filter for Fast Market Lookups */}
+      <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+        <div className={styles.searchWrapper} style={{ flex: 1, marginBottom: 0 }}>
+          <Search size={16} className={styles.searchIcon} aria-hidden="true" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Look up order by customer name, #ML-XXXX, phone, or crop..."
+            className={styles.searchInput}
+            aria-label="Search orders"
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              className={styles.clearSearchBtn}
+              onClick={() => setSearchTerm('')}
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setSmartBasketOnly(!smartBasketOnly)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '10px 14px',
+            borderRadius: 'var(--radius-lg)',
+            border: smartBasketOnly ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+            background: smartBasketOnly ? 'rgba(84, 23, 34, 0.08)' : 'var(--color-surface)',
+            color: smartBasketOnly ? 'var(--color-primary)' : 'var(--color-ink)',
+            fontWeight: 600,
+            fontSize: 'var(--text-xs)',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.15s',
+            height: '42px',
+          }}
+          title="Filter to Smart Basket AI orders"
+        >
+          <Sparkles size={14} aria-hidden="true" />
+          <span>Smart Basket</span>
+          {counts.smartBasket > 0 && (
+            <span
+              style={{
+                background: 'var(--color-primary)',
+                color: '#fff',
+                borderRadius: '10px',
+                padding: '1px 6px',
+                fontSize: '11px',
+                fontWeight: 700,
+              }}
+            >
+              {counts.smartBasket}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Segmented Status Tabs with Dynamic Badges */}
@@ -403,6 +449,25 @@ export function Orders() {
                       <span className={styles.orderNumber}>{order.orderNumber}</span>
                       <span className={styles.bullet}>•</span>
                       <strong className={styles.customerName}>{order.customerName}</strong>
+                      {(order.isSmartBasket || order.source === 'smart_basket') && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '1px 6px',
+                            borderRadius: 'var(--radius-full)',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, rgba(84, 23, 34, 0.08), rgba(224, 109, 40, 0.12))',
+                            border: '1px solid rgba(84, 23, 34, 0.25)',
+                            color: 'var(--color-primary)',
+                          }}
+                        >
+                          <Sparkles size={10} aria-hidden="true" />
+                          <span>Smart Basket</span>
+                        </span>
+                      )}
                       {order.customerPhone && (
                         <a
                           href={`tel:${order.customerPhone}`}

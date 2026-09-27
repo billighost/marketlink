@@ -81,6 +81,7 @@ export function MyStall() {
   const [pickupWindows, setPickupWindows] = useState([]);
   const [cutoffHours, setCutoffHours] = useState(2);
   const [maxOrdersPerSlot, setMaxOrdersPerSlot] = useState(20);
+  const [acceptingOrders, setAcceptingOrders] = useState(true);
 
   // Closed dates state
   const [slotOverrides, setSlotOverrides] = useState([]);
@@ -126,6 +127,7 @@ export function MyStall() {
         setPickupWindows(p.pickupWindows || []);
         setCutoffHours(p.cutoffMinutesBefore ? Math.round(p.cutoffMinutesBefore / 60) : 2);
         setMaxOrdersPerSlot(p.maxOrdersPerSlot ?? 20);
+        setAcceptingOrders(p.acceptingOrders !== false);
         setSlotOverrides(p.slotOverrides || []);
         setAddress(p.address || '');
         if (p.location?.coordinates && p.location.coordinates.length === 2) {
@@ -141,6 +143,29 @@ export function MyStall() {
       setLoading(false);
     }
   }, []);
+
+  const [togglingAvailability, setTogglingAvailability] = useState(false);
+
+  const handleToggleAcceptingOrders = async () => {
+    const nextVal = !acceptingOrders;
+    setTogglingAvailability(true);
+    try {
+      await updateFarmerProfile({ acceptingOrders: nextVal });
+      setAcceptingOrders(nextVal);
+      setToastMessage(
+        nextVal
+          ? 'Stall is active! Accepting pre-orders & live in Smart Basket.'
+          : 'Stall set to Seasonal Break. Not taking pre-orders right now.'
+      );
+      setToastType('success');
+      refreshProfile();
+    } catch (err) {
+      setToastMessage(err?.message || 'Failed to update stall availability.');
+      setToastType('error');
+    } finally {
+      setTogglingAvailability(false);
+    }
+  };
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [wizardStep, setWizardStep] = useState(1);
@@ -620,6 +645,50 @@ export function MyStall() {
 
       {/* Bento Grid Configuration Hub */}
       <section className={styles.bentoGrid} aria-label="Stall configuration sections">
+        {/* Card 0: Market Availability & Pre-order Intake Toggle */}
+        <article className={styles.bentoCard} style={{ gridColumn: '1 / -1', background: acceptingOrders ? 'linear-gradient(135deg, rgba(43, 138, 62, 0.04), rgba(84, 23, 34, 0.03))' : 'linear-gradient(135deg, rgba(224, 109, 40, 0.06), rgba(84, 23, 34, 0.04))' }}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardTitleWrap}>
+              <span className={styles.cardIcon} style={{ background: acceptingOrders ? 'rgba(43, 138, 62, 0.1)' : 'rgba(224, 109, 40, 0.1)', color: acceptingOrders ? '#2b8a3e' : '#e06d28' }}>
+                <Store size={18} />
+              </span>
+              <div>
+                <h3 className={styles.cardTitle}>Market Availability & Order Intake</h3>
+                <span style={{ fontSize: 'var(--text-xs)', color: acceptingOrders ? '#2b8a3e' : '#e06d28', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: acceptingOrders ? '#2b8a3e' : '#e06d28', display: 'inline-block' }} />
+                  {acceptingOrders ? 'Taking Pre-Orders · Active in Catalog & Smart Basket' : 'Seasonal Break · Pre-Orders Paused'}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className={styles.cardActionBtn}
+              onClick={handleToggleAcceptingOrders}
+              disabled={togglingAvailability}
+              style={{
+                background: acceptingOrders ? 'rgba(84, 23, 34, 0.08)' : 'var(--color-primary)',
+                color: acceptingOrders ? 'var(--color-primary)' : '#fff',
+                borderColor: 'transparent',
+                fontWeight: 700,
+                padding: 'var(--space-2) var(--space-4)',
+              }}
+            >
+              {togglingAvailability
+                ? 'Updating...'
+                : acceptingOrders
+                ? 'Pause Taking Orders'
+                : 'Resume Taking Orders'}
+            </button>
+          </div>
+          <div className={styles.cardContent} style={{ paddingTop: 'var(--space-2)' }}>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--color-ink-soft)', lineHeight: 1.5 }}>
+              {acceptingOrders
+                ? 'Your stall is currently open and accepting customer pre-orders. Items in stock are automatically eligible for customer Smart Baskets.'
+                : 'Your stall is on a seasonal break or temporary pause. Buyers will see a friendly break notice, and your produce is paused from Smart Basket generation until you reopen.'}
+            </p>
+          </div>
+        </article>
+
         {/* Card 1: Identity & Heritage */}
         <article className={styles.bentoCard}>
           <div className={styles.cardHeader}>

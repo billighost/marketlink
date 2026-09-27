@@ -15,10 +15,12 @@ import {
   ChevronRight,
   Sparkles,
   LogIn,
+  ShoppingBasket,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
+import { useSmartBasket } from '@/context/SmartBasketContext';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import MarketDropdown from '@/components/layout/MarketDropdown';
 import styles from './TopBar.module.css';
@@ -53,6 +55,8 @@ export function TopBar() {
     cartContext = {};
   }
   const { count = 0 } = cartContext;
+
+  const { openSmartBasket } = useSmartBasket();
 
   const navItems = [
     { name: 'Home', path: PATHS.HOME || '/', icon: Home },
@@ -230,6 +234,18 @@ export function TopBar() {
               <Bookmark size={18} strokeWidth={1.8} aria-hidden="true" />
             </Link>
 
+            {/* Smart Basket Shortcut */}
+            <button
+              type="button"
+              onClick={() => openSmartBasket()}
+              className={`${styles.iconBtn} ${styles.smartBasketNavBtn}`}
+              aria-label="Open Smart Basket"
+              title="Smart Basket"
+            >
+              <ShoppingBasket size={18} strokeWidth={2} aria-hidden="true" />
+              <span className={styles.smartBadgeDot} aria-hidden="true" />
+            </button>
+
             {/* Shopping Bag / Cart */}
             <Link
               to={PATHS.BUYER_CART || '/buyer/cart'}
@@ -325,6 +341,24 @@ export function TopBar() {
               </button>
             )}
           </form>
+
+          {/* Smart Basket Drawer Card */}
+          <button
+            type="button"
+            className={styles.drawerSmartBasketCard}
+            onClick={() => {
+              setIsOpen(false);
+              openSmartBasket();
+            }}
+          >
+            <div className={styles.drawerSmartIcon}>
+              <Sparkles size={18} />
+            </div>
+            <div>
+              <div className={styles.drawerSmartTitle}>Smart Basket</div>
+              <div className={styles.drawerSmartSub}>Describe what you need within your budget</div>
+            </div>
+          </button>
 
           {/* Navigation Links */}
           <nav className={styles.drawerNav} aria-label="Mobile Navigation">

@@ -63,10 +63,11 @@ export async function runSeed(force = false, targetDb = null) {
       try {
         await db.collection(coll.name).drop();
       } catch (err) {
-        try {
-          await db.collection(coll.name).deleteMany({});
-        } catch (_) {}
+        // drop may fail on some environments
       }
+      try {
+        await db.collection(coll.name).deleteMany({});
+      } catch (_) {}
     }
   }
   console.log('✓ Cleaned existing collections.');

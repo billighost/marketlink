@@ -410,8 +410,14 @@ export function Overview() {
           <div className={styles.healthMetric}>
             <Sparkles size={14} color="#fef08a" />
             <span>
-              <strong>99.4%</strong> Fulfillment •{' '}
-              <strong>{overviewData?.ratingAvg || '5.0'} ★</strong> ({overviewData?.ratingCount || 14} reviews)
+              {overviewData?.fulfillmentRate != null ? (
+                <><strong>{overviewData.fulfillmentRate}%</strong> Fulfillment</>
+              ) : (
+                <span style={{ opacity: 0.65 }}>No fulfillment data yet</span>
+              )}
+              {overviewData?.ratingCount > 0 && (
+                <>{' • '}<strong>{overviewData.ratingAvg} ★</strong> ({overviewData.ratingCount} review{overviewData.ratingCount !== 1 ? 's' : ''})</>
+              )}
             </span>
           </div>
         </div>

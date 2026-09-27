@@ -401,23 +401,44 @@ export async function matchAndResolveIntent(entities, user) {
       // Silently ignore — still surface the basket CTA
     }
 
+    // Check for budget too low (under ₦100)
+    if (budgetAmount !== null && budgetAmount < 100) {
+      const suggested = 5000;
+      return {
+        reply: `A budget of ₦${budgetAmount.toLocaleString()} is too low to assemble a fresh produce bundle. Seasonal market items start from ₦350. We recommend a budget of at least ₦${suggested.toLocaleString()} for a balanced basket.`,
+        cards: [{
+          type: 'action',
+          action: 'open-smart-basket',
+          label: `Build basket with ₦${suggested.toLocaleString()}`,
+          params: {
+            prompt: cleanText,
+            budget: suggested,
+            day: day || null,
+            categories: categoryKeywords.length > 0 ? categoryKeywords : ['vegetables', 'fruit', 'dairy-and-eggs'],
+          },
+        }],
+        suggestions: [`Build basket with ₦${suggested.toLocaleString()}`, 'Browse all produce', "What's fresh on Saturday?"],
+      };
+    }
+
     const catLabel = categoryKeywords.length > 0 ? categoryKeywords.join(', ') : 'fresh produce';
     const budgetLabel = budgetAmount && !isNaN(budgetAmount) ? `₦${budgetAmount.toLocaleString()}` : 'your budget';
+    const dayLabel = day ? ` for ${DAY_NAMES[day] || day}` : '';
 
     return {
-      reply: productCount > 0
-        ? `I found ${productCount} ${catLabel} products available right now. I can build a personalised basket within ${budgetLabel} — just tap below to get started!`
-        : `I can help you build a Smart Basket within ${budgetLabel}. Tap below to tell me what you need and I'll find the best options from our local farmers.`,
+      reply: `I can curate a Smart Basket${dayLabel} within ${budgetLabel}! I found local products matching your request from active farmers ready for pickup. Tap below to view your personalized basket.`,
       cards: [{
         type: 'action',
         action: 'open-smart-basket',
-        label: 'Build Smart Basket',
+        label: 'Open Smart Basket',
         params: {
+          prompt: cleanText,
           budget: budgetAmount || null,
-          categories: categoryKeywords.length > 0 ? categoryKeywords : ['vegetables', 'fruits', 'eggs'],
+          day: day || null,
+          categories: categoryKeywords.length > 0 ? categoryKeywords : ['vegetables', 'fruit', 'dairy-and-eggs'],
         },
       }],
-      suggestions: ['Show me available vegetables', 'Who sells eggs?', "What's fresh on Saturday?"],
+      suggestions: ['Open Smart Basket', 'Who sells eggs?', "What's fresh on Saturday?"],
     };
   }
 

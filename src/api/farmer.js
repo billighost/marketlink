@@ -25,6 +25,10 @@ export async function updateFarmerProfile(updates) {
   });
 }
 
+export async function setFarmerAcceptingOrders(acceptingOrders) {
+  return updateFarmerProfile({ acceptingOrders: Boolean(acceptingOrders) });
+}
+
 /**
  * Farmer Slots & Closures
  */

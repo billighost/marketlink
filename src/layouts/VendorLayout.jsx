@@ -25,6 +25,8 @@ import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
 import VerifyEmailBanner from '@/components/layout/VerifyEmailBanner';
 import Toast from '@/components/ui/Toast';
+import FloatingActions from '@/components/ui/FloatingActions';
+import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './VendorLayout.module.css';
 
 export const VendorContext = createContext({
@@ -179,7 +181,7 @@ export default function VendorLayout() {
         <aside className={styles.sidebar} aria-label="Farmer navigation">
           <div className={styles.sidebarHeader}>
             <Link to="/vendor" className={styles.brandLink}>
-              <span className={styles.brandLogo}>MarketLink</span>
+              <MarketLinkLogo size="sm" />
               <span className={styles.farmerBadge}>Farmer Portal</span>
             </Link>
 
@@ -499,6 +501,9 @@ export default function VendorLayout() {
               )}
             </div>
           </BottomSheet>
+
+          {/* Floating AI & Back to Top Actions */}
+          <FloatingActions showTopAfter={350} />
         </div>
       </div>
     </VendorContext.Provider>

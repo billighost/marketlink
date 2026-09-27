@@ -26,6 +26,7 @@ import {
   Sun,
   Sprout,
   HelpCircle,
+  CalendarOff,
 } from 'lucide-react';
 import { getFarmerDetail, getFarmerProducts, getFarmerReviews, getFarmers } from '@/api/catalog';
 import { formatPrice, formatDate } from '@/utils/format';
@@ -502,18 +503,57 @@ export function FarmerDetail() {
             </div>
 
             <div className={styles.profileActionsRight}>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('crops');
-                  const el = document.getElementById('stall-content-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className={styles.preorderPrimaryBtn}
-              >
-                <ShoppingBag size={16} />
-                <span>Reserve Weekend Harvest</span>
-              </button>
+              {farmer.listingEnabled === false || farmer.status === 'paused' ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  alignItems: 'flex-start'
+                }}>
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    backgroundColor: '#fff7ed',
+                    border: '1px solid #fed7aa',
+                    color: '#c2410c',
+                    borderRadius: '8px',
+                    fontSize: '0.8rem',
+                    fontWeight: '600'
+                  }}>
+                    <CalendarOff size={15} />
+                    Seasonal Break · Paused
+                  </span>
+                  <Link
+                    to={PATHS.FARMERS}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.78rem',
+                      fontWeight: '600',
+                      color: '#541722',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    Browse attending growers →
+                  </Link>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('crops');
+                    const el = document.getElementById('stall-content-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className={styles.preorderPrimaryBtn}
+                >
+                  <ShoppingBag size={16} />
+                  <span>Reserve Weekend Harvest</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

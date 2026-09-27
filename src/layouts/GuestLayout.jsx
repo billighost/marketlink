@@ -3,13 +3,13 @@ import { Outlet, useLocation } from 'react-router-dom';
 import TopBar from '@/components/layout/TopBar';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import Footer from '@/components/layout/Footer';
-import BackToTop from '@/components/ui/BackToTop';
+import FloatingActions from '@/components/ui/FloatingActions';
 import GuestBottomNav from '@/components/layout/GuestBottomNav';
 import styles from './GuestLayout.module.css';
 
 /**
  * GuestLayout frame wrapping public unauthenticated pages.
- * Provides skip-to-content link, persistent TopBar, unconstrained <main>, Footer, and BackToTop.
+ * Provides skip-to-content link, persistent TopBar, unconstrained <main>, Footer, and FloatingActions (AI & BackToTop).
  */
 export function GuestLayout() {
   const location = useLocation();
@@ -40,8 +40,8 @@ export function GuestLayout() {
       {/* Persistent footer */}
       <Footer withWave={false} />
 
-      {/* Floating Back to Top Button */}
-      <BackToTop showAfter={350} />
+      {/* Floating AI & Back to Top Actions */}
+      <FloatingActions showTopAfter={350} />
 
       {/* Mobile persistent app navigation */}
       <GuestBottomNav />

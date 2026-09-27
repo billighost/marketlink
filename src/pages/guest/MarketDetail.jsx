@@ -284,6 +284,9 @@ export function MarketDetail() {
       ? market.coordinates.lng
       : -74.172;
 
+  const todayShort = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+  const isOpenToday = scheduleDays.some((d) => String(d).toLowerCase().startsWith(todayShort));
+
   return (
     <div className={styles.page}>
       {/* ─── BREADCRUMBS BAR ─────────────────────────────────────── */}
@@ -309,10 +312,31 @@ export function MarketDetail() {
           <div className={styles.headerLayout}>
             <div className={styles.headerLeft}>
               <div className={styles.badgeRow}>
-                <span className={styles.statusPillOpen}>
-                  <span className={styles.statusDot} />
-                  Open {daysStr}
-                </span>
+                {isOpenToday ? (
+                  <span className={styles.statusPillOpen}>
+                    <span className={styles.statusDot} />
+                    Open Today · {scheduleText}
+                  </span>
+                ) : (
+                  <span
+                    className={styles.statusPillUpcoming}
+                    style={{
+                      backgroundColor: '#fff7ed',
+                      color: '#c2410c',
+                      border: '1px solid #fed7aa',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '4px 10px',
+                      borderRadius: '9999px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                    }}
+                  >
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#f97316' }} />
+                    Closed Today · Next: {daysStr}
+                  </span>
+                )}
                 <span className={styles.schedulePill}>{scheduleText}</span>
                 <span className={styles.verifiedPill}>
                   <ShieldCheck size={13} />
@@ -334,6 +358,62 @@ export function MarketDetail() {
                   <span>(Community Market)</span>
                 </div>
               </div>
+
+              {!isOpenToday && (
+                <div
+                  style={{
+                    backgroundColor: '#fffaf5',
+                    border: '1px solid #ffedd5',
+                    borderLeft: '4px solid #ea580c',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    marginTop: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                  }}
+                  role="status"
+                >
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#9a3412', fontWeight: '500' }}>
+                    This market is not open today. Pre-orders are open for pickup on <strong>{daysStr}</strong>.
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleTabJump('products')}
+                      style={{
+                        background: '#541722',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '6px 12px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Pre-order for pickup
+                    </button>
+                    <Link
+                      to={`${PATHS.MARKETS}?openNow=true`}
+                      style={{
+                        background: 'transparent',
+                        color: '#541722',
+                        border: '1px solid #c9b9af',
+                        borderRadius: '6px',
+                        padding: '5px 12px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      Markets open today
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Header Right Actions */}

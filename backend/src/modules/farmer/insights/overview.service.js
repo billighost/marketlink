@@ -245,7 +245,14 @@ export async function getFarmerOverview(farmerId) {
     nextMarket,
     stallName: farmer.stallName || 'My Stall',
     stallNumber: farmer.stallNumber || '',
-    healthScore: 98,
-    fulfillmentRate: 99.4,
+    healthScore: Math.min(100, Math.round(
+      (pipeline.completed / Math.max(1, pipeline.placed + pipeline.accepted + pipeline.ready + pipeline.completed + pipeline.cancelled)) * 100
+    )),
+    fulfillmentRate: (() => {
+      const total = pipeline.placed + pipeline.accepted + pipeline.ready + pipeline.completed + (pipeline.cancelled || 0);
+      if (total === 0) return null;
+      const fulfilled = pipeline.completed;
+      return Math.round((fulfilled / total) * 1000) / 10; // one decimal
+    })(),
   };
 }

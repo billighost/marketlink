@@ -215,14 +215,35 @@ export function Markets() {
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty State: No nearby markets / filters */}
         {!loading && markets.length === 0 && (
           <EmptyState
             scene="lost-path"
-            title="No markets found"
-            text="Try a different day."
-            actionLabel="View all days"
-            onAction={() => handleSelectDay(undefined)}
+            title={
+              searchQuery
+                ? `No markets matching "${searchQuery}"`
+                : selectedDay
+                ? `No markets operating on ${DAY_OPTIONS.find((d) => d.val === selectedDay)?.label || selectedDay}`
+                : 'No nearby markets found'
+            }
+            text={
+              searchQuery
+                ? `We couldn't find any farmers markets matching "${searchQuery}"${selectedDay ? ` on this day` : ''}. Try broadening your search or resetting filters.`
+                : selectedDay
+                ? 'No farmers markets are open on this day in this area. Most regional growers trade on Saturday and Sunday mornings.'
+                : 'No farmers markets were found in your immediate area. Try expanding your search radius to explore all regional producer markets.'
+            }
+            actionLabel={
+              searchQuery
+                ? 'Clear search & show all markets'
+                : selectedDay
+                ? 'View all days & regional markets'
+                : 'Show all regional markets'
+            }
+            onAction={() => {
+              setSearchQuery('');
+              handleSelectDay(undefined);
+            }}
           />
         )}
 

@@ -375,10 +375,14 @@ export function Market() {
                   );
                 })
               ) : (
-                <div className={styles.emptyResults}>
-                  <Store size={32} className={styles.emptyIcon} />
-                  <h4>No markets found</h4>
-                  <p>Try searching for a different neighborhood or reset your filters.</p>
+                <div className={styles.emptyResults} role="status">
+                  <Store size={32} className={styles.emptyIcon} aria-hidden="true" />
+                  <h4>No nearby markets found</h4>
+                  <p>
+                    {searchQuery
+                      ? `We couldn't find any farmers markets matching "${searchQuery}". Try broadening your search or resetting filters to see all regional markets.`
+                      : 'No markets match your current filter. Try expanding your search to browse all regional markets across the network.'}
+                  </p>
                   <button
                     type="button"
                     onClick={() => {
@@ -387,7 +391,7 @@ export function Market() {
                     }}
                     className={styles.resetFiltersBtn}
                   >
-                    Reset filters
+                    Expand search & view all markets
                   </button>
                 </div>
               )}

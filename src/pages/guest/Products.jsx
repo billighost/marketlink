@@ -477,6 +477,34 @@ export function Products() {
                   <span>Show All Harvest</span>
                 </button>
               </div>
+
+              <div style={{ marginTop: '18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.75rem', color: '#6b645c' }}>Or search for market staples:</span>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {['Apples', 'Sourdough', 'Eggs', 'Raw Honey', 'Carrots'].map((term) => (
+                    <button
+                      key={term}
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery(term);
+                        setSelectedCategory('All Harvest');
+                      }}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid #d4c8bf',
+                        borderRadius: '9999px',
+                        padding: '4px 12px',
+                        fontSize: '0.75rem',
+                        color: '#541722',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                      }}
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

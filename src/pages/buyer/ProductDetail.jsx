@@ -26,6 +26,7 @@ import HorizontalRow from '@/components/layout/HorizontalRow';
 import EmptyState from '@/components/ui/EmptyState';
 import ErrorState from '@/components/ui/ErrorState';
 import Skeleton from '@/components/ui/Skeleton';
+import { recordViewedProduct } from '@/utils/recentViews';
 import styles from './ProductDetail.module.css';
 
 function formatCutoffSentence(cutoffAt) {
@@ -87,6 +88,12 @@ export function ProductDetail() {
   } = useQuery(['product-detail', id], ({ signal }) => getProductDetail(id, signal));
 
   useDocumentTitle(`${product?.name || 'Produce'} · MarketLink`);
+
+  useEffect(() => {
+    if (product && product.id) {
+      recordViewedProduct(product);
+    }
+  }, [product]);
 
   const farmerId = product?.farmer?.id;
 
@@ -170,9 +177,9 @@ export function ProductDetail() {
         {isNotFound ? (
           <EmptyState
             scene="lost-path"
-            title="That produce is not on a stall"
-            text="It may have sold out, or the listing was removed."
-            actionLabel="Back to browse"
+            title="Produce unlisted or removed"
+            text="This item has been removed by the grower or is no longer listed at this market."
+            actionLabel="Explore market produce"
             actionTo="/buyer/products"
           />
         ) : (
@@ -363,6 +370,29 @@ export function ProductDetail() {
               {isSoldOut ? 'Sold out' : 'Add to basket'}
             </button>
           </div>
+
+          {/* Sold out recovery box */}
+          {isSoldOut && (
+            <div className={styles.soldOutBox} role="status">
+              <h4 className={styles.soldOutHeading}>This harvest is sold out</h4>
+              <p className={styles.soldOutText}>
+                All quantities for this market collection have been reserved. The grower is preparing the next harvest batch.
+              </p>
+              <div className={styles.soldOutActions}>
+                <Link to="/buyer/products" className={styles.soldOutActionBtn}>
+                  Browse similar produce
+                </Link>
+                {farmer?.id && (
+                  <Link
+                    to={`/buyer/products?farmer=${farmer.id}`}
+                    className={`${styles.soldOutActionBtn} ${styles.soldOutActionBtnSecondary}`}
+                  >
+                    More from this stall
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

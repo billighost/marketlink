@@ -23,8 +23,12 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  padding: var(--space-2) 0 var(--space-6);
+  padding-top: var(--space-2);
+}
+
+.sheet .group {
+  padding-left: clamp(16px, 4vw, 24px);
+  padding-right: clamp(16px, 4vw, 24px);
 }
 
 .group {
@@ -37,7 +41,7 @@
 
 .group:last-of-type {
   border-bottom: none;
-  padding-bottom: 0;
+  padding-bottom: var(--space-4);
 }
 
 .groupHeader {
@@ -72,7 +76,13 @@
 .chipGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .chipGrid {
+    gap: 6px;
+  }
 }
 
 .filterChip {
@@ -80,8 +90,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: var(--tap-min);
-  padding: 0 var(--space-4);
+  min-height: 38px;
+  padding: 6px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   background-color: transparent;
@@ -92,9 +102,18 @@
   cursor: pointer;
   touch-action: manipulation;
   user-select: none;
+  line-height: 1.25;
   transition: background-color var(--duration-fast) var(--ease-standard),
               color var(--duration-fast) var(--ease-standard),
               border-color var(--duration-fast) var(--ease-standard);
+}
+
+@media (max-width: 480px) {
+  .filterChip {
+    min-height: 36px;
+    padding: 5px 12px;
+    font-size: 0.8125rem;
+  }
 }
 
 .filterChip:hover {
@@ -151,38 +170,77 @@
   outline-offset: var(--focus-offset);
 }
 
-/* Sheet Sticky Footer: the ONE beet button while sheet is open */
+/* Sheet Sticky Footer: with Reset and Apply button */
 .sheetFooter {
   position: sticky;
   bottom: 0;
-  background-color: var(--color-white);
-  padding: var(--space-3) 0 var(--space-2);
-  margin-top: var(--space-4);
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 12px clamp(16px, 4vw, 24px) calc(12px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
+  box-shadow: 0 -4px 16px rgba(46, 43, 38, 0.05);
+}
+
+@media (max-width: 480px) {
+  .sheetFooter {
+    padding: 10px clamp(12px, 3.5vw, 16px) calc(10px + env(safe-area-inset-bottom, 0px));
+    gap: 8px;
+  }
+}
+
+.sheetResetBtn {
+  appearance: none;
+  background: var(--color-canvas, #faf7f5);
+  border: 1px solid var(--color-border, #dcd1c8);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-ink, #2e2b26);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  padding: 10px 16px;
+  min-height: var(--tap-min, 44px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.sheetResetBtn:hover {
+  background: var(--color-border, #f0e8e2);
 }
 
 .sheetApplyButton {
   appearance: none;
-  width: 100%;
-  min-height: var(--tap-min);
+  flex: 1;
+  min-height: var(--tap-min, 44px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-3) var(--space-6);
+  padding: 10px 20px;
   background-color: var(--color-beet);
   color: var(--color-white);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md, 8px);
   font-family: var(--font-body);
   font-size: var(--text-body);
   font-weight: var(--weight-semibold);
   cursor: pointer;
   touch-action: manipulation;
-  transition: background-color var(--duration-fast) var(--ease-standard);
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              transform 100ms ease;
+  box-shadow: 0 2px 8px rgba(84, 23, 34, 0.2);
 }
 
 .sheetApplyButton:hover {
   background-color: var(--color-beet-dark);
+}
+
+.sheetApplyButton:active {
+  transform: scale(0.99);
 }
 
 .sheetApplyButton:focus-visible {

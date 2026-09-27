@@ -1,779 +1,529 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+﻿import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  Search,
-  MapPin,
-  Calendar,
-  Store,
-  Leaf,
-  ShieldCheck,
-  Star,
-  ArrowRight,
-  CheckCircle2,
-  X,
-  Eye,
-  Sparkles,
-  Filter,
-  SlidersHorizontal,
-  RotateCcw,
-} from 'lucide-react';
-import { getFarmers, getMarkets, getFarmerProducts } from '@/api/catalog';
-import { PATHS } from '@/routes/paths';
-import useDocumentTitle from '@/hooks/useDocumentTitle';
-import BottomSheet from '@/components/ui/BottomSheet';
-import Button from '@/components/ui/Button';
-import { formatPrice } from '@/utils/format';
-import styles from './Farmers.module.css';
+  Search, Store, Leaf, ShieldCheck, Star, ArrowRight,
+  X, Eye, Sparkles, SlidersHorizontal, RotateCcw,
+  TrendingUp, Clock, PackageCheck, AlertCircle, ChevronDown,
+} from "lucide-react";
+import { getFarmers, getMarkets, getFarmerProducts } from "@/api/catalog";
+import useDocumentTitle from "@/hooks/useDocumentTitle";
+import BottomSheet from "@/components/ui/BottomSheet";
+import Button from "@/components/ui/Button";
+import Skeleton from "@/components/ui/Skeleton";
+import { formatPrice } from "@/utils/format";
+import styles from "./Farmers.module.css";
 
 const CATEGORIES = [
-  'All Growers',
-  'Vegetables & Herbs',
-  'Fruit & Berries',
-  'Bakery',
-  'Dairy & Cheese',
-  'Honey & Preserves',
+  { id: "all", label: "All Growers", icon: "🌿" },
+  { id: "vegetables", label: "Vegetables & Herbs", icon: "🥦" },
+  { id: "fruit", label: "Fruit & Berries", icon: "🍓" },
+  { id: "bakery", label: "Bakery", icon: "🍞" },
+  { id: "dairy", label: "Dairy & Cheese", icon: "🧀" },
+  { id: "honey", label: "Honey & Preserves", icon: "🍯" },
 ];
 
-function getFarmerImages(f) {
-  const stall = (f.stallName || f.farmName || f.name || '').toLowerCase();
-  if (stall.includes('willow') || stall.includes('poultry')) {
-    return {
-      avatar: '/images/farmer-marcus.jpg',
-      cover: '/images/hero-market-crates.jpg',
-      category: 'Dairy & Cheese',
-    };
-  }
-  if (stall.includes('oak') || stall.includes('mill') || stall.includes('bakery')) {
-    return {
-      avatar: '/images/farmer-elena.jpg',
-      cover: '/images/hero-market-crates.jpg',
-      category: 'Bakery',
-    };
-  }
-  if (stall.includes('cedarbrook') || stall.includes('flower')) {
-    return {
-      avatar: '/images/farmer-sarah.jpg',
-      cover: '/images/market-wildflower.jpg',
-      category: 'Vegetables & Herbs',
-    };
-  }
-  if (stall.includes('riverbend')) {
-    return {
-      avatar: '/images/farmer-david.jpg',
-      cover: '/images/riverbend-farm.jpg',
-      category: 'Vegetables & Herbs',
-    };
-  }
-  if (stall.includes('maplecrest') || stall.includes('creamery')) {
-    return {
-      avatar: '/images/farmer-priya.jpg',
-      cover: '/images/market-morning.jpg',
-      category: 'Dairy & Cheese',
-    };
-  }
-  if (stall.includes('hollow') || stall.includes('mushroom') || stall.includes('apiary')) {
-    return {
-      avatar: '/images/farmer-marcus.jpg',
-      cover: '/images/market-riverside.jpg',
-      category: 'Honey & Preserves',
-    };
-  }
-  return {
-    avatar: f.avatar || f.imageUrl || '/images/farmer-david.jpg',
-    cover: f.coverImage || '/images/riverbend-farm.jpg',
-    category: f.category || 'Vegetables & Herbs',
-  };
+const SORT_OPTIONS = [
+  { id: "rating", label: "Top Rated" },
+  { id: "top", label: "Best Sellers" },
+  { id: "new", label: "Newest" },
+  { id: "name", label: "A → Z" },
+];
+
+const ART_EMOJI = {
+  vegetables: "🥦", fruit: "🍎", bakery: "🍞", dairy: "🧀",
+  honey: "🍯", herbs: "🌿", mushroom: "🍄", eggs: "🥚",
+  meat: "🥩", fish: "🐟", flowers: "🌸", grains: "🌾",
+};
+
+function getArtDisplay(farmer) {
+  if (farmer.art && ART_EMOJI[farmer.art]) return ART_EMOJI[farmer.art];
+  const s = (farmer.stallName || "").toLowerCase();
+  if (s.includes("bread") || s.includes("bakery") || s.includes("hearth")) return "🍞";
+  if (s.includes("dairy") || s.includes("cream") || s.includes("cheese")) return "🧀";
+  if (s.includes("honey") || s.includes("apiary") || s.includes("bee")) return "🍯";
+  if (s.includes("berry") || s.includes("orchard") || s.includes("fruit")) return "🍎";
+  if (s.includes("flower") || s.includes("bloom")) return "🌸";
+  return "🌿";
 }
 
-const FALLBACK_MARKETS = [
-  { id: 'm-1', name: 'Grand Army Plaza Greenmarket', location: 'Prospect Park, Brooklyn' },
-  { id: 'm-2', name: 'Union Square Greenmarket', location: 'Union Square, Manhattan' },
-  { id: 'm-3', name: 'Brooklyn Borough Hall', location: 'Court St & Montague St' },
-  { id: 'm-4', name: 'Carroll Gardens Market', location: 'Carroll Park, Brooklyn' },
-];
+function getStallInitials(stallName = "") {
+  return stallName.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() || "").join("");
+}
 
-const FALLBACK_FARMERS = [
-  {
-    id: 'f-1',
-    name: 'David Miller',
-    stallName: 'Riverbend Organic Farm',
-    farmName: 'Riverbend Organic Farm',
-    category: 'Vegetables & Herbs',
-    rating: 4.95,
-    reviewCount: 142,
-    location: 'Hudson Valley, NY (38 mi)',
-    specialty: 'Heirloom Roots & Greens',
-    verified: true,
-    badges: ['100% Producer Only', 'Certified Organic', 'Top Seller'],
-    story: 'Fifth-generation regenerative stewardship cultivating 40+ heirloom root varieties and cold-hardy winter greens without synthetic pesticides.',
-    markets: [
-      { id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: 'SATURDAYS 8AM–3PM' },
-      { id: 'm-2', name: 'Union Square Greenmarket', day: 'WEDNESDAYS 8AM–4PM' },
-    ],
-  },
-  {
-    id: 'f-2',
-    name: 'Sarah Jenkins',
-    stallName: 'Cedarbrook Farmstead',
-    farmName: 'Cedarbrook Farmstead',
-    category: 'Vegetables & Herbs',
-    rating: 4.88,
-    reviewCount: 96,
-    location: 'Sussex County, NJ (42 mi)',
-    specialty: 'Microgreens & Nightshades',
-    verified: true,
-    badges: ['100% Producer Only', 'Low Till'],
-    story: 'Specializing in hyper-fresh microgreens cut at dawn and certified organic heirloom nightshades hand-harvested weekly.',
-    markets: [
-      { id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: 'SATURDAYS 8AM–3PM' },
-      { id: 'm-4', name: 'Carroll Gardens Market', day: 'SUNDAYS 9AM–2PM' },
-    ],
-  },
-  {
-    id: 'f-3',
-    name: 'Elena Vance',
-    stallName: 'Old Stone Hearth Bakery',
-    farmName: 'Old Stone Hearth Bakery',
-    category: 'Bakery',
-    rating: 4.98,
-    reviewCount: 215,
-    location: 'Catskills, NY (55 mi)',
-    specialty: 'Wood-fired Sourdough & Ancient Grains',
-    verified: true,
-    badges: ['100% Producer Only', 'Stone Milled', 'Top Seller'],
-    story: 'Naturally leavened sourdough crafted exclusively from single-origin regional heritage grains milled on stone bedstones weekly.',
-    markets: [
-      { id: 'm-2', name: 'Union Square Greenmarket', day: 'WEDNESDAYS & SATURDAYS' },
-      { id: 'm-3', name: 'Brooklyn Borough Hall', day: 'THURSDAYS 8AM–3PM' },
-    ],
-  },
-  {
-    id: 'f-4',
-    name: 'Marcus & Clara Lee',
-    stallName: 'Willow Brook Apiary & Pastures',
-    farmName: 'Willow Brook Apiary & Pastures',
-    category: 'Honey & Preserves',
-    rating: 4.91,
-    reviewCount: 84,
-    location: 'Pine Island, NY (48 mi)',
-    specialty: 'Raw Wildflower Honey & Bee Pollen',
-    verified: true,
-    badges: ['100% Producer Only', 'Raw & Unfiltered'],
-    story: 'Treatment-free sustainable apiaries producing single-bloom varietal honeys and organic orchard fruit preserves.',
-    markets: [
-      { id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: 'SATURDAYS 8AM–3PM' },
-      { id: 'm-2', name: 'Union Square Greenmarket', day: 'SATURDAYS 8AM–4PM' },
-    ],
-  },
-  {
-    id: 'f-5',
-    name: 'Priya Patel',
-    stallName: 'Maplecrest Artisan Creamery',
-    farmName: 'Maplecrest Artisan Creamery',
-    category: 'Dairy & Cheese',
-    rating: 4.97,
-    reviewCount: 167,
-    location: 'Litchfield Hills, CT (62 mi)',
-    specialty: 'Grass-fed Raw Cheeses & Cultured Butter',
-    verified: true,
-    badges: ['100% Producer Only', 'Pasture Raised', 'Top Seller'],
-    story: 'Small batch cheeses made strictly from 100% A2/A2 grass-fed Jersey cow milk aged in natural underground sandstone cellars.',
-    markets: [
-      { id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: 'SATURDAYS 8AM–3PM' },
-      { id: 'm-3', name: 'Brooklyn Borough Hall', day: 'TUESDAYS & SATURDAYS' },
-    ],
-  },
-  {
-    id: 'f-6',
-    name: 'Thomas & Anne Thorne',
-    stallName: 'Highland Orchard & Berry Works',
-    farmName: 'Highland Orchard & Berry Works',
-    category: 'Fruit & Berries',
-    rating: 4.89,
-    reviewCount: 112,
-    location: 'Warwick Valley, NY (45 mi)',
-    specialty: 'Heritage Apples & Cane Berries',
-    verified: true,
-    badges: ['100% Producer Only', 'IPM Certified'],
-    story: 'Fourth-generation hillside orchards producing heritage cider apples, sun-ripened cane berries, and unpasteurized sweet cider.',
-    markets: [
-      { id: 'm-2', name: 'Union Square Greenmarket', day: 'SATURDAYS 8AM–4PM' },
-      { id: 'm-4', name: 'Carroll Gardens Market', day: 'SUNDAYS 9AM–2PM' },
-    ],
-  },
-];
+function formatOperatingDays(days = []) {
+  const MAP = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
+  if (!days.length) return null;
+  return days.map((d) => MAP[d] || d).join(" · ");
+}
+
+function FarmerCardSkeleton() {
+  return (
+    <div className={styles.cardSkeleton}>
+      <div className={styles.skeletonHeader}>
+        <Skeleton height="100%" style={{ borderRadius: "0", position: "absolute", inset: 0 }} />
+      </div>
+      <div className={styles.skeletonBody}>
+        <Skeleton height="22px" width="70%" style={{ marginBottom: 8 }} />
+        <Skeleton height="14px" width="50%" style={{ marginBottom: 12 }} />
+        <Skeleton height="14px" width="90%" style={{ marginBottom: 6 }} />
+        <Skeleton height="14px" width="80%" style={{ marginBottom: 18 }} />
+        <Skeleton height="36px" />
+      </div>
+    </div>
+  );
+}
+
+function FarmerCard({ farmer, onPeek }) {
+  const hasImage = Boolean(farmer.bannerUrl || farmer.imageUrl);
+  const days = formatOperatingDays(farmer.operatingDays);
+  const initials = getStallInitials(farmer.stallName);
+  const art = getArtDisplay(farmer);
+
+  return (
+    <article className={styles.card}>
+      <div className={styles.cardHeader}>
+        {hasImage ? (
+          <img
+            src={farmer.bannerUrl || farmer.imageUrl}
+            alt={farmer.stallName}
+            className={styles.cardCover}
+            loading="lazy"
+          />
+        ) : null}
+        <div className={`${styles.cardCoverFallback} ${hasImage ? styles.hidden : ""}`}>
+          <span className={styles.cardArtEmoji}>{art}</span>
+        </div>
+        <div className={styles.cardHeaderOverlay}>
+          {farmer.openToday && (
+            <span className={styles.openBadge}>
+              <span className={styles.openBadgeDot} /> Open Today
+            </span>
+          )}
+          {farmer.isTopSeller && (
+            <span className={styles.topSellerBadge}>
+              <TrendingUp size={11} /> Top Seller
+            </span>
+          )}
+          {farmer.isNew && <span className={styles.newBadge}>New</span>}
+        </div>
+        <div className={styles.cardLogo}>
+          {farmer.logoUrl ? (
+            <img src={farmer.logoUrl} alt={farmer.stallName} className={styles.cardLogoImg} />
+          ) : (
+            <span className={styles.cardLogoInitials}>{initials}</span>
+          )}
+        </div>
+        {farmer.ratingAvg > 0 && (
+          <div className={styles.ratingChip}>
+            <Star size={11} fill="#E07A2C" color="#E07A2C" />
+            <span>{Number(farmer.ratingAvg).toFixed(1)}</span>
+            <span className={styles.ratingCount}>({farmer.ratingCount})</span>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.cardBody}>
+        <div className={styles.cardTitleRow}>
+          <h2 className={styles.cardTitle}>{farmer.stallName}</h2>
+          {farmer.stallNumber && <span className={styles.stallNum}>Stall {farmer.stallNumber}</span>}
+        </div>
+        {farmer.specialty && <p className={styles.cardSpecialty}>{farmer.specialty}</p>}
+        {(farmer.lowStockCount > 0 || farmer.soldOutCount > 0) && (
+          <div className={styles.stockRow}>
+            {farmer.lowStockCount > 0 && (
+              <span className={styles.lowStockPill}><AlertCircle size={11} /> {farmer.lowStockCount} low stock</span>
+            )}
+            {farmer.soldOutCount > 0 && (
+              <span className={styles.soldOutPill}><PackageCheck size={11} /> {farmer.soldOutCount} sold out</span>
+            )}
+          </div>
+        )}
+        {farmer.markets?.length > 0 && (
+          <div className={styles.marketsRow}>
+            <Store size={12} className={styles.marketsIcon} />
+            <span className={styles.marketsText}>{farmer.markets.slice(0, 2).map((m) => m.name).join(" · ")}</span>
+          </div>
+        )}
+        {days && (
+          <div className={styles.daysRow}>
+            <Clock size={12} className={styles.daysIcon} />
+            <span className={styles.daysText}>{days}</span>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.cardFooter}>
+        <button type="button" onClick={onPeek} className={styles.peekBtn} title="Quick peek at seasonal produce">
+          <Eye size={14} />
+          <span>Peek</span>
+        </button>
+        <Link to={`/farmers/${farmer.id}`} className={styles.visitBtn}>
+          <span>Explore Stall</span>
+          <ArrowRight size={14} />
+        </Link>
+      </div>
+    </article>
+  );
+}
 
 export function Farmers() {
-  useDocumentTitle('Local Farmers & Producers — MarketLink');
+  useDocumentTitle("Local Farmers & Producers — MarketLink");
   const navigate = useNavigate();
 
-  const [rawFarmers, setRawFarmers] = useState(FALLBACK_FARMERS);
-  const [markets, setMarkets] = useState(FALLBACK_MARKETS);
-  const [loading, setLoading] = useState(false);
+  const [farmers, setFarmers] = useState([]);
+  const [markets, setMarkets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All Growers');
-  const [selectedMarketId, setSelectedMarketId] = useState('all');
-  const [organicOnly, setOrganicOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedMarketId, setSelectedMarketId] = useState("all");
+  const [sortBy, setSortBy] = useState("rating");
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
-  // Peek modal
   const [peekFarmer, setPeekFarmer] = useState(null);
   const [peekProducts, setPeekProducts] = useState([]);
   const [peekLoading, setPeekLoading] = useState(false);
+  const [peekError, setPeekError] = useState("");
+
+  const debounceTimer = useRef(null);
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedQuery(val), 380);
+  };
+
+  const fetchFarmers = useCallback(async ({ cursor = null, replace = true } = {}) => {
+    if (replace) { setLoading(true); setError(""); }
+    else setLoadingMore(true);
+    try {
+      const query = { sort: sortBy, limit: 12 };
+      if (debouncedQuery.trim()) query.q = debouncedQuery.trim();
+      if (selectedCategory !== "all") query.category = selectedCategory;
+      if (selectedMarketId !== "all") query.market = selectedMarketId;
+      if (cursor) query.cursor = cursor;
+      const res = await getFarmers(query);
+      const list = Array.isArray(res) ? res : res?.data || [];
+      const meta = res?.meta || {};
+      setFarmers((prev) => (replace ? list : [...prev, ...list]));
+      setNextCursor(meta.nextCursor || null);
+      setHasMore(Boolean(meta.nextCursor));
+    } catch (err) {
+      setError(err?.message || "Failed to load farmers. Please try again.");
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [debouncedQuery, selectedCategory, selectedMarketId, sortBy]);
+
+  useEffect(() => { fetchFarmers({ replace: true }); }, [fetchFarmers]);
 
   useEffect(() => {
-    let active = true;
-
-    Promise.all([
-      getFarmers().catch(() => []),
-      getMarkets().catch(() => ({ data: [] })),
-    ])
-      .then(([farmersData, marketsData]) => {
-        if (!active) return;
-        const fList = Array.isArray(farmersData)
-          ? farmersData
-          : farmersData?.data || farmersData?.items || [];
-        const mList = Array.isArray(marketsData)
-          ? marketsData
-          : marketsData?.data || marketsData?.items || [];
-        if (fList.length > 0) setRawFarmers(fList);
-        if (mList.length > 0) setMarkets(mList);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
+    getMarkets().then((res) => {
+      const list = Array.isArray(res) ? res : res?.data || [];
+      setMarkets(list);
+    }).catch(() => {});
   }, []);
 
-function getFallbackProductsForFarmer(farmer) {
-  const cat = farmer?.category || '';
-  if (cat.includes('Dairy') || cat.includes('Cheese')) {
-    return [
-      { id: 'p-1', name: 'Raw Grass-Fed Whole Milk', priceCents: 550, unit: 'half gallon', quantityAvailable: 12 },
-      { id: 'p-2', name: 'Cultured Farmhouse Butter', priceCents: 650, unit: '8 oz tub', quantityAvailable: 18 },
-      { id: 'p-3', name: 'Fresh Jersey Ricotta', priceCents: 800, unit: 'jar', quantityAvailable: 8 },
-      { id: 'p-4', name: '2-Year Aged Farmhouse Cheddar', priceCents: 1200, unit: 'wedge (0.5 lb)', quantityAvailable: 14 },
-    ];
-  }
-  if (cat.includes('Bakery')) {
-    return [
-      { id: 'p-1', name: 'Wood-fired Sourdough Boule', priceCents: 900, unit: 'loaf', quantityAvailable: 15 },
-      { id: 'p-2', name: 'Heritage Einkorn Baguette', priceCents: 600, unit: 'baguette', quantityAvailable: 20 },
-      { id: 'p-3', name: 'Wild Cardamom Morning Buns', priceCents: 450, unit: 'each', quantityAvailable: 16 },
-      { id: 'p-4', name: 'Stone-Ground Rye Miche', priceCents: 1100, unit: 'half loaf', quantityAvailable: 10 },
-    ];
-  }
-  if (cat.includes('Honey') || cat.includes('Preserves')) {
-    return [
-      { id: 'p-1', name: 'Raw Catskills Wildflower Honey', priceCents: 1400, unit: '16 oz jar', quantityAvailable: 22 },
-      { id: 'p-2', name: 'Clover Creamed Honey', priceCents: 1250, unit: '12 oz jar', quantityAvailable: 14 },
-      { id: 'p-3', name: 'Wild Blackberry Preserves', priceCents: 950, unit: 'jar', quantityAvailable: 18 },
-      { id: 'p-4', name: 'Pure Local Bee Pollen', priceCents: 1600, unit: '8 oz jar', quantityAvailable: 9 },
-    ];
-  }
-  if (cat.includes('Fruit') || cat.includes('Berries')) {
-    return [
-      { id: 'p-1', name: 'Crisp Honeycrisp Apples', priceCents: 450, unit: 'lb', quantityAvailable: 35 },
-      { id: 'p-2', name: 'Fresh Sun-Ripened Blackberries', priceCents: 600, unit: 'pint', quantityAvailable: 20 },
-      { id: 'p-3', name: 'Unpasteurized Sweet Cider', priceCents: 850, unit: 'half gallon', quantityAvailable: 15 },
-      { id: 'p-4', name: 'Heirloom Bosc Pears', priceCents: 500, unit: 'lb', quantityAvailable: 25 },
-    ];
-  }
-  return [
-    { id: 'p-1', name: 'Heirloom Rainbow Carrots', priceCents: 450, unit: 'bunch', quantityAvailable: 24 },
-    { id: 'p-2', name: 'Tuscan Lacinato Kale', priceCents: 375, unit: 'bunch', quantityAvailable: 30 },
-    { id: 'p-3', name: 'Organic Butterhead Lettuce', priceCents: 400, unit: 'head', quantityAvailable: 18 },
-    { id: 'p-4', name: 'Golden Beetroot Bunches', priceCents: 500, unit: 'bunch', quantityAvailable: 15 },
-  ];
-}
-
-  // Open Peek Modal & fetch products
   const handleOpenPeek = async (farmer, e) => {
-    e.preventDefault();
+    e?.preventDefault();
     setPeekFarmer(farmer);
-    setPeekLoading(true);
     setPeekProducts([]);
+    setPeekLoading(true);
+    setPeekError("");
     try {
-      const res = await getFarmerProducts(farmer.id);
+      const res = await getFarmerProducts(farmer.id, { limit: 8 });
       const list = Array.isArray(res) ? res : res?.data || [];
-      if (list.length > 0) {
-        setPeekProducts(list.slice(0, 6));
-      } else {
-        setPeekProducts(getFallbackProductsForFarmer(farmer));
-      }
+      setPeekProducts(list);
     } catch {
-      setPeekProducts(getFallbackProductsForFarmer(farmer));
+      setPeekError("Could not load products for this stall.");
     } finally {
       setPeekLoading(false);
     }
   };
 
-  const normalizedFarmers = useMemo(() => {
-    return rawFarmers.map((f) => {
-      const id = f.id || f._id;
-      const farmName = f.stallName || f.farmName || f.name || 'Local Farm';
-      const growerName = f.name || (f.stallName ? `Grower at ${f.stallName}` : 'Local Grower');
-      const visual = getFarmerImages(f);
-      const badges = Array.isArray(f.badges) && f.badges.length > 0 ? f.badges : ['100% Producer Only'];
-      if (f.isTopSeller && !badges.includes('Top Seller')) badges.push('Top Seller');
-      if (f.isNew && !badges.includes('New Grower')) badges.push('New Grower');
+  const activeFiltersCount = (selectedMarketId !== "all" ? 1 : 0) + (verifiedOnly ? 1 : 0) + (sortBy !== "rating" ? 1 : 0);
 
-      const operatingDaysFormatted =
-        Array.isArray(f.operatingDays) && f.operatingDays.length > 0
-          ? f.operatingDays.map((d) => (typeof d === 'string' ? d.toUpperCase() : '')).filter(Boolean).join(', ')
-          : 'WEEKENDS';
+  const displayedFarmers = useMemo(() => {
+    if (!verifiedOnly) return farmers;
+    return farmers.filter((f) => f.ratingAvg >= 4 || f.isTopSeller);
+  }, [farmers, verifiedOnly]);
 
-      const marketList =
-        Array.isArray(f.markets) && f.markets.length > 0
-          ? f.markets.map((m) => ({
-              id: m.id || m._id,
-              name: m.name || 'Local Market',
-              day: m.day || operatingDaysFormatted,
-            }))
-          : [{ id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: operatingDaysFormatted }];
-
-      return {
-        id,
-        name: growerName,
-        farmName: f.farmName || farmName,
-        location: f.location || (f.stallNumber ? `Stall ${f.stallNumber} · Local Foodshed` : 'Local Regional Square'),
-        image: visual.avatar,
-        coverImage: visual.cover,
-        specialty: f.specialty || f.specialties?.join(', ') || 'Fresh Seasonal Harvest',
-        category: f.category || visual.category,
-        verified: f.verified !== false,
-        badges,
-        rating: f.ratingAvg ? Number(f.ratingAvg).toFixed(1) : f.rating ? Number(f.rating).toFixed(1) : '5.0',
-        reviewCount: f.ratingCount || f.reviewCount || 14,
-        story: f.story || f.bio || 'Dedicated to sustainable regional stewardship and harvest-fresh market stalls.',
-        markets: marketList,
-      };
-    });
-  }, [rawFarmers]);
-
-  // Category counts
-  const categoryCounts = useMemo(() => {
-    const counts = { 'All Growers': normalizedFarmers.length };
-    CATEGORIES.forEach((cat) => {
-      if (cat !== 'All Growers') {
-        counts[cat] = normalizedFarmers.filter((f) => f.category === cat).length;
-      }
-    });
-    return counts;
-  }, [normalizedFarmers]);
-
-  const activeFiltersCount = (selectedMarketId !== 'all' ? 1 : 0) + (organicOnly ? 1 : 0);
-
-  const filteredFarmers = useMemo(() => {
-    return normalizedFarmers.filter((f) => {
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesName = f.name?.toLowerCase().includes(q);
-        const matchesFarm = f.farmName?.toLowerCase().includes(q);
-        const matchesSpecialty = f.specialty?.toLowerCase().includes(q);
-        if (!matchesName && !matchesFarm && !matchesSpecialty) return false;
-      }
-
-      if (selectedCategory !== 'All Growers') {
-        if (f.category !== selectedCategory) return false;
-      }
-
-      if (selectedMarketId !== 'all') {
-        const attends = f.markets.some(
-          (m) =>
-            m.id === selectedMarketId ||
-            (m.name && m.name.toLowerCase().includes(selectedMarketId.toLowerCase()))
-        );
-        if (!attends) return false;
-      }
-
-      if (organicOnly) {
-        const isVerifiedProducer = Boolean(
-          f.verified ||
-          f.isProducerOnly ||
-          f.badges?.some((b) => typeof b === 'string' && b.toLowerCase().includes('producer'))
-        );
-        if (!isVerifiedProducer) return false;
-      }
-
-      return true;
-    });
-  }, [normalizedFarmers, searchQuery, selectedCategory, selectedMarketId, organicOnly]);
+  const resetFilters = () => {
+    setSelectedCategory("all");
+    setSelectedMarketId("all");
+    setSortBy("rating");
+    setVerifiedOnly(false);
+    setSearchQuery("");
+    setDebouncedQuery("");
+  };
 
   return (
     <div className={styles.page}>
-      {/* ─── 1. HERO BANNER & REGIONAL FOODSHED METRICS ─────────────── */}
+      {/* HERO */}
       <section className={styles.heroSection}>
+        <div className={styles.heroNoise} aria-hidden="true" />
         <div className="container">
           <div className={styles.heroContent}>
             <span className={styles.eyebrow}>
-              <span className={styles.pulseGreenDot} />
-              <Leaf size={14} className={styles.eyebrowIcon} />
-              100% REGIONAL PRODUCER-ONLY MARKET
+              <span className={styles.eyebrowDot} />
+              <Leaf size={13} />
+              100% Regional Producer-Only Network
             </span>
-
-            <h1 className={styles.heroTitle}>Meet Our Local Farmers & Artisans</h1>
+            <h1 className={styles.heroTitle}>
+              Meet Your Local<br />
+              <em>Farmers &amp; Artisans</em>
+            </h1>
             <p className={styles.heroSubtitle}>
-              Every grower on MarketLink is an independent family farm or food artisan cultivating
-              regenerative harvests within your regional foodshed. Zero middlemen, picked hours before pickup.
+              Every grower on MarketLink is an independent family farm or food artisan.
+              Zero middlemen — harvested within hours of your pickup.
             </p>
 
-            {/* Regional Foodshed Telemetry Bar */}
-            <div className={styles.foodshedCountersBar} aria-label="Regional foodshed statistics">
-              <div className={styles.counterItem}>
-                <span className={styles.counterNum}>{normalizedFarmers.length || 14}</span>
-                <span className={styles.counterLabel}>Verified Producers</span>
+            <div className={styles.statsBar}>
+              <div className={styles.statItem}>
+                <span className={styles.statNum}>{loading ? "—" : (farmers.length || "—")}</span>
+                <span className={styles.statLabel}>Verified Producers</span>
               </div>
-              <div className={styles.counterDivider} />
-              <div className={styles.counterItem}>
-                <span className={styles.counterNum}>{markets.length || 4}</span>
-                <span className={styles.counterLabel}>Regional Markets</span>
+              <div className={styles.statDivider} />
+              <div className={styles.statItem}>
+                <span className={styles.statNum}>{markets.length || "—"}</span>
+                <span className={styles.statLabel}>Market Locations</span>
               </div>
-              <div className={styles.counterDivider} />
-              <div className={styles.counterItem}>
-                <span className={styles.counterNum}>100%</span>
-                <span className={styles.counterLabel}>Direct-to-Customer</span>
+              <div className={styles.statDivider} />
+              <div className={styles.statItem}>
+                <span className={styles.statNum}>100%</span>
+                <span className={styles.statLabel}>Direct-to-Customer</span>
               </div>
-              <div className={styles.counterDivider} />
-              <div className={styles.counterItem}>
-                <span className={styles.counterNum}>&lt; 45 mi</span>
-                <span className={styles.counterLabel}>Avg Farm Distance</span>
+              <div className={styles.statDivider} />
+              <div className={styles.statItem}>
+                <span className={styles.statNum}>&lt; 45mi</span>
+                <span className={styles.statLabel}>Avg Farm Distance</span>
               </div>
             </div>
 
-            {/* Search & Market Dropdown Controls */}
-            <div className={styles.searchControlsRow}>
-              {/* Search Bar Input */}
-              <div className={styles.searchInputGroup}>
-                <Search size={18} className={styles.searchIcon} />
+            <div className={styles.searchRow}>
+              <div className={styles.searchInputWrap}>
+                <Search size={17} className={styles.searchIcon} />
                 <input
-                  type="text"
-                  placeholder="Search farmers, farms, or produce..."
+                  id="farmer-search"
+                  type="search"
+                  placeholder="Search by farm name or specialty..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   className={styles.searchInput}
-                  aria-label="Search farmers, farms, or produce"
+                  autoComplete="off"
                 />
                 {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => setSearchQuery('')}
-                    className={styles.clearSearchBtn}
+                    className={styles.clearBtn}
+                    onClick={() => { setSearchQuery(""); setDebouncedQuery(""); }}
                     aria-label="Clear search"
                   >
-                    <X size={16} />
+                    <X size={15} />
                   </button>
                 )}
               </div>
-
-              {/* Mobile Filter Sheet Trigger Button */}
-              <button
-                type="button"
-                className={`${styles.mobileFilterBtn} ${activeFiltersCount > 0 ? styles.mobileFilterBtnActive : ''}`}
-                onClick={() => setFilterSheetOpen(true)}
-                aria-label="Open filter options"
-              >
-                <SlidersHorizontal size={17} />
-                <span>Filters</span>
-                {activeFiltersCount > 0 && (
-                  <span className={styles.filterBadge}>{activeFiltersCount}</span>
-                )}
-              </button>
-
-              {/* Desktop Neighborhood Market Selector */}
-              <div className={styles.desktopControls}>
+              <div className={styles.sortWrap}>
                 <select
-                  className={styles.marketSelectDropdown}
-                  value={selectedMarketId}
-                  onChange={(e) => setSelectedMarketId(e.target.value)}
-                  aria-label="Filter by market location"
+                  className={styles.sortSelect}
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  aria-label="Sort farmers"
                 >
-                  <option value="all">All Market Locations</option>
-                  {markets.map((m) => (
-                    <option key={m.id || m._id} value={m.name}>
-                      {m.name}
-                    </option>
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.id} value={o.id}>{o.label}</option>
                   ))}
                 </select>
-
-                <button
-                  type="button"
-                  onClick={() => setOrganicOnly((v) => !v)}
-                  className={`${styles.filterToggleBtn} ${organicOnly ? styles.filterToggleActive : ''}`}
-                >
-                  <ShieldCheck size={16} />
-                  <span>Verified Only</span>
-                </button>
+                <ChevronDown size={14} className={styles.sortChevron} />
               </div>
+              <button
+                type="button"
+                className={`${styles.filterBtn} ${activeFiltersCount > 0 ? styles.filterBtnActive : ""}`}
+                onClick={() => setFilterSheetOpen(true)}
+              >
+                <SlidersHorizontal size={16} />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && <span className={styles.filterBadge}>{activeFiltersCount}</span>}
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── 2. STICKY CATEGORY PILLS BAR ────────────────────────────── */}
+      {/* CATEGORY PILLS */}
       <div className={styles.categoryBar}>
         <div className="container">
           <div className={styles.categoryScroll}>
             {CATEGORIES.map((cat) => (
               <button
-                key={cat}
+                key={cat.id}
                 type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className={`${styles.categoryChip} ${
-                  selectedCategory === cat ? styles.categoryChipActive : ''
-                }`}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`${styles.categoryChip} ${selectedCategory === cat.id ? styles.categoryChipActive : ""}`}
               >
-                <span>{cat}</span>
-                <span className={styles.categoryCountBadge}>
-                  {categoryCounts[cat] ?? 0}
-                </span>
+                <span className={styles.categoryIcon}>{cat.icon}</span>
+                <span>{cat.label}</span>
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ─── 3. FARMERS LISTING GRID ─────────────────────────────────── */}
-      <section className={styles.farmersGridSection}>
+      {/* GRID */}
+      <section className={styles.gridSection}>
         <div className="container">
-          <div className={styles.resultsMetaRow}>
-            <p className={styles.resultsCount}>
-              Showing <strong>{filteredFarmers.length}</strong> verified independent growers
-              {selectedCategory !== 'All Growers' && ` in "${selectedCategory}"`}
-            </p>
-            <div className={styles.trustBadges}>
-              <span className={styles.trustBadge}>
-                <CheckCircle2 size={13} color="#7A2E3B" /> 100% Producer Only
-              </span>
-              <span className={styles.trustBadge}>
-                <CheckCircle2 size={13} color="#7A2E3B" /> No Resellers
-              </span>
+          {!loading && !error && (
+            <div className={styles.metaRow}>
+              <p className={styles.resultsText}>
+                {displayedFarmers.length === 0
+                  ? "No growers found"
+                  : <><strong>{displayedFarmers.length}</strong> verified growers</>}
+                {selectedCategory !== "all" && ` · ${CATEGORIES.find((c) => c.id === selectedCategory)?.label}`}
+              </p>
+              {(searchQuery || selectedCategory !== "all" || selectedMarketId !== "all" || verifiedOnly) && (
+                <button type="button" onClick={resetFilters} className={styles.resetBtn}>
+                  <RotateCcw size={13} />
+                  <span>Reset all</span>
+                </button>
+              )}
             </div>
-          </div>
+          )}
 
-          <div className={styles.farmersGrid}>
+          {error && (
+            <div className={styles.errorBox}>
+              <AlertCircle size={20} />
+              <div>
+                <strong>Failed to load farmers</strong>
+                <p>{error}</p>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => fetchFarmers({ replace: true })}>Retry</Button>
+            </div>
+          )}
+
+          <div className={styles.grid}>
             {loading ? (
-              <div style={{ gridColumn: '1 / -1', padding: '60px 0', textAlign: 'center', color: '#6e655c' }}>
-                <p>Loading farmers...</p>
-              </div>
-            ) : filteredFarmers.length > 0 ? (
-              filteredFarmers.map((farmer) => (
-                <article key={farmer.id} className={styles.farmerCard}>
-                  {/* Card Cover Banner */}
-                  <div className={styles.cardHeaderArea}>
-                    <img
-                      src={farmer.coverImage}
-                      alt={farmer.farmName}
-                      className={styles.cardCoverImg}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = '/images/riverbend-farm.jpg';
-                      }}
-                    />
-                    <div className={styles.cardCoverOverlay} />
-
-                    <div className={styles.avatarWrap}>
-                      <img
-                        src={farmer.image}
-                        alt={farmer.name}
-                        className={styles.avatarImg}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/images/farmer-david.jpg';
-                        }}
-                      />
-                    </div>
-
-                    <div className={styles.ratingBadge}>
-                      <Star size={13} fill="#E07A2C" color="#E07A2C" />
-                      <span>{farmer.rating}</span>
-                      <span className={styles.ratingCount}>({farmer.reviewCount})</span>
-                    </div>
-                  </div>
-
-                  {/* Card Body */}
-                  <div className={styles.cardBody}>
-                    <div className={styles.titleRow}>
-                      <div>
-                        <h2 className={styles.farmTitle}>{farmer.farmName}</h2>
-                        <p className={styles.farmerSpecialty}>{farmer.specialty}</p>
-                      </div>
-                    </div>
-
-                    <div className={styles.locationRow}>
-                      <MapPin size={13} className={styles.locIcon} />
-                      <span>{farmer.location}</span>
-                    </div>
-
-                    <div className={styles.badgesRow}>
-                      {farmer.badges.map((b) => (
-                        <span
-                          key={b}
-                          className={`${styles.badgePill} ${b.includes('Producer') ? styles.badgePillHighlight : ''}`}
-                        >
-                          {b}
-                        </span>
-                      ))}
-                    </div>
-
-                    <p className={styles.storySnippet}>{farmer.story}</p>
-
-                    {/* Market Attendance */}
-                    <div className={styles.marketAttendanceBox}>
-                      <div className={styles.marketBoxHeader}>
-                        <Store size={13} />
-                        <span>Where to pick up:</span>
-                      </div>
-                      <div className={styles.marketDaysList}>
-                        {farmer.markets.map((m, idx) => (
-                          <div key={idx} className={styles.marketDayItem}>
-                            <span className={styles.marketDayName}>{m.name}</span>
-                            <span className={styles.marketDayTime}>{m.day}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Card Actions */}
-                    <div className={styles.cardFooter}>
-                      <button
-                        type="button"
-                        onClick={(e) => handleOpenPeek(farmer, e)}
-                        className={styles.peekBtn}
-                        title="Quickly preview seasonal produce"
-                      >
-                        <Eye size={14} />
-                        <span>Peek</span>
-                      </button>
-
-                      <Link to={`/farmers/${farmer.id}`} className={styles.viewStallBtn}>
-                        <span>Explore Stall</span>
-                        <ArrowRight size={14} />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
+              Array.from({ length: 6 }).map((_, i) => <FarmerCardSkeleton key={i} />)
+            ) : displayedFarmers.length > 0 ? (
+              displayedFarmers.map((farmer) => (
+                <FarmerCard key={farmer.id} farmer={farmer} onPeek={(e) => handleOpenPeek(farmer, e)} />
               ))
-            ) : (
-              <div style={{ gridColumn: '1 / -1', padding: '60px 0', textAlign: 'center', color: '#6e655c' }}>
-                <h3 style={{ fontSize: '1.25rem', color: '#1f2937', marginBottom: '8px' }}>
-                  No growers found
-                </h3>
-                <p style={{ color: '#6b7280', marginBottom: '16px' }}>
-                  Try adjusting your search keyword or clearing the market/category filter.
-                </p>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('All Growers');
-                    setSelectedMarketId('all');
-                    setOrganicOnly(false);
-                  }}
-                >
-                  Reset all filters
-                </Button>
+            ) : !error ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIllustration}>🌱</div>
+                <h3 className={styles.emptyTitle}>No growers found</h3>
+                <p className={styles.emptyText}>Try adjusting your search or clearing the filters.</p>
+                <Button variant="secondary" size="md" onClick={resetFilters}>Clear all filters</Button>
               </div>
-            )}
+            ) : null}
           </div>
+
+          {hasMore && !loading && !error && (
+            <div className={styles.loadMoreRow}>
+              <Button variant="secondary" size="md" loading={loadingMore} disabled={loadingMore}
+                onClick={() => fetchFarmers({ cursor: nextCursor, replace: false })}>
+                Load more growers
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ─── 4. QUICK HARVEST PEEK MODAL ─────────────────────────────── */}
+      {/* PEEK MODAL */}
       {peekFarmer && (
         <BottomSheet
-          open={Boolean(peekFarmer)}
-          isOpen={Boolean(peekFarmer)}
+          isOpen={true}
           onClose={() => setPeekFarmer(null)}
           size="peek"
-          title="Quick Farm Peek"
+          title={peekFarmer.stallName}
           footer={
-            <div className={styles.peekFooterActions}>
-              <button
-                type="button"
-                className={styles.peekCloseBtn}
-                onClick={() => setPeekFarmer(null)}
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                className={styles.peekVisitBtn}
-                onClick={() => {
-                  navigate(`/farmers/${peekFarmer.id}`);
-                  setPeekFarmer(null);
-                }}
-              >
-                <span>Visit Full Farm Stall</span>
+            <div className={styles.peekFooter}>
+              <button type="button" className={styles.peekCloseBtn} onClick={() => setPeekFarmer(null)}>Close</button>
+              <Link to={`/farmers/${peekFarmer.id}`} className={styles.peekVisitBtn} onClick={() => setPeekFarmer(null)}>
+                <span>View Full Stall</span>
                 <ArrowRight size={15} />
-              </button>
+              </Link>
             </div>
           }
         >
-          <div className={styles.peekModalContent}>
-            {/* Farmer Banner */}
-            <div className={styles.peekFarmerBanner}>
-              <div className={styles.peekAvatarWrap}>
-                <img
-                  src={peekFarmer.image}
-                  alt={peekFarmer.farmName}
-                  className={styles.peekAvatarImg}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = '/images/farmer-david.jpg';
-                  }}
-                />
-              </div>
-              <div className={styles.peekFarmerInfo}>
-                <h3 className={styles.peekFarmName}>{peekFarmer.farmName}</h3>
-                <p className={styles.peekFarmerSpecialty}>{peekFarmer.specialty}</p>
-                <div className={styles.peekRatingRow}>
-                  <Star size={12} fill="#E07A2C" color="#E07A2C" />
-                  <strong>{peekFarmer.rating}</strong>
-                  <span>({peekFarmer.reviewCount} reviews)</span>
-                  <span>•</span>
-                  <span>{peekFarmer.location}</span>
+          <div className={styles.peekContent}>
+            <div className={styles.peekBanner}>
+              <div className={styles.peekArt}>{getArtDisplay(peekFarmer)}</div>
+              <div className={styles.peekInfo}>
+                <h3 className={styles.peekStallName}>{peekFarmer.stallName}</h3>
+                {peekFarmer.specialty && <p className={styles.peekSpecialty}>{peekFarmer.specialty}</p>}
+                <div className={styles.peekMeta}>
+                  {peekFarmer.ratingAvg > 0 && (
+                    <span className={styles.peekRating}>
+                      <Star size={12} fill="#E07A2C" color="#E07A2C" />
+                      <strong>{Number(peekFarmer.ratingAvg).toFixed(1)}</strong>
+                      <span>({peekFarmer.ratingCount})</span>
+                    </span>
+                  )}
+                  {peekFarmer.openToday && (
+                    <span className={styles.peekOpenBadge}><span className={styles.openDot} /> Open Today</span>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Harvest Title */}
-            <div className={styles.peekSectionHeader}>
-              <div className={styles.peekSectionTitle}>
-                <Sparkles size={14} />
-                <span>Seasonal Harvest Available for Pre-order</span>
+            {peekFarmer.markets?.length > 0 && (
+              <div className={styles.peekMarkets}>
+                <span className={styles.peekMarketsLabel}><Store size={13} /> Pickup at:</span>
+                <div className={styles.peekMarketsList}>
+                  {peekFarmer.markets.slice(0, 2).map((m) => (
+                    <span key={m.id} className={styles.peekMarketPill}>{m.name}</span>
+                  ))}
+                </div>
               </div>
-              {peekProducts.length > 0 && (
-                <span className={styles.peekProduceCount}>{peekProducts.length} items</span>
-              )}
+            )}
+
+            {peekFarmer.operatingDays?.length > 0 && (
+              <div className={styles.peekDays}>
+                <Clock size={13} />
+                <span>{formatOperatingDays(peekFarmer.operatingDays)}</span>
+              </div>
+            )}
+
+            <div className={styles.peekProductsHeader}>
+              <span className={styles.peekProductsTitle}><Sparkles size={13} /> Seasonal Harvest Available</span>
+              {peekProducts.length > 0 && <span className={styles.peekProductCount}>{peekProducts.length} items</span>}
             </div>
 
             {peekLoading ? (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '24px 0' }}>
-                Loading seasonal produce...
-              </p>
+              <div className={styles.peekLoadingGrid}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className={styles.peekProductSkeleton}>
+                    <Skeleton height="14px" width="80%" style={{ marginBottom: 6 }} />
+                    <Skeleton height="18px" width="50%" />
+                  </div>
+                ))}
+              </div>
+            ) : peekError ? (
+              <p className={styles.peekErrorText}>{peekError}</p>
             ) : peekProducts.length === 0 ? (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '24px 0' }}>
-                Catalog is being refreshed for this week's market. Check stall profile for full details!
-              </p>
+              <div className={styles.peekEmpty}>
+                <p>Catalog refreshing for this week&apos;s market.</p>
+                <Link to={`/farmers/${peekFarmer.id}`} className={styles.peekEmptyLink}>See full stall details →</Link>
+              </div>
             ) : (
-              <div className={styles.peekProduceGrid}>
+              <div className={styles.peekGrid}>
                 {peekProducts.map((p) => (
-                  <div key={p.id || p._id} className={styles.peekProduceCard}>
-                    <h4 className={styles.peekProduceName}>{p.name}</h4>
-                    <div className={styles.peekPriceRow}>
-                      <span className={styles.peekPriceNum}>{formatPrice(p.priceCents)}</span>
-                      <span className={styles.peekPriceUnit}>/ {p.unit}</span>
-                    </div>
-                    <div className={styles.peekStockStatus}>
-                      <span className={styles.peekStockDot} />
-                      <span>{p.quantityAvailable || p.quantity || 'Available'} in stock</span>
+                  <div key={p.id || p._id} className={styles.peekProductCard}>
+                    <span className={styles.peekProductArt}>{p.art ? (ART_EMOJI[p.art] || "🌿") : "🌿"}</span>
+                    <div className={styles.peekProductInfo}>
+                      <p className={styles.peekProductName}>{p.name}</p>
+                      <div className={styles.peekProductPriceLine}>
+                        <span className={styles.peekProductPrice}>{formatPrice(p.priceCents)}</span>
+                        {p.unit && <span className={styles.peekProductUnit}>/ {p.unit}</span>}
+                      </div>
+                      {p.availability === "low" && <span className={styles.peekLowStock}>Low stock</span>}
                     </div>
                   </div>
                 ))}
@@ -783,110 +533,77 @@ function getFallbackProductsForFarmer(farmer) {
         </BottomSheet>
       )}
 
-      {/* ─── 5. MOBILE FILTER BOTTOM SHEET ─────────────────────────── */}
+      {/* FILTER SHEET */}
       <BottomSheet
-        open={filterSheetOpen}
         isOpen={filterSheetOpen}
         onClose={() => setFilterSheetOpen(false)}
         title="Filter Producers"
-      >
-        <div className={styles.filterSheetContent}>
-          {/* Market Location Selector */}
-          <div className={styles.filterSection}>
-            <div className={styles.filterSectionHeader}>
-              <label className={styles.filterSectionTitle}>
-                <Store size={14} className={styles.filterSectionIcon} />
-                <span>Farmers Market Location</span>
-              </label>
-            </div>
-            <div className={styles.filterPillList}>
-              <button
-                type="button"
-                className={`${styles.filterPill} ${selectedMarketId === 'all' ? styles.filterPillActive : ''}`}
-                onClick={() => setSelectedMarketId('all')}
-              >
-                All Markets
-              </button>
-              {markets.map((m) => {
-                const marketName = m.name || m;
-                const isSelected = selectedMarketId === marketName;
-                return (
-                  <button
-                    key={m.id || m._id || marketName}
-                    type="button"
-                    className={`${styles.filterPill} ${isSelected ? styles.filterPillActive : ''}`}
-                    onClick={() => setSelectedMarketId(marketName)}
-                  >
-                    {marketName}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Verification Badge Filter */}
-          <div className={styles.filterSection}>
-            <div className={styles.filterSectionHeader}>
-              <label className={styles.filterSectionTitle}>
-                <ShieldCheck size={14} className={styles.filterSectionIcon} />
-                <span>Standards & Verification</span>
-              </label>
-            </div>
-            <div
-              role="button"
-              tabIndex={0}
-              className={`${styles.filterToggleCard} ${organicOnly ? styles.filterToggleCardActive : ''}`}
-              onClick={() => setOrganicOnly((v) => !v)}
-              onKeyDown={(e) => {
-                if (e.key === ' ' || e.key === 'Enter') {
-                  e.preventDefault();
-                  setOrganicOnly((v) => !v);
-                }
-              }}
-            >
-              <div className={styles.filterToggleInfo}>
-                <div className={styles.filterToggleTitleRow}>
-                  <strong className={styles.filterToggleLabel}>100% Producer-Only Verified</strong>
-                </div>
-                <p className={styles.filterToggleSub}>
-                  Strictly vetted regional family farms with no wholesale resellers
-                </p>
-              </div>
-              <div
-                className={`${styles.iosSwitch} ${organicOnly ? styles.iosSwitchOn : ''}`}
-                aria-checked={organicOnly}
-                role="switch"
-              >
-                <div className={styles.iosSwitchThumb} />
-              </div>
-            </div>
-          </div>
-
-          {/* Action Bar */}
-          <div className={styles.filterSheetActions}>
-            <button
-              type="button"
-              className={styles.filterResetBtn}
-              onClick={() => {
-                setSelectedMarketId('all');
-                setOrganicOnly(false);
-              }}
-            >
+        footer={
+          <div className={styles.filterFooter}>
+            <button type="button" className={styles.filterResetBtn}
+              onClick={() => { setSelectedMarketId("all"); setSortBy("rating"); setVerifiedOnly(false); }}>
               <RotateCcw size={14} />
               <span>Reset</span>
             </button>
-            <button
-              type="button"
-              className={styles.filterApplyBtn}
-              disabled={filteredFarmers.length === 0}
-              onClick={() => setFilterSheetOpen(false)}
-            >
-              <span>
-                {filteredFarmers.length === 0
-                  ? 'No Matching Growers'
-                  : `Show ${filteredFarmers.length} ${filteredFarmers.length === 1 ? 'Grower' : 'Growers'}`}
-              </span>
+            <button type="button" className={styles.filterApplyBtn} onClick={() => setFilterSheetOpen(false)}>
+              {loading ? "Loading..." : `Show ${displayedFarmers.length} Growers`}
             </button>
+          </div>
+        }
+      >
+        <div className={styles.filterContent}>
+          <div className={styles.filterSection}>
+            <p className={styles.filterSectionLabel}>Sort by</p>
+            <div className={styles.filterPillGrid}>
+              {SORT_OPTIONS.map((opt) => (
+                <button key={opt.id} type="button"
+                  className={`${styles.filterPill} ${sortBy === opt.id ? styles.filterPillActive : ""}`}
+                  onClick={() => setSortBy(opt.id)}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {markets.length > 0 && (
+            <div className={styles.filterSection}>
+              <p className={styles.filterSectionLabel}><Store size={14} /> Market Location</p>
+              <div className={styles.filterPillGrid}>
+                <button type="button"
+                  className={`${styles.filterPill} ${selectedMarketId === "all" ? styles.filterPillActive : ""}`}
+                  onClick={() => setSelectedMarketId("all")}>
+                  All Markets
+                </button>
+                {markets.map((m) => {
+                  const mid = m.id || m._id?.toString();
+                  return (
+                    <button key={mid} type="button"
+                      className={`${styles.filterPill} ${selectedMarketId === mid ? styles.filterPillActive : ""}`}
+                      onClick={() => setSelectedMarketId(mid)}>
+                      {m.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className={styles.filterSection}>
+            <p className={styles.filterSectionLabel}><ShieldCheck size={14} /> Standards</p>
+            <div
+              role="button" tabIndex={0}
+              className={`${styles.filterToggleCard} ${verifiedOnly ? styles.filterToggleCardActive : ""}`}
+              onClick={() => setVerifiedOnly((v) => !v)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setVerifiedOnly((v) => !v)}
+            >
+              <div>
+                <strong className={styles.filterToggleTitle}>High-Rated Producers Only</strong>
+                <p className={styles.filterToggleSub}>4+ rated regional family farms</p>
+              </div>
+              <div className={`${styles.toggle} ${verifiedOnly ? styles.toggleOn : ""}`}>
+                <div className={styles.toggleThumb} />
+              </div>
+            </div>
           </div>
         </div>
       </BottomSheet>

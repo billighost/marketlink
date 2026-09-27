@@ -36,6 +36,7 @@ const ALLOWED_PROFILE_FIELDS = [
   'imageUrl',
   'imagePublicId',
   'stallNumber',
+  'acceptingOrders',
 ];
 
 const routes = [
@@ -224,6 +225,14 @@ const routes = [
             details.push({ field: 'imagePublicId', message: 'imagePublicId must be a string or null.' });
           } else {
             updates.imagePublicId = req.body.imagePublicId;
+          }
+        }
+
+        if (req.body.acceptingOrders !== undefined) {
+          if (typeof req.body.acceptingOrders !== 'boolean') {
+            details.push({ field: 'acceptingOrders', message: 'acceptingOrders must be a boolean.' });
+          } else {
+            updates.acceptingOrders = req.body.acceptingOrders;
           }
         }
 

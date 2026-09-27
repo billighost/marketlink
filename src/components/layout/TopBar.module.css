@@ -800,3 +800,72 @@
   overflow: hidden;
 }
 
+/* ─── SMART BASKET NAV BUTTON ───────────────────────────── */
+.smartBasketNavBtn {
+  position: relative;
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.smartBasketNavBtn:hover {
+  background: #dcfce7;
+  border-color: #4ade80;
+  color: #14532d;
+}
+
+.smartBadgeDot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 1px solid #ffffff;
+}
+
+.drawerSmartBasketCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #e2fbe8 100%);
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: calc(100% - 32px);
+}
+
+.drawerSmartBasketCard:hover {
+  background: #dcfce7;
+  border-color: #4ade80;
+  transform: translateY(-1px);
+}
+
+.drawerSmartIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #166534;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.drawerSmartTitle {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #166534;
+}
+
+.drawerSmartSub {
+  font-size: 0.75rem;
+  color: #475569;
+}
+

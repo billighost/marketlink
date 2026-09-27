@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useCart } from '@/context/CartContext';
 import BuyerTopBar from '@/components/layout/BuyerTopBar';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import VerifyEmailBanner from '@/components/layout/VerifyEmailBanner';
 import BottomNav from '@/components/layout/BottomNav';
-import CartBar from '@/components/layout/CartBar';
 import CommandPalette from '@/components/layout/CommandPalette';
+import FloatingActions from '@/components/ui/FloatingActions';
+import SmartBasketModal from '@/components/domain/SmartBasketModal';
+import { useSmartBasket } from '@/context/SmartBasketContext';
 import styles from './BuyerLayout.module.css';
 
 /**
@@ -15,12 +16,12 @@ import styles from './BuyerLayout.module.css';
  *  - Below 1024px: Mobile/Tablet bottom nav (5 items), slim top bar
  *  - 1024px and up: Desktop top navigation, no bottom nav
  * Bottom stack:
- *  - Safe area inset -> Bottom nav -> CartBar -> Toast
+ *  - Safe area inset -> Bottom nav -> Toast
  *  - --stack-bottom CSS token coordinates vertical offset
  */
 export function BuyerLayout() {
-  const { count } = useCart();
   const location = useLocation();
+  const { isOpen: isSmartBasketOpen, initialParams, closeSmartBasket } = useSmartBasket();
   const scrollPositionsRef = useRef({});
   const prevPathRef = useRef(location.pathname);
   const [reducedMotion, setReducedMotion] = useState(() => {
@@ -55,8 +56,6 @@ export function BuyerLayout() {
     }
   }, [reducedMotion]);
 
-  const isCartVisible = count > 0 && location.pathname !== '/buyer/basket';
-
   // Preserve scroll positions per tab across tab switches
   useEffect(() => {
     // Save previous tab scroll position
@@ -75,7 +74,7 @@ export function BuyerLayout() {
   return (
     <div
       className={styles.appShell}
-      data-cart-visible={isCartVisible ? 'true' : 'false'}
+      data-cart-visible="false"
       data-reduced-motion={reducedMotion ? 'true' : 'false'}
     >
       {/* Skip Link */}
@@ -95,14 +94,25 @@ export function BuyerLayout() {
         <Outlet />
       </main>
 
-      {/* Floating Cart Pill */}
-      <CartBar />
-
       {/* Mobile Bottom Navigation */}
       <BottomNav />
 
+      {/* Floating AI & Back to Top Actions */}
+      <FloatingActions showTopAfter={350} />
+
       {/* Command Palette */}
       <CommandPalette />
+
+      {/* AI Smart Basket Modal */}
+      <SmartBasketModal
+        isOpen={isSmartBasketOpen}
+        onClose={closeSmartBasket}
+        initialBudget={initialParams?.budget}
+        initialCategories={initialParams?.categories}
+        marketId={initialParams?.marketId}
+        prompt={initialParams?.prompt}
+        day={initialParams?.day}
+      />
     </div>
   );
 }

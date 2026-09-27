@@ -202,24 +202,41 @@ export function ProductDetail() {
   if (error || !product) {
     return (
       <div className={styles.page}>
-        <div className="container" style={{ padding: '80px 20px', textAlign: 'center' }}>
-          <h1 style={{ fontFamily: 'Georgia, serif', color: '#4a1521' }}>Harvest Item Not Found</h1>
-          <p style={{ color: '#4a433b', margin: '16px 0 24px' }}>
-            {error || 'This produce item could not be loaded or is currently out of stock.'}
+        <div className="container" style={{ padding: '80px 20px', textAlign: 'center', maxWidth: '640px', margin: '0 auto' }}>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: '#fee2e2',
+            color: '#b91c1c',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '16px'
+          }}>
+            <AlertCircle size={28} />
+          </div>
+          <h1 style={{ fontFamily: 'Georgia, serif', color: '#4a1521', fontSize: '1.75rem', marginBottom: '8px' }}>
+            Produce Unlisted or Removed
+          </h1>
+          <p style={{ color: '#6b645c', fontSize: '0.95rem', lineHeight: '1.5', margin: '0 0 24px' }}>
+            This item has been removed by the grower or is no longer listed at this market. Check out other fresh farm goods available today.
           </p>
           <Link
             to={PATHS.PRODUCTS}
             style={{
               display: 'inline-flex',
-              padding: '10px 24px',
+              padding: '12px 24px',
               backgroundColor: '#541722',
               color: '#ffffff',
               borderRadius: 8,
               textDecoration: 'none',
               fontWeight: 600,
+              fontSize: '0.9rem',
+              boxShadow: '0 2px 8px rgba(84, 23, 34, 0.2)'
             }}
           >
-            Browse all products
+            Explore Market Produce
           </Link>
         </div>
       </div>
@@ -739,6 +756,31 @@ export function ProductDetail() {
                     </>
                   )}
                 </button>
+
+                {product.availability === 'out' && (
+                  <div className={styles.soldOutNotice} role="status">
+                    <AlertCircle size={18} style={{ color: '#ea580c', flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <strong>This Harvest is Sold Out</strong>
+                      <p>
+                        All inventory for this market has been reserved. You can explore similar seasonal produce or visit the grower's stall.
+                      </p>
+                      <div className={styles.soldOutLinks}>
+                        <Link to={PATHS.PRODUCTS} className={styles.soldOutBtn}>
+                          Browse Similar Produce
+                        </Link>
+                        {product.farmer && (
+                          <Link
+                            to={`/farmers/${product.farmer.id || product.farmer._id}`}
+                            className={styles.soldOutBtnOutline}
+                          >
+                            View Grower Stall
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {reserved && (
                   <div className={styles.successNotice}>

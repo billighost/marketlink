@@ -246,6 +246,60 @@
   outline-offset: var(--focus-offset);
 }
 
+.adjustStockBtn {
+  background: var(--color-canvas, #fbf7f4);
+  color: var(--color-ink, #24201c);
+  border: 1px solid var(--color-carrot, #e06d28);
+  border-radius: var(--radius-sm, 6px);
+  padding: 3px 8px;
+  font-family: var(--font-body);
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--weight-semibold, 600);
+  cursor: pointer;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.adjustStockBtn:hover {
+  background: var(--color-carrot, #e06d28);
+  color: var(--color-white, #fff);
+}
+
+.cutoffBanner {
+  background: #fff8f5;
+  border: 1px solid #fed7aa;
+  border-radius: var(--radius-md, 8px);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cutoffBannerText {
+  font-size: var(--text-xs, 0.75rem);
+  color: #9a3412;
+  font-weight: var(--weight-medium, 500);
+}
+
+.switchSlotBtn {
+  background: var(--color-beet, #541722);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  padding: 4px 10px;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--weight-semibold, 600);
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.switchSlotBtn:hover {
+  opacity: 0.9;
+}
+
 .windowsSection {
   display: flex;
   flex-direction: column;

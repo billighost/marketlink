@@ -16,6 +16,8 @@ import { useAuth } from '@/context/AuthContext';
 import { getAdminOverview } from '@/api/admin';
 import { useVisibleInterval } from '@/hooks/useVisibleInterval';
 import Button from '@/components/ui/Button';
+import FloatingActions from '@/components/ui/FloatingActions';
+import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './AdminLayout.module.css';
 
 export const AdminContext = createContext({
@@ -93,7 +95,7 @@ export default function AdminLayout() {
         <aside className={styles.sidebar} aria-label="Admin sidebar navigation">
           <div className={styles.sidebarHeader}>
             <Link to="/admin" className={styles.brandLink}>
-              <span className={styles.brandLogo}>MarketLink</span>
+              <MarketLinkLogo size="sm" />
               <span className={styles.adminBadge}>Admin</span>
             </Link>
           </div>
@@ -235,6 +237,9 @@ export default function AdminLayout() {
           <main className={styles.content}>
             <Outlet />
           </main>
+
+          {/* Floating AI & Back to Top Actions */}
+          <FloatingActions showTopAfter={350} />
         </div>
       </div>
     </AdminContext.Provider>

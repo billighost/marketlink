@@ -65,11 +65,11 @@
 /* Top grabber indicator */
 .grabberZone {
   width: 100%;
-  height: 20px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 8px;
+  padding-top: 10px;
   touch-action: none;
   cursor: grab;
   flex-shrink: 0;
@@ -80,16 +80,16 @@
 }
 
 .handle {
-  width: 38px;
-  height: 4.5px;
+  width: 36px;
+  height: 4px;
   border-radius: 999px;
-  background-color: #d8d3cb;
+  background-color: rgba(46, 43, 38, 0.18);
   pointer-events: none;
   transition: background-color 150ms ease;
 }
 
 .grabberZone:active .handle {
-  background-color: #a8a095;
+  background-color: rgba(46, 43, 38, 0.35);
 }
 
 /* Header bar: back button + title + close button */
@@ -98,13 +98,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 18px 12px 18px;
-  border-bottom: 1px solid #f0eae1;
+  padding: 4px 16px 14px 16px;
+  border-bottom: 1px solid rgba(46, 43, 38, 0.08);
   flex-shrink: 0;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   cursor: grab;
+  background: var(--color-white);
 }
 
 .header:active {
@@ -113,7 +114,7 @@
 
 .sheetTitle {
   font-family: var(--font-body, system-ui, -apple-system, sans-serif);
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-ink, #2E2B26);
   letter-spacing: -0.015em;
@@ -164,10 +165,10 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  color: #6b7280;
+  color: var(--color-ink-soft, #6B6259);
   cursor: pointer;
   border-radius: 50%;
-  background: #f3f4f6;
+  background: rgba(46, 43, 38, 0.07);
   border: none;
   flex-shrink: 0;
   touch-action: manipulation;
@@ -176,8 +177,8 @@
 }
 
 .closeButton:hover {
-  background: #e5e7eb;
-  color: #111827;
+  background: rgba(46, 43, 38, 0.12);
+  color: var(--color-ink, #2E2B26);
 }
 
 .closeButton:active {
@@ -198,6 +199,7 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: rgba(122, 46, 59, 0.2) transparent;
+  padding: 16px 20px 32px;
 }
 
 .body::-webkit-scrollbar {

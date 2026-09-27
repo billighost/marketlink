@@ -17,6 +17,7 @@ import FilterPanel from '@/components/domain/FilterPanel';
 import EmptyState from '@/components/ui/EmptyState';
 import BottomSheet from '@/components/ui/BottomSheet';
 import { GridSkeleton, SkeletonCard } from '@/components/layout/GridSkeleton';
+import { useSmartBasket } from '@/context/SmartBasketContext';
 import styles from './Products.module.css';
 
 /**
@@ -117,6 +118,7 @@ function SearchBox({
  */
 export function Products() {
   const { selectedMarketId } = useAuth();
+  const { openSmartBasket } = useSmartBasket();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Read initial filter values from URL params
@@ -382,12 +384,36 @@ export function Products() {
     <div className={styles.page}>
       <div className={styles.container}>
         {/* ── Desktop Page Header (1024px+) ───────────────────────── */}
-        <header className={styles.desktopHeader}>
-          <h1 className={styles.pageTitle}>Browse produce</h1>
-          <p className={styles.pageContext}>
-            {resultsLabel}
-            {currentMarketName ? ` at ${currentMarketName}` : ''}
-          </p>
+        <header className={styles.desktopHeader} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1 className={styles.pageTitle}>Browse produce</h1>
+            <p className={styles.pageContext}>
+              {resultsLabel}
+              {currentMarketName ? ` at ${currentMarketName}` : ''}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => openSmartBasket({ marketId: selectedMarketIdState })}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              padding: 'var(--space-2-5) var(--space-4)',
+              background: 'linear-gradient(135deg, var(--color-primary), #7a1d2f)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 'var(--radius-lg)',
+              fontWeight: 600,
+              fontSize: 'var(--text-sm)',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(84, 23, 34, 0.25)',
+              transition: 'transform 0.15s, opacity 0.15s',
+            }}
+          >
+            <Sparkles size={16} aria-hidden="true" />
+            <span>AI Smart Basket</span>
+          </button>
         </header>
 
         {/* ── Mobile/Tablet Header (<1024px) ───────────────────────── */}
@@ -422,6 +448,20 @@ export function Products() {
 
           {/* Exactly one horizontal chip row on mobile/tablet — never wraps */}
           <div className={styles.chipRow} role="tablist" aria-label="Product categories">
+            <button
+              type="button"
+              onClick={() => openSmartBasket({ marketId: selectedMarketIdState })}
+              className={styles.categoryChip}
+              style={{
+                background: 'linear-gradient(135deg, rgba(84, 23, 34, 0.08), rgba(224, 109, 40, 0.08))',
+                borderColor: 'var(--color-primary)',
+                color: 'var(--color-primary)',
+                fontWeight: 700,
+              }}
+            >
+              <Sparkles size={13} aria-hidden="true" />
+              <span>Smart Basket</span>
+            </button>
             <button
               type="button"
               className={`${styles.categoryChip} ${selectedCategory === 'All' ? styles.categoryChipActive : ''}`}
@@ -526,13 +566,37 @@ export function Products() {
                 ))}
               </div>
             ) : (
-              <EmptyState
-                scene="walk-to-market"
-                title="Nothing matches that"
-                text="Try fewer filters or a different word."
-                actionLabel="Clear filters"
-                onAction={handleReset}
-              />
+              <div>
+                <EmptyState
+                  scene="walk-to-market"
+                  title={debouncedSearch ? `No produce matching "${debouncedSearch}"` : 'No produce found'}
+                  text={
+                    debouncedSearch
+                      ? `We couldn't find any fresh harvest matching "${debouncedSearch}"${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}. Check spelling or try a staple.`
+                      : 'No items match your active filter combination. Try clearing your filters or choosing a different category.'
+                  }
+                  actionLabel="Clear all filters & search"
+                  onAction={handleReset}
+                />
+                <div className={styles.emptySuggestionsWrap}>
+                  <span className={styles.emptySuggestionsLabel}>Try searching for popular staples:</span>
+                  <div className={styles.emptyPillsRow}>
+                    {['Apples', 'Sourdough', 'Eggs', 'Raw Honey', 'Carrots', 'Tomatoes'].map((term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        className={styles.emptyPillBtn}
+                        onClick={() => {
+                          setSearch(term);
+                          setSelectedCategory('All');
+                        }}
+                      >
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Infinite pagination loading tail */}

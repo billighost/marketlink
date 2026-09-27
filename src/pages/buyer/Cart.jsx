@@ -34,6 +34,66 @@ export function Cart() {
   const totalCents = quote?.totalCents ?? 0;
   const canProceed = Boolean(quote?.canCheckout) && hasItems && !loadingQuote;
 
+  // Scan for blocking issues across groups and lines
+  const { stockIssues, cutoffIssues, removedIssues } = React.useMemo(() => {
+    const sIssues = [];
+    const cIssues = [];
+    const rIssues = [];
+
+    for (const g of groups) {
+      if (Array.isArray(g.issues)) {
+        for (const iss of g.issues) {
+          if (iss.code === 'PAST_CUTOFF' || iss.code === 'SLOT_CLOSED' || iss.code === 'NO_SLOT_SELECTED' || iss.code === 'SLOT_FULL') {
+            cIssues.push({ ...iss, farmerId: g.farmerId || g.farmer?.id, stallName: g.farmer?.stallName || 'Stall' });
+          }
+        }
+      }
+      if (Array.isArray(g.lines)) {
+        for (const line of g.lines) {
+          const maxAvail = typeof line.quantityAvailable === 'number' ? line.quantityAvailable : 20;
+          if (line.availability === 'out' || maxAvail <= 0 || line.quantity > maxAvail) {
+            sIssues.push({
+              productId: line.productId,
+              name: line.name,
+              requested: line.quantity,
+              available: Math.max(0, maxAvail),
+            });
+          }
+          if (line.availability === 'hidden' || line.issues?.some((i) => i.code === 'UNAVAILABLE')) {
+            rIssues.push({ productId: line.productId, name: line.name });
+          }
+        }
+      }
+    }
+
+    return { stockIssues: sIssues, cutoffIssues: cIssues, removedIssues: rIssues };
+  }, [groups]);
+
+  const handleFixStock = () => {
+    for (const item of stockIssues) {
+      if (item.available <= 0) {
+        remove(item.productId);
+      } else {
+        setQuantity(item.productId, item.available);
+      }
+    }
+  };
+
+  const handleFixCutoff = () => {
+    for (const g of groups) {
+      const openSlot = g.pickupWindows?.find((w) => !w.disabled && !w.closed && w.isOpen !== false);
+      if (openSlot) {
+        setSlot(g.farmerId || g.farmer?.id, openSlot.id || openSlot.start);
+      }
+    }
+  };
+
+  const handleRemoveUnavailable = () => {
+    for (const item of removedIssues) {
+      remove(item.productId);
+    }
+  };
+
   if (!hasItems) {
     return (
       <Page width="detail" className={styles.emptyPage}>
@@ -59,11 +119,6 @@ export function Cart() {
     stallsCount === 1 ? 'stall' : 'stalls'
   }`;
 
-  const collectionText =
-    stallsCount === 1
-      ? 'One stall, one collection.'
-      : `${stallsCount} stalls, ${stallsCount} collections.`;
-
   return (
     <Page width="detail" className={styles.page}>
       <PageTitle
@@ -72,6 +127,51 @@ export function Cart() {
         backTo="/buyer/products"
         backLabel="Keep browsing"
       />
+
+      {/* Actionable recovery banners for stock, cutoff, or removed items */}
+      {stockIssues.length > 0 && (
+        <div className={styles.blockingAlert} role="alert">
+          <h4 className={styles.blockingTitle}>Produce stock changed</h4>
+          <p className={styles.blockingText}>
+            {stockIssues
+              .map((it) => `${it.name}: only ${it.available} remaining (you have ${it.requested})`)
+              .join(' · ')}
+          </p>
+          <div className={styles.blockingActions}>
+            <button type="button" className={styles.actionBtn} onClick={handleFixStock}>
+              Auto-adjust quantities to available stock
+            </button>
+          </div>
+        </div>
+      )}
+
+      {cutoffIssues.length > 0 && (
+        <div className={styles.blockingAlert} role="alert">
+          <h4 className={styles.blockingTitle}>Pickup time unavailable or cutoff passed</h4>
+          <p className={styles.blockingText}>
+            The cutoff preparation deadline has passed for one or more of your chosen collection windows.
+          </p>
+          <div className={styles.blockingActions}>
+            <button type="button" className={styles.actionBtn} onClick={handleFixCutoff}>
+              Select next open pickup window
+            </button>
+          </div>
+        </div>
+      )}
+
+      {removedIssues.length > 0 && (
+        <div className={styles.blockingAlert} role="alert">
+          <h4 className={styles.blockingTitle}>Produce unlisted by grower</h4>
+          <p className={styles.blockingText}>
+            {removedIssues.map((it) => it.name).join(', ')} is no longer offered by the grower at this market.
+          </p>
+          <div className={styles.blockingActions}>
+            <button type="button" className={styles.actionBtn} onClick={handleRemoveUnavailable}>
+              Remove unavailable items from basket
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className={styles.layout}>
         {/* Main column: Stall groups */}

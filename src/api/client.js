@@ -220,6 +220,9 @@ export async function apiFetch(path, options = {}) {
         // proceed to throw
       }
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('marketlink:offline'));
+    }
     throw new ApiError({
       status: 0,
       code: 'NETWORK',
@@ -242,8 +245,18 @@ export async function apiFetch(path, options = {}) {
       clearAccessToken();
       if (hadToken) {
         try {
+          if (typeof window !== 'undefined' && window.location) {
+            const currentPath = window.location.pathname + window.location.search;
+            if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+              sessionStorage.setItem('marketlink_return_url', currentPath);
+              sessionStorage.setItem('marketlink_session_expired', 'true');
+            }
+          }
           localStorage.removeItem('marketlink_user');
           localStorage.setItem('marketlink_signed_out', Date.now().toString());
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('marketlink:session_expired'));
+          }
         } catch {
           // ignore storage errors
         }
