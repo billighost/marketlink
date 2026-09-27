@@ -34,8 +34,14 @@ export function createPrng(seed = 42) {
 }
 
 export async function runLargeSeed(force = false) {
+  const hasForce = force || process.argv.includes('--force');
   const targetDbName = process.env.LARGE_DB_NAME || 'marketlink_large';
   const startTime = Date.now();
+
+  if (targetDbName === env.DB_NAME && !hasForce) {
+    console.warn(`🛑 [SAFETY GUARD] Cannot run seed:large on active database "${targetDbName}". Aborting.`);
+    return false;
+  }
 
   assertSafeDatabase(targetDbName, env.MONGODB_URI, 'large dataset generation', {
     nodeEnv: env.NODE_ENV,

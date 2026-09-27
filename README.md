@@ -22,6 +22,9 @@ npm run dev
 
 The application runs on Vite at `http://localhost:3000` (or the port specified in terminal).
 
+> ⚠️ **CRITICAL NOTE ON DATABASE SEEDING:**  
+> **The database must NEVER be seeded again.** Seeding drops collections and wipes existing users, farmers, produce, and orders. The backend seeding scripts have a safety guard installed that automatically aborts if data already exists in the database.
+
 ---
 
 ## 2. Design System & CSS Architecture
@@ -151,4 +154,20 @@ npm run dev       # Starts backend on http://localhost:4000/api
 npm install
 npm run dev       # Starts Vite development server on http://localhost:3000
 ```
+
+---
+
+## 7. Admin Console Route Map
+
+The Admin console is an operations workspace (`/admin`) for platform administration:
+
+| Route | View | Description | Key Capabilities |
+|---|---|---|---|
+| `/admin` | Overview | Dashboard action queue and live system health | 4 SRS summary metrics, pending actions queue, recent activity audit log |
+| `/admin/people` | People | Farmer applications and customer accounts | Approve, reject, suspend, reinstate farmers; deactivate/activate customers; bulk approvals |
+| `/admin/markets` | Markets | Physical markets and trading days management | Market CRUD, interactive map pin picker, 7-day operating schedule, stall associations |
+| `/admin/moderation` | Moderation | Content moderation and safety queue | Review and product flags, remove inappropriate content with note, dismiss/keep content |
+| `/admin/reports` | Reports | Performance analytics and data export | Orders over time chart, revenue collected by market, most active farmers, CSV downloads |
+| `/admin/settings` | Settings | Platform configuration and governance | Category hierarchy management, announcements, customer support messages, platform parameters |
+
 

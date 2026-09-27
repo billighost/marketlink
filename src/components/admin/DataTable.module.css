@@ -1,0 +1,266 @@
+.container {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-white);
+  overflow: hidden;
+}
+
+/* Desktop & Tablet Table (>= 48rem / 768px) */
+.tableWrapper {
+  display: none;
+  width: 100%;
+  overflow-x: auto;
+  max-height: 70vh;
+}
+
+@media (min-width: 48rem) {
+  .tableWrapper {
+    display: block;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  background-color: var(--color-white);
+}
+
+.thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.th {
+  padding: var(--space-3) var(--space-4);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink-soft);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.thRight {
+  text-align: right;
+}
+
+.thCenter {
+  text-align: center;
+}
+
+.thCheckbox {
+  width: 2.75rem;
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-4);
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.sortButton:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.sortIconActive {
+  color: var(--color-ink);
+}
+
+.sortIconInactive {
+  color: var(--color-ink-muted);
+}
+
+.tbody {
+  background-color: var(--color-white);
+}
+
+.tr {
+  min-height: var(--tap-min);
+  border-bottom: 1px solid var(--color-hairline-soft);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.tr:last-child {
+  border-bottom: none;
+}
+
+.tr:hover {
+  background-color: var(--color-canvas-soft);
+}
+
+.trSelected {
+  background-color: var(--color-canvas-soft);
+}
+
+.trClickable {
+  cursor: pointer;
+}
+
+.td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-ink);
+  line-height: var(--lh-ui);
+  vertical-align: middle;
+}
+
+.tdRight {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tdCenter {
+  text-align: center;
+}
+
+.tdCheckbox {
+  width: 2.75rem;
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-4);
+}
+
+.checkboxInput {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+/* Skeleton Loading */
+.skeletonBar {
+  display: inline-block;
+  height: 1rem;
+  width: 80%;
+  max-width: 10rem;
+  background-color: var(--color-hairline);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Empty State */
+.emptyState {
+  padding: var(--space-12) var(--space-4);
+  text-align: center;
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+}
+
+/* Mobile Stacked Cards (< 48rem / 768px) */
+.cardsWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background-color: var(--color-canvas-soft);
+}
+
+@media (min-width: 48rem) {
+  .cardsWrapper {
+    display: none;
+  }
+}
+
+.card {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cardSelected {
+  border-color: var(--color-primary);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.cardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.cardLabel {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.cardValue {
+  color: var(--color-ink);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Footer & Sum Row */
+.tfoot {
+  background-color: var(--color-canvas-soft);
+  border-top: 1px solid var(--color-border);
+}
+
+.trFooter {
+  font-weight: var(--weight-semibold);
+}
+
+.tdFooter {
+  padding: var(--space-3) var(--space-4);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.cardFooter {
+  background-color: var(--color-canvas-soft);
+  border: 1px solid var(--color-border);
+  font-weight: var(--weight-semibold);
+}
+
+.cardFooterTitle {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
+
+.cardFooterValue {
+  font-weight: var(--weight-semibold);
+}

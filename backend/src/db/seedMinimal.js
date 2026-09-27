@@ -32,6 +32,26 @@ export async function runMinimalSeed(force = false, targetDb = null) {
 
   const db = targetDb || (await connectDb(env.MONGODB_URI, targetDbName));
 
+  // ⚠️ CRITICAL SAFETY CHECK: NEVER RE-SEED IF DATA ALREADY EXISTS
+  if (!hasForce && targetDbName !== 'marketlink_test') {
+    const existingColls = await db.listCollections().toArray();
+    const existingNames = new Set(existingColls.map((c) => c.name));
+    if (existingNames.has(COLLECTIONS.USERS)) {
+      const userCount = await db.collection(COLLECTIONS.USERS).countDocuments({});
+      if (userCount > 0) {
+        console.warn(`\n****************************************************************`);
+        console.warn(`🛑  [DATABASE SAFETY GUARD] MINIMAL SEEDING ABORTED!`);
+        console.warn(`The database "${targetDbName}" is ALREADY SEEDED (${userCount} users found).`);
+        console.warn(`THE DATABASE MUST NEVER BE SEEDED AGAIN.`);
+        console.warn(`Re-seeding wipes all current users, farmers, stalls, and orders.`);
+        console.warn(`No data was deleted or modified.`);
+        console.warn(`(To force an intentional wipe and re-seed, run with: --force)`);
+        console.warn(`****************************************************************\n`);
+        return false;
+      }
+    }
+  }
+
   // 1. Ensure collections exist if not yet created
   const existingColls = await db.listCollections().toArray();
   const existingNames = new Set(existingColls.map((c) => c.name));

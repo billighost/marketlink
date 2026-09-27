@@ -1,7 +1,7 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
   width: 100%;
 }
 
@@ -10,23 +10,28 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  padding: var(--space-4);
   background-color: var(--color-canvas-soft);
   border-radius: var(--radius-md);
-  border: 1px dashed var(--color-wood-soft);
+  border: 1px dashed var(--color-border);
+  box-sizing: border-box;
 }
 
 .emptyText {
+  margin: 0;
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: var(--color-ink-muted);
+  color: var(--color-ink-soft);
+  text-align: center;
 }
 
+/* Active value readout above the chart */
 .activeDisplay {
-  min-height: 20px;
+  min-height: 1.25rem;
   font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: var(--color-ink);
+  font-size: var(--text-sm);
   line-height: var(--lh-ui);
+  color: var(--color-ink);
 }
 
 .activeLabel {
@@ -35,16 +40,19 @@
 
 .activeValue {
   color: var(--color-beet);
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-semibold);
 }
 
 .activeHint {
   color: var(--color-ink-muted);
 }
 
+/* ---------- Vertical (SVG column) chart ---------- */
+
 .svgContainer {
   position: relative;
   width: 100%;
+  padding-top: var(--space-4);
 }
 
 .yMaxLabel {
@@ -52,20 +60,27 @@
   top: 0;
   left: 0;
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
   color: var(--color-ink-muted);
   pointer-events: none;
 }
 
-.svg {
+/* Bars keep a real minimum width instead of being squeezed to fit; this
+   area scrolls horizontally once there are more bars than fit comfortably. */
+.svgScroll {
   width: 100%;
-  height: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.svg {
   display: block;
-  overflow: visible;
 }
 
 .baseline {
-  stroke: var(--color-wood-soft);
+  stroke: var(--color-border);
   stroke-width: 1px;
 }
 
@@ -78,44 +93,78 @@
 }
 
 .bar {
-  fill: var(--color-ink-soft);
-  rx: var(--radius-sm);
+  fill: var(--color-ink-muted);
   transition: fill var(--duration-fast) var(--ease-standard);
 }
 
 .barHighlight,
-.barGroup:hover .bar {
+.barGroup:hover .bar,
+.barGroup:focus-visible .bar {
   fill: var(--color-beet);
 }
 
-.xLabel {
-  font-family: var(--font-body);
-  font-size: 11px;
-  fill: var(--color-ink-soft);
+.xAxisRow {
+  position: relative;
+  width: 100%;
+  height: var(--space-6);
+  margin-top: var(--space-2);
 }
 
-/* Horizontal Layout */
+.xAxisCell {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+  pointer-events: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.xAxisCellActive {
+  color: var(--color-beet);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---------- Horizontal (bar row) chart ---------- */
+
 .horizontalContainer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   width: 100%;
 }
 
 .hRow {
   display: grid;
-  grid-template-columns: 140px 1fr 90px;
+  grid-template-columns: 8rem 1fr 4.75rem;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-1) 0;
+  padding: var(--space-2) var(--space-1);
   border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
-@media (max-width: 480px) {
+.hRow:hover,
+.hRow:focus-visible {
+  background-color: var(--color-canvas-soft);
+  outline: none;
+}
+
+@media (max-width: 30rem) {
   .hRow {
-    grid-template-columns: 100px 1fr 70px;
+    grid-template-columns: 5.5rem 1fr 3.5rem;
     gap: var(--space-2);
+  }
+}
+
+@media (max-width: 20rem) {
+  .hRow {
+    grid-template-columns: 4.5rem 1fr 3rem;
+    gap: var(--space-1);
+    padding: var(--space-2) 0;
   }
 }
 
@@ -130,21 +179,24 @@
 
 .hBarTrack {
   width: 100%;
-  height: 12px;
+  height: var(--space-2);
   background-color: var(--color-canvas-soft);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   overflow: hidden;
 }
 
 .hBarFill {
   height: 100%;
-  background-color: var(--color-ink-soft);
-  border-radius: var(--radius-sm);
-  transition: background-color var(--duration-fast) var(--ease-standard);
+  min-width: calc(3 * 1px);
+  background-color: var(--color-ink-muted);
+  border-radius: var(--radius-full);
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              width var(--duration-base) var(--ease-standard);
 }
 
 .hBarHighlight,
-.hRow:hover .hBarFill {
+.hRow:hover .hBarFill,
+.hRow:focus-visible .hBarFill {
   background-color: var(--color-beet);
 }
 
@@ -152,20 +204,23 @@
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
   color: var(--color-ink);
   text-align: right;
   white-space: nowrap;
 }
 
-/* Accessible Table alternative */
+/* ---------- Accessible table alternative ---------- */
+
 .tableDetails {
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
   font-family: var(--font-body);
   font-size: var(--text-xs);
   color: var(--color-ink-soft);
 }
 
 .tableSummary {
+  display: inline-block;
   cursor: pointer;
   padding: var(--space-1) 0;
   user-select: none;
@@ -173,6 +228,12 @@
 
 .tableSummary:hover {
   color: var(--color-beet);
+}
+
+.tableSummary:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-sm);
 }
 
 .dataTable {
@@ -186,10 +247,10 @@
 .dataTable td {
   padding: var(--space-1) var(--space-2);
   text-align: left;
-  border-bottom: 1px solid var(--color-wood-soft);
+  border-bottom: 1px solid var(--color-hairline-soft);
 }
 
 .dataTable th {
   font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  color: var(--color-ink-soft);
 }

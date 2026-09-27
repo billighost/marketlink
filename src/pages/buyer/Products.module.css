@@ -442,6 +442,17 @@
   .asideRail {
     display: block;
     width: 272px;
+    /* Pins in place as the page scrolls past it. align-self: start keeps
+       the grid item from stretching to the (much taller) grid row, which
+       would otherwise stop sticky from having anywhere to "stick" within. */
+    align-self: start;
+    position: sticky;
+    top: calc(var(--topbar-h-desk, 0px) + var(--space-6));
+    /* Falls back to its own scroll only if the filter list is ever taller
+       than the viewport — otherwise no inner scrollbar appears at all. */
+    max-height: calc(100vh - var(--topbar-h-desk, 0px) - var(--space-10));
+    overflow-y: auto;
+    scrollbar-width: thin;
   }
 }
 

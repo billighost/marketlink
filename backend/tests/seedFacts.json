@@ -1,7 +1,7 @@
 {
-  "elmMarketId": "6ab8728769a1586cec695970",
-  "georgeId": "6ab8728769a1586cec695975",
-  "newCustomerId": "6ab8728769a1586cec69597d",
+  "elmMarketId": "6ab8c2604b80703aafbb4315",
+  "georgeId": "6ab8c2614b80703aafbb431a",
+  "newCustomerId": "6ab8c2614b80703aafbb4322",
   "listedProductsCount": 46,
   "totalProductsCount": 46,
   "perCategoryCounts": {
@@ -14,12 +14,12 @@
     "meat-and-fish": 7
   },
   "cheapestProduct": {
-    "id": "6ab8728769a1586cec69599f",
+    "id": "6ab8c2614b80703aafbb4344",
     "name": "Sweet corn",
     "priceCents": 100
   },
   "priciestProduct": {
-    "id": "6ab8728769a1586cec6959aa",
+    "id": "6ab8c2614b80703aafbb434f",
     "name": "Pastured whole chicken",
     "priceCents": 1800
   },

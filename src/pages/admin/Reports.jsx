@@ -1,227 +1,335 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Download, ChevronDown } from 'lucide-react';
 import {
   getAdminReportsSummary,
-  exportAdminReport,
   getReportsHistory,
-} from '../../api/admin';
-import { BarChart } from '../../components/domain/BarChart';
-import EmptyState from '../../components/ui/EmptyState';
-import ErrorState from '../../components/ui/ErrorState';
-import { useToast } from '../../components/ui/Toast';
-import { formatCurrency, formatDate } from '../../utils/format';
+  exportAdminReport,
+  exportAdminSalesCsv,
+} from '@/api/admin';
+import { AdminPage } from '@/components/admin/AdminPage';
+import { StatTile } from '@/components/admin/StatTile';
+import { BarChart } from '@/components/domain/BarChart';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { useToast } from '@/components/ui/Toast';
+import { formatPrice } from '@/utils/format';
+import ReportsBreakdownTables from './ReportsBreakdownTables';
 import styles from './Reports.module.css';
 
+const RANGES = [
+  { value: '7d', label: '7 days', descriptive: '7 days' },
+  { value: '30d', label: '30 days', descriptive: '30 days' },
+  { value: '90d', label: '90 days', descriptive: '90 days' },
+  { value: '12m', label: '12 months', descriptive: '12 months' },
+];
+
+const VALID_RANGE_VALUES = new Set(['7d', '30d', '90d', '12m']);
+
 export default function Reports() {
-  const toast = useToast();
-  const [range, setRange] = useState('30d');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { showToast } = useToast();
+
+  const urlRange = searchParams.get('range');
+  const initialRange = VALID_RANGE_VALUES.has(urlRange) ? urlRange : '30d';
+  const [range, setRange] = useState(initialRange);
+
   const [summary, setSummary] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [exportingType, setExportingType] = useState(null);
+  const [error, setError] = useState(null);
 
-  const fetchReports = useCallback(async () => {
+  // Export dropdown state
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [exportingType, setExportingType] = useState(null);
+  const exportBtnRef = useRef(null);
+  const exportMenuRef = useRef(null);
+
+
+
+  // Sync URL when range state changes
+  const handleRangeChange = (newRange) => {
+    setRange(newRange);
+    setSearchParams({ range: newRange }, { replace: true });
+  };
+
+  // Sync state if URL changes externally
+  useEffect(() => {
+    if (urlRange && VALID_RANGE_VALUES.has(urlRange) && urlRange !== range) {
+      setRange(urlRange);
+    }
+  }, [urlRange, range]);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
       const [sumRes, histRes] = await Promise.all([
         getAdminReportsSummary(range),
         getReportsHistory().catch(() => ({ data: [] })),
       ]);
-      setSummary(sumRes.data || sumRes);
-      setHistory(histRes.data || []);
+      setSummary(sumRes?.data || null);
+      setHistory(histRes?.data || []);
     } catch (err) {
-      toast.show(err.message || 'Failed to load report data', 'error');
+      setError(err?.message || 'Could not load reports summary.');
     } finally {
       setLoading(false);
     }
-  }, [range, toast]);
+  }, [range]);
 
   useEffect(() => {
-    fetchReports();
-  }, [fetchReports]);
+    loadData();
+  }, [loadData]);
 
+  // Export execution
   const handleExport = async (type) => {
+    setExportMenuOpen(false);
+    setExportingType(type);
     try {
-      setExportingType(type);
-      toast.show('Preparing your file...', 'info');
-      const blob = await exportAdminReport(type, range);
-      const url = window.URL.createObjectURL(blob);
+      let blob;
+      if (type === 'sales') {
+        blob = await exportAdminSalesCsv(range);
+      } else {
+        blob = await exportAdminReport(type, range);
+      }
+
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `marketlink-${type}-${range}.csv`;
+      a.download = `marketlink-${type}-${range}-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.show('Export downloaded successfully', 'success');
-      // Refresh history to show newly generated report
-      const histRes = await getReportsHistory().catch(() => ({ data: [] }));
-      setHistory(histRes.data || []);
+      URL.revokeObjectURL(url);
+
+      showToast('Export downloaded.');
+
+      // Refresh export history table
+      const updatedHistory = await getReportsHistory().catch(() => null);
+      if (updatedHistory?.data) {
+        setHistory(updatedHistory.data);
+      }
     } catch (err) {
-      toast.show(err.message || 'Export failed', 'error');
+      showToast('Export failed. Try a shorter range.');
+      console.error('[Reports] export failed', err);
     } finally {
       setExportingType(null);
     }
   };
 
-  const marketChartData = (summary?.revenueByMarket || []).map((m) => ({
-    label: m.name || 'Market',
-    value: (m.revenueCents || 0) / 100,
-    valueLabel: formatCurrency(m.revenueCents || 0),
-  }));
+  // Keyboard navigation for Export Menu
+  useEffect(() => {
+    if (!exportMenuOpen) return;
 
-  const dailyChartData = (summary?.byDay || []).map((d) => ({
-    label: d.date ? d.date.slice(5) : d._id ? d._id.slice(5) : '',
-    value: d.orders || 0,
-    valueLabel: `${d.orders} orders`,
-  }));
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setExportMenuOpen(false);
+        exportBtnRef.current?.focus();
+        return;
+      }
 
-  const totalOrders = summary?.totalOrders || 0;
-  const revenueCents = summary?.revenueCents || 0;
-  const avgOrderCents = totalOrders > 0 ? Math.round(revenueCents / totalOrders) : 0;
+      const items = exportMenuRef.current?.querySelectorAll('[role="menuitem"]:not([disabled])');
+      if (!items || items.length === 0) return;
+      const index = Array.from(items).indexOf(document.activeElement);
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Reports & Analytics</h1>
-        <div className={styles.rangePills}>
-          {['7d', '30d', '90d', '365d'].map((r) => (
-            <button
-              key={r}
-              type="button"
-              className={`${styles.rangePill} ${range === r ? styles.rangePillActive : ''}`}
-              onClick={() => setRange(r)}
-            >
-              {r}
-            </button>
-          ))}
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = (index + 1) % items.length;
+        items[next]?.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = (index - 1 + items.length) % items.length;
+        items[prev]?.focus();
+      }
+    };
+
+    const handleClickOutside = (e) => {
+      if (
+        exportMenuRef.current &&
+        !exportMenuRef.current.contains(e.target) &&
+        !exportBtnRef.current?.contains(e.target)
+      ) {
+        setExportMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // Focus first item when opened
+    const firstItem = exportMenuRef.current?.querySelector('[role="menuitem"]');
+    firstItem?.focus();
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [exportMenuOpen]);
+
+  const nf = useMemo(() => new Intl.NumberFormat('en-US'), []);
+
+  // Compute metrics
+  const totalOrders = summary?.totalOrders ?? 0;
+  const revenueCents = summary?.revenueCents ?? 0;
+
+  const completedOrdersCount = useMemo(() => {
+    const list = summary?.revenueByMarket || [];
+    return list.reduce((acc, m) => acc + (m.orders || 0), 0);
+  }, [summary?.revenueByMarket]);
+
+  // Chart data from ordersByDay
+  const chartData = useMemo(() => {
+    const days = summary?.ordersByDay || [];
+    return days.map((d) => {
+      const parts = d.date ? d.date.split('-') : [];
+      let label = d.date || '';
+      if (parts.length === 3) {
+        // e.g. 09-24 -> Sep 24
+        const monthNum = parseInt(parts[1], 10);
+        const dayNum = parseInt(parts[2], 10);
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        label = `${monthNames[monthNum - 1] || parts[1]} ${dayNum}`;
+      }
+      return {
+        label,
+        value: d.orders || 0,
+        valueLabel: `${nf.format(d.orders || 0)} orders`,
+      };
+    });
+  }, [summary?.ordersByDay, nf]);
+
+
+
+  const selectedRangeObj = RANGES.find((r) => r.value === range) || RANGES[1];
+  const contextLine = `Platform activity for the last ${selectedRangeObj.descriptive}`;
+
+  // Export Action button with menu
+  const exportAction = (
+    <div className={styles.exportContainer}>
+      <button
+        ref={exportBtnRef}
+        type="button"
+        className={styles.exportButton}
+        onClick={() => setExportMenuOpen((open) => !open)}
+        disabled={Boolean(exportingType)}
+        aria-haspopup="menu"
+        aria-expanded={exportMenuOpen}
+        aria-label="Export reports menu"
+      >
+        <Download size={15} aria-hidden="true" />
+        <span>{exportingType ? 'Preparing…' : 'Export'}</span>
+        <ChevronDown size={14} aria-hidden="true" />
+      </button>
+
+      {exportMenuOpen && (
+        <div ref={exportMenuRef} className={styles.exportMenu} role="menu" aria-label="Export options">
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.exportMenuItem}
+            onClick={() => handleExport('orders')}
+          >
+            Orders CSV
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.exportMenuItem}
+            onClick={() => handleExport('revenue')}
+          >
+            Revenue CSV
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.exportMenuItem}
+            onClick={() => handleExport('farmers')}
+          >
+            Farmers CSV
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.exportMenuItem}
+            onClick={() => handleExport('sales')}
+          >
+            Sales CSV
+          </button>
         </div>
-      </div>
-
-      {loading && !summary ? (
-        <p>Loading analytics...</p>
-      ) : totalOrders === 0 ? (
-        <EmptyState
-          illustration="basket"
-          title="No orders in this period"
-          text="Try a longer range."
-          actionLabel="365 days"
-          onAction={() => setRange('365d')}
-        />
-      ) : (
-        <>
-          {/* Key Metric Totals */}
-          <div className={styles.metricsGrid}>
-            <div className={styles.metricCard}>
-              <div className={styles.metricLabel}>Total Revenue</div>
-              <div className={styles.metricValue}>
-                {formatCurrency(revenueCents)}
-              </div>
-            </div>
-            <div className={styles.metricCard}>
-              <div className={styles.metricLabel}>Total Orders</div>
-              <div className={styles.metricValue}>{totalOrders}</div>
-            </div>
-            <div className={styles.metricCard}>
-              <div className={styles.metricLabel}>Avg. Order Value</div>
-              <div className={styles.metricValue}>
-                {formatCurrency(avgOrderCents)}
-              </div>
-            </div>
-          </div>
-
-          {/* Revenue by Market (Horizontal BarChart) */}
-          <div className={styles.chartCard}>
-            <div className={styles.chartHeader}>
-              <h2 className={styles.chartTitle}>Revenue by Market</h2>
-            </div>
-            <BarChart
-              data={marketChartData}
-              layout="horizontal"
-              valueFormatter={(v) => formatCurrency(v * 100)}
-              ariaLabel="Revenue by market horizontal chart"
-            />
-          </div>
-
-          {/* Orders per Day (Vertical BarChart) */}
-          <div className={styles.chartCard}>
-            <div className={styles.chartHeader}>
-              <h2 className={styles.chartTitle}>Orders per Day</h2>
-            </div>
-            <BarChart
-              data={dailyChartData}
-              layout="vertical"
-              height={180}
-              valueFormatter={(v) => `${v} orders`}
-              ariaLabel="Orders per day chart"
-            />
-          </div>
-
-          {/* CSV Exports */}
-          <div className={styles.exportsSection}>
-            <h2 className={styles.exportsTitle}>Export CSV Data</h2>
-            <p style={{ fontSize: '0.875rem', color: 'var(--color-ink-muted)', margin: 0 }}>
-              Export full datasets for external accounting, audits, and spreadsheet analysis.
-            </p>
-            <div className={styles.exportButtons}>
-              <button
-                type="button"
-                className={styles.exportBtn}
-                disabled={Boolean(exportingType)}
-                onClick={() => handleExport('orders')}
-              >
-                📥 {exportingType === 'orders' ? 'Preparing file...' : 'Export Orders CSV'}
-              </button>
-              <button
-                type="button"
-                className={styles.exportBtn}
-                disabled={Boolean(exportingType)}
-                onClick={() => handleExport('revenue')}
-              >
-                📥 {exportingType === 'revenue' ? 'Preparing file...' : 'Export Revenue CSV'}
-              </button>
-              <button
-                type="button"
-                className={styles.exportBtn}
-                disabled={Boolean(exportingType)}
-                onClick={() => handleExport('farmers')}
-              >
-                📥 {exportingType === 'farmers' ? 'Preparing file...' : 'Export Farmers CSV'}
-              </button>
-            </div>
-          </div>
-
-          {/* Report History */}
-          {history.length > 0 && (
-            <div className={styles.historySection}>
-              <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--color-border)' }}>
-                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Recent Generated Reports</h3>
-              </div>
-              <table className={styles.historyTable}>
-                <thead>
-                  <tr>
-                    <th className={styles.historyTh}>Type</th>
-                    <th className={styles.historyTh}>Range</th>
-                    <th className={styles.historyTh}>Generated</th>
-                    <th className={styles.historyTh}>Records</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((h) => (
-                    <tr key={h.id || h._id}>
-                      <td className={styles.historyTd} style={{ textTransform: 'capitalize', fontWeight: 500 }}>
-                        {h.type}
-                      </td>
-                      <td className={styles.historyTd}>{h.range}</td>
-                      <td className={styles.historyTd}>{formatDate(h.createdAt)}</td>
-                      <td className={styles.historyTd}>{h.recordCount ?? h.rows ?? '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
       )}
     </div>
+  );
+
+  return (
+    <AdminPage title="Reports" context={contextLine} action={exportAction}>
+      <div className={styles.stack}>
+        {/* Error panel */}
+        {error && !summary && (
+          <div className={styles.errorPanel} role="alert">
+            <p className={styles.errorMessage}>{error}</p>
+            <button type="button" className={styles.retryButton} onClick={loadData}>
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Range control + summary tiles: one visually grouped overview block */}
+        <div className={styles.overview}>
+          <div className={styles.rangeRow}>
+            <SegmentedControl
+              options={RANGES}
+              value={range}
+              onChange={handleRangeChange}
+              name="reports-range"
+            />
+          </div>
+
+          <section className={styles.metricsRow} aria-label="Report summary statistics">
+            <StatTile
+              value={loading && !summary ? '—' : nf.format(totalOrders)}
+              label="Orders"
+            />
+            <StatTile
+              value={loading && !summary ? '—' : formatPrice(revenueCents)}
+              label="Collected"
+            />
+            <StatTile
+              value={loading && !summary ? '—' : nf.format(completedOrdersCount)}
+              label="Completed"
+            />
+          </section>
+        </div>
+
+        {/* Orders over time chart */}
+        <section className={styles.section} aria-labelledby="heading-orders-chart">
+          <h2 id="heading-orders-chart" className={styles.sectionHeading}>
+            Orders over time
+          </h2>
+          <div className={styles.chartCard}>
+            {loading && !summary ? (
+              <div className={styles.chartSkeleton} />
+            ) : chartData.length > 0 ? (
+              <div className={styles.chartWrapper}>
+                <BarChart
+                  data={chartData}
+                  height={180}
+                  valueFormatter={(v) => `${nf.format(v)} orders`}
+                  ariaLabel={`Orders over time chart for ${selectedRangeObj.descriptive}`}
+                />
+              </div>
+            ) : (
+              <p className={styles.emptyNote}>No order activity in this range.</p>
+            )}
+          </div>
+        </section>
+
+        <ReportsBreakdownTables
+          summary={summary}
+          history={history}
+          loading={loading}
+          range={range}
+        />
+      </div>
+    </AdminPage>
   );
 }

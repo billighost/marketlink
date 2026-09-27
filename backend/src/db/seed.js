@@ -1,7 +1,8 @@
 /**
  * Database seed script.
- * Populates all collections with rich, realistic, interconnected data ported from front-end placeholders.
- * Calculates denormalised stats dynamically and guarantees valid relations.
+ * ⚠️ WARNING: THIS SCRIPT RESETS THE DATABASE.
+ * THE DATABASE MUST NEVER BE SEEDED AGAIN ONCE POPULATED WITH DATA.
+ * An automatic safety guard prevents execution if data already exists in the database.
  */
 
 import fs from 'node:fs';
@@ -49,12 +50,32 @@ export async function runSeed(force = false, targetDb = null) {
     force: hasForce,
   });
 
+  const db = targetDb || (await connectDb(env.MONGODB_URI, targetDbName));
+
+  // ⚠️ CRITICAL SAFETY CHECK: NEVER RE-SEED IF DATA ALREADY EXISTS
+  if (!hasForce && targetDbName !== 'marketlink_test') {
+    const existingColls = await db.listCollections().toArray();
+    const existingNames = new Set(existingColls.map((c) => c.name));
+    if (existingNames.has(COLLECTIONS.USERS)) {
+      const userCount = await db.collection(COLLECTIONS.USERS).countDocuments({});
+      if (userCount > 0) {
+        console.warn(`\n****************************************************************`);
+        console.warn(`🛑  [DATABASE SAFETY GUARD] SEEDING ABORTED!`);
+        console.warn(`The database "${targetDbName}" is ALREADY SEEDED (${userCount} users found).`);
+        console.warn(`THE DATABASE MUST NEVER BE SEEDED AGAIN.`);
+        console.warn(`Re-seeding wipes all current users, farmers, stalls, and orders.`);
+        console.warn(`No data was deleted or modified.`);
+        console.warn(`(To force an intentional wipe and re-seed, run with: --force)`);
+        console.warn(`****************************************************************\n`);
+        return false;
+      }
+    }
+  }
+
   const startTime = Date.now();
   console.log(`\n======================================================`);
   console.log(`🌱  Starting MarketLink Database Seed on "${targetDbName}" (${env.NODE_ENV})...`);
   console.log(`======================================================\n`);
-
-  const db = targetDb || (await connectDb(env.MONGODB_URI, targetDbName));
 
   // 1. Drop existing collections to ensure a fresh, clean slate
   const existingCollections = await db.listCollections().toArray();

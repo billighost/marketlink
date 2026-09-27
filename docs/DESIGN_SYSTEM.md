@@ -746,4 +746,49 @@ The following patterns are strictly forbidden as they directly cause responsiven
 6. **Background Interaction During Modal Sheets**: When a modal sheet or dialog is open, the background app root MUST have `inert` applied, and underlying page chrome (such as top navigation or floating bars) must be occluded or hidden to prevent overlapping click traps.
 7. **Decorative Gradients & Heavy Shadows**: Never use CSS linear gradients, radial gradients, or heavy multi-layer box shadows. Use hairline borders (`1px solid var(--color-border)`) and generous whitespace for calm, elegant visual hierarchy.
 
+---
+
+## 9. Admin Console Architecture & Design System
+
+The Admin console is an operations workspace designed for high information density, calm focus, and safe, unambiguous execution of platform mutations.
+
+### 9.1 The Admin Shell
+- **Structure**: Clean sidebar shell (`AdminLayout`) on desktop with a fixed 240px navigation rail (`.sidebar`) and a top mobile bar (`.topbar`) under 1024px.
+- **Surface**: White-first (`var(--color-white)`). No full-page canvas backgrounds. Hairline neutral dividers via `--color-border` on `.layout`.
+- **Navigation**: Six top-level routes (`/admin`, `/admin/people`, `/admin/markets`, `/admin/moderation`, `/admin/reports`, `/admin/settings`). Each nav item displays route label and an unread attention badge where active items require intervention.
+
+### 9.2 The Six Primitives
+Located in `src/components/admin/`:
+1. **`AdminPage`**: Standardized page frame enforcing exactly one `<h1>` with font weight 400 (`var(--font-display)`), a single muted context line, and a consistent top-right primary action slot.
+   - Props: `title` (string), `context` (string/node), `primaryAction` (`{ label, onClick, disabled, loading, variant }`), `children`.
+2. **`DataTable`**: Responsive data grid rendering a semantic `<table>` with `<th scope="col">` and `aria-sort` at 768px+, and stacking into accessible cards with `data-label` below 768px.
+   - Props: `columns` (`[{ key, header, align, sortable, render, hideBelow }]`), `rows`, `rowKey`, `loading`, `empty`, `sort`, `onSort`, `selected`, `onSelect`, `onRowClick`, `footer`.
+3. **`FilterBar`**: Unified search and filtering toolbar with debounced search query and popover or inline select filters.
+   - Props: `search`, `onSearchChange`, `filters` (`[{ key, label, value, options }]`), `onFilterChange`, `resultCount`, `onReset`.
+4. **`StatTile`**: High-contrast operational metric display for SRS summary counters with tabular numbers.
+   - Props: `label` (string), `value` (string/number), `subtext` (string), `tone` ('neutral'|'warning'|'success'|'danger').
+5. **`BulkBar`**: Floating selection banner for multi-row actions (e.g. bulk farmer approval/rejection).
+   - Props: `selected` (array of ids), `onClear` (func), `children` (action buttons).
+6. **`ConfirmDialog`**: Universal modal guard for destructive or state-altering mutations. Includes optional text reason inputs and confirmation phrases.
+   - Props: `open` (bool), `title` (string), `body` (string/node), `confirmLabel` (string), `cancelLabel` (string), `variant` ('primary'|'danger'), `requireReason` (bool), `typeToConfirm` (string), `onConfirm` (async func), `onClose` (func).
+
+### 9.3 Accent Budget for Admin
+- **Two Beet Elements Maximum Per Screen**: At any time, exactly one active navigation link plus at most one primary action button may use `--color-beet`.
+- **Semantic Tone Allocation**:
+  - Attention badges & warnings: `--color-carrot` background with `--color-carrot-text` (never bare carrot as text).
+  - Success confirmations & active items: `--color-herb` / `--color-success`.
+  - Destructive & danger actions: `--color-danger` (`#B3261E`).
+
+### 9.4 Table Stacking Rule
+- At **768px and up**: Full tabular view with `min-height: var(--tap-min)` rows, aligned cells, and hover highlights.
+- **Below 768px**: Cards stacked vertically. Each card displays key metadata, badges, and stacked labeled field pairs. Controls and multi-select checkboxes remain fully operable with 44px hit targets.
+
+### 9.5 The Destructive-Action Contract
+Every destructive mutation MUST obey the following contract:
+1. **Guarded by `ConfirmDialog`**: No direct mutation from button clicks.
+2. **Explicit Consequence**: The modal body states the permanent outcome (e.g. "Their listings will be hidden immediately. Existing orders are not cancelled.").
+3. **Reason Required Where Applicable**: Operator must supply a reason when rejecting or suspending accounts or removing moderated content.
+4. **Re-fetch and State Refresh**: The view re-fetches its dataset and calls `refreshOverview()` to update badge indicators immediately.
+
+
 
