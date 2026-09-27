@@ -3,39 +3,23 @@
 .wrap {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  flex: 1;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: var(--space-8) var(--page-pad) var(--space-12);
+  padding: var(--space-8) var(--page-pad);
   box-sizing: border-box;
+  background-image: linear-gradient(rgba(26, 24, 21, 0.65), rgba(26, 24, 21, 0.65)),
+                    url('/images/market-morning.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 768px) {
   .wrap {
-    align-items: center;
+    padding: var(--space-12) var(--page-pad);
   }
-}
-
-.bgOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.bgImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-
-.scrim {
-  position: absolute;
-  inset: 0;
-  background: var(--color-overlay);
 }
 
 .card {
