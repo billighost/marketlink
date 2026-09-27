@@ -43,6 +43,8 @@ export async function getPublicHomeData() {
             availability: 1,
             farmer: 1,
             featuredScore: 1,
+            imageUrl: 1,
+            art: 1,
           },
         }
       )
@@ -93,6 +95,8 @@ export async function getPublicHomeData() {
     priceCents: p.priceCents,
     unit: p.unit,
     availability: p.availability,
+    imageUrl: p.imageUrl || null,
+    art: p.art || null,
   }));
 
   const farmerCards = topFarmers.map((f) => {

@@ -4,12 +4,16 @@ import TopBar from '@/components/layout/TopBar';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import Footer from '@/components/layout/Footer';
 import BackToTop from '@/components/ui/BackToTop';
-import GuestBottomNav from '@/components/layout/GuestBottomNav';
 import styles from './GuestLayout.module.css';
 
 /**
- * GuestLayout frame wrapping public unauthenticated pages.
- * Provides skip-to-content link, persistent TopBar, unconstrained <main>, Footer, and BackToTop.
+ * GuestLayout wraps all public unauthenticated pages.
+ * - Scopes --color-border to --color-hairline (neutral, not tan) on .layout
+ * - Scopes --color-bg-muted to --color-white (no canvas bands as default section bg)
+ * - Adds key={pathname} on <main> so the skip link lands correctly after navigation
+ * - GuestBottomNav removed: a signed-out visitor is browsing, not operating an app.
+ *   64px of persistent bottom chrome on every page duplicates the drawer and steals
+ *   viewport from the catalogue. TopBar + drawer carry all navigation.
  */
 export function GuestLayout() {
   const location = useLocation();
@@ -32,8 +36,8 @@ export function GuestLayout() {
       {/* Persistent guest header */}
       <TopBar />
 
-      {/* Main content: unconstrained to allow full-width canvas bands */}
-      <main id="main" className={styles.main} tabIndex={-1}>
+      {/* key forces remount on navigation so skip link scrolls to top of new page */}
+      <main id="main" key={location.pathname} className={styles.main} tabIndex={-1}>
         <Outlet />
       </main>
 
@@ -42,9 +46,6 @@ export function GuestLayout() {
 
       {/* Floating Back to Top Button */}
       <BackToTop showAfter={350} />
-
-      {/* Mobile persistent app navigation */}
-      <GuestBottomNav />
     </div>
   );
 }

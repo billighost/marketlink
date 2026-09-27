@@ -3,6 +3,11 @@
   flex-direction: column;
   min-height: 100vh;
   background-color: var(--color-white);
+
+  /* Re-scope border and muted bg to neutral hairlines for the guest shell.
+     Same pattern as BuyerLayout. Reversible: one declaration, no other role touched. */
+  --color-border:   var(--color-hairline);
+  --color-bg-muted: var(--color-white);
 }
 
 .main {
@@ -12,10 +17,3 @@
   flex-direction: column;
   outline: none;
 }
-
-@media (max-width: 767px) {
-  .main {
-    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-  }
-}
-

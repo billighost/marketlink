@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { formatPrice } from '@/utils/format';
 import Illustration from '@/components/domain/Illustration';
 import AddToCartButton from '@/components/domain/AddToCartButton';
 import QuantityStepper from '@/components/ui/QuantityStepper';
 import Badge from '@/components/ui/Badge';
+import { useCatalogueRoutes } from '@/components/catalogue/routes';
 import styles from './ProductCard.module.css';
 
 /**
@@ -22,9 +23,12 @@ export function ProductCard({
   farmer: farmerProp,
   variant = 'compact',
   className = '',
+  audience = 'buyer',
 }) {
   const [imgError, setImgError] = useState(false);
   const [selectedQty, setSelectedQty] = useState(1);
+  const routes = useCatalogueRoutes(audience);
+  const location = useLocation();
 
   if (!product) return null;
 
@@ -36,6 +40,8 @@ export function ProductCard({
 
   const aspectAttr = variant === 'feature' ? '16/10' : '4/3';
   const maxQty = product.quantityLeft ? Math.min(99, product.quantityLeft) : 99;
+  const productId = product.id || product._id;
+  const loginNext = `/login?next=${encodeURIComponent(location.pathname + (location.search || ''))}`;
 
   return (
     <article
@@ -44,7 +50,7 @@ export function ProductCard({
     >
       {/* Clickable link to product page covering image tile and title */}
       <Link
-        to={`/buyer/products/${product.id}`}
+        to={routes.produce(productId)}
         className={styles.stretchedLink}
         tabIndex={0}
         aria-label={`${product.name} from ${farmer?.stallName || 'Farmer'}`}
@@ -104,7 +110,7 @@ export function ProductCard({
               <span className={styles.unit}>/ {product.unit}</span>
             </div>
 
-            {!isSoldOut && (
+            {audience !== 'guest' && !isSoldOut && (
               <div className={styles.stepperWrapper}>
                 <QuantityStepper
                   value={selectedQty}
@@ -119,14 +125,20 @@ export function ProductCard({
           </div>
 
           <div className={styles.actionWrapper}>
-            <AddToCartButton
-              productId={product.id}
-              farmerId={farmer?.id || product.farmerId || product.farmer?.id}
-              productName={product.name}
-              quantity={selectedQty}
-              onAddSuccess={() => setSelectedQty(1)}
-              disabled={isSoldOut}
-            />
+            {audience === 'guest' ? (
+              <Link to={loginNext} className={styles.guestReserveBtn}>
+                Sign in to reserve
+              </Link>
+            ) : (
+              <AddToCartButton
+                productId={product.id}
+                farmerId={farmer?.id || product.farmerId || product.farmer?.id}
+                productName={product.name}
+                quantity={selectedQty}
+                onAddSuccess={() => setSelectedQty(1)}
+                disabled={isSoldOut}
+              />
+            )}
           </div>
         </div>
       </div>

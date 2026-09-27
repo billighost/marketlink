@@ -363,7 +363,7 @@ export function About() {
           </div>
 
           <div className={styles.teamGrid}>
-            {siteContent.team.map((member, idx) => (
+            {TEAM.map((member, idx) => (
               <div key={idx} className={styles.teamCard}>
                 <div className={styles.teamImgWrap}>
                   {member.image ? (

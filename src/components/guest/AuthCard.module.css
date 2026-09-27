@@ -1,0 +1,76 @@
+/* AuthCard — centred card for all six auth pages */
+
+.wrap {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-8) var(--page-pad) var(--space-12);
+}
+
+@media (min-width: 480px) {
+  .wrap { align-items: center; }
+}
+
+.card {
+  width: 100%;
+  max-width: var(--container-form);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (max-width: 479px) {
+  .card {
+    border: none;
+    border-radius: 0;
+    padding: var(--space-6) 0;
+  }
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  margin-bottom: var(--space-2);
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+.logoLink:hover { opacity: 0.85; }
+.logoLink:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+.title {
+  font-family: var(--font-head);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-head);
+  line-height: var(--lh-h2);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.lead {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-relaxed);
+  margin: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.footer {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  text-align: center;
+}

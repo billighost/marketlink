@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Illustration from '@/components/domain/Illustration';
 import DayDots from '@/components/domain/DayDots';
+import { useCatalogueRoutes } from '@/components/catalogue/routes';
 import styles from './StallInline.module.css';
 
 /**
@@ -11,8 +12,10 @@ import styles from './StallInline.module.css';
  * @param {object} farmer Farmer details object
  * @param {object} market Market details object or string
  * @param {string} className
+ * @param {'guest'|'buyer'} audience
  */
-export function StallInline({ farmer, market, className = '' }) {
+export function StallInline({ farmer, market, className = '', audience = 'buyer' }) {
+  const routes = useCatalogueRoutes(audience);
   if (!farmer) return null;
 
   const stallName = farmer.stallName || 'Local Farm Stall';
@@ -72,7 +75,7 @@ export function StallInline({ farmer, market, className = '' }) {
 
       <div className={styles.linkRow}>
         <Link
-          to={`/buyer/stalls/${farmer.id}`}
+          to={routes.stall(farmer.id || farmer._id)}
           className={styles.stallLink}
           aria-label={`See the whole stall for ${stallName}`}
         >

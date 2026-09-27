@@ -15,7 +15,7 @@ import {
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import useQuery from '@/hooks/useQuery';
-import { getPublicHome, getMarkets } from '@/api/catalog';
+import { getPublicHome, getMarkets, getProducts } from '@/api/catalog';
 import { formatPrice, formatMarketSchedule } from '@/utils/format';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -130,166 +130,46 @@ function getFarmerVisual(farmer) {
   return { type: 'illustration', name: 'stall' };
 }
 
-const DEFAULT_BOARD_ITEMS = [
-  {
-    id: 'prod-heirloom-tomatoes',
-    name: 'Heirloom tomatoes',
-    farmerName: 'Riverbend Farm',
-    stallNumber: 'Stall 4',
-    priceCents: 450,
-    unit: 'lb',
-    availability: 'in',
-    imageUrl: '/images/product-tomatoes.jpg',
-  },
-  {
-    id: 'prod-sourdough',
-    name: 'Artisan sourdough boule',
-    farmerName: 'Oak & Mill Bakery',
-    stallNumber: 'Stall 7',
-    priceCents: 850,
-    unit: 'loaf',
-    availability: 'in',
-    imageUrl: '/images/product-sourdough.jpg',
-  },
-  {
-    id: 'prod-strawberries',
-    name: 'Field strawberries',
-    farmerName: 'Clearwater Orchards',
-    stallNumber: 'Stall 1',
-    priceCents: 600,
-    unit: 'pint',
-    availability: 'low',
-    imageUrl: '/images/product-strawberries.jpg',
-  },
-  {
-    id: 'prod-wildflower-honey',
-    name: 'Raw wildflower honey',
-    farmerName: 'Hollow Creek Apiary',
-    stallNumber: 'Stall 2',
-    priceCents: 1200,
-    unit: 'jar',
-    availability: 'in',
-    imageUrl: '/images/product-honey.jpg',
-  },
-  {
-    id: 'prod-salad-greens',
-    name: 'Crisp salad greens',
-    farmerName: 'Riverbend Farm',
-    stallNumber: 'Stall 4',
-    priceCents: 500,
-    unit: 'bag',
-    availability: 'in',
-    imageUrl: '/images/product-lettuce.jpg',
-  },
-  {
-    id: 'prod-sweet-corn',
-    name: 'Sweet summer corn',
-    farmerName: 'Willow Brook Farm',
-    stallNumber: 'Stall 3',
-    priceCents: 100,
-    unit: 'each',
-    availability: 'low',
-    imageUrl: '/images/hero-carrots.jpg',
-  },
-];
-
-const DEFAULT_FARMERS = [
-  {
-    id: 'farmer-riverbend',
-    stallName: 'Riverbend Farm',
-    stallNumber: 'Stall 4',
-    specialty: 'Heirloom vegetables, fresh herbs & seasonal greens',
-    ratingAvg: 4.9,
-    ratingCount: 42,
-    operatingDays: ['sat', 'sun'],
-    isTopSeller: true,
-    isNew: false,
-    imageUrl: '/images/farmer-david.jpg',
-  },
-  {
-    id: 'farmer-oak-mill',
-    stallName: 'Oak & Mill Bakery',
-    stallNumber: 'Stall 7',
-    specialty: 'Naturally leavened sourdough & morning pastries',
-    ratingAvg: 4.8,
-    ratingCount: 38,
-    operatingDays: ['sat', 'sun'],
-    isTopSeller: true,
-    isNew: false,
-    imageUrl: '/images/farmer-elena.jpg',
-  },
-  {
-    id: 'farmer-hollow-creek',
-    stallName: 'Hollow Creek Apiary',
-    stallNumber: 'Stall 2',
-    specialty: 'Raw unprocessed wildflower honey & beeswax candles',
-    ratingAvg: 5.0,
-    ratingCount: 29,
-    operatingDays: ['sat', 'wed'],
-    isTopSeller: false,
-    isNew: true,
-    imageUrl: '/images/farmer-marcus.jpg',
-  },
-];
-
-const DEFAULT_MARKETS = [
-  {
-    id: 'market-elm-street',
-    name: 'Elm Street Market',
-    address: '200 Elm Street, Maplewood, NJ',
-    farmerCount: 14,
-    schedule: [{ day: 'sat', openMin: 480, closeMin: 780 }],
-    imageUrl: '/images/market-morning.jpg',
-  },
-  {
-    id: 'market-riverside',
-    name: 'Riverside Sunday Market',
-    address: '45 River Road, Millburn, NJ',
-    farmerCount: 10,
-    schedule: [{ day: 'sun', openMin: 540, closeMin: 840 }],
-    imageUrl: '/images/market-riverside.jpg',
-  },
-  {
-    id: 'market-hilltop',
-    name: 'Hilltop Farmers Market',
-    address: '88 Summit Avenue, Summit, NJ',
-    farmerCount: 12,
-    schedule: [{ day: 'sat', openMin: 450, closeMin: 720 }, { day: 'wed', openMin: 450, closeMin: 720 }],
-    imageUrl: '/images/market-greenwich.jpg',
-  },
-];
-
 export function Home() {
   useDocumentTitle('MarketLink — Fresh from The Farm');
   const navigate = useNavigate();
 
   const { data: homeData, loading: homeLoading } = useQuery('public_home', getPublicHome);
   const { data: marketsData, loading: marketsLoading } = useQuery('guest_markets_home', () => getMarkets({ limit: 3 }));
+  const { data: productsData, loading: productsLoading } = useQuery('guest_products_home', () => getProducts({ limit: 8 }));
 
   const { add } = useCart();
   const { isProductFavorite, toggleProduct } = useFavorites();
   const [reservedIds, setReservedIds] = useState(new Set());
 
-  const handleReserve = (item) => {
-    add(item.id);
-    setReservedIds((prev) => new Set([...prev, item.id]));
+  const handleReserve = (product) => {
+    add(product.id, { farmerId: product.farmerId || product.farmer?.id });
+    setReservedIds((prev) => new Set([...prev, product.id]));
   };
 
   const board = homeData?.board || null;
-  const rawBoardItems = board?.items;
-  const boardItems = Array.isArray(rawBoardItems) && rawBoardItems.length > 0
-    ? rawBoardItems
-    : (homeLoading ? [] : DEFAULT_BOARD_ITEMS);
+  const rawProducts = Array.isArray(productsData?.data) && productsData.data.length > 0
+    ? productsData.data
+    : (Array.isArray(board?.items) && board.items.length > 0 ? board.items : []);
+
+  const boardItems = rawProducts.map((p) => ({
+    id: p.id || (p._id ? p._id.toString() : ''),
+    name: p.name,
+    farmerId: p.farmer?.id || p.farmerId || '',
+    farmerName: p.farmer?.stallName || p.farmerName || '',
+    stallNumber: p.farmer?.stallNumber || p.stallNumber || '',
+    priceCents: p.priceCents ?? (p.price != null ? Math.round(p.price * 100) : 0),
+    unit: p.unit || 'unit',
+    availability: p.availability || p.stock || 'in',
+    imageUrl: p.imageUrl || p.image || null,
+    art: p.art || null,
+  }));
 
   const rawFarmers = homeData?.farmers;
-  const farmers = Array.isArray(rawFarmers) && rawFarmers.length > 0
-    ? rawFarmers
-    : (homeLoading ? [] : DEFAULT_FARMERS);
+  const farmers = Array.isArray(rawFarmers) ? rawFarmers : [];
 
   const rawMarkets = marketsData?.data;
-  const markets = Array.isArray(rawMarkets) && rawMarkets.length > 0
-    ? rawMarkets
-    : (marketsLoading ? [] : DEFAULT_MARKETS);
+  const markets = Array.isArray(rawMarkets) ? rawMarkets : [];
 
   return (
     <div className={styles.homeContainer}>
@@ -325,325 +205,310 @@ export function Home() {
       </section>
 
       {/* ─── 2. WEEKEND GATHERINGS / MARKETS ────────────────────────── */}
-      <section className={styles.marketsSection}>
-        <div className="container">
-          <div className={styles.sectionHeader}>
-            <div>
-              <p className={styles.sectionEyebrow}>WEEKEND GATHERINGS</p>
-              <h2 className={styles.sectionTitle}>Find a Market Near You</h2>
+      {(marketsLoading || markets.length > 0) && (
+        <section className={styles.marketsSection}>
+          <div className="container">
+            <div className={styles.sectionHeader}>
+              <div>
+                <p className={styles.sectionEyebrow}>WEEKEND GATHERINGS</p>
+                <h2 className={styles.sectionTitle}>Find a Market Near You</h2>
+              </div>
+              <Link to={PATHS.MARKETS} className={styles.filterBtn}>
+                <SlidersHorizontal size={15} />
+                <span>All Markets</span>
+              </Link>
             </div>
-            <Link to={PATHS.MARKETS} className={styles.filterBtn}>
-              <SlidersHorizontal size={15} />
-              <span>All Markets</span>
-            </Link>
-          </div>
 
-          {marketsLoading ? (
-            <div className={styles.marketsGrid}>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className={styles.marketCard} style={{ minHeight: '280px', padding: 'var(--space-4)' }}>
-                  <Skeleton width="100%" height="160px" style={{ borderRadius: 'var(--radius-md)' }} />
-                  <Skeleton width="70%" height="24px" style={{ marginTop: 'var(--space-3)' }} />
-                  <Skeleton width="50%" height="16px" style={{ marginTop: 'var(--space-2)' }} />
-                </div>
-              ))}
-            </div>
-          ) : markets.length === 0 ? (
-            <EmptyState
-              title="No markets listed right now"
-              text="Check back soon as local weekend markets are added."
-              actionLabel="Explore Produce"
-              onAction={() => navigate(PATHS.PRODUCTS)}
-            />
-          ) : (
-            <div className={styles.marketsGrid}>
-              {markets.map((market) => (
-                <div key={market.id} className={styles.marketCard}>
-                  <div className={styles.marketImgWrapper}>
-                    <img
-                      src={getMarketImage(market)}
-                      alt={market.name}
-                      className={styles.marketImg}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = '/images/market-central.jpg';
-                      }}
-                    />
-                    <span className={`${styles.marketStatusBadge} ${styles.badgeToday}`}>
-                      {getMarketScheduleBadge(market)}
-                    </span>
+            {marketsLoading ? (
+              <div className={styles.marketsGrid}>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className={styles.marketCard} style={{ minHeight: '280px', padding: 'var(--space-4)' }}>
+                    <Skeleton width="100%" height="160px" style={{ borderRadius: 'var(--radius-md)' }} />
+                    <Skeleton width="70%" height="24px" style={{ marginTop: 'var(--space-3)' }} />
+                    <Skeleton width="50%" height="16px" style={{ marginTop: 'var(--space-2)' }} />
                   </div>
-
-                  <div className={styles.marketBody}>
-                    <p className={styles.marketLocation}>
-                      <MapPin size={13} className={styles.iconInline} />
-                      <span>{market.address || market.city || 'Local Square'}</span>
-                    </p>
-
-                    <h3 className={styles.marketName}>{market.name}</h3>
-
-                    <p className={styles.marketSchedule}>
-                      <Clock size={13} className={styles.iconInline} />
-                      <span>{formatMarketSchedule(market) || 'Saturdays · 8:00 AM – 2:00 PM'}</span>
-                    </p>
-
-                    <div className={styles.marketFooter}>
-                      <span className={styles.vendorCount}>
-                        {market.farmerCount ? `${market.farmerCount} Active Farmers` : 'Attending Farmers'}
+                ))}
+              </div>
+            ) : (
+              <div className={styles.marketsGrid}>
+                {markets.map((market) => (
+                  <div key={market.id || market._id} className={styles.marketCard}>
+                    <div className={styles.marketImgWrapper}>
+                      <img
+                        src={getMarketImage(market)}
+                        alt={market.name}
+                        className={styles.marketImg}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/images/market-central.jpg';
+                        }}
+                      />
+                      <span className={`${styles.marketStatusBadge} ${styles.badgeToday}`}>
+                        {getMarketScheduleBadge(market)}
                       </span>
-                      <Link to={`/markets/${market.id}`} className={styles.viewMarketLink}>
-                        <span>View Market</span>
-                        <ArrowRight size={14} />
-                      </Link>
+                    </div>
+
+                    <div className={styles.marketBody}>
+                      <p className={styles.marketLocation}>
+                        <MapPin size={13} className={styles.iconInline} />
+                        <span>{market.address || market.city || 'Local Square'}</span>
+                      </p>
+
+                      <h3 className={styles.marketName}>{market.name}</h3>
+
+                      <p className={styles.marketSchedule}>
+                        <Clock size={13} className={styles.iconInline} />
+                        <span>{formatMarketSchedule(market) || 'Saturdays · 8:00 AM – 2:00 PM'}</span>
+                      </p>
+
+                      <div className={styles.marketFooter}>
+                        <span className={styles.vendorCount}>
+                          {market.farmerCount ? `${market.farmerCount} Active Farmers` : 'Attending Farmers'}
+                        </span>
+                        <Link to={`/markets/${market.id || market._id}`} className={styles.viewMarketLink}>
+                          <span>View Market</span>
+                          <ArrowRight size={14} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ─── 3. SEASONAL HARVEST / PRICE BOARD ─────────────────────── */}
-      <section className={styles.productsSection}>
-        <div className="container">
-          <div className={styles.sectionHeader}>
-            <div>
-              <p className={styles.sectionEyebrow}>
-                {board?.market?.name ? `LIVE PRICE BOARD · ${board.market.name.toUpperCase()}` : 'LIVE PRICE BOARD'}
-              </p>
-              <h2 className={styles.sectionTitle}>Fresh From The Stalls</h2>
+      {(productsLoading || homeLoading || boardItems.length > 0) && (
+        <section className={styles.productsSection}>
+          <div className="container">
+            <div className={styles.sectionHeader}>
+              <div>
+                <p className={styles.sectionEyebrow}>
+                  {board?.market?.name ? `LIVE PRICE BOARD · ${board.market.name.toUpperCase()}` : 'LIVE PRICE BOARD'}
+                </p>
+                <h2 className={styles.sectionTitle}>Fresh From The Stalls</h2>
+              </div>
+              <Link to={PATHS.PRODUCTS} className={styles.filterBtn}>
+                <span>View Full Catalog</span>
+                <ArrowRight size={14} />
+              </Link>
             </div>
-            <Link to={PATHS.PRODUCTS} className={styles.filterBtn}>
-              <span>View Full Catalog</span>
-              <ArrowRight size={14} />
-            </Link>
-          </div>
 
-          {homeLoading ? (
-            <div className={styles.productsGrid}>
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={styles.productCard} style={{ minHeight: '260px', padding: 'var(--space-4)' }}>
-                  <Skeleton width="100%" height="140px" style={{ borderRadius: 'var(--radius-md)' }} />
-                  <Skeleton width="60%" height="20px" style={{ marginTop: 'var(--space-3)' }} />
-                  <Skeleton width="40%" height="16px" style={{ marginTop: 'var(--space-2)' }} />
-                </div>
-              ))}
-            </div>
-          ) : boardItems.length === 0 ? (
-            <EmptyState
-              title="No price board items listed today"
-              text="Farmers publish this week's harvest prices leading up to Saturday morning."
-              actionLabel="Browse All Products"
-              onAction={() => navigate(PATHS.PRODUCTS)}
-            />
-          ) : (
-            <div className={styles.productsGrid}>
-              {boardItems.slice(0, 8).map((product) => {
-                const isFav = isProductFavorite(product.id);
-                const isReserved = reservedIds.has(product.id);
-                const visual = getProductVisual(product);
+            {(productsLoading || (homeLoading && boardItems.length === 0)) ? (
+              <div className={styles.productsGrid}>
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className={styles.productCard} style={{ minHeight: '260px', padding: 'var(--space-4)' }}>
+                    <Skeleton width="100%" height="140px" style={{ borderRadius: 'var(--radius-md)' }} />
+                    <Skeleton width="60%" height="20px" style={{ marginTop: 'var(--space-3)' }} />
+                    <Skeleton width="40%" height="16px" style={{ marginTop: 'var(--space-2)' }} />
+                  </div>
+                ))}
+              </div>
+            ) : boardItems.length > 0 ? (
+              <div className={styles.productsGrid}>
+                {boardItems.slice(0, 8).map((product) => {
+                  const isFav = isProductFavorite(product.id);
+                  const isReserved = reservedIds.has(product.id);
+                  const visual = getProductVisual(product);
 
-                return (
-                  <div key={product.id} className={styles.productCard}>
-                    <div className={styles.productImgWrapper}>
-                      {visual.type === 'img' ? (
-                        <img
-                          src={visual.src}
-                          alt={product.name}
-                          className={styles.productImg}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = 'none';
-                            if (e.target.nextSibling) {
-                              e.target.nextSibling.style.display = 'flex';
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className={styles.productIllustrationWrap}>
-                          <Illustration name={visual.name} size="md" />
+                  return (
+                    <div key={product.id} className={styles.productCard}>
+                      <div className={styles.productImgWrapper}>
+                        {visual.type === 'img' ? (
+                          <img
+                            src={visual.src}
+                            alt={product.name}
+                            className={styles.productImg}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                              if (e.target.nextSibling) {
+                                e.target.nextSibling.style.display = 'flex';
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className={styles.productIllustrationWrap}>
+                            <Illustration name={visual.name} size="md" />
+                          </div>
+                        )}
+                        <div className={styles.productIllustrationWrap} style={{ display: 'none' }}>
+                          <Illustration name="basket" size="md" />
                         </div>
-                      )}
-                      <div className={styles.productIllustrationWrap} style={{ display: 'none' }}>
-                        <Illustration name="basket" size="md" />
-                      </div>
 
-                      {/* Favorite Heart Button */}
-                      <button
-                        type="button"
-                        onClick={() => toggleProduct(product.id)}
-                        className={`${styles.favoriteBtn} ${isFav ? styles.favoriteBtnActive : ''}`}
-                        aria-label="Save to favorites"
-                      >
-                        <Heart
-                          size={16}
-                          fill={isFav ? '#7A2E3B' : 'none'}
-                          color={isFav ? '#7A2E3B' : '#2E2B26'}
-                          strokeWidth={2}
-                        />
-                      </button>
-
-                      {/* Stock pill overlay */}
-                      <span
-                        className={`${styles.productStockBadge} ${
-                          product.availability === 'low' ? styles.stockLow : styles.stockIn
-                        }`}
-                      >
-                        {product.availability === 'low' ? 'Low Stock' : 'In Stock'}
-                      </span>
-                    </div>
-
-                    <div className={styles.productBody}>
-                      <p className={styles.productFarmer}>
-                        {product.farmerName} {product.stallNumber ? `• ${product.stallNumber}` : ''}
-                      </p>
-                      <h3 className={styles.productTitle}>
-                        <Link to={`/products/${product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                          {product.name}
-                        </Link>
-                      </h3>
-
-                      <div className={styles.productPriceRow}>
-                        <p className={styles.productPrice}>
-                          <span className={styles.priceNum}>{formatPrice(product.priceCents)}</span>{' '}
-                          <span className={styles.priceUnit}>/ {product.unit}</span>
-                        </p>
-
+                        {/* Favorite Heart Button */}
                         <button
                           type="button"
-                          onClick={() => handleReserve(product)}
-                          className={`${styles.reserveBtn} ${isReserved ? styles.reserveBtnDone : ''}`}
+                          onClick={() => toggleProduct(product.id)}
+                          className={`${styles.favoriteBtn} ${isFav ? styles.favoriteBtnActive : ''}`}
+                          aria-label="Save to favorites"
                         >
-                          {isReserved ? (
-                            <>
-                              <BookmarkCheck size={13} />
-                              <span>Added</span>
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles size={12} />
-                              <span>Pre-order</span>
-                            </>
-                          )}
+                          <Heart
+                            size={16}
+                            fill={isFav ? '#7A2E3B' : 'none'}
+                            color={isFav ? '#7A2E3B' : '#2E2B26'}
+                            strokeWidth={2}
+                          />
                         </button>
+
+                        {/* Stock pill overlay */}
+                        <span
+                          className={`${styles.productStockBadge} ${
+                            product.availability === 'low' ? styles.stockLow : styles.stockIn
+                          }`}
+                        >
+                          {product.availability === 'low' ? 'Low Stock' : 'In Stock'}
+                        </span>
+                      </div>
+
+                      <div className={styles.productBody}>
+                        <p className={styles.productFarmer}>
+                          {product.farmerName} {product.stallNumber ? `• ${product.stallNumber}` : ''}
+                        </p>
+                        <h3 className={styles.productTitle}>
+                          <Link to={`/products/${product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                            {product.name}
+                          </Link>
+                        </h3>
+
+                        <div className={styles.productPriceRow}>
+                          <p className={styles.productPrice}>
+                            <span className={styles.priceNum}>{formatPrice(product.priceCents)}</span>{' '}
+                            <span className={styles.priceUnit}>/ {product.unit}</span>
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={() => handleReserve(product)}
+                            className={`${styles.reserveBtn} ${isReserved ? styles.reserveBtnDone : ''}`}
+                          >
+                            {isReserved ? (
+                              <>
+                                <BookmarkCheck size={13} />
+                                <span>Added</span>
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles size={12} />
+                                <span>Pre-order</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            ) : null}
 
-          <div className={styles.exploreHarvestRow}>
-            <Link to={PATHS.PRODUCTS} className={styles.exploreHarvestBtn}>
-              <span>Explore All Seasonal Harvest</span>
-              <ArrowRight size={15} />
-            </Link>
+            <div className={styles.exploreHarvestRow}>
+              <Link to={PATHS.PRODUCTS} className={styles.exploreHarvestBtn}>
+                <span>Explore All Seasonal Harvest</span>
+                <ArrowRight size={15} />
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ─── 4. THE GROWERS / MEET LOCAL FARMERS ─────────────────── */}
-      <section className={styles.farmersSection}>
-        <div className="container">
-          <div className={styles.sectionHeader}>
-            <div>
-              <p className={styles.sectionEyebrow}>THE GROWERS</p>
-              <h2 className={styles.sectionTitle}>Meet The Farmers</h2>
+      {(homeLoading || farmers.length > 0) && (
+        <section className={styles.farmersSection}>
+          <div className="container">
+            <div className={styles.sectionHeader}>
+              <div>
+                <p className={styles.sectionEyebrow}>THE GROWERS</p>
+                <h2 className={styles.sectionTitle}>Meet The Farmers</h2>
+              </div>
+              <Link to={PATHS.FARMERS} className={styles.viewAllLink}>
+                <span>View All Growers</span>
+                <ArrowRight size={15} />
+              </Link>
             </div>
-            <Link to={PATHS.FARMERS} className={styles.viewAllLink}>
-              <span>View All Growers</span>
-              <ArrowRight size={15} />
-            </Link>
-          </div>
 
-          {homeLoading ? (
-            <div className={styles.farmersGrid}>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className={styles.farmerCard} style={{ minHeight: '180px', padding: 'var(--space-4)' }}>
-                  <Skeleton width="100%" height="80px" style={{ borderRadius: 'var(--radius-md)' }} />
-                  <Skeleton width="60%" height="20px" style={{ marginTop: 'var(--space-2)' }} />
-                </div>
-              ))}
-            </div>
-          ) : farmers.length === 0 ? (
-            <EmptyState
-              title="No growers found"
-              text="Our producer directory will update once weekend stalls confirm attendance."
-              actionLabel="View Markets"
-              onAction={() => navigate(PATHS.MARKETS)}
-            />
-          ) : (
-            <div className={styles.farmersGrid}>
-              {farmers.map((farmer) => {
-                const visual = getFarmerVisual(farmer);
-                const operatingDays = Array.isArray(farmer.operatingDays)
-                  ? farmer.operatingDays.map((d) => d.toUpperCase()).join(', ')
-                  : 'WEEKENDS';
-
-                return (
-                  <div key={farmer.id} className={styles.farmerCard}>
-                    <div className={styles.farmerImgWrapper}>
-                      {visual.type === 'img' ? (
-                        <img
-                          src={visual.src}
-                          alt={farmer.stallName}
-                          className={styles.farmerAvatarImg}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = 'none';
-                            if (e.target.nextSibling) {
-                              e.target.nextSibling.style.display = 'flex';
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className={styles.farmerArtWrap}>
-                          <Illustration name={visual.name} size="md" />
-                        </div>
-                      )}
-                      <div className={styles.farmerArtWrap} style={{ display: 'none' }}>
-                        <Illustration name={visual.fallbackArt || 'stall'} size="md" />
-                      </div>
-                    </div>
-
-                    <div className={styles.farmerBody}>
-                      <div className={styles.farmerTopRow}>
-                        <h3 className={styles.farmerName}>{farmer.stallName}</h3>
-                        {farmer.isTopSeller && <span className={styles.topSellerBadge}>Top Seller</span>}
-                        {farmer.isNew && <span className={styles.newBadge}>New</span>}
-                      </div>
-
-                      <p className={styles.farmerFarm}>{farmer.specialty || 'Fresh regional harvest'}</p>
-
-                      <div className={styles.farmerMetaRow}>
-                        <span className={styles.farmerSpecialty}>
-                          {farmer.stallNumber ? `${farmer.stallNumber} • ` : ''}
-                          {operatingDays}
-                        </span>
-                        {farmer.ratingAvg > 0 && (
-                          <span className={styles.farmerRating}>
-                            ★ {Number(farmer.ratingAvg).toFixed(1)}
-                            {farmer.ratingCount ? ` (${farmer.ratingCount})` : ''}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className={styles.farmerFooter}>
-                        <Link to={`/farmers/${farmer.id}`} className={styles.viewStallLink}>
-                          <span>Visit Stall</span>
-                          <ArrowRight size={13} />
-                        </Link>
-                      </div>
-                    </div>
+            {homeLoading ? (
+              <div className={styles.farmersGrid}>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className={styles.farmerCard} style={{ minHeight: '180px', padding: 'var(--space-4)' }}>
+                    <Skeleton width="100%" height="80px" style={{ borderRadius: 'var(--radius-md)' }} />
+                    <Skeleton width="60%" height="20px" style={{ marginTop: 'var(--space-2)' }} />
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
+                ))}
+              </div>
+            ) : farmers.length > 0 ? (
+              <div className={styles.farmersGrid}>
+                {farmers.map((farmer) => {
+                  const visual = getFarmerVisual(farmer);
+                  const operatingDays = Array.isArray(farmer.operatingDays)
+                    ? farmer.operatingDays.map((d) => d.toUpperCase()).join(', ')
+                    : 'WEEKENDS';
+
+                  return (
+                    <div key={farmer.id || farmer._id} className={styles.farmerCard}>
+                      <div className={styles.farmerImgWrapper}>
+                        {visual.type === 'img' ? (
+                          <img
+                            src={visual.src}
+                            alt={farmer.stallName}
+                            className={styles.farmerAvatarImg}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                              if (e.target.nextSibling) {
+                                e.target.nextSibling.style.display = 'flex';
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className={styles.farmerArtWrap}>
+                            <Illustration name={visual.name} size="md" />
+                          </div>
+                        )}
+                        <div className={styles.farmerArtWrap} style={{ display: 'none' }}>
+                          <Illustration name={visual.fallbackArt || 'stall'} size="md" />
+                        </div>
+                      </div>
+
+                      <div className={styles.farmerBody}>
+                        <div className={styles.farmerTopRow}>
+                          <h3 className={styles.farmerName}>{farmer.stallName}</h3>
+                          {farmer.isTopSeller && <span className={styles.topSellerBadge}>Top Seller</span>}
+                          {farmer.isNew && <span className={styles.newBadge}>New</span>}
+                        </div>
+
+                        <p className={styles.farmerFarm}>{farmer.specialty || 'Fresh regional harvest'}</p>
+
+                        <div className={styles.farmerMetaRow}>
+                          <span className={styles.farmerSpecialty}>
+                            {farmer.stallNumber ? `${farmer.stallNumber} • ` : ''}
+                            {operatingDays}
+                          </span>
+                          {farmer.ratingAvg > 0 && (
+                            <span className={styles.farmerRating}>
+                              ★ {Number(farmer.ratingAvg).toFixed(1)}
+                              {farmer.ratingCount ? ` (${farmer.ratingCount})` : ''}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className={styles.farmerFooter}>
+                          <Link to={`/farmers/${farmer.id || farmer._id}`} className={styles.viewStallLink}>
+                            <span>Visit Stall</span>
+                            <ArrowRight size={13} />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      )}
 
       {/* ─── 5. HOW MARKETLINK WORKS ──────────────────────────────── */}
       <section className={styles.howItWorksSection}>

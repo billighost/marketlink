@@ -1,0 +1,194 @@
+/* MarketsView.module.css — Shared markets index view */
+
+/* === CONTAINER === */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* === TOP BAR === */
+.topBar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Title + segmented control side by side */
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* === CONTROLS WRAP === */
+.controlsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* View toggle sits left-aligned */
+.segmentedWrap {
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+/* === SEARCH BAR === */
+.searchForm {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-4);
+  color: var(--color-ink-soft);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: var(--control-h);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-4) 0 calc(var(--space-4) + 18px + var(--space-3));
+  font-family: var(--font-body);
+  font-size: var(--text-input);
+  color: var(--color-ink);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
+}
+
+.searchInput:focus {
+  border-color: var(--color-ink);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--color-ink-faint);
+}
+
+/* === DAY CHIPS === */
+.dayChips {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: var(--space-1);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.dayChips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-h-sm);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
+}
+
+.chip:hover {
+  border-color: var(--color-ink-soft);
+  color: var(--color-ink);
+}
+
+.chip:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Active chip: ink-filled to preserve accent budget */
+.activeChip {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-white);
+}
+
+.activeChip:hover {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-white);
+}
+
+/* === DIVIDER === */
+.divider {
+  height: 1px;
+  width: 100%;
+  background-color: var(--color-hairline);
+  margin-block: var(--space-1);
+}
+
+/* === LIST GRID === */
+.listGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .listGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+/* === MAP VIEW === */
+.mapViewWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.mapWrapper {
+  width: 100%;
+  height: 26.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  position: relative;
+  background-color: var(--color-canvas);
+}
+
+.selectedCardWrap {
+  max-width: 37.5rem;
+  width: 100%;
+}
+
+/* === SKELETON === */
+.skeletonCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--card-padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background-color: var(--color-white);
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Illustration from '@/components/domain/Illustration';
+import { useCatalogueRoutes } from '@/components/catalogue/routes';
 import styles from './FarmerCard.module.css';
 
 function getStallInitials(name) {
@@ -25,8 +26,12 @@ export function FarmerCard({
   farmer,
   variant = 'row',
   className = '',
+  audience = 'buyer',
 }) {
+  const routes = useCatalogueRoutes(audience);
   if (!farmer) return null;
+
+  const stallId = farmer.id || farmer._id;
 
   if (variant === 'stall') {
     const initials = getStallInitials(farmer.stallName);
@@ -39,7 +44,7 @@ export function FarmerCard({
         aria-label={`${farmer.stallName}, ${farmerSub}`}
       >
         <Link
-          to={`/buyer/stalls/${farmer.id}`}
+          to={routes.stall(stallId)}
           className={styles.stretchedLink}
           tabIndex={0}
           aria-label={`View stall ${farmer.stallName}`}
@@ -82,7 +87,7 @@ export function FarmerCard({
       aria-label={`${farmer.stallName}, ${farmer.specialty}`}
     >
       <Link
-        to={`/buyer/stalls/${farmer.id}`}
+        to={routes.stall(stallId)}
         className={styles.stretchedLink}
         tabIndex={0}
         aria-label={`View stall ${farmer.stallName}`}

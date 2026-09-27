@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DayDots from '@/components/domain/DayDots';
+import { useCatalogueRoutes } from '@/components/catalogue/routes';
 import styles from './MarketCard.module.css';
 
 /**
@@ -21,9 +22,12 @@ export function MarketCard({
   onSelect,
   isSelected = false,
   className = '',
+  audience = 'buyer',
 }) {
+  const routes = useCatalogueRoutes(audience);
   if (!market) return null;
 
+  const marketId = market.id || market._id;
   const clock = market.clock;
   const isOpen = Boolean(clock?.openNow);
 
@@ -66,7 +70,7 @@ export function MarketCard({
       onClick={handleClick}
     >
       <Link
-        to={`/buyer/markets/${market.id}`}
+        to={routes.market(marketId)}
         className={styles.stretchedLink}
         tabIndex={0}
         aria-label={`View ${market.name}`}
