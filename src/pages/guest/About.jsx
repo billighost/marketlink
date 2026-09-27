@@ -18,6 +18,7 @@ import {
   Quote,
   ShoppingBag,
   ExternalLink,
+  UserCircle,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
@@ -133,6 +134,13 @@ const TEAM = [
     image: aliyahImg,
     fallbackImage: '/images/team/Aliyah.jpeg',
     bio: 'Software developer and team leader skilled in React, React Native, and Node.js. Aliyah is passionate about engineering impactful web and mobile solutions to solve real-life problems.',
+  },
+  {
+    name: 'Olatoye Uthman',
+    role: 'Product  Specialist & Asset Generator ',
+    image: null,
+    fallbackImage: null,
+    bio: 'Focused on shaping product quality and visual identity, Uthman led product refining, asset generation, and related creative production — ensuring every interface detail and digital asset met a premium standard.',
   },
 ];
 
@@ -383,8 +391,27 @@ export function About() {
                       }}
                     />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-beet)', fontFamily: 'var(--font-head)', fontSize: 'var(--text-h3)' }}>
-                      {member.name.charAt(0)}
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(145deg, #541722 0%, #7a2030 60%, #9b3545 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}>
+                      <UserCircle size={56} color="rgba(255,255,255,0.90)" strokeWidth={1.3} />
+                      <span style={{
+                        fontFamily: 'var(--font-head)',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        color: 'rgba(255,255,255,0.65)',
+                      }}>
+                        {member.name.split(' ').map(n => n[0]).join('')}
+                      </span>
                     </div>
                   )}
                 </div>
