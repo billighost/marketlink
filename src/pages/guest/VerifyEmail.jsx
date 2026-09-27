@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, Mail, ArrowRight, RefreshCw } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
@@ -31,19 +31,33 @@ export function VerifyEmail() {
   const [resendSent, setResendSent] = useState(false);
   const [resendError, setResendError] = useState('');
 
-  useEffect(() => {
-    if (!token) return;
+  const verifyingRef = useRef(false);
+  const verifiedTokenRef = useRef('');
 
+  useEffect(() => {
+    if (user?.emailVerified) {
+      setSuccess(true);
+      setLoading(false);
+      return;
+    }
+
+    if (!token) return;
+    if (verifiedTokenRef.current === token) return;
+    if (verifyingRef.current) return;
+
+    verifyingRef.current = true;
     let mounted = true;
+
     async function executeVerification() {
       try {
         setLoading(true);
         setErrorMessage('');
         await verifyEmail(token);
+        verifiedTokenRef.current = token;
         if (mounted) {
           setSuccess(true);
           // Refresh user context if authenticated
-          if (isAuthenticated && typeof refreshUser === 'function') {
+          if (typeof refreshUser === 'function') {
             try {
               await refreshUser();
             } catch {
@@ -53,6 +67,10 @@ export function VerifyEmail() {
         }
       } catch (err) {
         if (mounted) {
+          if (user?.emailVerified) {
+            setSuccess(true);
+            return;
+          }
           setSuccess(false);
           if (err.code === 'INVALID_VERIFICATION_TOKEN') {
             setErrorMessage('This verification link is invalid, expired, or has already been used.');
@@ -61,6 +79,7 @@ export function VerifyEmail() {
           }
         }
       } finally {
+        verifyingRef.current = false;
         if (mounted) {
           setLoading(false);
         }
@@ -71,7 +90,7 @@ export function VerifyEmail() {
     return () => {
       mounted = false;
     };
-  }, [token, isAuthenticated, refreshUser]);
+  }, [token, user?.emailVerified, refreshUser]);
 
   const handleResend = async (e) => {
     e.preventDefault();

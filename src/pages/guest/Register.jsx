@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, Navigate } from 'react-router-dom';
 import {
   User,
   Store,
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, homePathFor } from '@/context/AuthContext';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './Register.module.css';
 
@@ -48,12 +48,23 @@ export function Register() {
   useDocumentTitle('Create Account — MarketLink');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { isAuthenticated, role: userRole } = useAuth();
+
   const roleParam = searchParams.get('role')?.toLowerCase();
 
   const [step, setStep] = useState(1);
   const [role, setRole] = useState(
     roleParam === 'customer' || roleParam === 'farmer' ? roleParam : 'customer'
   );
+
+  const initiallyAuthenticatedRef = useRef(isAuthenticated);
+
+  useEffect(() => {
+    // Only redirect if already authenticated on initial page load (not after completing step 2 into step 3)
+    if (initiallyAuthenticatedRef.current) {
+      navigate(homePathFor(userRole), { replace: true });
+    }
+  }, [userRole, navigate]);
 
   useEffect(() => {
     if (roleParam === 'customer' || roleParam === 'farmer') {
@@ -591,6 +602,7 @@ export function Register() {
                               value={farmerData.email}
                               onChange={handleFarmerChange}
                               placeholder="grower@farm.org"
+                              autoComplete="email"
                               className={styles.textInput}
                               required
                             />
@@ -611,6 +623,7 @@ export function Register() {
                               value={farmerData.phone}
                               onChange={handleFarmerChange}
                               placeholder="(555) 012-3456"
+                              autoComplete="tel"
                               className={styles.textInput}
                               required
                             />
@@ -648,6 +661,7 @@ export function Register() {
                               : handleFarmerChange
                           }
                           placeholder="Min. 8 characters"
+                          autoComplete="new-password"
                           className={styles.textInput}
                           required
                         />
@@ -688,6 +702,7 @@ export function Register() {
                               : handleFarmerChange
                           }
                           placeholder="Repeat password"
+                          autoComplete="new-password"
                           className={styles.textInput}
                           required
                         />

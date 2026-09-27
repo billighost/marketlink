@@ -182,6 +182,9 @@ export function Profile() {
           size="peek"
         >
           <div className={styles.signOutModal}>
+            <div className={styles.signOutIcon} aria-hidden="true">
+              <LogOut size={20} strokeWidth={2} />
+            </div>
             <p className={styles.signOutText}>
               Are you sure you want to sign out of MarketLink?
             </p>

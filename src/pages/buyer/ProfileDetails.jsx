@@ -250,6 +250,17 @@ export function ProfileDetails() {
         </p>
 
         <form onSubmit={handlePasswordSubmit}>
+          {/* Hidden username field for browser accessibility and password manager compliance */}
+          <input
+            type="text"
+            name="username"
+            value={user?.email || ''}
+            autoComplete="username"
+            style={{ display: 'none' }}
+            readOnly
+            tabIndex={-1}
+            aria-hidden="true"
+          />
           <div className={styles.fields}>
             <FormField
               id="currentPassword"

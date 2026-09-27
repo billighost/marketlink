@@ -24,16 +24,37 @@ export class ApiError extends Error {
 }
 
 export function getAccessToken() {
+  if (!inMemoryAccessToken) {
+    try {
+      inMemoryAccessToken = localStorage.getItem('marketlink_access_token');
+    } catch {
+      // ignore
+    }
+  }
   return inMemoryAccessToken;
 }
 
 export function setAccessToken(token) {
   inMemoryAccessToken = token;
+  try {
+    if (token) {
+      localStorage.setItem('marketlink_access_token', token);
+    } else {
+      localStorage.removeItem('marketlink_access_token');
+    }
+  } catch {
+    // ignore
+  }
   notifyAuthListeners();
 }
 
 export function clearAccessToken() {
   inMemoryAccessToken = null;
+  try {
+    localStorage.removeItem('marketlink_access_token');
+  } catch {
+    // ignore
+  }
   notifyAuthListeners();
 }
 
@@ -81,8 +102,11 @@ export async function performTokenRefresh() {
         });
 
         if (!res.ok) {
-          clearAccessToken();
-          return null;
+          if (res.status === 401 || res.status === 403) {
+            clearAccessToken();
+            return { error: 'UNAUTHENTICATED', status: res.status };
+          }
+          return { error: 'SERVER_ERROR', status: res.status };
         }
 
         const data = await res.json();
@@ -92,11 +116,9 @@ export async function performTokenRefresh() {
           setAccessToken(nextToken);
           return { accessToken: nextToken, user };
         }
-        clearAccessToken();
-        return null;
-      } catch {
-        clearAccessToken();
-        return null;
+        return { error: 'NO_TOKEN' };
+      } catch (err) {
+        return { error: 'NETWORK_ERROR', message: err.message };
       } finally {
         refreshPromise = null;
       }
@@ -150,8 +172,9 @@ export async function apiFetch(path, options = {}) {
     ...headers,
   };
 
-  if (inMemoryAccessToken) {
-    reqHeaders['Authorization'] = `Bearer ${inMemoryAccessToken}`;
+  const currentToken = getAccessToken();
+  if (currentToken) {
+    reqHeaders['Authorization'] = `Bearer ${currentToken}`;
   }
 
   if (idempotencyKey) {
@@ -188,6 +211,15 @@ export async function apiFetch(path, options = {}) {
     if (err.name === 'AbortError') {
       throw err;
     }
+    // Auto-retry once on network error (absorbs development backend reloads)
+    if (!_isRetry) {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        return await apiFetch(path, { ...options, _isRetry: true });
+      } catch {
+        // proceed to throw
+      }
+    }
     throw new ApiError({
       status: 0,
       code: 'NETWORK',
@@ -198,19 +230,23 @@ export async function apiFetch(path, options = {}) {
 
   // 401 Unauthorized handling (single-flight token refresh)
   if (response.status === 401 && !_isRetry && !cleanPath.includes('/auth/login') && !cleanPath.includes('/auth/refresh')) {
-    const refreshedToken = await performTokenRefresh();
-    if (refreshedToken?.accessToken) {
+    const refreshResult = await performTokenRefresh();
+    if (refreshResult?.accessToken) {
       return apiFetch(path, {
         ...options,
         _isRetry: true,
       });
-    } else {
-      // If refresh failed and caller had a token, broadcast sign-out notification
+    } else if (refreshResult?.error === 'UNAUTHENTICATED') {
+      // Only broadcast sign-out when the refresh token is definitively rejected by the server
+      const hadToken = Boolean(getAccessToken());
       clearAccessToken();
-      try {
-        localStorage.setItem('marketlink_signed_out', Date.now().toString());
-      } catch {
-        // ignore storage errors
+      if (hadToken) {
+        try {
+          localStorage.removeItem('marketlink_user');
+          localStorage.setItem('marketlink_signed_out', Date.now().toString());
+        } catch {
+          // ignore storage errors
+        }
       }
     }
   }

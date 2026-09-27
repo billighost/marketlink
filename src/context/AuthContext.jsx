@@ -22,8 +22,38 @@ export function homePathFor(role) {
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('marketlink_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const updateUser = useCallback((nextUser) => {
+    setUser(nextUser);
+    try {
+      if (nextUser) {
+        localStorage.setItem('marketlink_user', JSON.stringify(nextUser));
+      } else {
+        localStorage.removeItem('marketlink_user');
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  // If we already have a cached user and token, don't show blocking loading screen
+  const [isCheckingSession, setIsCheckingSession] = useState(() => {
+    try {
+      const hasCachedUser = Boolean(localStorage.getItem('marketlink_user'));
+      const hasToken = Boolean(localStorage.getItem('marketlink_access_token'));
+      return !(hasCachedUser && hasToken);
+    } catch {
+      return true;
+    }
+  });
 
   // Normalize role
   const role = useMemo(() => {
@@ -51,17 +81,24 @@ export function AuthProvider({ children }) {
         if (refreshData?.accessToken) {
           setAccessToken(refreshData.accessToken);
           if (refreshData.user) {
-            setUser(refreshData.user);
+            updateUser(refreshData.user);
           } else {
             const me = await getMe();
             if (!cancelled && me) {
-              setUser(me);
+              updateUser(me);
             }
           }
+        } else if (refreshData?.error === 'UNAUTHENTICATED') {
+          // Explicit server rejection (cookie missing or invalid)
+          clearAccessToken();
+          updateUser(null);
         }
-      } catch {
-        // Not authenticated, user remains guest
-        clearAccessToken();
+        // If network error (e.g. backend server restarting), preserve existing cached session
+      } catch (err) {
+        if (err?.status === 401 || err?.code === 'UNAUTHENTICATED') {
+          clearAccessToken();
+          updateUser(null);
+        }
       } finally {
         if (!cancelled) {
           clearTimeout(timeoutTimer);
@@ -76,7 +113,7 @@ export function AuthProvider({ children }) {
     const handleStorageChange = (e) => {
       if (e.key === 'marketlink_signed_out') {
         clearAccessToken();
-        setUser(null);
+        updateUser(null);
         invalidateQueries();
       }
     };
@@ -88,15 +125,15 @@ export function AuthProvider({ children }) {
       clearTimeout(timeoutTimer);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [updateUser]);
 
   const login = useCallback(async (email, password) => {
     const data = await apiLogin({ email, password });
     if (data?.user) {
-      setUser(data.user);
+      updateUser(data.user);
     }
     return data;
-  }, []);
+  }, [updateUser]);
 
   const logout = useCallback(async () => {
     try {
@@ -104,44 +141,45 @@ export function AuthProvider({ children }) {
     } catch {
       // ignore logout errors
     } finally {
-      setUser(null);
+      updateUser(null);
       clearAccessToken();
       invalidateQueries();
       try {
+        localStorage.removeItem('marketlink_user');
         localStorage.setItem('marketlink_signed_out', Date.now().toString());
       } catch {
         // ignore storage errors
       }
     }
-  }, []);
+  }, [updateUser]);
 
   const registerCustomer = useCallback(async (payload) => {
     const data = await apiRegisterCustomer(payload);
     if (data?.user) {
-      setUser(data.user);
+      updateUser(data.user);
     }
     return data;
-  }, []);
+  }, [updateUser]);
 
   const registerFarmer = useCallback(async (payload) => {
     const data = await apiRegisterFarmer(payload);
     if (data?.user) {
-      setUser(data.user);
+      updateUser(data.user);
     }
     return data;
-  }, []);
+  }, [updateUser]);
 
   const refreshUser = useCallback(async () => {
     try {
       const me = await getMe();
       if (me) {
-        setUser(me);
+        updateUser(me);
       }
       return me;
     } catch {
       return null;
     }
-  }, []);
+  }, [updateUser]);
 
   // Fetch active markets to ensure selected market is always valid
   const { data: marketsData } = useQuery(['markets'], ({ signal }) =>
