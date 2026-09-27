@@ -89,7 +89,7 @@ html {
   -webkit-text-size-adjust: 100%;
   background-color: var(--color-bg);
   color: var(--color-text);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -102,7 +102,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   min-height: 100dvh;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
   width: 100%;
   padding-top: env(safe-area-inset-top);
@@ -226,43 +226,22 @@ input[type="search"]::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
 
-/* Any input inside an external styled wrapper (which handles the nice border & focus ring) */
-[class*="Wrapper"] > input,
-[class*="wrapper"] > input,
-[class*="Group"] > input,
-[class*="group"] > input,
-[class*="Wrap"] > input,
-[class*="wrap"] > input,
-[class*="Inner"] > input,
-[class*="inner"] > input,
-[class*="Box"] > input,
-[class*="box"] > input {
+/* Inputs inside dedicated control wrappers (e.g. FormField controlWrapper or data-input-wrapper) */
+[class*="controlWrapper"] > input,
+[data-input-wrapper] > input,
+.bareInput {
   border: none;
   background-color: transparent;
   outline: none !important;
   box-shadow: none !important;
 }
 
-[class*="Wrapper"] > input:focus,
-[class*="Wrapper"] > input:focus-visible,
-[class*="wrapper"] > input:focus,
-[class*="wrapper"] > input:focus-visible,
-[class*="Group"] > input:focus,
-[class*="Group"] > input:focus-visible,
-[class*="group"] > input:focus,
-[class*="group"] > input:focus-visible,
-[class*="Wrap"] > input:focus,
-[class*="Wrap"] > input:focus-visible,
-[class*="wrap"] > input:focus,
-[class*="wrap"] > input:focus-visible,
-[class*="Inner"] > input:focus,
-[class*="Inner"] > input:focus-visible,
-[class*="inner"] > input:focus,
-[class*="inner"] > input:focus-visible,
-[class*="Box"] > input:focus,
-[class*="Box"] > input:focus-visible,
-[class*="box"] > input:focus,
-[class*="box"] > input:focus-visible {
+[class*="controlWrapper"] > input:focus,
+[class*="controlWrapper"] > input:focus-visible,
+[data-input-wrapper] > input:focus,
+[data-input-wrapper] > input:focus-visible,
+.bareInput:focus,
+.bareInput:focus-visible {
   border: none !important;
   outline: none !important;
   outline-offset: 0 !important;

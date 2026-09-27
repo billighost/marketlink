@@ -183,19 +183,27 @@ export default function VendorLayout() {
               <span className={styles.farmerBadge}>Farmer Portal</span>
             </Link>
 
-            <div className={styles.stallCardHeader}>
+            <Link
+              to="/vendor/stall?action=create"
+              className={styles.stallCardHeader}
+              title={stallInfo?.stallName ? 'Configure your stall' : 'Create your farm stall'}
+            >
               <div className={styles.stallMeta}>
-                <span className={styles.stallName} title={stallInfo?.stallName || 'My Stall'}>
-                  {stallInfo?.stallName || 'My Stall'}
+                <span className={styles.stallName} title={stallInfo?.stallName || 'Create Your Stall'}>
+                  {stallInfo?.stallName || '✨ Create Your Stall'}
                 </span>
                 <div className={styles.stallStatusRow}>
                   <span className={styles.livePulseDot} />
                   <span className={styles.stallStatusText}>
-                    {isPending ? 'Pending Approval' : 'Stall Active'}
+                    {stallInfo?.stallName
+                      ? isPending
+                        ? 'Pending Approval'
+                        : 'Stall Active'
+                      : 'Setup Required'}
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
 
             {/* Sidebar Quick Action Bar */}
             <div className={styles.sidebarQuickActions}>

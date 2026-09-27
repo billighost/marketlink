@@ -860,31 +860,239 @@
 .peekModalContent {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+  padding: 6px 2px 14px 2px;
+}
+
+.peekFarmerBanner {
+  display: flex;
+  align-items: center;
   gap: 14px;
-  padding: 4px 0;
+  padding: 12px 14px;
+  background: #fbf9f6;
+  border: 1.5px solid #ebdcd6;
+  border-radius: 14px;
+}
+
+.peekAvatarWrap {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.peekAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.peekFarmerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.peekFarmName {
+  font-family: Georgia, serif;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.peekFarmerSpecialty {
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.82rem;
+  color: #7A2E3B;
+  font-weight: 600;
+  margin: 0;
+}
+
+.peekRatingRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.peekSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.peekSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #7A2E3B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.peekProduceCount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 
 .peekProduceGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
-@media (min-width: 600px) {
+@media (max-width: 440px) {
   .peekProduceGrid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 12px;
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 
 .peekProduceCard {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 10px;
-  background: #fdfdfd;
+  background: #ffffff;
+  border: 1.5px solid #ebdcd6;
+  border-radius: 12px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  transition: all 160ms ease;
+}
+
+.peekProduceCard:hover {
+  border-color: #7A2E3B;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(122, 46, 59, 0.08);
+}
+
+.peekProduceName {
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.peekPriceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.peekPriceNum {
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #7A2E3B;
+}
+
+.peekPriceUnit {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.peekStockStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: #15803d;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.peekStockDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #16a34a;
+}
+
+/* Modal Footer Actions */
+.peekFooterActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.peekCloseBtn {
+  height: 46px;
+  padding: 0 20px;
+  border-radius: 12px;
+  background: #f7f4ef;
+  border: 1px solid #e5ded4;
+  color: #4b5563;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.peekCloseBtn:hover {
+  background: #ebe4d8;
+  color: #1f2937;
+}
+
+.peekCloseBtn:active {
+  transform: scale(0.96);
+}
+
+.peekVisitBtn {
+  flex: 1;
+  height: 46px;
+  padding: 0 20px;
+  border-radius: 12px;
+  background: #7A2E3B;
+  color: #ffffff;
+  border: none;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.92rem;
+  font-weight: 650;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 3px 12px rgba(122, 46, 59, 0.28);
+  transition: all 160ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.peekVisitBtn:hover {
+  background: #5E212B;
+  box-shadow: 0 4px 16px rgba(122, 46, 59, 0.35);
+}
+
+.peekVisitBtn:active {
+  transform: scale(0.98);
 }
 
 /* ─── MOBILE FILTER BOTTOM SHEET STYLES ──────────────────────────── */

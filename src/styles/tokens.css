@@ -43,7 +43,14 @@
   --color-danger:          #B3261E;                  /* errors and destructive confirm buttons */
   --color-danger-bg:       #FBEAE8;
   --color-focus:           var(--color-beet);        /* focus ring colour */
+  --focus-ring:            2px solid var(--color-beet);
+  --focus-offset:          2px;
+  --border-input:          1px solid var(--color-border-input);
   --color-overlay:         rgba(46, 43, 38, 0.40);   /* modal backdrop */
+  --color-ink-muted:       var(--color-ink-soft);
+  --color-warning-subtle:  var(--color-warning-bg);
+  --color-danger-subtle:   var(--color-danger-bg);
+  --color-success-subtle:  var(--color-success-bg);
 
   /* ---------- Typography: families ---------- */
   --font-head: 'Idiqlat', Georgia, 'Times New Roman', serif;
@@ -51,10 +58,12 @@
 
   /* ---------- Typography: weights ---------- */
   --weight-head:     400;   /* Idiqlat has NO weight above 400. Do not change. */
+  --weight-normal:   400;
   --weight-regular:  400;
   --weight-medium:   500;   /* Inter: labels, nav, buttons */
   --weight-semibold: 600;   /* Inter: prices, table headers */
-
+  --weight-bold:     700;
+ 
   /* ---------- Typography: sizes (fluid for headings) ---------- */
   --text-display: clamp(2.5rem, 1.8rem + 3vw, 3.5rem);     /* 40 -> 56px  Hero only */
   --text-h1:      clamp(2rem, 1.6rem + 1.6vw, 2.5rem);     /* 32 -> 40px  Page titles */
@@ -62,17 +71,19 @@
   --text-h3:      1.3125rem;                                /* 21px        Card / sub-section titles */
   --text-h4:      1.125rem;                                 /* 18px        Smallest Idiqlat size */
   --text-lead:    1.125rem;                                 /* 18px  Intro paragraphs */
+  --text-base:    1rem;                                     /* 16px  Standard body */
   --text-body:    0.9375rem;                                /* 15px  Default body */
   --text-input:   1rem;                                     /* 16px  Inputs (prevents iOS zoom) */
   --text-sm:      0.8125rem;                                /* 13px  Captions, labels, badges */
   --text-xs:      0.75rem;                                  /* 12px  Rare: legal text */
-
+ 
   /* ---------- Typography: line heights ---------- */
   --lh-display: 1.1;
   --lh-h1:      1.15;
   --lh-h2:      1.2;
   --lh-h3:      1.3;
   --lh-h4:      1.35;
+  --lh-relaxed: 1.6;
   --lh-body:    1.7;   /* reading text */
   --lh-ui:      1.5;   /* buttons, labels, table cells */
 
@@ -166,8 +177,8 @@
   --sheet-max-height:   85dvh;                           /* bottom sheet maximum height */
   --sheet-tall-height:  92dvh;                           /* tall resting height */
   --sheet-mid-height:   60dvh;                           /* two-stop mid resting height */
-  --sheet-drawer-width: 28rem;                           /* desktop sheet drawer width (28rem - 30rem) */
-  --drawer-width:       28rem;                           /* token alias for drawer width */
+  --sheet-drawer-width: clamp(30rem, 36vw, 36rem);       /* desktop sheet drawer width */
+  --drawer-width:       clamp(30rem, 36vw, 36rem);       /* token alias for drawer width */
   --card-w-product:     clamp(11.5rem, 8.5rem + 10vw, 14.5rem); /* responsive horizontal row product card */
   --card-w-feature:     clamp(14rem, 10rem + 12vw, 18rem); /* featured editorial card */
   --card-w-farmer:      clamp(10rem, 7rem + 10vw, 13rem);  /* farmer card in rows */

@@ -409,6 +409,24 @@ export function Overview() {
         </div>
       </header>
 
+      {/* Setup Stall Prompt if stall has no name yet */}
+      {!stallInfo?.stallName && (
+        <section className={styles.pendingCard} aria-label="Setup stall prompt">
+          <div className={styles.pendingContent}>
+            <div className={styles.pendingTitleRow}>
+              <Sparkles size={18} className={styles.pendingIcon} aria-hidden="true" />
+              <strong>Welcome! Your farm stall is ready to be set up</strong>
+            </div>
+            <p className={styles.pendingDescription}>
+              Configure your grower story, select regional farmers markets, and set pickup windows to start selling fresh harvest.
+            </p>
+          </div>
+          <Link to="/vendor/stall?action=create" className={styles.pendingLink}>
+            Launch Stall Setup Wizard <ChevronRight size={16} aria-hidden="true" />
+          </Link>
+        </section>
+      )}
+
       {/* Pending Approval Calm Notice */}
       {isPending && (
         <section className={styles.pendingCard} aria-label="Approval status">
