@@ -1,18 +1,39 @@
+/* ==========================================================================
+   SmartBasketModal — MarketLink Design System
+   Desktop: centered dialog. Mobile: bottom sheet.
+   Uses design tokens only — no ad-hoc colors.
+   ========================================================================== */
+
 .backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(15, 23, 42, 0.68);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 1100;
+  background: var(--color-overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem;
-  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: var(--space-5);
+  animation: backdropIn var(--duration-base) var(--ease-standard);
 }
 
-@keyframes fadeIn {
+.modal {
+  background: var(--color-bg);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-modal);
+  width: 100%;
+  max-width: var(--container-narrow);
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: modalIn var(--duration-base) var(--ease-standard);
+}
+
+@keyframes backdropIn {
   from {
     opacity: 0;
   }
@@ -21,25 +42,10 @@
   }
 }
 
-.modal {
-  background: #ffffff;
-  border-radius: 1.35rem;
-  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(16, 185, 129, 0.15);
-  width: 100%;
-  max-width: 980px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-}
-
-@keyframes modalScaleUp {
+@keyframes modalIn {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.97);
+    transform: translateY(12px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -47,24 +53,14 @@
   }
 }
 
-/* Custom scrollbar for modal */
-.modal::-webkit-scrollbar {
-  width: 7px;
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .modal {
+    animation: none;
+  }
 }
 
-.modal::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.modal::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.25);
-  border-radius: 4px;
-}
-
-.modal::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.45);
-}
-
+/* ─── Bottom sheet below tablet width ────────────────────────────────────── */
 @media (max-width: 768px) {
   .backdrop {
     padding: 0;
@@ -72,9 +68,16 @@
   }
 
   .modal {
-    max-height: 92vh;
-    border-radius: 1.5rem 1.5rem 0 0;
-    box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.3);
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    max-width: 100%;
+    max-height: var(--sheet-tall-height, 92dvh);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* ─── Small phones ────────────────────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .modal {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 }

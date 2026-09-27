@@ -11,6 +11,54 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './Cart.module.css';
 
 /**
+ * Animated shimmer skeleton shown while cart quote is loading.
+ */
+function CartSkeleton() {
+  const rows = [1, 2, 3];
+  return (
+    <div className={styles.skeletonLayout}>
+      {/* Main column — 2 stall-group skeletons */}
+      <div className={styles.groupsCol}>
+        {[0, 1].map((cardIdx) => (
+          <div key={cardIdx} className={styles.skeletonCard}>
+            {/* Stall header */}
+            <div className={styles.skeletonHeader}>
+              <div className={`${styles.skeletonBase} ${styles.skeletonAvatar}`} />
+              <div className={styles.skeletonHeaderText}>
+                <div className={`${styles.skeletonBase} ${styles.skeletonLine}`} />
+                <div className={`${styles.skeletonBase} ${styles.skeletonLineShort}`} />
+              </div>
+            </div>
+            {/* Item rows */}
+            {rows.map((r) => (
+              <div key={r} className={styles.skeletonRow}>
+                <div className={styles.skeletonRowLeft}>
+                  <div className={`${styles.skeletonBase} ${styles.skeletonLine}`} />
+                  <div className={`${styles.skeletonBase} ${styles.skeletonLineShort}`} />
+                </div>
+                <div className={`${styles.skeletonBase} ${styles.skeletonPrice}`} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Summary sidebar skeleton (desktop only) */}
+      <div className={styles.skeletonSummaryCard}>
+        <div className={`${styles.skeletonBase} ${styles.skeletonSummaryTitle}`} />
+        {rows.map((r) => (
+          <div key={r} className={styles.skeletonSummaryRow}>
+            <div className={`${styles.skeletonBase} ${styles.skeletonSummaryLabel}`} />
+            <div className={`${styles.skeletonBase} ${styles.skeletonSummaryAmt}`} />
+          </div>
+        ))}
+        <div className={`${styles.skeletonBase} ${styles.skeletonBtn}`} />
+      </div>
+    </div>
+  );
+}
+
+/**
  * Basket page (/buyer/basket) — grouped by stall.
  * The entry point to the reservation loop.
  */
@@ -33,6 +81,17 @@ export function Cart() {
   const stallsCount = groups.length || (hasItems ? 1 : 0);
   const totalCents = quote?.totalCents ?? 0;
   const canProceed = Boolean(quote?.canCheckout) && hasItems && !loadingQuote;
+
+  // Summarise collection windows across all groups for the summary card
+  const collectionText = React.useMemo(() => {
+    if (!groups.length) return 'collect at the stall';
+    const slots = groups
+      .map((g) => g.selectedSlot?.label || g.selectedSlot?.start || null)
+      .filter(Boolean);
+    if (!slots.length) return 'collect at the stall';
+    const unique = [...new Set(slots)];
+    return unique.length === 1 ? `collect ${unique[0]}` : 'multiple pickup windows';
+  }, [groups]);
 
   // Scan for blocking issues across groups and lines
   const { stockIssues, cutoffIssues, removedIssues } = React.useMemo(() => {
@@ -111,6 +170,20 @@ export function Cart() {
             actionTo="/buyer/products"
           />
         </div>
+      </Page>
+    );
+  }
+
+  // Show skeleton when items exist but quote hasn't resolved yet
+  if (loadingQuote && groups.length === 0) {
+    return (
+      <Page width="detail" className={styles.page}>
+        <PageTitle
+          title="Basket"
+          backTo="/buyer/products"
+          backLabel="Keep browsing"
+        />
+        <CartSkeleton />
       </Page>
     );
   }
