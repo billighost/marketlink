@@ -204,7 +204,21 @@ export async function executeTool(name, args = {}, { user } = {}) {
       }
 
       const products = items.slice(0, limit).map((p) => {
-        cards.push({ type: 'product', id: p.id });
+        cards.push({
+          type: 'product',
+          id: p.id,
+          data: {
+            id: p.id,
+            name: p.name,
+            priceCents: p.priceCents,
+            unit: p.unit,
+            farmer: p.farmer,
+            availability: p.availability,
+            imageUrl: p.imageUrl,
+            art: p.art,
+            quantityLeft: p.quantityLeft,
+          },
+        });
         return {
           id: p.id,
           name: p.name,
@@ -231,7 +245,7 @@ export async function executeTool(name, args = {}, { user } = {}) {
       }
       try {
         const p = await getProductDetail(args.productId);
-        cards.push({ type: 'product', id: p.id });
+        cards.push({ type: 'product', id: p.id, data: p });
         return {
           result: {
             id: p.id,
@@ -287,11 +301,16 @@ export async function executeTool(name, args = {}, { user } = {}) {
           bio: f.bio,
           operatingDays: f.operatingDays,
           stallNumber: f.stallNumber,
+          specialty: f.specialty,
+          rating: f.rating,
+          reviewCount: f.reviewCount,
+          art: f.art,
+          openToday: f.openToday,
         }));
       }
 
       const farmers = farmersList.map((f) => {
-        cards.push({ type: 'farmer', id: f.id });
+        cards.push({ type: 'farmer', id: f.id, data: f });
         return {
           id: f.id,
           stallName: f.stallName,
@@ -316,7 +335,7 @@ export async function executeTool(name, args = {}, { user } = {}) {
       }
       try {
         const f = await getFarmerDetail(args.farmerId);
-        cards.push({ type: 'farmer', id: f.id });
+        cards.push({ type: 'farmer', id: f.id, data: f });
         const hours = Math.round((f.cutoffMinutesBefore || 720) / 60);
         return {
           result: {
@@ -339,7 +358,7 @@ export async function executeTool(name, args = {}, { user } = {}) {
       const cached = marketHoursCache.get(cacheKey);
       if (cached && Date.now() - cached.time < 60000) {
         if (cached.data.marketId) {
-          cards.push({ type: 'market', id: cached.data.marketId });
+          cards.push({ type: 'market', id: cached.data.marketId, data: cached.data.market });
         }
         return { result: cached.data, cards };
       }
@@ -370,11 +389,22 @@ export async function executeTool(name, args = {}, { user } = {}) {
 
       const marketList = markets.map((m) => {
         const marketId = m._id ? m._id.toString() : m.id;
-        cards.push({ type: 'market', id: marketId });
         const schedule = (m.schedule || []).map((s) => ({
           day: DAY_LABELS[s.day] || s.day,
           hours: `${formatMinutes(s.openMin)} to ${formatMinutes(s.closeMin)}`,
         }));
+        cards.push({
+          type: 'market',
+          id: marketId,
+          data: {
+            id: marketId,
+            name: m.name,
+            address: m.address,
+            city: m.city,
+            schedule: m.schedule,
+            clock: m.clock,
+          },
+        });
         return {
           marketId,
           name: m.name,
@@ -386,6 +416,14 @@ export async function executeTool(name, args = {}, { user } = {}) {
       const data = {
         markets: marketList,
         marketId: marketList[0]?.marketId,
+        market: markets[0] ? {
+          id: markets[0]._id ? markets[0]._id.toString() : markets[0].id,
+          name: markets[0].name,
+          address: markets[0].address,
+          city: markets[0].city,
+          schedule: markets[0].schedule,
+          clock: markets[0].clock,
+        } : null,
       };
 
       marketHoursCache.set(cacheKey, { data, time: Date.now() });
@@ -408,7 +446,21 @@ export async function executeTool(name, args = {}, { user } = {}) {
 
       const products = topProducts.map((p) => {
         const id = p._id.toString();
-        cards.push({ type: 'product', id });
+        cards.push({
+          type: 'product',
+          id,
+          data: {
+            id,
+            name: p.name,
+            priceCents: p.priceCents,
+            unit: p.unit,
+            farmer: p.farmer,
+            availability: p.availability,
+            imageUrl: p.imageUrl,
+            art: p.art,
+            quantityLeft: p.quantityLeft,
+          },
+        });
         return {
           id,
           name: p.name,

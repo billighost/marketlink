@@ -150,7 +150,21 @@ export async function matchAndResolveIntent(entities, user) {
       if (product) {
         return {
           reply: `${product.name} from ${product.farmer?.stallName || 'our local farmers'} is ${formatPrice(product.priceCents)} per ${product.unit}.`,
-          cards: [{ type: 'product', id: product._id.toString() }],
+          cards: [{
+            type: 'product',
+            id: product._id.toString(),
+            data: {
+              id: product._id.toString(),
+              name: product.name,
+              priceCents: product.priceCents,
+              unit: product.unit,
+              farmer: product.farmer,
+              availability: product.availability,
+              imageUrl: product.imageUrl,
+              art: product.art,
+              quantityLeft: product.quantityLeft,
+            },
+          }],
           suggestions: [`Who sells ${product.name}?`, 'When is pickup?', 'What else does this farmer sell?'],
         };
       }
@@ -191,7 +205,18 @@ export async function matchAndResolveIntent(entities, user) {
 
       return {
         reply: `${matchedMarket.name} is open ${schedText} at ${matchedMarket.address}.`,
-        cards: [{ type: 'market', id: matchedMarket._id.toString() }],
+        cards: [{
+          type: 'market',
+          id: matchedMarket._id.toString(),
+          data: {
+            id: matchedMarket._id.toString(),
+            name: matchedMarket.name,
+            address: matchedMarket.address,
+            city: matchedMarket.city,
+            schedule: matchedMarket.schedule,
+            clock: matchedMarket.clock,
+          },
+        }],
         suggestions: [`Who sells at ${matchedMarket.name}?`, "What's fresh on Saturday?", 'Market directions'],
       };
     }
@@ -216,7 +241,20 @@ export async function matchAndResolveIntent(entities, user) {
 
     return {
       reply: `${matchedFarmer.stallName} attends ${marketName} on ${days || 'weekends'}${stallInfo}.`,
-      cards: [{ type: 'farmer', id: matchedFarmer._id.toString() }],
+      cards: [{
+        type: 'farmer',
+        id: matchedFarmer._id.toString(),
+        data: {
+          id: matchedFarmer._id.toString(),
+          stallName: matchedFarmer.stallName,
+          specialty: matchedFarmer.specialty,
+          stallNumber: matchedFarmer.stallNumber,
+          rating: matchedFarmer.rating,
+          reviewCount: matchedFarmer.reviewCount,
+          art: matchedFarmer.art,
+          openToday: matchedFarmer.openToday,
+        },
+      }],
       suggestions: [`What does ${matchedFarmer.stallName} sell?`, 'When is the cut-off?', 'View all farmers'],
     };
   }
@@ -262,7 +300,21 @@ export async function matchAndResolveIntent(entities, user) {
 
         return {
           reply: `We have ${sellers}. Pre-orders are open for pickup!`,
-          cards: products.map((p) => ({ type: 'product', id: p._id.toString() })),
+          cards: products.map((p) => ({
+            type: 'product',
+            id: p._id.toString(),
+            data: {
+              id: p._id.toString(),
+              name: p.name,
+              priceCents: p.priceCents,
+              unit: p.unit,
+              farmer: p.farmer,
+              availability: p.availability,
+              imageUrl: p.imageUrl,
+              art: p.art,
+              quantityLeft: p.quantityLeft,
+            },
+          })),
           suggestions: [`How much are ${products[0].name}?`, 'When can I pick up?', "What's fresh on Saturday?"],
         };
       }
@@ -288,7 +340,21 @@ export async function matchAndResolveIntent(entities, user) {
 
       return {
         reply: `Here are some popular fresh items ready for ${dayLabel}: ${names}.`,
-        cards: topProducts.map((p) => ({ type: 'product', id: p._id.toString() })),
+        cards: topProducts.map((p) => ({
+          type: 'product',
+          id: p._id.toString(),
+          data: {
+            id: p._id.toString(),
+            name: p.name,
+            priceCents: p.priceCents,
+            unit: p.unit,
+            farmer: p.farmer,
+            availability: p.availability,
+            imageUrl: p.imageUrl,
+            art: p.art,
+            quantityLeft: p.quantityLeft,
+          },
+        })),
         suggestions: ['Who sells eggs?', 'Market hours', 'How to pre-order'],
       };
     }
