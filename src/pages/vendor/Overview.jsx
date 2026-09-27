@@ -308,16 +308,16 @@ export function Overview() {
   // Sparkline data extracted from 7d history or fallback
   const sparklineRevenue = useMemo(() => {
     if (overviewData?.sparkline7d && overviewData.sparkline7d.length > 0) {
-      return overviewData.sparkline7d.map((d) => d.revenueCents / 100);
+      return overviewData.sparkline7d.map((d) => (d.revenueCents || 0) / 100);
     }
-    return [10, 15, 25, 18, 30, 42, 38];
+    return [0, 0, 0, 0, 0, 0, 0];
   }, [overviewData]);
 
   const sparklineOrders = useMemo(() => {
     if (overviewData?.sparkline7d && overviewData.sparkline7d.length > 0) {
-      return overviewData.sparkline7d.map((d) => d.orders);
+      return overviewData.sparkline7d.map((d) => d.orders || 0);
     }
-    return [1, 2, 4, 3, 5, 8, 7];
+    return [0, 0, 0, 0, 0, 0, 0];
   }, [overviewData]);
 
   // Derived stats
@@ -332,11 +332,11 @@ export function Overview() {
     ? formatPrice(overviewData.revenue.weekCents)
     : weekInsights?.revenueCents != null
     ? formatPrice(weekInsights.revenueCents)
-    : '$26.00';
+    : '$0.00';
 
   const totalRevenueDisplay = overviewData?.revenue?.totalCents != null
     ? formatPrice(overviewData.revenue.totalCents)
-    : '$48.50';
+    : '$0.00';
 
   const publicStallUrl = stallInfo?.id || stallInfo?._id
     ? `/farmers/${stallInfo.id || stallInfo._id}`
@@ -355,9 +355,13 @@ export function Overview() {
               <h1 className={styles.greetingText}>{getGreeting()}</h1>
               <div className={styles.stallSubtext}>
                 <Store size={14} />
-                <strong>{stallInfo?.stallName || overviewData?.stallName || 'Riverbend Farm'}</strong>
-                <span>•</span>
-                <span>{stallInfo?.stallNumber || overviewData?.stallNumber || 'Stall 4'}</span>
+                <strong>{stallInfo?.stallName || overviewData?.stallName || user?.name || 'My Farm Stall'}</strong>
+                {Boolean(stallInfo?.stallNumber || overviewData?.stallNumber) && (
+                  <>
+                    <span>•</span>
+                    <span>{stallInfo?.stallNumber || overviewData?.stallNumber}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -389,7 +393,11 @@ export function Overview() {
             <span>
               Next Fulfillment:{' '}
               <strong>
-                {overviewData?.nextMarket?.name || 'Saturday Elm Street Market'} (8 AM – 1 PM)
+                {overviewData?.nextMarket?.name
+                  ? `${overviewData.nextMarket.name} (8 AM – 1 PM)`
+                  : Array.isArray(stallInfo?.operatingDays) && stallInfo.operatingDays.length > 0
+                  ? `${stallInfo.operatingDays.map((d) => d.toUpperCase()).join(', ')} Pickups Scheduled`
+                  : 'Configure schedule in My Stall'}
               </strong>
             </span>
           </div>
@@ -552,7 +560,7 @@ export function Overview() {
                 </div>
               </div>
               <div className={styles.statMainValue}>
-                {(overviewData?.topProducts || []).length || 5}{' '}
+                {(overviewData?.topProducts || []).length}{' '}
                 <span style={{ fontSize: '0.9rem', fontWeight: '500', color: '#6b7280' }}>
                   Active Items
                 </span>

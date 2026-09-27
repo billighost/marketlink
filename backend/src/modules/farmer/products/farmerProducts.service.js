@@ -408,7 +408,16 @@ export async function createFarmerProduct(farmerId, body) {
     availability = 'low';
   }
 
-  const listed = Boolean(farmer.listingEnabled && availability !== 'hidden');
+  let isListing = Boolean(farmer.listingEnabled);
+  if (!isListing && farmer.stallName) {
+    await db.collection(COLLECTIONS.FARMERS).updateOne(
+      { _id: fId },
+      { $set: { listingEnabled: true, updatedAt: new Date() } }
+    );
+    isListing = true;
+  }
+
+  const listed = Boolean(isListing && availability !== 'hidden');
   const now = new Date();
   const newProductId = new ObjectId();
 

@@ -10,7 +10,7 @@ import { COLLECTIONS } from '../../../db/collections.js';
 import { toObjectId } from '../../../utils/ids.js';
 import { AppError } from '../../../utils/errors.js';
 import { clearSlotsCache } from '../../../utils/slots.js';
-import { syncFarmerStallInfo, syncFarmerMarkets } from '../../../utils/sync.js';
+import { syncFarmerStallInfo, syncFarmerMarkets, syncFarmerApproval } from '../../../utils/sync.js';
 import { env } from '../../../config/env.js';
 import { validateAndAttachImage } from '../../uploads/attachHelper.js';
 
@@ -228,6 +228,19 @@ export async function updateFarmerProfile(userId, updates) {
 
   if (updates.marketIds !== undefined) {
     await syncFarmerMarkets(farmer._id, updates.marketIds, farmer.marketIds || [], { db });
+  }
+
+  // If farmer has configured stall details, auto-activate user and enable listings
+  const finalStallName = updates.stallName || farmer.stallName;
+  const finalOperatingDays = effectiveOperatingDays;
+  if (finalStallName && finalOperatingDays?.length > 0) {
+    await db.collection(COLLECTIONS.USERS).updateOne(
+      { _id: uid, status: 'pending' },
+      { $set: { status: 'active', updatedAt: new Date() } }
+    );
+    if (!farmer.listingEnabled) {
+      await syncFarmerApproval(farmer._id, { db });
+    }
   }
 
   // Clear slots cache so upcoming slots reflect changes

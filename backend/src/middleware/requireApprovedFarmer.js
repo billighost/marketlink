@@ -48,13 +48,21 @@ export async function requireApprovedFarmer(req, res, next) {
     }
 
     if (user.status === 'pending') {
-      return next(
-        new AppError(
-          403,
-          'FARMER_NOT_APPROVED',
-          'Your stall is waiting for approval. You can add products once it is approved.'
-        )
-      );
+      const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ userId });
+      if (farmer && farmer.stallName) {
+        await db.collection(COLLECTIONS.USERS).updateOne(
+          { _id: userId },
+          { $set: { status: 'active', updatedAt: new Date() } }
+        );
+      } else {
+        return next(
+          new AppError(
+            403,
+            'FARMER_NOT_APPROVED',
+            'Your stall is waiting for setup. Please launch your stall to start adding products.'
+          )
+        );
+      }
     }
 
     if (user.status !== 'active') {

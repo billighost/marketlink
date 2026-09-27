@@ -333,18 +333,16 @@ export function Stock() {
           >
             <span>Apply Schedule</span>
           </button>
-          {!isPending && (
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              onClick={() => setSheetMode('new')}
-              className={styles.addPrimaryBtn}
-            >
-              <Plus size={16} aria-hidden="true" />
-              <span>Add Produce</span>
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            onClick={() => setSheetMode('new')}
+            className={styles.addPrimaryBtn}
+          >
+            <Plus size={16} aria-hidden="true" />
+            <span>Add Produce</span>
+          </Button>
         </div>
       </header>
 
@@ -545,8 +543,8 @@ export function Stock() {
                 ? `No items found matching "${search}". Try checking for spelling or clear the filter.`
                 : 'Add fresh crops or use your weekly template to restock in one click.'
             }
-            actionLabel={!isPending ? 'Add a Product' : undefined}
-            onAction={!isPending ? () => setSheetMode('new') : undefined}
+            actionLabel="Add a Product"
+            onAction={() => setSheetMode('new')}
           />
         </div>
       ) : viewMode === 'grid' ? (
@@ -796,20 +794,18 @@ export function Stock() {
       )}
 
       {/* Mobile Sticky Action: Add a product */}
-      {!isPending && (
-        <div className={styles.stickyFooter}>
-          <Button
-            type="button"
-            variant="primary"
-            size="lg"
-            onClick={() => setSheetMode('new')}
-            className={styles.addStickyBtn}
-          >
-            <Plus size={18} aria-hidden="true" />
-            <span>Add New Produce</span>
-          </Button>
-        </div>
-      )}
+      <div className={styles.stickyFooter}>
+        <Button
+          type="button"
+          variant="primary"
+          size="lg"
+          onClick={() => setSheetMode('new')}
+          className={styles.addStickyBtn}
+        >
+          <Plus size={18} aria-hidden="true" />
+          <span>Add New Produce</span>
+        </Button>
+      </div>
 
       {/* Add / Edit Product Sheet */}
       {(sheetMode === 'new' || sheetMode === 'edit') && (

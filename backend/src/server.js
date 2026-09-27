@@ -34,7 +34,7 @@ async function bootstrap() {
     server.headersTimeout = 31000; // slightly longer than keepAliveTimeout
     server.keepAliveTimeout = 30000; // 30s idle keep-alive
 
-    server.listen(env.PORT, '0.0.0.0', () => {
+    server.listen(env.PORT, () => {
       console.log(`[SERVER] MarketLink API listening on http://localhost:${env.PORT}/api`);
       console.log(`[SERVER] Health check ready at http://localhost:${env.PORT}/api/health`);
     });

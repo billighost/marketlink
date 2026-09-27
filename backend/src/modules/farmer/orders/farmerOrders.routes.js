@@ -53,6 +53,22 @@ const routes = [
       }
     },
   },
+  {
+    method: 'get',
+    path: '/picklist',
+    auth: 'farmer',
+    middlewares: [resolveFarmer],
+    summary: 'Get daily pick list aggregated by product and pickup window (alias)',
+    handler: async (req, res, next) => {
+      try {
+        const date = req.query.date || new Date().toISOString().slice(0, 10);
+        const result = await getPickList(req.farmer._id, date);
+        res.json({ data: result });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
 
   // ── Orders Listing ──
   {
