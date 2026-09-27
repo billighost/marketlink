@@ -166,6 +166,17 @@ export function toFarmerDetail(f, { markets = [], ratingBreakdown = {}, productC
     location: loc,
     pickupWindows: Array.isArray(f.pickupWindows) ? f.pickupWindows : [],
     cutoffMinutesBefore: f.cutoffMinutesBefore ?? 720,
+    markets: markets.map((m) => {
+      const mLoc = fromGeoPoint(m.location) || null;
+      return {
+        id: m._id ? m._id.toString() : m.id,
+        name: m.name,
+        slug: m.slug || '',
+        address: m.address || '',
+        location: mLoc,
+        schedule: Array.isArray(m.schedule) ? m.schedule : [],
+      };
+    }),
     ratingBreakdown: {
       5: ratingBreakdown[5] || 0,
       4: ratingBreakdown[4] || 0,

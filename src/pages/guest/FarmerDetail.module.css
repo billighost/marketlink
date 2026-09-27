@@ -921,3 +921,741 @@
 .guaranteeBtn:hover {
   background-color: #3e0e16;
 }
+
+/* ─── HARVEST CATALOG FILTERS & SEARCH ────────────────────────── */
+.catalogToolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.searchAndAvailabilityRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.searchWrap {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  max-width: 380px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8c8175;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  border: 1px solid #dcd1c8;
+  border-radius: 8px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  background-color: #faf7f5;
+  color: #24201c;
+  outline: none;
+  transition: all 120ms ease;
+}
+
+.searchInput:focus {
+  background-color: #ffffff;
+  border-color: #541722;
+  box-shadow: 0 0 0 3px rgba(84, 23, 34, 0.1);
+}
+
+.categoryChipsList {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.categoryChipsList::-webkit-scrollbar {
+  display: none;
+}
+
+.categoryChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #dcd1c8;
+  background-color: #ffffff;
+  color: #595147;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 120ms ease;
+}
+
+.categoryChip:hover {
+  border-color: #a89f97;
+  color: #24201c;
+}
+
+.categoryChipActive {
+  background-color: #541722;
+  border-color: #541722;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.categoryChipActive:hover {
+  background-color: #3e0e16;
+  border-color: #3e0e16;
+  color: #ffffff;
+}
+
+.inStockToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #dcd1c8;
+  border-radius: 6px;
+  background-color: #ffffff;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #595147;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.inStockToggleBtnActive {
+  background-color: #e5f6e8;
+  border-color: #8ed09c;
+  color: #175e21;
+}
+
+/* ─── CATALOG CALLOUT BANNER ─────────────────────────────────── */
+.preorderCallout {
+  margin-top: 28px;
+  background: linear-gradient(135deg, #faede9 0%, #fef8f6 100%);
+  border: 1px solid #e8d2cb;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 680px) {
+  .preorderCallout {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.preorderCalloutLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.preorderCalloutIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: #541722;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.preorderCalloutTitle {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #4a1521;
+  margin: 0 0 4px 0;
+}
+
+.preorderCalloutText {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #595147;
+  margin: 0;
+}
+
+.preorderCalloutActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btnPrimarySmall {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background-color: #541722;
+  color: #ffffff;
+  border-radius: 7px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+  white-space: nowrap;
+}
+
+.btnPrimarySmall:hover {
+  background-color: #3e0e16;
+}
+
+.btnSecondarySmall {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  background-color: #ffffff;
+  border: 1px solid #dcd1c8;
+  color: #2e2b26;
+  border-radius: 7px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.btnSecondarySmall:hover {
+  border-color: #541722;
+  color: #541722;
+}
+
+/* ─── MEET THE GROWER SPOTLIGHT ──────────────────────────────── */
+.meetGrowerBox {
+  background: #ffffff;
+  border: 1px solid #ebe1db;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+@media (min-width: 600px) {
+  .meetGrowerBox {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.meetGrowerAvatarWrap {
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid #541722;
+  flex-shrink: 0;
+}
+
+.meetGrowerAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.meetGrowerBody {
+  flex: 1;
+}
+
+.meetGrowerHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.meetGrowerName {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #4a1521;
+  margin: 0;
+}
+
+.meetGrowerRole {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #8c8175;
+  background-color: #faf5f2;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.meetGrowerQuote {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #3c342d;
+  margin: 0 0 10px 0;
+  border-left: 3px solid #541722;
+  padding-left: 12px;
+}
+
+.meetGrowerDetails {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.775rem;
+  line-height: 1.5;
+  color: #6b6259;
+  margin: 0;
+}
+
+/* ─── FOUR-SEASON HARVEST CALENDAR ───────────────────────────── */
+.seasonsCard {
+  background-color: #ffffff;
+  border: 1px solid #ebe1db;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 20px;
+}
+
+.seasonsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+@media (min-width: 600px) {
+  .seasonsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .seasonsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.seasonBox {
+  background-color: #faf7f5;
+  border: 1px solid #ede3dc;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seasonBoxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.seasonTitle {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #4a1521;
+  margin: 0;
+}
+
+.seasonMonths {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.6875rem;
+  color: #8c8175;
+}
+
+.seasonCropsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.seasonCropItem {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  color: #4a433b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.seasonCropBullet {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #541722;
+  flex-shrink: 0;
+}
+
+/* ─── HOW PICKUP WORKS 4 STEPS ───────────────────────────────── */
+.pickupGuideCard {
+  background-color: #ffffff;
+  border: 1px solid #ebe1db;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.pickupStepsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (min-width: 600px) {
+  .pickupStepsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 860px) {
+  .pickupStepsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.pickupStepBox {
+  background-color: #faf7f5;
+  border: 1px solid #ede3dc;
+  border-radius: 10px;
+  padding: 16px;
+  position: relative;
+}
+
+.stepNumberBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #541722;
+  color: #ffffff;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.stepTitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #2e2b26;
+  margin: 0 0 6px 0;
+}
+
+.stepDesc {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #6b6259;
+  margin: 0;
+}
+
+/* ─── REVIEWS BREAKDOWN & REPLIES ────────────────────────────── */
+.reviewsRatingContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 680px) {
+  .reviewsRatingContainer {
+    grid-template-columns: 220px 1fr;
+    gap: 20px;
+  }
+}
+
+.breakdownBarsList {
+  background-color: #ffffff;
+  border: 1px solid #ebe1db;
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.breakdownRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+}
+
+.breakdownStarLabel {
+  width: 50px;
+  color: #595147;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breakdownBarTrack {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background-color: #f0e8e2;
+  overflow: hidden;
+}
+
+.breakdownBarFill {
+  height: 100%;
+  background-color: #e07a2c;
+  border-radius: 999px;
+}
+
+.breakdownCount {
+  width: 28px;
+  text-align: right;
+  color: #8c8175;
+}
+
+.reviewReplyBox {
+  margin-top: 12px;
+  background-color: #faf7f5;
+  border-left: 3px solid #541722;
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+}
+
+.reviewReplyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.reviewReplyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #541722;
+}
+
+.reviewReplyDate {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.6875rem;
+  color: #8c8175;
+}
+
+.reviewReplyText {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.775rem;
+  line-height: 1.5;
+  color: #4a433b;
+  margin: 0;
+}
+
+/* ─── STALL FAQ ACCORDION ────────────────────────────────────── */
+.faqCard {
+  background-color: #ffffff;
+  border: 1px solid #ebe1db;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.faqItem {
+  border: 1px solid #ede3dc;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #faf7f5;
+  transition: all 120ms ease;
+}
+
+.faqItemOpen {
+  border-color: #d6c6bc;
+  background-color: #ffffff;
+}
+
+.faqQuestionBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #2e2b26;
+  text-align: left;
+  cursor: pointer;
+  gap: 10px;
+}
+
+.faqQuestionBtn:hover {
+  color: #541722;
+}
+
+.faqAnswer {
+  padding: 0 16px 14px 16px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #595147;
+  margin: 0;
+}
+
+/* ─── BOTTOM DISCOVERY / OTHER GROWERS ───────────────────────── */
+.otherGrowersSection {
+  margin-top: 48px;
+  padding-top: 36px;
+  border-top: 1px solid #eee4df;
+}
+
+.otherGrowersHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.otherGrowersGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .otherGrowersGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .otherGrowersGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.otherGrowerCard {
+  background-color: #ffffff;
+  border: 1px solid #ebe1db;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 4px rgba(46, 43, 38, 0.04);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.otherGrowerCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(46, 43, 38, 0.08);
+}
+
+.otherGrowerCover {
+  height: 120px;
+  width: 100%;
+  position: relative;
+  background-color: #f5eee8;
+}
+
+.otherGrowerCoverImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.otherGrowerAvatar {
+  position: absolute;
+  bottom: -20px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  overflow: hidden;
+  background-color: #faf5f2;
+}
+
+.otherGrowerAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.otherGrowerBody {
+  padding: 28px 16px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.otherGrowerName {
+  font-family: Georgia, 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #24201c;
+  margin: 0 0 2px 0;
+}
+
+.otherGrowerSpecialty {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  color: #6b6259;
+  margin: 0 0 10px 0;
+}
+
+.otherGrowerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #f6f0ec;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  color: #595147;
+}
+
+.otherGrowerRating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+}
+
