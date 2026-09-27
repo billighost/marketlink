@@ -22,6 +22,10 @@ import {
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import siteContent from '@/content/siteContent';
+import billalImg from '@/asset/billal.png';
+import ayoImg from '@/asset/ayo.png';
+import malikImg from '@/asset/malik.png';
+import aliyahImg from '@/asset/Aliyah.jpeg';
 import styles from './About.module.css';
 
 const STATS = [
@@ -103,32 +107,32 @@ const TIMELINE_STEPS = [
 
 const TEAM = [
   {
-    name: 'Elena Vance',
-    role: 'Co-Founder & Organic Soil Cultivator',
-    farm: 'Riverbend Farm (Hudson Valley, NY)',
-    image: '/images/farmer-elena.jpg',
-    bio: 'Fourth-generation grower managing 45 certified organic acres along the Hudson. Elena co-founded MarketLink to protect family farms from predatory distributor margins.',
+    name: 'Bello Bilal Olamiposi',
+    role: 'Systems Architect & Software Engineer',
+    image: billalImg,
+    fallbackImage: '/images/team/billal.png',
+    bio: 'Self-taught systems architect and tech entrepreneur with a passion for civic platforms. Bilal began programming at 14 and has engineered digital products including DevDrill, Dezola Studio, and inDeck.',
   },
   {
-    name: 'Marcus Bennett',
-    role: 'Regional Market Operations Director',
-    farm: 'Greenwich Village Farmers Alliance',
-    image: '/images/farmer-marcus.jpg',
-    bio: 'Former agricultural economist and fifteen-year market manager dedicated to revitalizing historic urban square markets across Lower Manhattan.',
+    name: 'Ayomide Alao',
+    role: 'Software Developer & Systems Engineer',
+    image: ayoImg,
+    fallbackImage: '/images/team/ayo.png',
+    bio: 'Self-taught software developer and systems engineer based in Ibadan. An alumnus of the ALX Software Engineering program, Ayomide specializes in web technologies and systems engineering at Aptech.',
   },
   {
-    name: 'Priya Patel',
-    role: 'Heritage Grains Specialist & Artisan Baker',
-    farm: 'Oak & Mill Bakery (Kingston, NY)',
-    image: '/images/hero-carrots.jpg',
-    bio: 'Priya champions stone-milled New York wheat varieties, baking naturally fermented sourdough boules in wood-fired stone deck ovens.',
+    name: 'Okunola Abdulmaleek',
+    role: 'Software Developer & Creative Technologist',
+    image: malikImg,
+    fallbackImage: '/images/team/malik.png',
+    bio: 'Creative technologist pursuing an ADSE at Aptech. Experienced in web development, databases, and digital products, Abdulmaleek is also building Mandrixx Music, a streaming platform.',
   },
   {
-    name: 'David Cho',
-    role: 'Food Access & Community Partnerships',
-    farm: 'Orchard & Grove Collective',
-    image: '/images/farmer-david.jpg',
-    bio: 'David directs our partnerships with SNAP/EBT and FMNP programs, ensuring that fresh farm produce is accessible to every community household.',
+    name: 'Aliyah Adeleke',
+    role: 'Software Developer & Team Leader',
+    image: aliyahImg,
+    fallbackImage: '/images/team/Aliyah.jpeg',
+    bio: 'Software developer and team leader skilled in React, React Native, and Node.js. Aliyah is passionate about engineering impactful web and mobile solutions to solve real-life problems.',
   },
 ];
 

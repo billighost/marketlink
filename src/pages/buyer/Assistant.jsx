@@ -9,6 +9,7 @@ import MarketCard from '@/components/domain/MarketCard';
 import Page from '@/components/layout/Page';
 import PageTitle from '@/components/layout/PageTitle';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useSmartBasket } from '@/context/SmartBasketContext';
 import styles from './Assistant.module.css';
 
 const SUGGESTED_PROMPTS = [
@@ -96,7 +97,12 @@ function AssistantEntityCard({ card }) {
     );
   }
 
+  const { openSmartBasket } = useSmartBasket();
+
   if (card.type === 'action' && card.action === 'open-smart-basket') {
+    const budgetNum = card.params?.budget;
+    const budgetLabel = budgetNum ? `₦${Number(budgetNum).toLocaleString()}` : 'your budget';
+
     return (
       <div className={styles.actionCard}>
         <div className={styles.actionCardHeader}>
@@ -106,15 +112,17 @@ function AssistantEntityCard({ card }) {
           <div>
             <h4 className={styles.actionCardTitle}>{card.label || 'Build Smart Basket'}</h4>
             <p className={styles.actionCardSub}>
-              {card.params?.budget
-                ? `Custom basket curated within ${card.params.budget}`
-                : 'Custom basket curated from fresh market produce'}
+              Custom produce bundle curated within {budgetLabel} from real market inventory
             </p>
           </div>
         </div>
-        <Link to="/buyer/basket" className={styles.actionCardBtn}>
-          Start Smart Basket
-        </Link>
+        <button
+          type="button"
+          onClick={() => openSmartBasket(card.params)}
+          className={styles.actionCardBtn}
+        >
+          {card.label || 'Start Smart Basket'}
+        </button>
       </div>
     );
   }

@@ -42,6 +42,7 @@ export const PATHS = {
   BUYER_STALLS:            '/buyer/stalls',
   BUYER_STALL_DETAIL:      '/buyer/stalls/:id',
   BUYER_BASKET:            '/buyer/basket',
+  BUYER_SMART_BASKET:      '/buyer/smart-basket',
   BUYER_CHECKOUT:          '/buyer/checkout',
   BUYER_ORDER_CONFIRMED_ID:'/buyer/orders/:id/confirmed',
   BUYER_SAVED:             '/buyer/saved',

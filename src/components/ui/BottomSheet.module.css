@@ -65,11 +65,11 @@
 /* Top grabber indicator */
 .grabberZone {
   width: 100%;
-  height: 20px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 8px;
+  padding-top: 10px;
   touch-action: none;
   cursor: grab;
   flex-shrink: 0;
@@ -105,6 +105,7 @@
   user-select: none;
   -webkit-user-select: none;
   cursor: grab;
+  background: var(--color-white);
 }
 
 .header:active {
@@ -204,6 +205,7 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: rgba(122, 46, 59, 0.2) transparent;
+  padding: 16px 20px 32px;
 }
 
 .body::-webkit-scrollbar {

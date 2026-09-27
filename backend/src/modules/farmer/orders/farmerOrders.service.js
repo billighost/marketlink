@@ -60,6 +60,8 @@ export function toFarmerOrderDto(order, customerMap) {
     cancelReason: order.cancelReason || null,
     note: order.note || '',
     pickupCode: order.pickupCode || null,
+    source: order.source || (order.isSmartBasket ? 'smart_basket' : 'standard'),
+    isSmartBasket: Boolean(order.isSmartBasket || order.source === 'smart_basket'),
     createdAt: order.createdAt instanceof Date ? order.createdAt.toISOString() : order.createdAt,
     updatedAt: order.updatedAt instanceof Date ? order.updatedAt.toISOString() : order.updatedAt,
   };
@@ -112,9 +114,16 @@ export async function listFarmerOrders(farmerId, query = {}) {
     ];
   }
 
+  if (query.source === 'smart_basket' || query.isSmartBasket === 'true') {
+    filter.$or = [
+      { isSmartBasket: true },
+      { source: 'smart_basket' },
+    ];
+  }
+
   const limit = Math.min(100, Math.max(1, parseInt(query.limit || 20, 10)));
 
-  const [orders, countAgg] = await Promise.all([
+  const [orders, countAgg, smartBasketCount] = await Promise.all([
     db
       .collection(COLLECTIONS.ORDERS)
       .find(filter)
@@ -128,6 +137,10 @@ export async function listFarmerOrders(farmerId, query = {}) {
         { $group: { _id: '$status', count: { $sum: 1 } } },
       ])
       .toArray(),
+    db.collection(COLLECTIONS.ORDERS).countDocuments({
+      farmerId: fId,
+      $or: [{ isSmartBasket: true }, { source: 'smart_basket' }],
+    }),
   ]);
 
   const counts = {
@@ -137,6 +150,7 @@ export async function listFarmerOrders(farmerId, query = {}) {
     completed: 0,
     cancelled: 0,
     declined: 0,
+    smartBasket: smartBasketCount || 0,
   };
 
   for (const item of countAgg) {

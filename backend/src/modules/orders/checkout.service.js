@@ -399,6 +399,8 @@ export async function processCheckout({ user, idempotencyKey, groups, now = new 
         cutoffAt,
         slotKey,
         note: group.note ? group.note.trim() : '',
+        source: group.source || (group.isSmartBasket ? 'smart_basket' : 'standard'),
+        isSmartBasket: Boolean(group.isSmartBasket || group.source === 'smart_basket'),
         timeline: [{ status: 'placed', at: now, byRole: 'customer' }],
         cancelReason: null,
         reviewed: false,

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Clock } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import { useAuth, homePathFor } from '@/context/AuthContext';
 import { resendVerification } from '@/api/auth';
@@ -24,7 +24,7 @@ export function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { login, isAuthenticated, user } = useAuth();
+  const { login, isAuthenticated, user, role: userRole } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,14 +44,18 @@ export function Login() {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
+  const isSessionExpired =
+    searchParams.get('reason') === 'expired' ||
+    sessionStorage.getItem('marketlink_session_expired') === 'true';
+
   // If already authenticated, redirect
   useEffect(() => {
     if (isAuthenticated) {
-      const rawNext = searchParams.get('next') || location.state?.from?.pathname;
-      const dest = safeNext(rawNext) || homePathFor(user?.role);
+      const rawNext = searchParams.get('next') || searchParams.get('redirect') || location.state?.from?.pathname;
+      const dest = safeNext(rawNext) || homePathFor(user?.role || userRole);
       navigate(dest, { replace: true });
     }
-  }, [isAuthenticated, user, searchParams, location, navigate]);
+  }, [isAuthenticated, user, userRole, searchParams, location, navigate]);
 
   const validateField = (name, val) => {
     if (name === 'email') {
@@ -106,7 +110,7 @@ export function Login() {
     try {
       const data = await login(email.trim(), password);
       const role = data?.user?.role;
-      const rawNext = searchParams.get('next') || location.state?.from?.pathname;
+      const rawNext = searchParams.get('next') || searchParams.get('redirect') || location.state?.from?.pathname;
       const dest = safeNext(rawNext) || homePathFor(role);
       navigate(dest, { replace: true });
     } catch (err) {
@@ -161,6 +165,16 @@ export function Login() {
         </span>
       }
     >
+      {/* Session Expired Notice */}
+      {isSessionExpired && (
+        <div role="status" className={authStyles.bannerSuccess}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Clock size={16} aria-hidden="true" />
+            <p style={{ margin: 0 }}>Your session has expired. Please sign in to resume where you left off.</p>
+          </div>
+        </div>
+      )}
+
       {/* Alert banner for page-level errors */}
       {bannerError && (
         <div role="alert" className={authStyles.bannerError}>

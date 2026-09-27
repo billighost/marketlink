@@ -26,6 +26,19 @@ export function formatPrice(cents) {
 export const formatCurrency = formatPrice;
 
 /**
+ * Format amount as Nigerian Naira (e.g. ₦10,000 or ₦2,500)
+ * @param {number} amount
+ * @returns {string}
+ */
+export function formatNaira(amount) {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    return '₦0';
+  }
+  const clean = Math.round(amount);
+  return `₦${new Intl.NumberFormat('en-NG').format(clean)}`;
+}
+
+/**
  * Parses a dollar string ($4.50 or 4.5) to integer cents using integer math.
  * Split on '.' and pad string - no floating point math allowed.
  * @param {string} str

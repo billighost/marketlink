@@ -57,7 +57,7 @@ const routes = [
         ]);
       }
 
-      rejectUnknownFields(req.body, ['groups']);
+      rejectUnknownFields(req.body, ['groups', 'source', 'isSmartBasket']);
       const details = [];
 
       if (!req.body || !Array.isArray(req.body.groups)) {
@@ -80,7 +80,7 @@ const routes = [
           continue;
         }
 
-        rejectUnknownFields(g, ['farmerId', 'slotStart', 'note', 'items']);
+        rejectUnknownFields(g, ['farmerId', 'slotStart', 'note', 'items', 'source', 'isSmartBasket']);
 
         if (!g.farmerId || !isValidObjectId(g.farmerId)) {
           details.push({ field: `groups[${gIdx}].farmerId`, message: 'farmerId must be a valid identifier.' });
@@ -140,11 +140,20 @@ const routes = [
           });
         }
 
+        const isSmartBasket = Boolean(
+          g.isSmartBasket ||
+          req.body.isSmartBasket ||
+          g.source === 'smart_basket' ||
+          req.body.source === 'smart_basket'
+        );
+
         validatedGroups.push({
           farmerId: g.farmerId,
           slotStart: slotStartDate ? slotStartDate.toISOString() : undefined,
           note: note || '',
           items: validatedItems,
+          source: isSmartBasket ? 'smart_basket' : (g.source || req.body.source || 'standard'),
+          isSmartBasket,
         });
       }
 

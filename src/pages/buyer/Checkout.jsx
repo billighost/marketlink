@@ -28,10 +28,15 @@ export function Checkout() {
     quote,
     loadingQuote,
     performCheckout,
+    setQuantity,
+    setSlot,
+    remove,
+    refreshQuote,
+    resetIdempotencyKey,
   } = useCart();
 
   const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [errorState, setErrorState] = useState(null);
 
   // Idempotency key held in a ref: generated once per attempt and stable across re-renders
   const idempotencyKeyRef = useRef(null);
@@ -58,6 +63,28 @@ export function Checkout() {
     return list;
   }, [groups]);
 
+  // Pre-emptive issues detected from server quote
+  const quoteIssues = useMemo(() => {
+    const issues = [];
+    for (const g of groups) {
+      if (Array.isArray(g.issues)) {
+        for (const issue of g.issues) {
+          issues.push({ ...issue, farmerId: g.farmerId || g.farmer?.id, stallName: g.farmer?.stallName || 'Stall' });
+        }
+      }
+      if (Array.isArray(g.lines)) {
+        for (const line of g.lines) {
+          if (Array.isArray(line.issues)) {
+            for (const li of line.issues) {
+              issues.push({ ...li, productId: line.productId, name: line.name, maxQuantity: line.quantityAvailable });
+            }
+          }
+        }
+      }
+    }
+    return issues;
+  }, [groups]);
+
   const handlePlacePreOrder = async () => {
     if (!canSubmit) return;
 
@@ -66,7 +93,7 @@ export function Checkout() {
     }
 
     setSubmitting(true);
-    setErrorMessage(null);
+    setErrorState(null);
 
     try {
       const res = await performCheckout('', idempotencyKeyRef.current);
@@ -80,24 +107,151 @@ export function Checkout() {
         navigate('/buyer/orders', { replace: true });
       }
     } catch (err) {
-      let msg = 'Unable to reserve your items. Please try again.';
       const rawMsg = err.message || '';
+      const details = Array.isArray(err.details) ? err.details : [];
 
-      if (err.status === 422 || err.code === 'VALIDATION_ERROR') {
-        msg = rawMsg || 'Please review your selected pickup times and quantities.';
-      } else if (
+      // 1. Stock changed while checking out
+      const stockProblems = details.filter(
+        (d) => d.code === 'NOT_ENOUGH_STOCK' || d.code === 'OUT_OF_STOCK' || d.code === 'STOCK_CONFLICT'
+      );
+      if (
+        stockProblems.length > 0 ||
         err.code === 'STOCK_CONFLICT' ||
+        err.code === 'NOT_ENOUGH_STOCK' ||
         rawMsg.toLowerCase().includes('stock') ||
         rawMsg.toLowerCase().includes('sold out')
       ) {
-        msg = 'Some items sold out while you were reserving.';
-      } else if (err.code === 'PAST_CUTOFF' || rawMsg.toLowerCase().includes('cutoff')) {
-        msg = 'The cutoff for one of your stalls has passed.';
-      } else if (err.code === 'NETWORK' || err.status === 0) {
-        msg = 'Could not reach MarketLink. Your basket is safe.';
+        setErrorState({
+          type: 'stock',
+          title: 'Stock changed while checking out',
+          message:
+            stockProblems.length > 0
+              ? stockProblems.map((p) => p.message).join(' ')
+              : 'Some produce quantities changed or sold out while you were completing your pre-order.',
+          actionLabel: 'Update basket to available quantity & continue',
+          onAction: async () => {
+            if (stockProblems.length > 0) {
+              for (const prob of stockProblems) {
+                if (prob.productId) {
+                  const maxQty = typeof prob.maxQuantity === 'number' ? prob.maxQuantity : 0;
+                  if (maxQty <= 0) {
+                    remove(prob.productId);
+                  } else {
+                    setQuantity(prob.productId, maxQty);
+                  }
+                }
+              }
+            } else {
+              // Adjust any lines where requested > available
+              for (const line of allLines) {
+                if (typeof line.quantityAvailable === 'number' && line.quantity > line.quantityAvailable) {
+                  if (line.quantityAvailable <= 0) {
+                    remove(line.productId);
+                  } else {
+                    setQuantity(line.productId, line.quantityAvailable);
+                  }
+                }
+              }
+            }
+            resetIdempotencyKey();
+            idempotencyKeyRef.current = createIdempotencyKey();
+            await refreshQuote();
+            setErrorState(null);
+            showToast({ message: 'Basket quantities updated to match current stall inventory.', type: 'info' });
+          },
+        });
+        showToast({ message: 'Stock changed. Please review adjusted quantities.', type: 'danger' });
+        return;
       }
 
-      setErrorMessage(msg);
+      // 2. Invalid pickup time / cutoff passed
+      const cutoffProblems = details.filter(
+        (d) => d.code === 'CUTOFF_PASSED' || d.code === 'SLOT_CLOSED' || d.code === 'SLOT_FULL'
+      );
+      if (
+        cutoffProblems.length > 0 ||
+        err.code === 'PAST_CUTOFF' ||
+        err.code === 'CUTOFF_PASSED' ||
+        err.code === 'SLOT_FULL' ||
+        rawMsg.toLowerCase().includes('cutoff')
+      ) {
+        setErrorState({
+          type: 'cutoff',
+          title: 'Pickup time unavailable or cutoff passed',
+          message:
+            cutoffProblems.length > 0
+              ? cutoffProblems.map((p) => p.message).join(' ')
+              : 'The preparation cutoff deadline has passed for one of your selected pickup slots.',
+          actionLabel: 'Select next available pickup window',
+          onAction: async () => {
+            for (const g of groups) {
+              const openSlot =
+                g.pickupWindows?.find((w) => !w.disabled && !w.closed && w.isOpen !== false) ||
+                g.slots?.find((s) => s.isOpen);
+              if (openSlot) {
+                setSlot(g.farmerId || g.farmer?.id, openSlot.id || openSlot.start);
+              }
+            }
+            resetIdempotencyKey();
+            idempotencyKeyRef.current = createIdempotencyKey();
+            await refreshQuote();
+            setErrorState(null);
+            showToast({ message: 'Updated to next open pickup window.', type: 'info' });
+          },
+        });
+        showToast({ message: 'Cutoff passed for selected time slot.', type: 'danger' });
+        return;
+      }
+
+      // 3. Product removed or unlisted
+      const unavailProblems = details.filter((d) => d.code === 'UNAVAILABLE');
+      if (unavailProblems.length > 0 || err.code === 'UNAVAILABLE') {
+        setErrorState({
+          type: 'removed',
+          title: 'Product unlisted by grower',
+          message:
+            unavailProblems.length > 0
+              ? unavailProblems.map((p) => p.message).join(' ')
+              : 'One or more items in your basket were removed or unlisted by the grower.',
+          actionLabel: 'Remove unavailable items & continue',
+          onAction: async () => {
+            for (const prob of unavailProblems) {
+              if (prob.productId) {
+                remove(prob.productId);
+              }
+            }
+            resetIdempotencyKey();
+            idempotencyKeyRef.current = createIdempotencyKey();
+            await refreshQuote();
+            setErrorState(null);
+            showToast({ message: 'Unavailable items removed from basket.', type: 'info' });
+          },
+        });
+        showToast({ message: 'Some produce is no longer listed.', type: 'danger' });
+        return;
+      }
+
+      // 4. Network failure
+      if (err.code === 'NETWORK' || err.status === 0) {
+        setErrorState({
+          type: 'network',
+          title: 'Connection error',
+          message: 'Could not connect to MarketLink. Your basket is safe.',
+          actionLabel: 'Retry pre-order',
+          onAction: () => handlePlacePreOrder(),
+        });
+        showToast({ message: 'Could not reach MarketLink. Your basket is safe.', type: 'danger' });
+        return;
+      }
+
+      // 5. Generic validation or server error
+      const msg = rawMsg || 'Unable to reserve your items. Please review pickup times and basket items.';
+      setErrorState({
+        type: 'generic',
+        title: 'Could not complete reservation',
+        message: msg,
+        actionLabel: null,
+      });
       showToast({ message: msg, type: 'danger' });
     } finally {
       setSubmitting(false);
@@ -123,12 +277,39 @@ export function Checkout() {
         backLabel="Back to basket"
       />
 
-      {errorMessage && (
+      {errorState && (
         <div className={styles.errorAlert} role="alert">
-          <p className={styles.errorText}>{errorMessage}</p>
-          <Link to="/buyer/basket" className={styles.errorBackLink}>
-            Return to basket
-          </Link>
+          <h4 className={styles.alertTitle}>{errorState.title}</h4>
+          <p className={styles.errorText}>{errorState.message}</p>
+          <div className={styles.alertActions}>
+            {errorState.actionLabel && errorState.onAction && (
+              <button
+                type="button"
+                className={styles.recoveryBtn}
+                onClick={errorState.onAction}
+              >
+                {errorState.actionLabel}
+              </button>
+            )}
+            <Link to="/buyer/basket" className={styles.errorBackLink}>
+              Return to basket
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Pre-emptive warning if quote has blocking issues */}
+      {!errorState && quoteIssues.length > 0 && (
+        <div className={styles.errorAlert} role="alert">
+          <h4 className={styles.alertTitle}>Please review your basket before reserving</h4>
+          <p className={styles.errorText}>
+            {quoteIssues.map((qi) => qi.message).join(' ')}
+          </p>
+          <div className={styles.alertActions}>
+            <Link to="/buyer/basket" className={styles.recoveryBtn}>
+              Fix in basket →
+            </Link>
+          </div>
         </div>
       )}
 

@@ -163,6 +163,16 @@ export function StallGroup({
                         Only {maxAvailable} available
                       </span>
                     )}
+                    {line.quantity > maxAvailable && maxAvailable > 0 && (
+                      <button
+                        type="button"
+                        className={styles.adjustStockBtn}
+                        onClick={() => onChangeQty?.(pid, maxAvailable)}
+                        title="Set quantity to available stock"
+                      >
+                        Adjust to {maxAvailable}
+                      </button>
+                    )}
                   </div>
 
                   <button
@@ -171,7 +181,7 @@ export function StallGroup({
                     onClick={() => onRemove?.(pid, line.name)}
                     aria-label={`Remove ${line.name} from basket`}
                   >
-                    Remove
+                    {isSoldOut ? 'Remove sold out' : 'Remove'}
                   </button>
                 </div>
               </div>
@@ -180,6 +190,25 @@ export function StallGroup({
         })}
       </div>
 
+      {/* Cutoff / Invalid pickup time recovery banner */}
+      {isPastCutoff && (() => {
+        const nextOpenWindow = group.pickupWindows?.find((w) => !w.disabled && !w.closed && w.isOpen !== false);
+        return nextOpenWindow ? (
+          <div className={styles.cutoffBanner} role="alert">
+            <span className={styles.cutoffBannerText}>
+              Cutoff passed for the chosen slot. Next open collection: <strong>{nextOpenWindow.label}</strong>
+            </span>
+            <button
+              type="button"
+              className={styles.switchSlotBtn}
+              onClick={() => onSelectWindow?.(nextOpenWindow.id || nextOpenWindow.start)}
+            >
+              Switch to open window
+            </button>
+          </div>
+        ) : null;
+      })()}
+
       {/* Pickup Windows */}
       <div className={styles.windowsSection}>
         <span className={styles.windowsLabel}>Collect from this stall</span>
@@ -187,7 +216,7 @@ export function StallGroup({
           windows={group.pickupWindows || []}
           selectedId={selectedWindowId}
           onSelect={onSelectWindow}
-          disabled={isPastCutoff}
+          disabled={false}
         />
       </div>
 

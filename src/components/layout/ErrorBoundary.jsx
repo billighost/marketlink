@@ -19,10 +19,7 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // In dev, log error safely
-    if (import.meta.env.DEV) {
-      // keep dev info accessible without leaking in production
-    }
+    console.error('ErrorBoundary caught error:', error, errorInfo);
   }
 
   handleReload = () => {

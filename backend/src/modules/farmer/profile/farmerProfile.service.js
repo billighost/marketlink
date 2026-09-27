@@ -62,6 +62,7 @@ export async function getFarmerProfile(userId) {
       isTopSeller: false,
       isNew: true,
       listingEnabled: true,
+      acceptingOrders: true,
       rnd: Math.random(),
       categorySlugs: [],
       createdAt: now,
@@ -77,6 +78,7 @@ export async function getFarmerProfile(userId) {
   return {
     id: _id.toString(),
     approvalStatus: user?.status || 'pending',
+    acceptingOrders: farmer.acceptingOrders !== false,
     ...rest,
   };
 }

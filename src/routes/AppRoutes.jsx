@@ -62,6 +62,7 @@ import BuyerCart from '@/pages/buyer/Cart';
 import BuyerCheckout from '@/pages/buyer/Checkout';
 import BuyerOrderConfirmed from '@/pages/buyer/OrderConfirmed';
 import BuyerOrderDetail from '@/pages/buyer/OrderDetail';
+import BuyerSmartBasket from '@/pages/buyer/SmartBasket';
 import BuyerAssistant from '@/pages/buyer/Assistant';
 import BuyerProfileDetails from '@/pages/buyer/ProfileDetails';
 import BuyerSavedMarkets from '@/pages/buyer/SavedMarkets';
@@ -168,6 +169,7 @@ export function AppRoutes() {
 
         {/* Basket and checkout — canonical. /buyer/cart redirects in. */}
         <Route path="basket"              element={<BuyerCart />} />
+        <Route path="smart-basket"        element={<BuyerSmartBasket />} />
         <Route path="checkout"            element={<BuyerCheckout />} />
 
         {/* Orders */}

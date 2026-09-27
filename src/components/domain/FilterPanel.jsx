@@ -23,10 +23,10 @@ const DAY_OPTIONS = [
 
 const PRICE_OPTIONS = [
   { label: 'Any', id: 'any', minPrice: undefined, maxPrice: undefined, maxCents: null },
-  { label: 'Under £2', id: 'under-2', minPrice: undefined, maxPrice: 200, maxCents: 200 },
-  { label: '£2–£5', id: '2-5', minPrice: 200, maxPrice: 500, maxCents: 500 },
-  { label: '£5–£10', id: '5-10', minPrice: 500, maxPrice: 1000, maxCents: 1000 },
-  { label: 'Over £10', id: 'over-10', minPrice: 1000, maxPrice: undefined, maxCents: 1001 },
+  { label: 'Under $2', id: 'under-2', minPrice: undefined, maxPrice: 200, maxCents: 200 },
+  { label: '$2–$5', id: '2-5', minPrice: 200, maxPrice: 500, maxCents: 500 },
+  { label: '$5–$10', id: '5-10', minPrice: 500, maxPrice: 1000, maxCents: 1000 },
+  { label: 'Over $10', id: 'over-10', minPrice: 1000, maxPrice: undefined, maxCents: 1001 },
 ];
 
 /**
@@ -246,6 +246,16 @@ export function FilterPanel({
       {/* Sheet sticky footer button */}
       {layout === 'sheet' && (
         <div className={styles.sheetFooter}>
+          {isAnyFilterActive && (
+            <button
+              type="button"
+              className={styles.sheetResetBtn}
+              onClick={onReset}
+              aria-label="Reset all filters"
+            >
+              Reset all
+            </button>
+          )}
           <button
             type="button"
             className={styles.sheetApplyButton}

@@ -6,6 +6,7 @@ import { useHotkey } from '@/hooks/useHotkey';
 import styles from './CommandPalette.module.css';
 
 const GO_TO_ITEMS = [
+  { id: 'goto-smart-basket', title: 'Smart Basket', path: '/buyer/smart-basket', secondary: 'Describe what you need & budget', icon: ShoppingBasket },
   { id: 'goto-basket', title: 'Basket', path: '/buyer/basket', secondary: 'Review items & checkout', icon: ShoppingBasket },
   { id: 'goto-orders', title: 'Orders', path: '/buyer/orders', secondary: 'View order history', icon: Receipt },
   { id: 'goto-saved', title: 'Saved', path: '/buyer/saved', secondary: 'Produce, stalls & markets', icon: Bookmark },
@@ -378,19 +379,6 @@ export function CommandPalette() {
             </ul>
           )}
         </div>
-
-        <footer className={styles.footer} aria-hidden="true">
-          <span className={styles.keyHint}>
-            <kbd className={styles.kbd}>↑</kbd>
-            <kbd className={styles.kbd}>↓</kbd> move
-          </span>
-          <span className={styles.keyHint}>
-            <kbd className={styles.kbd}>↵</kbd> open
-          </span>
-          <span className={styles.keyHint}>
-            <kbd className={styles.kbd}>esc</kbd> close
-          </span>
-        </footer>
       </div>
     </div>
   );
