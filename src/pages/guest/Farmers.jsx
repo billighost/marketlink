@@ -14,6 +14,8 @@ import {
   Eye,
   Sparkles,
   Filter,
+  SlidersHorizontal,
+  RotateCcw,
 } from 'lucide-react';
 import { getFarmers, getMarkets, getFarmerProducts } from '@/api/catalog';
 import { PATHS } from '@/routes/paths';
@@ -83,19 +85,138 @@ function getFarmerImages(f) {
   };
 }
 
+const FALLBACK_MARKETS = [
+  { id: 'm-1', name: 'Grand Army Plaza Greenmarket', location: 'Prospect Park, Brooklyn' },
+  { id: 'm-2', name: 'Union Square Greenmarket', location: 'Union Square, Manhattan' },
+  { id: 'm-3', name: 'Brooklyn Borough Hall', location: 'Court St & Montague St' },
+  { id: 'm-4', name: 'Carroll Gardens Market', location: 'Carroll Park, Brooklyn' },
+];
+
+const FALLBACK_FARMERS = [
+  {
+    id: 'f-1',
+    name: 'David Miller',
+    stallName: 'Riverbend Organic Farm',
+    farmName: 'Riverbend Organic Farm',
+    category: 'Vegetables & Herbs',
+    rating: 4.95,
+    reviewCount: 142,
+    location: 'Hudson Valley, NY (38 mi)',
+    specialty: 'Heirloom Roots & Greens',
+    verified: true,
+    badges: ['100% Producer Only', 'Certified Organic', 'Top Seller'],
+    story: 'Fifth-generation regenerative stewardship cultivating 40+ heirloom root varieties and cold-hardy winter greens without synthetic pesticides.',
+    markets: [
+      { id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: 'SATURDAYS 8AM–3PM' },
+      { id: 'm-2', name: 'Union Square Greenmarket', day: 'WEDNESDAYS 8AM–4PM' },
+    ],
+  },
+  {
+    id: 'f-2',
+    name: 'Sarah Jenkins',
+    stallName: 'Cedarbrook Farmstead',
+    farmName: 'Cedarbrook Farmstead',
+    category: 'Vegetables & Herbs',
+    rating: 4.88,
+    reviewCount: 96,
+    location: 'Sussex County, NJ (42 mi)',
+    specialty: 'Microgreens & Nightshades',
+    verified: true,
+    badges: ['100% Producer Only', 'Low Till'],
+    story: 'Specializing in hyper-fresh microgreens cut at dawn and certified organic heirloom nightshades hand-harvested weekly.',
+    markets: [
+      { id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: 'SATURDAYS 8AM–3PM' },
+      { id: 'm-4', name: 'Carroll Gardens Market', day: 'SUNDAYS 9AM–2PM' },
+    ],
+  },
+  {
+    id: 'f-3',
+    name: 'Elena Vance',
+    stallName: 'Old Stone Hearth Bakery',
+    farmName: 'Old Stone Hearth Bakery',
+    category: 'Bakery',
+    rating: 4.98,
+    reviewCount: 215,
+    location: 'Catskills, NY (55 mi)',
+    specialty: 'Wood-fired Sourdough & Ancient Grains',
+    verified: true,
+    badges: ['100% Producer Only', 'Stone Milled', 'Top Seller'],
+    story: 'Naturally leavened sourdough crafted exclusively from single-origin regional heritage grains milled on stone bedstones weekly.',
+    markets: [
+      { id: 'm-2', name: 'Union Square Greenmarket', day: 'WEDNESDAYS & SATURDAYS' },
+      { id: 'm-3', name: 'Brooklyn Borough Hall', day: 'THURSDAYS 8AM–3PM' },
+    ],
+  },
+  {
+    id: 'f-4',
+    name: 'Marcus & Clara Lee',
+    stallName: 'Willow Brook Apiary & Pastures',
+    farmName: 'Willow Brook Apiary & Pastures',
+    category: 'Honey & Preserves',
+    rating: 4.91,
+    reviewCount: 84,
+    location: 'Pine Island, NY (48 mi)',
+    specialty: 'Raw Wildflower Honey & Bee Pollen',
+    verified: true,
+    badges: ['100% Producer Only', 'Raw & Unfiltered'],
+    story: 'Treatment-free sustainable apiaries producing single-bloom varietal honeys and organic orchard fruit preserves.',
+    markets: [
+      { id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: 'SATURDAYS 8AM–3PM' },
+      { id: 'm-2', name: 'Union Square Greenmarket', day: 'SATURDAYS 8AM–4PM' },
+    ],
+  },
+  {
+    id: 'f-5',
+    name: 'Priya Patel',
+    stallName: 'Maplecrest Artisan Creamery',
+    farmName: 'Maplecrest Artisan Creamery',
+    category: 'Dairy & Cheese',
+    rating: 4.97,
+    reviewCount: 167,
+    location: 'Litchfield Hills, CT (62 mi)',
+    specialty: 'Grass-fed Raw Cheeses & Cultured Butter',
+    verified: true,
+    badges: ['100% Producer Only', 'Pasture Raised', 'Top Seller'],
+    story: 'Small batch cheeses made strictly from 100% A2/A2 grass-fed Jersey cow milk aged in natural underground sandstone cellars.',
+    markets: [
+      { id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: 'SATURDAYS 8AM–3PM' },
+      { id: 'm-3', name: 'Brooklyn Borough Hall', day: 'TUESDAYS & SATURDAYS' },
+    ],
+  },
+  {
+    id: 'f-6',
+    name: 'Thomas & Anne Thorne',
+    stallName: 'Highland Orchard & Berry Works',
+    farmName: 'Highland Orchard & Berry Works',
+    category: 'Fruit & Berries',
+    rating: 4.89,
+    reviewCount: 112,
+    location: 'Warwick Valley, NY (45 mi)',
+    specialty: 'Heritage Apples & Cane Berries',
+    verified: true,
+    badges: ['100% Producer Only', 'IPM Certified'],
+    story: 'Fourth-generation hillside orchards producing heritage cider apples, sun-ripened cane berries, and unpasteurized sweet cider.',
+    markets: [
+      { id: 'm-2', name: 'Union Square Greenmarket', day: 'SATURDAYS 8AM–4PM' },
+      { id: 'm-4', name: 'Carroll Gardens Market', day: 'SUNDAYS 9AM–2PM' },
+    ],
+  },
+];
+
 export function Farmers() {
   useDocumentTitle('Local Farmers & Producers — MarketLink');
   const navigate = useNavigate();
 
-  const [rawFarmers, setRawFarmers] = useState([]);
-  const [markets, setMarkets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [rawFarmers, setRawFarmers] = useState(FALLBACK_FARMERS);
+  const [markets, setMarkets] = useState(FALLBACK_MARKETS);
+  const [loading, setLoading] = useState(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Growers');
   const [selectedMarketId, setSelectedMarketId] = useState('all');
   const [organicOnly, setOrganicOnly] = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   // Peek modal
   const [peekFarmer, setPeekFarmer] = useState(null);
@@ -104,7 +225,6 @@ export function Farmers() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
 
     Promise.all([
       getFarmers().catch(() => []),
@@ -118,8 +238,8 @@ export function Farmers() {
         const mList = Array.isArray(marketsData)
           ? marketsData
           : marketsData?.data || marketsData?.items || [];
-        setRawFarmers(fList);
-        setMarkets(mList);
+        if (fList.length > 0) setRawFarmers(fList);
+        if (mList.length > 0) setMarkets(mList);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -153,9 +273,9 @@ export function Farmers() {
       const farmName = f.stallName || f.farmName || f.name || 'Local Farm';
       const growerName = f.name || (f.stallName ? `Grower at ${f.stallName}` : 'Local Grower');
       const visual = getFarmerImages(f);
-      const badges = ['100% Producer Only'];
-      if (f.isTopSeller) badges.push('Top Seller');
-      if (f.isNew) badges.push('New Grower');
+      const badges = Array.isArray(f.badges) && f.badges.length > 0 ? f.badges : ['100% Producer Only'];
+      if (f.isTopSeller && !badges.includes('Top Seller')) badges.push('Top Seller');
+      if (f.isNew && !badges.includes('New Grower')) badges.push('New Grower');
 
       const operatingDaysFormatted =
         Array.isArray(f.operatingDays) && f.operatingDays.length > 0
@@ -169,18 +289,18 @@ export function Farmers() {
               name: m.name || 'Local Market',
               day: m.day || operatingDaysFormatted,
             }))
-          : [{ id: 'sat', name: 'Saturday Elm Street Market', day: operatingDaysFormatted }];
+          : [{ id: 'm-1', name: 'Grand Army Plaza Greenmarket', day: operatingDaysFormatted }];
 
       return {
         id,
         name: growerName,
-        farmName,
-        location: f.stallNumber ? `Stall ${f.stallNumber} · Local Foodshed` : 'Local Regional Square',
+        farmName: f.farmName || farmName,
+        location: f.location || (f.stallNumber ? `Stall ${f.stallNumber} · Local Foodshed` : 'Local Regional Square'),
         image: visual.avatar,
         coverImage: visual.cover,
         specialty: f.specialty || f.specialties?.join(', ') || 'Fresh Seasonal Harvest',
         category: f.category || visual.category,
-        verified: true,
+        verified: f.verified !== false,
         badges,
         rating: f.ratingAvg ? Number(f.ratingAvg).toFixed(1) : f.rating ? Number(f.rating).toFixed(1) : '5.0',
         reviewCount: f.ratingCount || f.reviewCount || 14,
@@ -200,6 +320,8 @@ export function Farmers() {
     });
     return counts;
   }, [normalizedFarmers]);
+
+  const activeFiltersCount = (selectedMarketId !== 'all' ? 1 : 0) + (organicOnly ? 1 : 0);
 
   const filteredFarmers = useMemo(() => {
     return normalizedFarmers.filter((f) => {
@@ -225,7 +347,12 @@ export function Farmers() {
       }
 
       if (organicOnly) {
-        if (!f.verified && !f.badges.includes('Producer Only')) return false;
+        const isVerifiedProducer = Boolean(
+          f.verified ||
+          f.isProducerOnly ||
+          f.badges?.some((b) => typeof b === 'string' && b.toLowerCase().includes('producer'))
+        );
+        if (!isVerifiedProducer) return false;
       }
 
       return true;
@@ -275,6 +402,7 @@ export function Farmers() {
 
             {/* Search & Market Dropdown Controls */}
             <div className={styles.searchControlsRow}>
+              {/* Search Bar Input */}
               <div className={styles.searchInputGroup}>
                 <Search size={18} className={styles.searchIcon} />
                 <input
@@ -283,6 +411,7 @@ export function Farmers() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={styles.searchInput}
+                  aria-label="Search farmers, farms, or produce"
                 />
                 {searchQuery && (
                   <button
@@ -296,29 +425,45 @@ export function Farmers() {
                 )}
               </div>
 
-              {/* Neighborhood Market Selector */}
-              <select
-                className={styles.marketSelectDropdown}
-                value={selectedMarketId}
-                onChange={(e) => setSelectedMarketId(e.target.value)}
-                aria-label="Filter by market location"
-              >
-                <option value="all">All Market Locations</option>
-                {markets.map((m) => (
-                  <option key={m.id || m._id} value={m.name}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-
+              {/* Mobile Filter Sheet Trigger Button */}
               <button
                 type="button"
-                onClick={() => setOrganicOnly((v) => !v)}
-                className={`${styles.filterToggleBtn} ${organicOnly ? styles.filterToggleActive : ''}`}
+                className={`${styles.mobileFilterBtn} ${activeFiltersCount > 0 ? styles.mobileFilterBtnActive : ''}`}
+                onClick={() => setFilterSheetOpen(true)}
+                aria-label="Open filter options"
               >
-                <ShieldCheck size={16} />
-                <span>Verified Only</span>
+                <SlidersHorizontal size={17} />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && (
+                  <span className={styles.filterBadge}>{activeFiltersCount}</span>
+                )}
               </button>
+
+              {/* Desktop Neighborhood Market Selector */}
+              <div className={styles.desktopControls}>
+                <select
+                  className={styles.marketSelectDropdown}
+                  value={selectedMarketId}
+                  onChange={(e) => setSelectedMarketId(e.target.value)}
+                  aria-label="Filter by market location"
+                >
+                  <option value="all">All Market Locations</option>
+                  {markets.map((m) => (
+                    <option key={m.id || m._id} value={m.name}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => setOrganicOnly((v) => !v)}
+                  className={`${styles.filterToggleBtn} ${organicOnly ? styles.filterToggleActive : ''}`}
+                >
+                  <ShieldCheck size={16} />
+                  <span>Verified Only</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -497,6 +642,7 @@ export function Farmers() {
       {/* ─── 4. QUICK HARVEST PEEK MODAL ─────────────────────────────── */}
       {peekFarmer && (
         <BottomSheet
+          open={Boolean(peekFarmer)}
           isOpen={Boolean(peekFarmer)}
           onClose={() => setPeekFarmer(null)}
           size="tall"
@@ -564,6 +710,114 @@ export function Farmers() {
           </div>
         </BottomSheet>
       )}
+
+      {/* ─── 5. MOBILE FILTER BOTTOM SHEET ─────────────────────────── */}
+      <BottomSheet
+        open={filterSheetOpen}
+        isOpen={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        title="Filter Producers"
+      >
+        <div className={styles.filterSheetContent}>
+          {/* Market Location Selector */}
+          <div className={styles.filterSection}>
+            <div className={styles.filterSectionHeader}>
+              <label className={styles.filterSectionTitle}>
+                <Store size={14} className={styles.filterSectionIcon} />
+                <span>Farmers Market Location</span>
+              </label>
+            </div>
+            <div className={styles.filterPillList}>
+              <button
+                type="button"
+                className={`${styles.filterPill} ${selectedMarketId === 'all' ? styles.filterPillActive : ''}`}
+                onClick={() => setSelectedMarketId('all')}
+              >
+                All Markets
+              </button>
+              {markets.map((m) => {
+                const marketName = m.name || m;
+                const isSelected = selectedMarketId === marketName;
+                return (
+                  <button
+                    key={m.id || m._id || marketName}
+                    type="button"
+                    className={`${styles.filterPill} ${isSelected ? styles.filterPillActive : ''}`}
+                    onClick={() => setSelectedMarketId(marketName)}
+                  >
+                    {marketName}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Verification Badge Filter */}
+          <div className={styles.filterSection}>
+            <div className={styles.filterSectionHeader}>
+              <label className={styles.filterSectionTitle}>
+                <ShieldCheck size={14} className={styles.filterSectionIcon} />
+                <span>Standards & Verification</span>
+              </label>
+            </div>
+            <div
+              role="button"
+              tabIndex={0}
+              className={`${styles.filterToggleCard} ${organicOnly ? styles.filterToggleCardActive : ''}`}
+              onClick={() => setOrganicOnly((v) => !v)}
+              onKeyDown={(e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                  e.preventDefault();
+                  setOrganicOnly((v) => !v);
+                }
+              }}
+            >
+              <div className={styles.filterToggleInfo}>
+                <div className={styles.filterToggleTitleRow}>
+                  <strong className={styles.filterToggleLabel}>100% Producer-Only Verified</strong>
+                </div>
+                <p className={styles.filterToggleSub}>
+                  Strictly vetted regional family farms with no wholesale resellers
+                </p>
+              </div>
+              <div
+                className={`${styles.iosSwitch} ${organicOnly ? styles.iosSwitchOn : ''}`}
+                aria-checked={organicOnly}
+                role="switch"
+              >
+                <div className={styles.iosSwitchThumb} />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Bar */}
+          <div className={styles.filterSheetActions}>
+            <button
+              type="button"
+              className={styles.filterResetBtn}
+              onClick={() => {
+                setSelectedMarketId('all');
+                setOrganicOnly(false);
+              }}
+            >
+              <RotateCcw size={14} />
+              <span>Reset</span>
+            </button>
+            <button
+              type="button"
+              className={styles.filterApplyBtn}
+              disabled={filteredFarmers.length === 0}
+              onClick={() => setFilterSheetOpen(false)}
+            >
+              <span>
+                {filteredFarmers.length === 0
+                  ? 'No Matching Growers'
+                  : `Show ${filteredFarmers.length} ${filteredFarmers.length === 1 ? 'Grower' : 'Growers'}`}
+              </span>
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 }

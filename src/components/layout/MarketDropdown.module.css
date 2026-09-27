@@ -113,21 +113,52 @@
   right: 0;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 1023px) {
   .subLabel {
     display: none;
   }
+  .triggerBtn {
+    background: #ffffff;
+    border: 1px solid rgba(46, 43, 38, 0.12);
+    border-radius: 999px;
+    padding: 3px 10px 3px 5px;
+    gap: 7px;
+    min-height: 38px;
+    box-shadow: 0 1px 3px rgba(46, 43, 38, 0.04);
+  }
+  .triggerBtn:hover {
+    background-color: #faf7f2;
+    border-color: rgba(122, 46, 59, 0.22);
+  }
+  .triggerBtnOpen {
+    background-color: #faf7f2;
+    border-color: rgba(122, 46, 59, 0.28);
+  }
+  .iconBox {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background-color: rgba(122, 46, 59, 0.08);
+  }
   .marketName {
-    max-width: 110px;
+    max-width: 160px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+}
+
+@media (max-width: 480px) {
+  .marketName {
+    max-width: 125px;
     font-size: 0.78rem;
   }
   .triggerBtn {
-    padding: 4px 8px;
+    padding: 3px 8px 3px 5px;
     gap: 5px;
   }
   .iconBox {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
   }
   .dropdownMenu {
     min-width: 270px;
@@ -138,6 +169,13 @@
   }
   .dropdownMenuRight {
     right: -4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .marketName {
+    max-width: 95px;
+    font-size: 0.75rem;
   }
 }
 

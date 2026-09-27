@@ -1,0 +1,133 @@
+/* =========================================================
+   GUEST BOTTOM NAV — APP STYLE MOBILE NAVIGATION
+   ========================================================= */
+
+.bottomBar {
+  display: block;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-sticky, 1000);
+  background: rgba(255, 252, 250, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(46, 43, 38, 0.08);
+  box-shadow: 0 -4px 20px rgba(46, 43, 38, 0.05);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Hide entirely on desktop and tablet (>=768px) */
+@media (min-width: 768px) {
+  .bottomBar {
+    display: none !important;
+  }
+}
+
+.navContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 56px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 4px;
+}
+
+.tabBtn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  color: #7d7266;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 2px 0 3px 0;
+  gap: 3px;
+  user-select: none;
+  transition: color 150ms ease, transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tabBtn:active {
+  transform: scale(0.92);
+}
+
+.iconWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+}
+
+.tabLabel {
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  transition: color 150ms ease, font-weight 150ms ease;
+}
+
+/* Active State */
+.tabBtnActive {
+  color: var(--color-beet, #7a2e3b) !important;
+}
+
+.tabBtnActive .tabLabel {
+  font-weight: 650;
+  color: var(--color-beet, #7a2e3b);
+}
+
+.activePill {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 3px;
+  background-color: var(--color-beet, #7a2e3b);
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(122, 46, 59, 0.35);
+  animation: pillIn 200ms ease-out;
+}
+
+@keyframes pillIn {
+  from {
+    transform: translateX(-50%) scaleX(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* Badge for Cart count */
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-beet, #7a2e3b);
+  color: #ffffff;
+  border: 2px solid #fffdfa;
+  border-radius: 999px;
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1;
+}
