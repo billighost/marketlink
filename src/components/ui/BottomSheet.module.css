@@ -80,16 +80,16 @@
 }
 
 .handle {
-  width: 36px;
-  height: 4px;
-  border-radius: 999px;
-  background-color: rgba(46, 43, 38, 0.18);
+  width: calc(38 * 1px);
+  height: calc(4 * 1px);
+  border-radius: var(--radius-full);
+  background-color: var(--color-border);
   pointer-events: none;
-  transition: background-color 150ms ease;
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
 .grabberZone:active .handle {
-  background-color: rgba(46, 43, 38, 0.35);
+  background-color: var(--color-ink-muted);
 }
 
 /* Header bar: back button + title + close button */
@@ -98,8 +98,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 16px 14px 16px;
-  border-bottom: 1px solid rgba(46, 43, 38, 0.08);
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--color-hairline);
   flex-shrink: 0;
   touch-action: none;
   user-select: none;
@@ -113,10 +113,10 @@
 }
 
 .sheetTitle {
-  font-family: var(--font-body, system-ui, -apple-system, sans-serif);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-ink, #2E2B26);
+  font-family: var(--font-head);
+  font-size: var(--text-base);
+  font-weight: var(--weight-head);
+  color: var(--color-ink);
   letter-spacing: -0.015em;
   margin: 0;
   text-align: center;
@@ -124,25 +124,31 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0 8px;
+  padding: 0 var(--space-2);
 }
 
 .backButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: #4b5563;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  color: var(--color-ink-soft);
   cursor: pointer;
-  border-radius: 50%;
-  background: #f3f4f6;
-  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
   flex-shrink: 0;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition: transform var(--duration-fast) var(--ease-standard),
-              background var(--duration-fast) var(--ease-standard);
+              background var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+
+.backButton:hover {
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
 
 .backButton:active {
@@ -155,7 +161,7 @@
 }
 
 .headerSpacer {
-  width: 32px;
+  width: var(--control-h-sm);
   flex-shrink: 0;
 }
 
@@ -163,13 +169,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: var(--color-ink-soft, #6B6259);
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  color: var(--color-ink-soft);
   cursor: pointer;
-  border-radius: 50%;
-  background: rgba(46, 43, 38, 0.07);
-  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
   flex-shrink: 0;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -177,8 +183,8 @@
 }
 
 .closeButton:hover {
-  background: rgba(46, 43, 38, 0.12);
-  color: var(--color-ink, #2E2B26);
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
 
 .closeButton:active {
@@ -238,12 +244,12 @@
   /* Peek -> centred dialog */
   .peek {
     width: 100%;
-    max-width: min(520px, calc(100vw - 32px));
+    max-width: min(32.5rem, calc(100vw - var(--space-6)));
     margin: auto;
-    border-radius: var(--radius-xl, 20px);
+    border-radius: var(--radius-xl);
     animation: fadeScaleIn 240ms var(--ease-standard);
-    border: 1px solid rgba(46, 43, 38, 0.12);
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.18);
     overflow: hidden;
   }
 
@@ -257,6 +263,7 @@
     max-height: 100dvh;
     border-radius: 0;
     border-left: 1px solid var(--color-border);
+    box-shadow: -0.5rem 0 2rem rgba(0, 0, 0, 0.08);
     animation: slideInRight 240ms var(--ease-standard);
   }
 

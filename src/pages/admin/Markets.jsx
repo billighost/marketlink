@@ -1,532 +1,365 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  getAdminMarkets,
-  createMarket,
-  updateMarket,
-  deleteMarket,
-} from '../../api/admin';
-import BottomSheet from '../../components/ui/BottomSheet';
-import TimeSelect from '../../components/ui/TimeSelect';
-import ConfirmStep from '../../components/ui/ConfirmStep';
-import MapView from '../../components/domain/MapView';
-import { useToast } from '../../components/ui/Toast';
-import { OPERATING_DAYS, MARKET_FACILITIES } from '../../constants';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { ExternalLink } from 'lucide-react';
+import { getAdminMarkets, deleteMarket } from '@/api/admin';
+import { useToast } from '@/components/ui/Toast';
+import AdminPage from '@/components/admin/AdminPage';
+import DataTable from '@/components/admin/DataTable';
+import FilterBar from '@/components/admin/FilterBar';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import Button from '@/components/ui/Button';
+import DayDots from '@/components/domain/DayDots';
+import MarketEditorSheet from './MarketEditorSheet';
 import styles from './Markets.module.css';
 
-const DEFAULT_SCHEDULE = [
-  { day: 'sat', openMin: 480, closeMin: 780, enabled: true },
-  { day: 'sun', openMin: 480, closeMin: 780, enabled: false },
-  { day: 'mon', openMin: 480, closeMin: 780, enabled: false },
-  { day: 'tue', openMin: 480, closeMin: 780, enabled: false },
-  { day: 'wed', openMin: 480, closeMin: 780, enabled: false },
-  { day: 'thu', openMin: 480, closeMin: 780, enabled: false },
-  { day: 'fri', openMin: 480, closeMin: 780, enabled: false },
-];
+function extractTown(address) {
+  if (!address || typeof address !== 'string') return '—';
+  const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length > 2) return parts[parts.length - 2];
+  if (parts.length === 2) return parts[1];
+  return parts[0] || '—';
+}
 
-export default function Markets() {
-  const toast = useToast();
+export function Markets() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { showToast } = useToast();
+
   const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [fetchError, setFetchError] = useState(null);
+
+  // URL state
+  const searchParam = searchParams.get('q') || '';
+  const dayParam = searchParams.get('day') || 'all';
+  const statusParam = searchParams.get('status') || 'all';
+
+  const [search, setSearch] = useState(searchParam);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchParam);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (search.trim()) next.set('q', search.trim());
+          else next.delete('q');
+          return next;
+        },
+        { replace: true }
+      );
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [search, setSearchParams]);
+
+  useEffect(() => {
+    if (searchParam !== search) {
+      setSearch(searchParam);
+      setDebouncedSearch(searchParam);
+    }
+  }, [searchParam]);
+
+  // Fetch markets
+  const fetchMarketsList = useCallback(async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const res = await getAdminMarkets();
+      const list = res?.data || (Array.isArray(res) ? res : []);
+      setMarkets(list);
+    } catch (err) {
+      setFetchError(err.message || 'Failed to load markets.');
+      showToast(err.message || 'Failed to load markets.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchMarketsList();
+  }, [fetchMarketsList]);
+
+  // Filtered rows
+  const filteredMarkets = useMemo(() => {
+    return markets.filter((m) => {
+      if (debouncedSearch) {
+        const query = debouncedSearch.toLowerCase();
+        const nameMatch = m.name?.toLowerCase().includes(query);
+        const addressMatch = m.address?.toLowerCase().includes(query);
+        if (!nameMatch && !addressMatch) return false;
+      }
+      if (dayParam && dayParam !== 'all') {
+        const hasDay = Array.isArray(m.schedule) && m.schedule.some((s) => s.day === dayParam);
+        if (!hasDay) return false;
+      }
+      if (statusParam && statusParam !== 'all') {
+        const mStatus = m.status || 'active';
+        if (mStatus !== statusParam) return false;
+      }
+      return true;
+    });
+  }, [markets, debouncedSearch, dayParam, statusParam]);
+
+  const totalStalls = useMemo(() => {
+    return markets.reduce(
+      (sum, m) => sum + (m.farmerCount ?? m.attendingFarmersCount ?? 0),
+      0
+    );
+  }, [markets]);
 
   // Sheet State
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingMarket, setEditingMarket] = useState(null);
 
-  // Form State
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [coords, setCoords] = useState({ lat: -33.8688, lng: 151.2093 });
-  const [mapUrl, setMapUrl] = useState('');
-  const [scheduleState, setScheduleState] = useState(DEFAULT_SCHEDULE);
-  const [facilities, setFacilities] = useState([]);
-  const [note, setNote] = useState('');
-  const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-
-  // Deletion confirm state
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [forceDetachCount, setForceDetachCount] = useState(null);
-
-  const fetchMarkets = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await getAdminMarkets({ search });
-      setMarkets(res.data || []);
-    } catch (err) {
-      toast.show(err.message || 'Failed to load markets', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [search, toast]);
-
-  useEffect(() => {
-    fetchMarkets();
-  }, [fetchMarkets]);
+  // Deletion State
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const handleOpenCreate = () => {
     setEditingMarket(null);
-    setName('');
-    setAddress('');
-    setCoords({ lat: -33.8688, lng: 151.2093 });
-    setMapUrl('');
-    setScheduleState(DEFAULT_SCHEDULE);
-    setFacilities([]);
-    setNote('');
-    setErrors({});
-    setConfirmDelete(false);
-    setForceDetachCount(null);
     setIsSheetOpen(true);
   };
 
   const handleOpenEdit = (m) => {
     setEditingMarket(m);
-    setName(m.name || '');
-    setAddress(m.address || '');
-    if (m.location?.coordinates) {
-      setCoords({ lat: m.location.coordinates[1], lng: m.location.coordinates[0] });
-    } else {
-      setCoords({ lat: -33.8688, lng: 151.2093 });
-    }
-    setMapUrl(m.mapUrl || '');
-
-    // Map existing schedule to 7 days
-    const existingDays = new Map((m.schedule || []).map((s) => [s.day, s]));
-    const nextSched = OPERATING_DAYS.map((d) => {
-      const match = existingDays.get(d);
-      if (match) {
-        return { day: d, openMin: match.openMin, closeMin: match.closeMin, enabled: true };
-      }
-      return { day: d, openMin: 480, closeMin: 780, enabled: false };
-    });
-    setScheduleState(nextSched);
-    setFacilities(m.facilities || []);
-    setNote(m.note || '');
-    setErrors({});
-    setConfirmDelete(false);
-    setForceDetachCount(null);
     setIsSheetOpen(true);
   };
 
-  const handleScheduleToggle = (index) => {
-    setScheduleState((prev) => {
-      const copy = [...prev];
-      copy[index] = { ...copy[index], enabled: !copy[index].enabled };
-      return copy;
-    });
+  const handleCloseSheet = () => {
+    setIsSheetOpen(false);
+    setEditingMarket(null);
   };
 
-  const handleScheduleChange = (index, field, val) => {
-    setScheduleState((prev) => {
-      const copy = [...prev];
-      copy[index] = { ...copy[index], [field]: val };
-      return copy;
-    });
+  const handleSavedSheet = async () => {
+    setIsSheetOpen(false);
+    setEditingMarket(null);
+    await fetchMarketsList();
   };
 
-  const handleFacilityToggle = (f) => {
-    setFacilities((prev) =>
-      prev.includes(f) ? prev.filter((item) => item !== f) : [...prev, f]
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteMarket(deleteTarget.id || deleteTarget._id, true);
+      showToast('Market deleted.', 'success');
+      setDeleteTarget(null);
+      await fetchMarketsList();
+    } catch (err) {
+      showToast(err?.message || 'Failed to delete market.', 'error');
+    }
+  };
+
+  // Table Columns with (_val, row) signatures
+  const columns = useMemo(
+    () => [
+      {
+        key: 'name',
+        header: 'Market',
+        render: (_val, row) => (
+          <div className={styles.marketCell}>
+            <button
+              type="button"
+              className={styles.marketName}
+              onClick={() => handleOpenEdit(row)}
+            >
+              {row?.name}
+            </button>
+            <span className={styles.marketAddress}>{row?.address}</span>
+          </div>
+        ),
+      },
+      {
+        key: 'town',
+        header: 'Town',
+        render: (_val, row) => <span className={styles.townCell}>{extractTown(row?.address)}</span>,
+      },
+      {
+        key: 'days',
+        header: 'Days',
+        render: (_val, row) => <DayDots days={row?.schedule || []} size="sm" />,
+      },
+      {
+        key: 'stalls',
+        header: 'Stalls',
+        render: (_val, row) => {
+          const stallCount = row?.farmerCount ?? row?.attendingFarmersCount ?? 0;
+          return (
+            <Link
+              to={`/admin/people?tab=farmers&market=${row?.id || row?._id}`}
+              className={styles.stallLink}
+              title={`View ${stallCount} stall(s) in People`}
+            >
+              <span>{stallCount}</span>
+              <ExternalLink size={12} className={styles.externalIcon} aria-hidden="true" />
+            </Link>
+          );
+        },
+      },
+      {
+        key: 'actions',
+        header: 'Actions',
+        align: 'right',
+        render: (_val, row) => (
+          <div className={styles.actionsCell}>
+            <button
+              type="button"
+              className={styles.actionBtn}
+              onClick={() => handleOpenEdit(row)}
+              aria-label={`Edit ${row?.name}`}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className={styles.deleteBtn}
+              onClick={() => setDeleteTarget(row)}
+              aria-label={`Delete ${row?.name}`}
+            >
+              Delete
+            </button>
+          </div>
+        ),
+      },
+    ],
+    []
+  );
+
+  // Filters for FilterBar
+  const filterOptions = useMemo(
+    () => [
+      {
+        key: 'day',
+        label: 'Trading Day',
+        value: dayParam,
+        options: [
+          { value: 'all', label: 'All days' },
+          { value: 'mon', label: 'Monday' },
+          { value: 'tue', label: 'Tuesday' },
+          { value: 'wed', label: 'Wednesday' },
+          { value: 'thu', label: 'Thursday' },
+          { value: 'fri', label: 'Friday' },
+          { value: 'sat', label: 'Saturday' },
+          { value: 'sun', label: 'Sunday' },
+        ],
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        value: statusParam,
+        options: [
+          { value: 'all', label: 'All statuses' },
+          { value: 'active', label: 'Active' },
+          { value: 'draft', label: 'Draft' },
+        ],
+      },
+    ],
+    [dayParam, statusParam]
+  );
+
+  const handleFilterChange = (key, value) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value && value !== 'all') {
+          next.set(key, value);
+        } else {
+          next.delete(key);
+        }
+        return next;
+      },
+      { replace: true }
     );
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const newErrors = {};
-
-    if (!name.trim() || name.trim().length < 2 || name.trim().length > 80) {
-      newErrors.name = 'Market name must be between 2 and 80 characters';
-    }
-    if (!address.trim() || address.trim().length < 5 || address.trim().length > 200) {
-      newErrors.address = 'Market address must be between 5 and 200 characters';
-    }
-
-    const activeSchedule = scheduleState
-      .filter((s) => s.enabled)
-      .map((s) => ({
-        day: s.day,
-        openMin: s.openMin,
-        closeMin: s.closeMin,
-      }));
-
-    if (activeSchedule.length === 0) {
-      newErrors.schedule = 'Please enable at least one operating day.';
-    }
-
-    for (const s of activeSchedule) {
-      if (s.closeMin <= s.openMin) {
-        newErrors.schedule = 'Closing time must be after opening time.';
-        break;
-      }
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    const payload = {
-      name: name.trim(),
-      address: address.trim(),
-      location: { lat: coords.lat, lng: coords.lng },
-      schedule: activeSchedule,
-      facilities,
-      note: note.trim() || undefined,
-    };
-    if (mapUrl.trim()) {
-      payload.mapUrl = mapUrl.trim();
-    }
-
-    try {
-      setSubmitting(true);
-      if (editingMarket) {
-        await updateMarket(editingMarket.id || editingMarket._id, payload);
-        toast.show(`${payload.name} updated successfully`, 'success');
-      } else {
-        await createMarket(payload);
-        toast.show(`${payload.name} created successfully`, 'success');
-      }
-      setIsSheetOpen(false);
-      fetchMarkets();
-    } catch (err) {
-      toast.show(err.message || 'Failed to save market', 'error');
-    } finally {
-      setSubmitting(false);
-    }
+  const handleResetFilters = () => {
+    setSearch('');
+    setDebouncedSearch('');
+    setSearchParams({}, { replace: true });
   };
-
-  const handleDelete = async (force = false) => {
-    if (!editingMarket) return;
-    try {
-      setSubmitting(true);
-      const marketId = editingMarket.id || editingMarket._id;
-      await deleteMarket(marketId, force);
-      toast.show('Market removed successfully', 'success');
-      setIsSheetOpen(false);
-      fetchMarkets();
-    } catch (err) {
-      if (err.code === 'FORCE_REQUIRED' || err.status === 409) {
-        const count = err.details?.attendingFarmersCount || 'attending';
-        setForceDetachCount(count);
-        setConfirmDelete(true);
-      } else {
-        toast.show(err.message || 'Failed to delete market', 'error');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const filteredMarkets = markets.filter(
-    (m) =>
-      m.name?.toLowerCase().includes(search.toLowerCase()) ||
-      m.address?.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Markets</h1>
-        <div className={styles.headerActions}>
-          <div className={styles.searchBar}>
-            <span className={styles.searchIcon}>🔍</span>
-            <input
-              type="text"
-              placeholder="Search markets or address..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={styles.searchInput}
-            />
+    <AdminPage
+      title="Markets"
+      context={`${markets.length} physical markets · ${totalStalls} stalls attached`}
+      primaryAction={{
+        label: 'Add market',
+        onClick: handleOpenCreate,
+      }}
+    >
+      <div className={styles.container}>
+        <FilterBar
+          search={search}
+          onSearchChange={setSearch}
+          filters={filterOptions}
+          onFilterChange={handleFilterChange}
+          resultCount={filteredMarkets.length}
+          onReset={handleResetFilters}
+        />
+
+        {fetchError && (
+          <div className={styles.errorBanner} role="alert">
+            <span>{fetchError}</span>
+            <Button variant="secondary" size="sm" onClick={fetchMarketsList}>
+              Retry
+            </Button>
           </div>
-          <button
-            type="button"
-            className={styles.primaryBtn}
-            onClick={handleOpenCreate}
-          >
-            + Add Market
-          </button>
-        </div>
+        )}
+
+        {!fetchError && (
+          <DataTable
+            columns={columns}
+            rows={filteredMarkets}
+            rowKey="id"
+            loading={loading}
+            empty={
+              <div className={styles.emptyState}>
+                <p className={styles.emptyTitle}>
+                  {debouncedSearch || dayParam !== 'all' || statusParam !== 'all'
+                    ? 'No matching markets found'
+                    : 'No markets registered yet.'}
+                </p>
+                <p className={styles.emptyDesc}>
+                  {debouncedSearch || dayParam !== 'all' || statusParam !== 'all'
+                    ? 'Try adjusting your search query or day filters.'
+                    : 'Add your first market to start organizing stalls and schedules.'}
+                </p>
+                {debouncedSearch || dayParam !== 'all' || statusParam !== 'all' ? (
+                  <Button variant="secondary" size="sm" onClick={handleResetFilters}>
+                    Reset filters
+                  </Button>
+                ) : (
+                  <Button variant="primary" size="sm" onClick={handleOpenCreate}>
+                    Add market
+                  </Button>
+                )}
+              </div>
+            }
+          />
+        )}
       </div>
 
-      {loading ? (
-        <p>Loading markets...</p>
-      ) : filteredMarkets.length === 0 ? (
-        <p>No markets found.</p>
-      ) : (
-        <>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th className={styles.th}>Market</th>
-                  <th className={styles.th}>Operating Days</th>
-                  <th className={styles.th}>Farmers</th>
-                  <th className={styles.th}>Status</th>
-                  <th className={styles.th}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredMarkets.map((m) => (
-                  <tr key={m.id || m._id} className={styles.tr}>
-                    <td className={styles.td}>
-                      <div className={styles.marketName}>{m.name}</div>
-                      <div className={styles.marketAddress}>{m.address}</div>
-                    </td>
-                    <td className={styles.td}>
-                      <div className={styles.daysBadges}>
-                        {(m.schedule || []).map((s) => (
-                          <span key={s.day} className={styles.dayChip}>
-                            {s.day}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className={styles.td}>
-                      {m.attendingFarmersCount ?? m.farmerCount ?? 0}
-                    </td>
-                    <td className={styles.td}>
-                      <span className={styles.dayChip}>{m.status || 'active'}</span>
-                    </td>
-                    <td className={styles.td}>
-                      <button
-                        type="button"
-                        className={styles.actionBtn}
-                        onClick={() => handleOpenEdit(m)}
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <MarketEditorSheet
+        open={isSheetOpen}
+        market={editingMarket}
+        onClose={handleCloseSheet}
+        onSaved={handleSavedSheet}
+        showToast={showToast}
+      />
 
-          <div className={styles.cardsWrap}>
-            {filteredMarkets.map((m) => (
-              <div key={m.id || m._id} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <div>
-                    <div className={styles.marketName}>{m.name}</div>
-                    <div className={styles.marketAddress}>{m.address}</div>
-                  </div>
-                  <button
-                    type="button"
-                    className={styles.actionBtn}
-                    onClick={() => handleOpenEdit(m)}
-                  >
-                    Edit
-                  </button>
-                </div>
-                <div className={styles.daysBadges}>
-                  {(m.schedule || []).map((s) => (
-                    <span key={s.day} className={styles.dayChip}>
-                      {s.day}
-                    </span>
-                  ))}
-                </div>
-                <div className={styles.marketAddress}>
-                  {m.attendingFarmersCount ?? m.farmerCount ?? 0} farmers attending
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Market Add/Edit Sheet */}
-      <BottomSheet
-        isOpen={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-        title={editingMarket ? 'Edit Market' : 'Add Market'}
-        size="tall"
-      >
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Section: Basics */}
-          <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Basics</h2>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Market Name *</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Elm Street Farmers Market"
-                required
-              />
-              {errors.name && <span className={styles.errorText}>{errors.name}</span>}
-            </div>
-
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Physical Address *</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="e.g. 12 Elm Street, Melbourne"
-                required
-              />
-              {errors.address && (
-                <span className={styles.errorText}>{errors.address}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Section: Location */}
-          <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Location</h2>
-            <p className={styles.helperText}>
-              Drag the marker to position the market pin on the map.
-            </p>
-            <MapView
-              latitude={coords.lat}
-              longitude={coords.lng}
-              zoom={13}
-              draggable={true}
-              onMove={(c) => setCoords(c)}
-              height="200px"
-            />
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Coordinates</label>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--color-ink-muted)' }}>
-                Lat: {coords.lat.toFixed(5)}, Lng: {coords.lng.toFixed(5)}
-              </div>
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Map Link (Optional fallback)</label>
-              <input
-                type="url"
-                className={styles.input}
-                value={mapUrl}
-                onChange={(e) => setMapUrl(e.target.value)}
-                placeholder="https://maps.google.com/?q=-33.86,151.20"
-              />
-            </div>
-          </div>
-
-          {/* Section: Schedule */}
-          <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Schedule</h2>
-            <p className={styles.helperText}>
-              Enable operating days and set standard open/close times.
-            </p>
-            {errors.schedule && (
-              <span className={styles.errorText}>{errors.schedule}</span>
-            )}
-            <div className={styles.scheduleGrid}>
-              {scheduleState.map((s, idx) => (
-                <div key={s.day} className={styles.scheduleRow}>
-                  <label className={styles.dayLabel}>
-                    <input
-                      type="checkbox"
-                      checked={s.enabled}
-                      onChange={() => handleScheduleToggle(idx)}
-                      style={{ marginRight: '6px' }}
-                    />
-                    {s.day}
-                  </label>
-                  {s.enabled ? (
-                    <div className={styles.timeWrap}>
-                      <TimeSelect
-                        value={s.openMin}
-                        onChange={(m) => handleScheduleChange(idx, 'openMin', m)}
-                      />
-                      <span className={styles.toText}>to</span>
-                      <TimeSelect
-                        value={s.closeMin}
-                        onChange={(m) => handleScheduleChange(idx, 'closeMin', m)}
-                      />
-                    </div>
-                  ) : (
-                    <span className={styles.helperText}>Closed</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Section: Facilities */}
-          <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Facilities</h2>
-            <div className={styles.chipsGrid}>
-              {(MARKET_FACILITIES || ['parking', 'restrooms', 'atm', 'wheelchair', 'dog_friendly', 'indoor']).map(
-                (f) => {
-                  const active = facilities.includes(f);
-                  return (
-                    <button
-                      key={f}
-                      type="button"
-                      className={`${styles.facilityChip} ${active ? styles.facilityChipActive : ''}`}
-                      onClick={() => handleFacilityToggle(f)}
-                    >
-                      {f.replace('_', ' ')}
-                    </button>
-                  );
-                }
-              )}
-            </div>
-          </div>
-
-          {/* Section: Note */}
-          <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Notice or Notes</h2>
-            <textarea
-              className={styles.textarea}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              maxLength={500}
-              placeholder="e.g. Parking available behind the town hall."
-            />
-          </div>
-
-          {/* Actions */}
-          <div className={styles.sheetActions}>
-            <button
-              type="submit"
-              className={styles.primaryBtn}
-              disabled={submitting}
-            >
-              {submitting
-                ? 'Saving...'
-                : editingMarket
-                ? 'Save Changes'
-                : 'Add Market'}
-            </button>
-
-            {editingMarket && (
-              <>
-                {confirmDelete ? (
-                  <ConfirmStep
-                    title="Delete Market"
-                    message={
-                      forceDetachCount
-                        ? `This market has ${forceDetachCount} attending Farmers. Deleting it will detach all Farmers from this market.`
-                        : `Are you sure you want to remove ${editingMarket.name}?`
-                    }
-                    confirmLabel={forceDetachCount ? 'Force Delete & Detach' : 'Confirm Delete'}
-                    onConfirm={() => handleDelete(Boolean(forceDetachCount))}
-                    onCancel={() => {
-                      setConfirmDelete(false);
-                      setForceDetachCount(null);
-                    }}
-                    danger
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.deleteBtn}
-                    onClick={() => setConfirmDelete(true)}
-                  >
-                    Delete Market
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </form>
-      </BottomSheet>
-    </div>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title={`Delete "${deleteTarget?.name || 'market'}"?`}
+        body={
+          (deleteTarget?.farmerCount ?? deleteTarget?.attendingFarmersCount ?? 0) > 0
+            ? `This market has ${(deleteTarget?.farmerCount ?? deleteTarget?.attendingFarmersCount ?? 0)} stall(s) attached. This will remove the market and detach all stalls. This cannot be undone.`
+            : 'This will remove the market. This action cannot be undone.'
+        }
+        confirmLabel="Delete market"
+        typeToConfirm={deleteTarget?.name}
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onClose={() => setDeleteTarget(null)}
+      />
+    </AdminPage>
   );
 }
+
+export default Markets;

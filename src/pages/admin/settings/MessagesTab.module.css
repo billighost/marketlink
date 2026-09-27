@@ -1,0 +1,189 @@
+/* src/pages/admin/settings/MessagesTab.module.css */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.subTabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-bottom: var(--border);
+  padding-bottom: var(--space-2);
+}
+
+.subTabBtn {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+}
+
+.subTabBtn:hover {
+  color: var(--color-ink);
+  background-color: var(--color-canvas);
+}
+
+.subTabBtnActive {
+  color: var(--color-ink);
+  background-color: var(--color-canvas);
+  font-weight: var(--weight-semibold);
+}
+
+.badgeCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(1 * 1px) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  background-color: var(--color-canvas-soft);
+  color: var(--color-ink);
+}
+
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background-color: var(--color-white);
+  border: var(--border);
+  border-radius: var(--radius-md);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.senderInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.senderName {
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+.topicBadge {
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  background-color: var(--color-canvas);
+  padding: calc(2 * 1px) var(--space-2);
+  border-radius: var(--radius-sm);
+  text-transform: capitalize;
+}
+
+.orderBadge {
+  font-size: var(--text-xs);
+  color: var(--color-beet);
+  background-color: var(--color-beet-tint);
+  padding: calc(2 * 1px) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.body {
+  font-size: var(--text-body);
+  color: var(--color-ink);
+  line-height: var(--lh-relaxed);
+  white-space: pre-wrap;
+  margin: 0;
+  padding: var(--space-2) 0;
+  border-top: var(--border);
+  border-bottom: var(--border);
+}
+
+.replySection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.replyTextarea {
+  width: 100%;
+  min-height: calc(80 * 1px);
+  padding: var(--space-3);
+  border: var(--border-input);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  resize: vertical;
+}
+
+.replyTextarea:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.emailTruthNotice {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  margin: 0;
+  line-height: var(--lh-relaxed);
+}
+
+.replyActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.mailtoLink {
+  font-size: var(--text-sm);
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: var(--underline-offset);
+}
+
+.handledMeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+.handledByText {
+  font-size: var(--text-xs);
+  color: var(--color-herb);
+  font-weight: var(--weight-medium);
+}
+
+.handledNote {
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  background-color: var(--color-canvas-soft);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: var(--border);
+}

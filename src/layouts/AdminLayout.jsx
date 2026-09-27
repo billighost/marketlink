@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext, useRef } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { getAdminOverview } from '@/api/admin';
 import { useVisibleInterval } from '@/hooks/useVisibleInterval';
+import { MarketLinkLeaf } from '@/components/ui/MarketLinkLogo';
 import Button from '@/components/ui/Button';
 import FloatingActions from '@/components/ui/FloatingActions';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
@@ -25,7 +26,10 @@ export const AdminContext = createContext({
   pendingFarmers: 0,
   openFlags: 0,
   unhandledMessages: 0,
-  refreshOverview: () => {},
+  lastUpdated: null,
+  loadingOverview: false,
+  errorOverview: null,
+  refreshOverview: async () => {},
 });
 
 export const useAdmin = () => useContext(AdminContext);
@@ -40,20 +44,35 @@ const ADMIN_NAV = [
 ];
 
 export default function AdminLayout() {
-  const { logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   const [overview, setOverview] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [loadingOverview, setLoadingOverview] = useState(true);
+  const [errorOverview, setErrorOverview] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [pollingActive, setPollingActive] = useState(true);
 
+  const menuButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const drawerRef = useRef(null);
+  const mainWrapperRef = useRef(null);
+
   const fetchOverview = useCallback(async () => {
     if (!isAuthenticated || !pollingActive) return;
+    setLoadingOverview(true);
     try {
       const res = await getAdminOverview();
       setOverview(res?.data || null);
+      setLastUpdated(new Date());
+      setErrorOverview(null);
+      return res?.data;
     } catch (err) {
       if (err?.status === 401) setPollingActive(false);
+      setErrorOverview(err?.message || 'Could not load platform overview.');
+    } finally {
+      setLoadingOverview(false);
     }
   }, [isAuthenticated, pollingActive]);
 
@@ -80,6 +99,71 @@ export default function AdminLayout() {
     return 0;
   };
 
+  // Mobile drawer accessibility & focus management
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // Move focus to close button
+    const timer = setTimeout(() => {
+      closeButtonRef.current?.focus();
+    }, 50);
+
+    // Apply inert to main wrapper behind drawer if supported
+    if (mainWrapperRef.current) {
+      mainWrapperRef.current.setAttribute('aria-hidden', 'true');
+      if ('inert' in mainWrapperRef.current) {
+        mainWrapperRef.current.inert = true;
+      }
+    }
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsMenuOpen(false);
+        return;
+      }
+
+      if (e.key === 'Tab' && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearTimeout(timer);
+      document.body.style.overflow = previousOverflow;
+      if (mainWrapperRef.current) {
+        mainWrapperRef.current.removeAttribute('aria-hidden');
+        if ('inert' in mainWrapperRef.current) {
+          mainWrapperRef.current.inert = false;
+        }
+      }
+      window.removeEventListener('keydown', handleKeyDown);
+      menuButtonRef.current?.focus();
+    };
+  }, [isMenuOpen]);
+
   return (
     <AdminContext.Provider
       value={{
@@ -87,6 +171,9 @@ export default function AdminLayout() {
         pendingFarmers,
         openFlags,
         unhandledMessages,
+        lastUpdated,
+        loadingOverview,
+        errorOverview,
         refreshOverview: fetchOverview,
       }}
     >
@@ -95,8 +182,11 @@ export default function AdminLayout() {
         <aside className={styles.sidebar} aria-label="Admin sidebar navigation">
           <div className={styles.sidebarHeader}>
             <Link to="/admin" className={styles.brandLink}>
-              <MarketLinkLogo size="sm" />
-              <span className={styles.adminBadge}>Admin</span>
+              <div className={styles.brandRow}>
+                <MarketLinkLeaf size={24} className={styles.brandIcon} color="var(--color-primary)" />
+                <span className={styles.brandLogo}>MarketLink</span>
+              </div>
+              <span className={styles.adminSubtitle}>Admin</span>
             </Link>
           </div>
 
@@ -114,7 +204,6 @@ export default function AdminLayout() {
                   className={({ isActive }) =>
                     `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
                   }
-                  aria-current={({ isActive }) => (isActive ? 'page' : undefined)}
                   aria-label={ariaLabel}
                 >
                   <Icon size={18} aria-hidden="true" className={styles.navIcon} />
@@ -130,6 +219,11 @@ export default function AdminLayout() {
           </nav>
 
           <div className={styles.sidebarFooter}>
+            <div className={styles.signedInAs}>
+              <span className={styles.signedInLabel}>Signed in as</span>
+              <span className={styles.signedInName}>{user?.name || 'Administrator'}</span>
+              <span className={styles.signedInEmail}>{user?.email || 'admin@marketlink.test'}</span>
+            </div>
             <Link to="/buyer" className={styles.switchLink}>
               <ExternalLink size={16} aria-hidden="true" />
               <span>Customer app</span>
@@ -142,14 +236,18 @@ export default function AdminLayout() {
         </aside>
 
         {/* Main Content Area */}
-        <div className={styles.mainWrapper}>
+        <div className={styles.mainWrapper} ref={mainWrapperRef}>
           {/* Mobile Top Bar (< 1024px) */}
           <header className={styles.mobileTopBar}>
-            <div className={styles.mobileBrand}>
-              <span className={styles.mobileBrandText}>MarketLink</span>
-              <span className={styles.adminBadge}>Admin</span>
-            </div>
+            <Link to="/admin" className={styles.mobileBrand}>
+              <MarketLinkLeaf size={22} className={styles.brandIcon} color="var(--color-primary)" />
+              <div className={styles.mobileBrandInfo}>
+                <span className={styles.mobileBrandText}>MarketLink</span>
+                <span className={styles.mobileAdminSubtitle}>Admin</span>
+              </div>
+            </Link>
             <button
+              ref={menuButtonRef}
               type="button"
               className={styles.menuButton}
               onClick={() => setIsMenuOpen(true)}
@@ -161,86 +259,94 @@ export default function AdminLayout() {
             </button>
           </header>
 
-          {/* Mobile Drawer Navigation (< 1024px) */}
-          {isMenuOpen && (
-            <div className={styles.mobileDrawerOverlay} onClick={() => setIsMenuOpen(false)}>
-              <div
-                className={styles.mobileDrawer}
-                onClick={(e) => e.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-                aria-label="Administration menu"
-              >
-                <div className={styles.drawerHeader}>
-                  <span className={styles.drawerTitle}>Administration</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={styles.drawerCloseBtn}
-                    aria-label="Close menu"
-                  >
-                    <X size={20} aria-hidden="true" />
-                  </button>
-                </div>
-
-                <nav className={styles.drawerNav}>
-                  {ADMIN_NAV.map(({ to, label, icon: Icon, end, badgeKey }) => {
-                    const count = badgeKey ? getBadgeValue(badgeKey) : 0;
-                    const badgeText = count > 9 ? '9+' : count > 0 ? String(count) : null;
-
-                    return (
-                      <NavLink
-                        key={to}
-                        to={to}
-                        end={end}
-                        onClick={() => setIsMenuOpen(false)}
-                        className={({ isActive }) =>
-                          `${styles.drawerNavItem} ${isActive ? styles.drawerNavItemActive : ''}`
-                        }
-                      >
-                        <Icon size={20} aria-hidden="true" />
-                        <span className={styles.drawerNavLabel}>{label}</span>
-                        {badgeText && (
-                          <span className={styles.badge} aria-hidden="true">
-                            {badgeText}
-                          </span>
-                        )}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
-
-                <div className={styles.drawerFooter}>
-                  <Link
-                    to="/buyer"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={styles.switchLink}
-                  >
-                    <ExternalLink size={16} aria-hidden="true" />
-                    <span>Customer app</span>
-                  </Link>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={handleSignOut}
-                    className={styles.drawerSignOutBtn}
-                  >
-                    <LogOut size={16} aria-hidden="true" />
-                    <span>Sign out</span>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Main Outlet */}
           <main className={styles.content}>
             <Outlet />
           </main>
-
-          {/* Floating AI & Back to Top Actions */}
-          <FloatingActions showTopAfter={350} />
         </div>
+
+        {/* Mobile Drawer Navigation (< 1024px) */}
+        {isMenuOpen && (
+          <div
+            className={styles.mobileDrawerOverlay}
+            onClick={() => setIsMenuOpen(false)}
+            aria-hidden="true"
+          >
+            <div
+              ref={drawerRef}
+              className={styles.mobileDrawer}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Administration menu"
+            >
+              <div className={styles.drawerHeader}>
+                <span className={styles.drawerTitle}>Administration</span>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={styles.drawerCloseBtn}
+                  aria-label="Close menu"
+                >
+                  <X size={20} aria-hidden="true" />
+                </button>
+              </div>
+
+              <nav className={styles.drawerNav}>
+                {ADMIN_NAV.map(({ to, label, icon: Icon, end, badgeKey }) => {
+                  const count = badgeKey ? getBadgeValue(badgeKey) : 0;
+                  const badgeText = count > 9 ? '9+' : count > 0 ? String(count) : null;
+
+                  return (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end={end}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `${styles.drawerNavItem} ${isActive ? styles.drawerNavItemActive : ''}`
+                      }
+                    >
+                      <Icon size={20} aria-hidden="true" />
+                      <span className={styles.drawerNavLabel}>{label}</span>
+                      {badgeText && (
+                        <span className={styles.badge} aria-hidden="true">
+                          {badgeText}
+                        </span>
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </nav>
+
+              <div className={styles.drawerFooter}>
+                <div className={styles.signedInAs}>
+                  <span className={styles.signedInLabel}>Signed in as</span>
+                  <span className={styles.signedInName}>{user?.name || 'Administrator'}</span>
+                  <span className={styles.signedInEmail}>{user?.email || 'admin@marketlink.test'}</span>
+                </div>
+                <Link
+                  to="/buyer"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={styles.switchLink}
+                >
+                  <ExternalLink size={16} aria-hidden="true" />
+                  <span>Customer app</span>
+                </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleSignOut}
+                  className={styles.drawerSignOutBtn}
+                >
+                  <LogOut size={16} aria-hidden="true" />
+                  <span>Sign out</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminContext.Provider>
   );

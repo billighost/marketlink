@@ -1,188 +1,280 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getAdminOverview } from '@/api/admin';
+import { RefreshCw, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAdmin } from '@/layouts/AdminLayout';
-import Skeleton from '@/components/ui/Skeleton';
-import Button from '@/components/ui/Button';
-import {
-  Users,
-  Store,
-  MapPin,
-  ShoppingBag,
-  AlertCircle,
-  Flag,
-  Mail,
-  ChevronRight,
-  Clock,
-} from 'lucide-react';
-import { formatDateShort } from '@/utils/format';
+import { AdminPage } from '@/components/admin/AdminPage';
+import { StatTile } from '@/components/admin/StatTile';
+import { DataTable } from '@/components/admin/DataTable';
+import { formatDate, formatTime } from '@/utils/format';
 import styles from './Overview.module.css';
 
-export function Overview() {
-  const { overview: contextOverview, refreshOverview } = useAdmin();
-
-  const [data, setData] = useState(contextOverview);
-  const [loading, setLoading] = useState(!contextOverview);
-  const [error, setError] = useState('');
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await getAdminOverview();
-      setData(res?.data || null);
-    } catch (err) {
-      setError(err?.message || 'Could not load platform overview.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!contextOverview) {
-      loadData();
-    } else {
-      setData(contextOverview);
-      setLoading(false);
-    }
-  }, [contextOverview, loadData]);
-
-  const totals = data?.totals || { farmers: 0, customers: 0, markets: 0, orders: 0 };
-  const pendingFarmers = data?.pendingFarmers ?? 0;
-  const openFlags = data?.openFlags ?? 0;
-  const unhandledMessages = data?.unhandledMessages ?? 0;
-  const recentActivity = data?.recentActivity || [];
-
-  return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Overview</h1>
-        <p className={styles.subtitle}>Platform metrics and real-time operational status.</p>
-      </header>
-
-      {loading ? (
-        <div className={styles.skeletonContainer}>
-          <Skeleton height="90px" />
-          <Skeleton height="140px" />
-          <Skeleton height="200px" />
-        </div>
-      ) : error ? (
-        <div className={styles.errorBox}>
-          <p>{error}</p>
-          <Button variant="secondary" size="sm" onClick={loadData}>
-            Try again
-          </Button>
-        </div>
-      ) : (
-        <>
-          {/* Four Key Numbers Only */}
-          <section className={styles.fourTotalsRow} aria-label="Platform counts">
-            <div className={styles.totalCol}>
-              <span className={styles.totalLabel}>Farmers</span>
-              <span className={styles.totalValue}>{totals.farmers}</span>
-            </div>
-            <div className={styles.totalCol}>
-              <span className={styles.totalLabel}>Customers</span>
-              <span className={styles.totalValue}>{totals.customers}</span>
-            </div>
-            <div className={styles.totalCol}>
-              <span className={styles.totalLabel}>Markets</span>
-              <span className={styles.totalValue}>{totals.markets}</span>
-            </div>
-            <div className={styles.totalCol}>
-              <span className={styles.totalLabel}>Orders</span>
-              <span className={styles.totalValue}>{totals.orders}</span>
-            </div>
-          </section>
-
-          {/* Needs Attention List */}
-          <section className={styles.attentionSection}>
-            <h2 className={styles.sectionTitle}>Needs attention</h2>
-            <div className={styles.attentionCard}>
-              <Link to="/admin/people?role=farmer&status=pending" className={styles.attentionRow}>
-                <div className={styles.attentionLeft}>
-                  <AlertCircle
-                    size={18}
-                    className={pendingFarmers > 0 ? styles.alertCarrot : styles.alertMuted}
-                    aria-hidden="true"
-                  />
-                  <span className={styles.attentionText}>Pending stall applications</span>
-                </div>
-                <div className={styles.attentionRight}>
-                  {pendingFarmers > 0 ? (
-                    <span className={styles.countBadge}>{pendingFarmers}</span>
-                  ) : (
-                    <span className={styles.clearText}>Clear</span>
-                  )}
-                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
-                </div>
-              </Link>
-
-              <Link to="/admin/moderation" className={styles.attentionRow}>
-                <div className={styles.attentionLeft}>
-                  <Flag
-                    size={18}
-                    className={openFlags > 0 ? styles.alertCarrot : styles.alertMuted}
-                    aria-hidden="true"
-                  />
-                  <span className={styles.attentionText}>Flagged listings and reviews</span>
-                </div>
-                <div className={styles.attentionRight}>
-                  {openFlags > 0 ? (
-                    <span className={styles.countBadge}>{openFlags}</span>
-                  ) : (
-                    <span className={styles.clearText}>Clear</span>
-                  )}
-                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
-                </div>
-              </Link>
-
-              <Link to="/admin/settings?tab=messages" className={styles.attentionRow}>
-                <div className={styles.attentionLeft}>
-                  <Mail
-                    size={18}
-                    className={unhandledMessages > 0 ? styles.alertCarrot : styles.alertMuted}
-                    aria-hidden="true"
-                  />
-                  <span className={styles.attentionText}>Unhandled contact messages</span>
-                </div>
-                <div className={styles.attentionRight}>
-                  {unhandledMessages > 0 ? (
-                    <span className={styles.countBadge}>{unhandledMessages}</span>
-                  ) : (
-                    <span className={styles.clearText}>Clear</span>
-                  )}
-                  <ChevronRight size={16} className={styles.chevron} aria-hidden="true" />
-                </div>
-              </Link>
-            </div>
-          </section>
-
-          {/* Recent Activity (Last 10 events) */}
-          <section className={styles.activitySection}>
-            <h2 className={styles.sectionTitle}>Recent activity</h2>
-            {recentActivity.length === 0 ? (
-              <p className={styles.emptyText}>No recent audit activity.</p>
-            ) : (
-              <div className={styles.activityList}>
-                {recentActivity.map((event, idx) => (
-                  <div key={idx} className={styles.activityRow}>
-                    <div className={styles.activityTextRow}>
-                      <span className={styles.activityBullet}>•</span>
-                      <span className={styles.activityText}>{event.text}</span>
-                    </div>
-                    <span className={styles.activityTime}>
-                      {event.at ? formatDateShort(event.at) : ''}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </>
-      )}
-    </div>
-  );
+function formatFreshness(lastUpdated) {
+  if (!lastUpdated) return 'updated just now';
+  const now = Date.now();
+  const diffSec = Math.max(0, Math.floor((now - new Date(lastUpdated).getTime()) / 1000));
+  if (diffSec < 60) return 'updated just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin === 1) return 'updated 1 minute ago';
+  if (diffMin < 60) return `updated ${diffMin} minutes ago`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours === 1) return 'updated 1 hour ago';
+  return `updated ${diffHours} hours ago`;
 }
 
-export default Overview;
+function formatCurrentDay() {
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date());
+}
+
+export default function Overview() {
+  const {
+    overview,
+    pendingFarmers,
+    openFlags,
+    unhandledMessages,
+    lastUpdated,
+    loadingOverview,
+    errorOverview,
+    refreshOverview,
+  } = useAdmin();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const [, setTick] = useState(0);
+
+  // Re-derive freshness text every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await refreshOverview();
+    } catch {
+      // Handled via context errorOverview
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const contextLine = useMemo(() => {
+    const day = formatCurrentDay();
+    const freshness = formatFreshness(lastUpdated);
+    return `${day} · ${freshness}`;
+  }, [lastUpdated]);
+
+  const nf = useMemo(() => new Intl.NumberFormat('en-US'), []);
+
+  // Action Queue items
+  const queueItems = useMemo(() => {
+    const items = [];
+    if (pendingFarmers > 0) {
+      items.push({
+        id: 'pending-farmers',
+        count: pendingFarmers,
+        label: 'Farmers awaiting approval',
+        to: '/admin/people?tab=farmers&status=pending',
+        ariaLabel: `${pendingFarmers} farmers awaiting approval. Review`,
+      });
+    }
+    if (openFlags > 0) {
+      items.push({
+        id: 'open-flags',
+        count: openFlags,
+        label: 'Flagged items in moderation',
+        to: '/admin/moderation?status=open',
+        ariaLabel: `${openFlags} flagged items in moderation. Review`,
+      });
+    }
+    if (unhandledMessages > 0) {
+      items.push({
+        id: 'unhandled-messages',
+        count: unhandledMessages,
+        label: 'Unanswered support messages',
+        to: '/admin/settings?tab=messages&status=open',
+        ariaLabel: `${unhandledMessages} unanswered support messages. Review`,
+      });
+    }
+    return items;
+  }, [pendingFarmers, openFlags, unhandledMessages]);
+
+  const activityRows = useMemo(() => {
+    const list = overview?.recentActivity || [];
+    return list.slice(0, 10).map((act, idx) => ({
+      id: `act-${idx}`,
+      when: act.at ? `${formatDate(act.at)} · ${formatTime(act.at)}` : '',
+      text: act.text || 'System event recorded',
+    }));
+  }, [overview?.recentActivity]);
+
+  const activityColumns = useMemo(
+    () => [
+      {
+        key: 'when',
+        header: 'When',
+        width: '13rem',
+        render: (val) => <span className={styles.activityTimeCell}>{val}</span>,
+      },
+      {
+        key: 'text',
+        header: 'Activity',
+        render: (val) => <span className={styles.activityTextCell}>{val}</span>,
+      },
+    ],
+    []
+  );
+
+  const farmersCount = overview?.totals?.farmers ?? 0;
+  const customersCount = overview?.totals?.customers ?? 0;
+  const marketsCount = overview?.totals?.markets ?? 0;
+  const ordersCount = overview?.totals?.orders ?? 0;
+
+  const refreshAction = (
+    <button
+      type="button"
+      className={styles.refreshButton}
+      onClick={handleRefresh}
+      disabled={refreshing}
+      aria-label="Refresh overview metrics"
+    >
+      <RefreshCw
+        size={14}
+        className={`${styles.refreshIcon} ${refreshing ? styles.spinning : ''}`}
+        aria-hidden="true"
+      />
+      <span>{refreshing ? 'Refreshing…' : 'Refresh'}</span>
+    </button>
+  );
+
+  const isLoadingInitial = loadingOverview && !overview;
+  const hasError = Boolean(errorOverview && !overview);
+
+  return (
+    <AdminPage title="Overview" context={contextLine} action={refreshAction}>
+      <div className={styles.stack}>
+        {/* Error State */}
+        {hasError && (
+          <div className={styles.errorPanel} role="alert">
+            <div className={styles.errorLeft}>
+              <AlertCircle size={20} className={styles.errorIcon} aria-hidden="true" />
+              <div>
+                <p className={styles.errorTitle}>Unable to load overview</p>
+                <p className={styles.errorMessage}>{errorOverview}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className={styles.retryButton}
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Section 1: Needs your attention (Action Queue) */}
+        <section className={styles.section} aria-labelledby="heading-attention">
+          <h2 id="heading-attention" className={styles.sectionHeading}>
+            Needs your attention
+          </h2>
+
+          {isLoadingInitial ? (
+            <div className={styles.queueSkeletonBox}>
+              <div className={styles.skeletonQueueRow} />
+              <div className={styles.skeletonQueueRow} />
+            </div>
+          ) : queueItems.length > 0 ? (
+            <ul className={styles.queueList}>
+              {queueItems.map((item) => (
+                <li key={item.id} className={styles.queueItem}>
+                  <Link to={item.to} className={styles.queueLink} aria-label={item.ariaLabel}>
+                    <div className={styles.queueLeft}>
+                      <span className={styles.queueCount}>{nf.format(item.count)}</span>
+                      <span className={styles.queueLabel}>{item.label}</span>
+                    </div>
+                    <div className={styles.queueRight}>
+                      <span className={styles.queueActionText}>Review</span>
+                      <ArrowRight size={16} className={styles.queueArrow} aria-hidden="true" />
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className={styles.queueQuietBox}>
+              <p className={styles.queueQuietText}>Nothing needs attention right now.</p>
+            </div>
+          )}
+        </section>
+
+        {/* Section 2: Platform Metrics */}
+        <section className={styles.section} aria-labelledby="heading-platform">
+          <h2 id="heading-platform" className={styles.sectionHeading}>
+            Platform
+          </h2>
+
+          {isLoadingInitial ? (
+            <div className={styles.metricsGrid}>
+              <div className={styles.skeletonTile} />
+              <div className={styles.skeletonTile} />
+              <div className={styles.skeletonTile} />
+              <div className={styles.skeletonTile} />
+            </div>
+          ) : (
+            <div className={styles.metricsGrid}>
+              <StatTile
+                value={nf.format(farmersCount)}
+                label="Farmers"
+                to="/admin/people?tab=farmers"
+              />
+              <StatTile
+                value={nf.format(customersCount)}
+                label="Customers"
+                to="/admin/people?tab=customers"
+              />
+              <StatTile
+                value={nf.format(marketsCount)}
+                label="Markets"
+                to="/admin/markets"
+              />
+              <StatTile
+                value={nf.format(ordersCount)}
+                label="Orders"
+                to="/admin/reports"
+              />
+            </div>
+          )}
+        </section>
+
+        {/* Section 3: Recent Activity (Only if feed exists) */}
+        {!isLoadingInitial && activityRows.length > 0 && (
+          <section className={styles.section} aria-labelledby="heading-activity">
+            <div className={styles.sectionHeaderRow}>
+              <h2 id="heading-activity" className={styles.sectionHeading}>
+                Recent activity
+              </h2>
+              <Link to="/admin/reports" className={styles.seeReportsLink}>
+                <span>See reports</span>
+                <ArrowRight size={14} aria-hidden="true" />
+              </Link>
+            </div>
+
+            <DataTable
+              columns={activityColumns}
+              rows={activityRows}
+              rowKey="id"
+              empty="No recent activity recorded."
+            />
+          </section>
+        )}
+      </div>
+    </AdminPage>
+  );
+}

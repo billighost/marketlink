@@ -6,16 +6,15 @@
   min-width: 0;
 }
 
-/* Rail layout at 1024px+ */
+/*
+ * Rail layout at 1024px+. The scrolling and pinning is handled by the
+ * parent .asideRail in Products.module.css (it stretches to the full
+ * pane height and scrolls on its own) — this just needs to fill it.
+ */
 .rail {
   width: 100%;
   padding-right: var(--space-4);
   gap: var(--space-6);
-  position: sticky;
-  top: calc(var(--topbar-h-desk) + var(--space-6));
-  max-height: calc(100vh - var(--topbar-h-desk) - var(--space-10));
-  overflow-y: auto;
-  scrollbar-width: thin;
 }
 
 /* Sheet layout under 1024px */

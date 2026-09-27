@@ -125,9 +125,9 @@ export function BarChart({
   const W = Math.max(120, data.length * (barW + gap));
   const chartH = height - 32; // Reserve bottom 32px for x-axis labels
 
-  // Pick up to 5 label positions: first, last, and evenly spaced
+  // Pick up to 5 label positions: first, last, and evenly spaced (or all if <= 8 items)
   const labelIndices = new Set();
-  if (data.length <= 5) {
+  if (data.length <= 8) {
     data.forEach((_, i) => labelIndices.add(i));
   } else {
     labelIndices.add(0);
@@ -158,70 +158,84 @@ export function BarChart({
         {/* Y-axis max label indicator */}
         <div className={styles.yMaxLabel}>{valueFormatter(maxVal)}</div>
 
-        <svg
-          viewBox={`0 0 ${W} ${height}`}
-          className={styles.svg}
-          role="img"
-          aria-label={computedAriaLabel}
-          preserveAspectRatio="none"
-        >
-          {/* Baseline hairline */}
-          <line
-            x1="0"
-            y1={chartH}
-            x2={W}
-            y2={chartH}
-            className={styles.baseline}
-          />
+        <div className={styles.svgScroll}>
+          <svg
+            viewBox={`0 0 ${W} ${chartH}`}
+            className={styles.svg}
+            style={{ width: '100%', minWidth: `${W}px`, height: `${chartH}px` }}
+            role="img"
+            aria-label={computedAriaLabel}
+            preserveAspectRatio="none"
+          >
+            {/* Baseline hairline */}
+            <line
+              x1="0"
+              y1={chartH - 1}
+              x2={W}
+              y2={chartH - 1}
+              className={styles.baseline}
+            />
 
-          {/* Bars */}
-          {data.map((item, idx) => {
-            const barHeight = maxVal > 0 ? (item.value / maxVal) * (chartH - 8) : 0;
-            const x = idx * (barW + gap) + gap / 2;
-            const y = chartH - barHeight;
-            const isHighlighted = idx === activeIdx;
+            {/* Bars */}
+            {data.map((item, idx) => {
+              const barHeight = maxVal > 0 ? (item.value / maxVal) * (chartH - 10) : 0;
+              const x = idx * (barW + gap) + gap / 2;
+              const y = chartH - 1 - barHeight;
+              const isHighlighted = idx === activeIdx;
 
-            return (
-              <g
-                key={idx}
-                className={styles.barGroup}
-                onMouseEnter={() => setHoveredIdx(idx)}
-                onMouseLeave={() => setHoveredIdx(null)}
-                onClick={() => setHoveredIdx(idx)}
-              >
-                {/* Invisible larger hit target for touch accessibility */}
-                <rect
-                  x={x - gap / 4}
-                  y={0}
-                  width={barW + gap / 2}
-                  height={height}
-                  fill="transparent"
-                  className={styles.hitTarget}
-                />
-                {/* Rendered Bar */}
-                <rect
-                  x={x}
-                  y={y}
-                  width={barW}
-                  height={Math.max(2, barHeight)}
-                  rx="3"
-                  className={`${styles.bar} ${isHighlighted ? styles.barHighlight : ''}`}
-                />
-                {/* X-axis label if selected */}
-                {labelIndices.has(idx) && (
-                  <text
-                    x={x + barW / 2}
-                    y={chartH + 20}
-                    textAnchor="middle"
-                    className={styles.xLabel}
-                  >
-                    {item.label}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </svg>
+              return (
+                <g
+                  key={idx}
+                  className={styles.barGroup}
+                  tabIndex={0}
+                  onMouseEnter={() => setHoveredIdx(idx)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  onFocus={() => setHoveredIdx(idx)}
+                  onBlur={() => setHoveredIdx(null)}
+                  onClick={() => setHoveredIdx(idx)}
+                >
+                  {/* Invisible larger hit target for touch accessibility */}
+                  <rect
+                    x={x - gap / 4}
+                    y={0}
+                    width={barW + gap / 2}
+                    height={chartH}
+                    fill="transparent"
+                    className={styles.hitTarget}
+                  />
+                  {/* Rendered Bar */}
+                  <rect
+                    x={x}
+                    y={y}
+                    width={barW}
+                    height={Math.max(2, barHeight)}
+                    rx="3"
+                    className={`${styles.bar} ${isHighlighted ? styles.barHighlight : ''}`}
+                  />
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* HTML X-axis Labels (never stretched by SVG aspect-ratio scaling) */}
+          <div className={styles.xAxisRow} aria-hidden="true" style={{ width: '100%', minWidth: `${W}px` }}>
+            {data.map((item, idx) => {
+              const showLabel = labelIndices.has(idx);
+              const isHighlighted = idx === activeIdx;
+              const leftPct = ((idx + 0.5) / data.length) * 100;
+
+              return (
+                <div
+                  key={idx}
+                  className={`${styles.xAxisCell} ${isHighlighted ? styles.xAxisCellActive : ''}`}
+                  style={{ left: `${leftPct}%` }}
+                >
+                  {showLabel ? item.label : ''}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Accessible data table alternative */}

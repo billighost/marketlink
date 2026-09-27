@@ -74,15 +74,21 @@ Review and adjust variables in `.env` if using a custom MongoDB connection or po
 
 ## 4. Database Seeding & Indexes
 
+> ⚠️ **CRITICAL: THE DATABASE MUST NEVER BE SEEDED AGAIN.**  
+> Running `npm run seed` or `npm run seed:minimal` wipes and destroys all current users, farmers, stalls, produce, orders, and reviews in the database.  
+> **A permanent safety guard is active:** If the database already contains records, the seeding scripts will automatically abort with an alert and refuse to modify any data.  
+> Do **NOT** re-seed an active environment.
+
 ```bash
-# 1. Populate full database with realistic mock data & compute aggregates
+# ⚠️ CAUTION: Only run on a completely empty, brand new database setup.
+# If data exists, the script will automatically abort to preserve your data.
 npm run seed
 
-# 2. Verify or recreate all database indexes idempotently
+# Verify or recreate all database indexes idempotently (safe to run anytime)
 npm run indexes
 ```
 
-> **Note**: `npm run seed` refuses to run if `NODE_ENV=production` unless passed `--force`.
+> **Safety Guard**: Both `seed.js` and `seedMinimal.js` detect existing database records and immediately abort to prevent accidental data loss. To intentionally force an overwrite, the `--force` flag is required.
 
 ---
 

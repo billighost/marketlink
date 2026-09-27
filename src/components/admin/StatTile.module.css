@@ -1,0 +1,55 @@
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--card-padding);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+}
+
+.tileLink:hover {
+  background-color: var(--color-canvas-soft);
+  border-color: var(--color-ink-soft);
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+}
+
+.value {
+  font-family: var(--font-body);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-h2);
+  color: var(--color-ink);
+}
+
+.deltaWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--lh-ui);
+}
+
+.deltaUp {
+  color: var(--color-herb);
+}
+
+.deltaDown {
+  color: var(--color-danger);
+}
+
+.deltaFlat {
+  color: var(--color-ink-soft);
+}

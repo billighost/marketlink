@@ -81,7 +81,6 @@ export async function updateMarket(id, updates) {
 export async function deleteMarket(id, force = false) {
   return apiFetch(`/admin/markets/${id}${force ? '?force=true' : ''}`, {
     method: 'DELETE',
-    body: { force },
   });
 }
 
@@ -127,6 +126,14 @@ export async function getReportsHistory(signal) {
 export async function exportAdminReport(type = 'orders', range = '30d') {
   return apiFetch('/admin/reports/export', {
     query: { type, range },
+    headers: { Accept: 'text/csv' },
+    responseType: 'blob',
+  });
+}
+
+export async function exportAdminSalesCsv(range = '30d') {
+  return apiFetch('/admin/reports/sales.csv', {
+    query: { range },
     headers: { Accept: 'text/csv' },
     responseType: 'blob',
   });
@@ -226,3 +233,11 @@ export async function updatePlatformSettings(data) {
     body: data,
   });
 }
+
+/**
+ * Settings: Email Log
+ */
+export async function getAdminEmailLog(query = {}, signal) {
+  return apiFetch('/admin/email-log', { query, signal });
+}
+
