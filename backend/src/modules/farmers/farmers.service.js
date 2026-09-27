@@ -143,7 +143,7 @@ export async function getFarmerDetail(id) {
   const [markets, breakdownDocs, productCount, stockCounts] = await Promise.all([
     db
       .collection(COLLECTIONS.MARKETS)
-      .find({ _id: { $in: farmer.marketIds || [] }, status: 'active' }, { projection: { _id: 1, name: 1 } })
+      .find({ _id: { $in: farmer.marketIds || [] }, status: 'active' }, { projection: { _id: 1, name: 1, address: 1, location: 1, schedule: 1, slug: 1 } })
       .toArray(),
     db
       .collection(COLLECTIONS.REVIEWS)

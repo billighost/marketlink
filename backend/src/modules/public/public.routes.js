@@ -170,8 +170,10 @@ const routes = [
       try {
         const limit = parseLimit(req.query.limit, 20, 50);
         const cursor = req.query.cursor ? String(req.query.cursor).trim() : undefined;
+        const category = req.query.category ? String(req.query.category).trim() : undefined;
+        const includeSoldOut = req.query.includeSoldOut === 'true';
 
-        const result = await listFarmerProducts(req.params.id, { cursor, limit });
+        const result = await listFarmerProducts(req.params.id, { category, includeSoldOut, cursor, limit });
         return res.json(result);
       } catch (err) {
         next(err);
