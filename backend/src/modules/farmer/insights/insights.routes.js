@@ -8,7 +8,7 @@ import { COLLECTIONS } from '../../../db/collections.js';
 import { toObjectId } from '../../../utils/ids.js';
 import { AppError } from '../../../utils/errors.js';
 import { getFarmerInsights } from './insights.service.js';
-import { getFarmerOverview } from './overview.service.js';
+import { getFarmerOverview, getFarmerBestSellingProducts } from './overview.service.js';
 import { defineRoutes } from '../../../utils/defineRoutes.js';
 
 export const farmerInsightsRouter = Router();
@@ -87,6 +87,23 @@ const routes = [
             },
           },
         });
+      } catch (err) {
+        next(err);
+      }
+    },
+  },
+
+  // GET /api/farmer/best-sellers
+  {
+    method: 'get',
+    path: '/best-sellers',
+    auth: 'farmer',
+    middlewares: [resolveFarmer],
+    summary: 'Best-selling products ranking with real order percentage and medals',
+    handler: async (req, res, next) => {
+      try {
+        const data = await getFarmerBestSellingProducts(req.farmer._id);
+        res.json({ data });
       } catch (err) {
         next(err);
       }

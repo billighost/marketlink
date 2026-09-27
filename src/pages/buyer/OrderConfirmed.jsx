@@ -91,7 +91,7 @@ export function OrderConfirmed() {
           Order {orderNumber} · {formatPrice(totalCents)} to pay at the stall
         </p>
 
-        {/* Actions: View order is the ONE beet element */}
+        {/* Actions: View order and Market Route Planner */}
         <div className={styles.actions}>
           <Button
             variant="primary"
@@ -100,6 +100,15 @@ export function OrderConfirmed() {
             className={styles.viewOrderBtn}
           >
             View order
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="lg"
+            to="/buyer/route"
+            style={{ width: '100%' }}
+          >
+            🗺️ View Market Route Planner
           </Button>
 
           <Link to="/buyer" className={styles.backLink}>

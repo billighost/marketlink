@@ -95,6 +95,13 @@ export function BuyerTopBar() {
           >
             Orders
           </Link>
+          <Link
+            to="/buyer/route"
+            className={`${styles.navLink} ${currentPath.startsWith('/buyer/route') ? styles.navLinkActive : ''}`}
+            title="Market Route Planner"
+          >
+            Route
+          </Link>
         </nav>
 
         {/* Action group: on mobile MarketDropdown flexes on left; Search and Basket on right */}

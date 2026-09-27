@@ -482,3 +482,198 @@
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
 }
+
+/* ==========================================================================
+   MarketLink Availability Mode Banner Card
+   ========================================================================== */
+
+.availabilityModeCard {
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: all var(--duration-fast) var(--ease-standard);
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.availCardOpen {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+}
+
+.availCardLimited {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.08);
+}
+
+.availCardClosed {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.08);
+}
+
+.availHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.availStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.availCardOpen .availStatusBadge {
+  color: #065f46;
+}
+
+.availCardLimited .availStatusBadge {
+  color: #92400e;
+}
+
+.availCardClosed .availStatusBadge {
+  color: #991b1b;
+}
+
+.availPulseDot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+
+.availCardOpen .availPulseDot {
+  background-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  animation: pulseOpen 2s infinite ease-in-out;
+}
+
+.availCardLimited .availPulseDot {
+  background-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+  animation: pulseLimited 2s infinite ease-in-out;
+}
+
+.availCardClosed .availPulseDot {
+  background-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+@keyframes pulseOpen {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.75; }
+}
+
+@keyframes pulseLimited {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.75; }
+}
+
+.availModeTag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.availCardOpen .availModeTag {
+  color: #047857;
+}
+
+.availCardLimited .availModeTag {
+  color: #b45309;
+}
+
+.availCardClosed .availModeTag {
+  color: #b91c1c;
+}
+
+.availBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.availMetaMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.availFarmName {
+  font-family: var(--font-head);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.availLocationRow,
+.availHoursRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  font-weight: 500;
+}
+
+.availHoursRow {
+  font-weight: 600;
+  color: #065f46;
+}
+
+.availCardLimited .availHoursRow {
+  color: #92400e;
+}
+
+.availCalloutBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  color: #92400e;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.availClosedCalloutBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-md);
+  color: #991b1b;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.availCalloutText {
+  margin: 0;
+  line-height: 1.35;
+}

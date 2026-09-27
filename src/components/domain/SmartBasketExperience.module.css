@@ -1,7 +1,7 @@
 /* ==========================================================================
    SMART BASKET EXPERIENCE - MarketLink Design System
-   Modern Indigo, Electric Violet & Warm Amber Luxury Aesthetic.
-   100% Green-Free, Hyper-Responsive Across Mobile, Tablet & Desktop.
+   Organic Forest Green, Emerald & Sage Luxury Aesthetic.
+   Hyper-Responsive Across Mobile, Tablet & Desktop.
    ========================================================================== */
 
 .container {
@@ -24,13 +24,13 @@
 /* ─── Hero / Header ──────────────────────────────────────────────────────── */
 .hero {
   position: relative;
-  background: linear-gradient(135deg, #090d16 0%, #151a30 45%, #231b54 100%);
+  background: linear-gradient(135deg, #052014 0%, #0d3822 45%, #14532d 100%);
   border-radius: 1.25rem;
   padding: 2.25rem 2.25rem;
   color: #ffffff;
   overflow: hidden;
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(165, 180, 252, 0.22);
+  border: 1px solid rgba(167, 243, 208, 0.22);
 }
 
 .heroGlow {
@@ -39,7 +39,7 @@
   right: -60px;
   width: 320px;
   height: 320px;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.38) 0%, rgba(79, 70, 229, 0.18) 50%, transparent 72%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(5, 150, 105, 0.18) 50%, transparent 72%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -134,8 +134,8 @@
 }
 
 .promptBar:focus-within {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.22);
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.22);
 }
 
 .promptInputGroup {
@@ -147,7 +147,7 @@
 }
 
 .promptIcon {
-  color: #6366f1;
+  color: #10b981;
   flex-shrink: 0;
 }
 
@@ -172,7 +172,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #15803d 0%, #047857 100%);
   color: #ffffff;
   border: none;
   padding: 0.8rem 1.55rem;
@@ -181,15 +181,15 @@
   font-size: 0.92rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.38);
+  box-shadow: 0 4px 14px rgba(21, 128, 61, 0.38);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .generateBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #166534 0%, #065f46 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.48);
+  box-shadow: 0 6px 18px rgba(21, 128, 61, 0.48);
 }
 
 .generateBtn:disabled {
@@ -249,8 +249,8 @@
 }
 
 .controlsHighlighted {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16), 0 8px 24px rgba(15, 23, 42, 0.08);
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16), 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .controlGroup {
@@ -308,9 +308,9 @@
 
 .controlSelect:focus,
 .controlInput:focus {
-  border-color: #6366f1;
+  border-color: #10b981;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
 .budgetInputWrapper {
@@ -323,7 +323,7 @@
   position: absolute;
   left: 0.85rem;
   font-weight: 800;
-  color: #4f46e5;
+  color: #15803d;
   font-size: 1.05rem;
   pointer-events: none;
 }
@@ -358,10 +358,10 @@
 }
 
 .budgetQuickBtn.active {
-  background: #4f46e5;
+  background: #15803d;
   color: #ffffff;
-  border-color: #4f46e5;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+  border-color: #15803d;
+  box-shadow: 0 2px 8px rgba(21, 128, 61, 0.3);
 }
 
 /* ─── DYNAMIC BUDGET TRACKER CARD ────────────────────────────────────────── */
@@ -421,7 +421,7 @@
 }
 
 .budgetSpent {
-  color: #4f46e5;
+  color: #15803d;
 }
 
 .remainingBadgeRow {
@@ -432,7 +432,7 @@
 }
 
 .budgetRemaining {
-  color: #0284c7;
+  color: #059669;
 }
 
 .budgetRemaining.over {
@@ -440,7 +440,7 @@
 }
 
 .budgetRemaining.exact {
-  color: #4f46e5;
+  color: #15803d;
 }
 
 .budgetStatusPill {
@@ -454,15 +454,15 @@
 }
 
 .statusGood {
-  background: #f0f9ff;
-  color: #0284c7;
-  border: 1px solid #bae6fd;
+  background: #f0fdf4;
+  color: #059669;
+  border: 1px solid #bbf7d0;
 }
 
 .statusExact {
-  background: #eef2ff;
-  color: #4338ca;
-  border: 1px solid #c7d2fe;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .statusOver {
@@ -492,9 +492,9 @@
 }
 
 .metaBadgePrimary {
-  background: #eef2ff;
-  border-color: #c7d2fe;
-  color: #4338ca;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
   font-weight: 700;
 }
 
@@ -516,7 +516,7 @@
 
 .progressBarFill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  background: linear-gradient(90deg, #10b981 0%, #059669 50%, #047857 100%);
   border-radius: 6px;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.35s ease;
 }
@@ -600,10 +600,10 @@
 }
 
 .modifyToggleBtn.active {
-  background: #4f46e5;
+  background: #15803d;
   color: #ffffff;
-  border-color: #4f46e5;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.28);
+  border-color: #15803d;
+  box-shadow: 0 2px 8px rgba(21, 128, 61, 0.28);
 }
 
 /* Error & Loading States */
@@ -673,7 +673,7 @@
 
 .resetBtn {
   margin-top: 0.5rem;
-  background: #4f46e5;
+  background: #15803d;
   color: #ffffff;
   border: none;
   padding: 0.65rem 1.35rem;
@@ -682,11 +682,11 @@
   font-size: 0.88rem;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
 }
 
 .resetBtn:hover {
-  background: #4338ca;
+  background: #166534;
 }
 
 /* ─── Items List ─────────────────────────────────────────────────────────── */
@@ -709,8 +709,8 @@
 }
 
 .itemCard:hover {
-  border-color: #c7d2fe;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.08);
+  border-color: #a7f3d0;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.08);
   transform: translateY(-1px);
 }
 
@@ -773,7 +773,7 @@
 }
 
 .itemName:hover {
-  color: #4f46e5;
+  color: #15803d;
   text-decoration: underline;
 }
 
@@ -782,8 +782,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: #eef2ff;
-  color: #4338ca;
+  background: #ecfdf5;
+  color: #065f46;
   padding: 0.18rem 0.55rem;
   border-radius: 1rem;
 }
@@ -798,11 +798,11 @@
 }
 
 .farmerIcon {
-  color: #818cf8;
+  color: #10b981;
 }
 
 .farmerLink {
-  color: #4f46e5;
+  color: #15803d;
   font-weight: 600;
   text-decoration: none;
 }
@@ -835,9 +835,9 @@
 }
 
 .stockGood {
-  background: #f0f9ff;
-  color: #0284c7;
-  border: 1px solid #bae6fd;
+  background: #f0fdf4;
+  color: #059669;
+  border: 1px solid #bbf7d0;
 }
 
 .stockLow {
@@ -936,9 +936,9 @@
 }
 
 .replaceBtn:hover {
-  background: #eef2ff;
-  color: #4338ca;
-  border-color: #c7d2fe;
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
 }
 
 .removeBtn:hover {
@@ -976,9 +976,9 @@
 }
 
 .searchBar:focus-within {
-  border-color: #6366f1;
+  border-color: #10b981;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
 .searchBar input {
@@ -1016,7 +1016,7 @@
 
 .searchResultCard:hover {
   background: #ffffff;
-  border-color: #c7d2fe;
+  border-color: #a7f3d0;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
 }
 
@@ -1036,7 +1036,7 @@
 
 .searchResultPrice {
   font-size: 0.8rem;
-  color: #4f46e5;
+  color: #15803d;
   font-weight: 700;
 }
 
@@ -1046,7 +1046,7 @@
 }
 
 .addBtn {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #15803d 0%, #10b981 100%);
   color: #ffffff;
   border: none;
   border-radius: 0.55rem;
@@ -1062,7 +1062,7 @@
 }
 
 .addBtn:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #166534 0%, #059669 100%);
   transform: scale(1.04);
 }
 
@@ -1120,9 +1120,9 @@
 }
 
 .tagGood {
-  background: #eef2ff;
-  color: #4338ca;
-  border: 1px solid #c7d2fe;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .tagOver {
@@ -1159,7 +1159,7 @@
 }
 
 .reserveBasketBtn {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #15803d 0%, #047857 100%);
   color: #ffffff;
   border: none;
   padding: 0.85rem 2rem;
@@ -1170,14 +1170,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  box-shadow: 0 4px 18px rgba(79, 70, 229, 0.38);
+  box-shadow: 0 4px 18px rgba(21, 128, 61, 0.38);
   transition: all 0.2s ease;
 }
 
 .reserveBasketBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #166534 0%, #065f46 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.48);
+  box-shadow: 0 8px 24px rgba(21, 128, 61, 0.48);
 }
 
 .reserveBasketBtn:disabled {
@@ -1275,7 +1275,7 @@
 
 .altItem:hover {
   background: #ffffff;
-  border-color: #c7d2fe;
+  border-color: #a7f3d0;
 }
 
 .altMeta {
@@ -1292,7 +1292,7 @@
 
 .altPrice {
   font-size: 0.82rem;
-  color: #4f46e5;
+  color: #15803d;
   font-weight: 700;
 }
 
@@ -1302,7 +1302,7 @@
 }
 
 .swapBtn {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #15803d 0%, #10b981 100%);
   color: #ffffff;
   border: none;
   border-radius: 0.55rem;
@@ -1317,7 +1317,7 @@
 }
 
 .swapBtn:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #166534 0%, #059669 100%);
 }
 
 .noAlternatives {
@@ -1367,7 +1367,7 @@
 .detailsPrice {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #4f46e5;
+  color: #15803d;
 }
 
 .detailsUnit {

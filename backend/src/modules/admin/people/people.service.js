@@ -5,6 +5,7 @@
  */
 
 import { ObjectId } from 'mongodb';
+import bcrypt from 'bcryptjs';
 import { getDb } from '../../../db/client.js';
 import { COLLECTIONS } from '../../../db/collections.js';
 import { toObjectId } from '../../../utils/ids.js';
@@ -502,3 +503,269 @@ export async function activateCustomer(adminActor, customerId) {
   const updatedUser = await db.collection(COLLECTIONS.USERS).findOne({ _id: cid });
   return toPersonSummary(updatedUser);
 }
+
+/**
+ * Creates a new user (farmer or customer) from the admin portal.
+ *
+ * @param {object} adminActor
+ * @param {object} payload - { role, name, email, phone, password, stallName, stallNumber, status }
+ * @returns {Promise<object>}
+ */
+export async function createPerson(adminActor, payload = {}) {
+  const db = getDb();
+
+  const role = payload.role === 'farmer' ? 'farmer' : 'customer';
+  const name = (payload.name || '').trim();
+  const email = (payload.email || '').toLowerCase().trim();
+  const phone = payload.phone ? payload.phone.trim() : null;
+  const status = payload.status || (role === 'farmer' ? 'active' : 'active');
+
+  if (!name || name.length < 2) {
+    throw new AppError(400, 'INVALID_NAME', 'Name must be at least 2 characters long.');
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    throw new AppError(400, 'INVALID_EMAIL', 'A valid email address is required.');
+  }
+
+  // Check email uniqueness
+  const existingUser = await db.collection(COLLECTIONS.USERS).findOne({ email });
+  if (existingUser) {
+    throw new AppError(409, 'EMAIL_EXISTS', 'A user with this email address already exists.');
+  }
+
+  const password = payload.password && payload.password.trim() ? payload.password.trim() : `MarketLink#${Math.floor(1000 + Math.random() * 9000)}`;
+  const passwordHash = await bcrypt.hash(password, 10);
+  const now = new Date();
+
+  const userDoc = {
+    role,
+    name,
+    email,
+    passwordHash,
+    phone,
+    status,
+    emailVerified: true,
+    emailVerifiedAt: now,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const userInsertRes = await db.collection(COLLECTIONS.USERS).insertOne(userDoc);
+  const userId = userInsertRes.insertedId;
+  userDoc._id = userId;
+
+  let farmerDoc = null;
+  if (role === 'farmer') {
+    const stallName = (payload.stallName || '').trim() || `${name}'s Stall`;
+    farmerDoc = {
+      userId,
+      stallName,
+      contactPerson: name,
+      phone,
+      email,
+      stallNumber: payload.stallNumber ? payload.stallNumber.trim() : null,
+      specialty: payload.specialty ? payload.specialty.trim() : '',
+      story: '',
+      since: now.getFullYear(),
+      marketIds: [],
+      operatingDays: ['saturday', 'sunday'],
+      pickupWindows: [
+        { day: 'saturday', startTime: '09:00', endTime: '13:00' },
+        { day: 'sunday', startTime: '09:00', endTime: '13:00' },
+      ],
+      listingEnabled: status === 'active',
+      ratingAvg: 0,
+      ratingCount: 0,
+      salesCount: 0,
+      isTopSeller: false,
+      isNew: true,
+      stallNameLower: stallName.toLowerCase(),
+      rnd: Math.random(),
+      categorySlugs: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const farmerInsertRes = await db.collection(COLLECTIONS.FARMERS).insertOne(farmerDoc);
+    farmerDoc._id = farmerInsertRes.insertedId;
+  }
+
+  await writeAudit(
+    adminActor,
+    role === 'farmer' ? 'farmer.create' : 'customer.create',
+    { type: role, id: userId },
+    { name, email, role, status }
+  );
+
+  return toPersonSummary(userDoc, farmerDoc);
+}
+
+/**
+ * Updates a user's details and linked farmer record.
+ *
+ * @param {object} adminActor
+ * @param {string|ObjectId} personId
+ * @param {object} updates
+ * @returns {Promise<object>}
+ */
+export async function updatePerson(adminActor, personId, updates = {}) {
+  const db = getDb();
+  const uid = toObjectId(personId);
+
+  const user = await db.collection(COLLECTIONS.USERS).findOne({ _id: uid });
+  if (!user) {
+    throw AppError.notFound('Person not found');
+  }
+
+  const now = new Date();
+  const userSet = { updatedAt: now };
+
+  if (updates.name !== undefined) {
+    const name = String(updates.name).trim();
+    if (name.length < 2) throw new AppError(400, 'INVALID_NAME', 'Name must be at least 2 characters.');
+    userSet.name = name;
+  }
+
+  if (updates.email !== undefined) {
+    const email = String(updates.email).toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) throw new AppError(400, 'INVALID_EMAIL', 'A valid email is required.');
+
+    if (email !== user.email) {
+      const existing = await db.collection(COLLECTIONS.USERS).findOne({ email, _id: { $ne: uid } });
+      if (existing) throw new AppError(409, 'EMAIL_EXISTS', 'Email address is already in use.');
+      userSet.email = email;
+    }
+  }
+
+  if (updates.phone !== undefined) {
+    userSet.phone = updates.phone ? String(updates.phone).trim() : null;
+  }
+
+  if (updates.status !== undefined) {
+    const validStatuses = ['active', 'inactive', 'pending', 'suspended', 'rejected'];
+    if (!validStatuses.includes(updates.status)) {
+      throw new AppError(400, 'INVALID_STATUS', `Status must be one of: ${validStatuses.join(', ')}`);
+    }
+    userSet.status = updates.status;
+  }
+
+  if (updates.password && String(updates.password).trim()) {
+    userSet.passwordHash = await bcrypt.hash(String(updates.password).trim(), 10);
+    await revokeAllUserSessions(uid);
+  }
+
+  await db.collection(COLLECTIONS.USERS).updateOne({ _id: uid }, { $set: userSet });
+
+  let farmer = null;
+  if (user.role === 'farmer') {
+    farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: uid });
+    if (farmer) {
+      const farmerSet = { updatedAt: now };
+
+      if (userSet.name) farmerSet.contactPerson = userSet.name;
+      if (userSet.email) farmerSet.email = userSet.email;
+      if (userSet.phone !== undefined) farmerSet.phone = userSet.phone;
+
+      if (updates.stallName !== undefined) {
+        const stallName = String(updates.stallName).trim();
+        if (stallName) {
+          farmerSet.stallName = stallName;
+          farmerSet.stallNameLower = stallName.toLowerCase();
+        }
+      }
+
+      if (updates.stallNumber !== undefined) {
+        farmerSet.stallNumber = updates.stallNumber ? String(updates.stallNumber).trim() : null;
+      }
+
+      if (updates.specialty !== undefined) {
+        farmerSet.specialty = String(updates.specialty).trim();
+      }
+
+      if (updates.listingEnabled !== undefined) {
+        farmerSet.listingEnabled = Boolean(updates.listingEnabled);
+      } else if (userSet.status) {
+        farmerSet.listingEnabled = userSet.status === 'active';
+      }
+
+      await db.collection(COLLECTIONS.FARMERS).updateOne({ _id: farmer._id }, { $set: farmerSet });
+
+      if (farmerSet.listingEnabled !== undefined && farmerSet.listingEnabled !== farmer.listingEnabled) {
+        await syncFarmerListed(farmer._id, farmerSet.listingEnabled, {
+          wasListingEnabled: farmer.listingEnabled,
+          db,
+        });
+      }
+
+      farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ _id: farmer._id });
+    }
+  }
+
+  await writeAudit(
+    adminActor,
+    user.role === 'farmer' ? 'farmer.update' : 'customer.update',
+    { type: user.role, id: uid },
+    { updates: Object.keys(updates) }
+  );
+
+  const updatedUser = await db.collection(COLLECTIONS.USERS).findOne({ _id: uid });
+  return toPersonSummary(updatedUser, farmer);
+}
+
+/**
+ * Permanently deletes a person and all their associated records.
+ *
+ * @param {object} adminActor
+ * @param {string|ObjectId} personId
+ * @returns {Promise<object>}
+ */
+export async function deletePerson(adminActor, personId) {
+  const db = getDb();
+  const uid = toObjectId(personId);
+
+  const user = await db.collection(COLLECTIONS.USERS).findOne({ _id: uid });
+  if (!user) {
+    throw AppError.notFound('Person not found');
+  }
+
+  if (adminActor && (adminActor.id === uid.toString() || adminActor._id?.toString() === uid.toString())) {
+    throw new AppError(400, 'CANNOT_DELETE_SELF', 'You cannot delete your own admin account.');
+  }
+
+  if (user.role === 'admin') {
+    throw new AppError(403, 'CANNOT_DELETE_ADMIN', 'Cannot delete an administrator account.');
+  }
+
+  // If farmer, clean up farmer doc and their products
+  if (user.role === 'farmer') {
+    const farmer = await db.collection(COLLECTIONS.FARMERS).findOne({ userId: uid });
+    if (farmer) {
+      // Delist or delete products
+      await db.collection(COLLECTIONS.PRODUCTS).deleteMany({ farmerId: farmer._id });
+      // Delete reviews
+      await db.collection(COLLECTIONS.REVIEWS).deleteMany({ targetId: farmer._id });
+      // Delete farmer
+      await db.collection(COLLECTIONS.FARMERS).deleteOne({ _id: farmer._id });
+    }
+  }
+
+  // Delete sessions & notifications
+  await revokeAllUserSessions(uid);
+  await db.collection(COLLECTIONS.NOTIFICATIONS).deleteMany({ userId: uid });
+
+  // Delete user
+  await db.collection(COLLECTIONS.USERS).deleteOne({ _id: uid });
+
+  await writeAudit(
+    adminActor,
+    user.role === 'farmer' ? 'farmer.delete' : 'customer.delete',
+    { type: user.role, id: uid },
+    { name: user.name, email: user.email }
+  );
+
+  return { success: true, deletedId: uid.toString() };
+}
+

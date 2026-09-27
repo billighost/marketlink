@@ -29,6 +29,7 @@ function isValidMarker(m) {
  */
 export function MapView({
   markers = [],
+  routePath = [],
   selectedId,
   onSelect,
   draggable = false,
@@ -44,6 +45,7 @@ export function MapView({
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markerLayersRef = useRef(new Map());
+  const polylineLayerRef = useRef(null);
   const userLayerRef = useRef(null);
   const reducedMotionRef = useRef(false);
 
@@ -151,11 +153,17 @@ export function MapView({
       const isHighlighted = Boolean(marker.highlight);
       const markerType = marker.markerType || 'market';
 
+      const pinInnerHtml = marker.stepNumber != null
+        ? `<span class="marketlink-pin-num">${marker.stepNumber}</span>`
+        : marker.iconText
+          ? `<span class="marketlink-pin-text">${marker.iconText}</span>`
+          : `<div class="marketlink-pin-inner"></div>`;
+
       const customIcon = L.divIcon({
         className: 'marketlink-map-pin',
         html: `
           <div class="marketlink-pin-badge ${markerType} ${isSelected ? 'selected' : ''} ${isHighlighted ? 'highlighted' : ''}">
-            <div class="marketlink-pin-inner"></div>
+            ${pinInnerHtml}
           </div>
         `,
         iconSize: [32, 32],
@@ -201,6 +209,28 @@ export function MapView({
       markerLayersRef.current.set(marker.id, leafletMarker);
     });
 
+    // Draw route path polyline if provided
+    if (polylineLayerRef.current) {
+      polylineLayerRef.current.remove();
+      polylineLayerRef.current = null;
+    }
+
+    if (Array.isArray(routePath) && routePath.length > 1) {
+      const validPoints = routePath
+        .map((p) => (Array.isArray(p) ? p : isValidMarker(p) ? [p.lat, p.lng] : null))
+        .filter(Boolean);
+
+      if (validPoints.length > 1) {
+        polylineLayerRef.current = L.polyline(validPoints, {
+          color: '#1b4332',
+          weight: 4,
+          dashArray: '6, 8',
+          opacity: 0.85,
+          lineJoin: 'round',
+        }).addTo(map);
+      }
+    }
+
     if (draggable && onMove) {
       map.on('click', (e) => {
         const newPos = {
@@ -218,7 +248,7 @@ export function MapView({
       map.fitBounds(bounds, { padding: [30, 30] });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(validMarkers), selectedId, draggable]);
+  }, [JSON.stringify(validMarkers), JSON.stringify(routePath), selectedId, draggable]);
 
   // ---- Fullscreen: resize the Leaflet canvas after the layout settles ----
   useEffect(() => {

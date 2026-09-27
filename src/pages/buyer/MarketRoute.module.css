@@ -1,0 +1,607 @@
+/* Market Route Planner Styles */
+
+.page {
+  padding-bottom: var(--space-12);
+}
+
+.header {
+  margin-bottom: var(--space-6);
+}
+
+.topBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.routeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px 10px;
+  background-color: rgba(45, 106, 79, 0.12);
+  color: #1b4332;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modeToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px 10px;
+  background-color: var(--color-canvas);
+  border: var(--border);
+  color: var(--color-ink-soft);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.modeToggleBtn:hover {
+  background-color: var(--color-canvas-subtle);
+  color: var(--color-ink);
+  border-color: var(--color-ink-muted);
+}
+
+.headerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background-color: var(--color-canvas-subtle);
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+/* Progress bar strip */
+.progressCard {
+  background-color: var(--color-canvas);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.progressLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+}
+
+.progressCount {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: #1b4332;
+}
+
+.progressBarTrack {
+  width: 100%;
+  height: 8px;
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #2d6a4f, #40916c);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.progressAllDone {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background-color: rgba(45, 106, 79, 0.1);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: #1b4332;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Main Two-Column Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: start;
+  }
+}
+
+/* Left Column: Vertical Route Flow */
+.routeFlow {
+  display: flex;
+  flex-direction: column;
+}
+
+/* START & FINISH Waypoints */
+.waypoint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-canvas);
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.waypointStart {
+  border-left: 4px solid #2d6a4f;
+}
+
+.waypointFinish {
+  border-left: 4px solid #b08968;
+}
+
+.waypointIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.waypointStart .waypointIcon {
+  background-color: rgba(45, 106, 79, 0.15);
+  color: #1b4332;
+}
+
+.waypointFinish .waypointIcon {
+  background-color: rgba(176, 137, 104, 0.15);
+  color: #7f5539;
+}
+
+.waypointContent {
+  flex: 1;
+}
+
+.waypointTag {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.waypointTitle {
+  font-size: var(--text-body);
+  font-weight: var(--weight-bold);
+  color: var(--color-ink);
+  margin-top: 1px;
+}
+
+.waypointSubtitle {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+/* Connecting Downward Connector with Arrow */
+.connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2) 0;
+  color: #2d6a4f;
+  margin-left: 32px;
+}
+
+.connectorLine {
+  width: 2px;
+  height: 20px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #2d6a4f 0,
+    #2d6a4f 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.connectorArrow {
+  font-size: 16px;
+  line-height: 1;
+  color: #2d6a4f;
+  font-weight: var(--weight-bold);
+  margin-top: -2px;
+}
+
+/* Stall Stop Card */
+.stopCard {
+  background-color: var(--color-canvas);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-fast) var(--ease-standard);
+  position: relative;
+}
+
+.stopCard:hover {
+  border-color: #2d6a4f;
+  box-shadow: var(--shadow-md);
+}
+
+.stopCardActive {
+  border-color: #2d6a4f;
+  box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.25);
+  background-color: #fcfdfc;
+}
+
+.stopCardCollected {
+  opacity: 0.75;
+  background-color: var(--color-canvas-subtle);
+  border-color: var(--color-border);
+}
+
+.stopCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.stopTitleGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.stopNumberBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: #1b4332;
+  color: #ffffff;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.stopNumberBadgeCollected {
+  background-color: var(--color-ink-muted);
+}
+
+.stopStallName {
+  font-size: var(--text-h3);
+  font-weight: var(--weight-bold);
+  color: var(--color-ink);
+  line-height: 1.25;
+}
+
+.stopStallNumber {
+  display: inline-block;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: #2d6a4f;
+  background-color: rgba(45, 106, 79, 0.08);
+  padding: 1px 8px;
+  border-radius: var(--radius-sm);
+  margin-left: var(--space-2);
+}
+
+.stopCategory {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  margin-top: 2px;
+}
+
+/* Status & Code Row */
+.stopMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-canvas-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+}
+
+.orderStatusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.statusReady {
+  background-color: rgba(45, 106, 79, 0.12);
+  color: #1b4332;
+}
+
+.statusPlaced {
+  background-color: rgba(176, 137, 104, 0.15);
+  color: #7f5539;
+}
+
+.pickupCodeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: monospace;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-ink);
+  background-color: var(--color-canvas);
+  border: var(--border);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.pickupCodeBadge:hover {
+  border-color: #2d6a4f;
+  color: #1b4332;
+}
+
+/* Items list within stop card */
+.itemsList {
+  border-top: var(--border);
+  padding-top: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.itemsHeading {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-muted);
+  margin-bottom: var(--space-2);
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  padding: 3px 0;
+}
+
+.itemName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.itemQuantity {
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink-soft);
+}
+
+/* Card Actions */
+.stopActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border-top: var(--border);
+  padding-top: var(--space-3);
+}
+
+.collectToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+  cursor: pointer;
+  user-select: none;
+}
+
+.collectCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #2d6a4f;
+  cursor: pointer;
+}
+
+.receiptLink {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: #2d6a4f;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.receiptLink:hover {
+  text-decoration: underline;
+}
+
+/* Right Sticky Map & Quick Card Column */
+.mapColumn {
+  position: sticky;
+  top: calc(var(--top-bar-height, 68px) + var(--space-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.mapCard {
+  background-color: var(--color-canvas);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.mapCardHeader {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mapTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mapLegend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+
+.legendDotStart { background-color: #2d6a4f; }
+.legendDotStop  { background-color: #1b4332; }
+.legendDotFinish{ background-color: #b08968; }
+
+.quickHandoffCard {
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-md);
+}
+
+.quickHandoffTitle {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+  margin-bottom: var(--space-1);
+}
+
+.quickHandoffStall {
+  font-size: var(--text-h3);
+  font-weight: var(--weight-bold);
+  margin-bottom: var(--space-3);
+}
+
+.quickHandoffCodeWrap {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  text-align: center;
+  margin-bottom: var(--space-3);
+}
+
+.quickHandoffCodeLabel {
+  font-size: var(--text-xs);
+  opacity: 0.8;
+  margin-bottom: 2px;
+}
+
+.quickHandoffCodeVal {
+  font-family: monospace;
+  font-size: var(--text-h2);
+  font-weight: var(--weight-bold);
+  letter-spacing: 2px;
+}
+
+.quickHandoffTip {
+  font-size: var(--text-xs);
+  opacity: 0.85;
+  line-height: 1.4;
+}
+
+/* Modal for full physical handoff code */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: fadeIn 0.15s ease;
+}
+
+.modalCard {
+  background-color: var(--color-canvas);
+  border-radius: var(--radius-xl);
+  max-width: 400px;
+  width: 100%;
+  padding: var(--space-6);
+  text-align: center;
+  box-shadow: var(--shadow-modal);
+  position: relative;
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--color-ink-muted);
+}
+
+.modalCloseBtn:hover {
+  color: var(--color-ink);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

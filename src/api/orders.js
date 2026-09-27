@@ -87,3 +87,8 @@ export async function createOrderReview(orderId, payload) {
   });
   return res.data;
 }
+
+export async function getRoutePlan(signal) {
+  const res = await apiFetch('/orders/route-plan', { signal });
+  return res.data;
+}

@@ -448,3 +448,117 @@
   color: var(--color-ink-muted);
   text-transform: uppercase;
 }
+
+/* ─── 4. Top Products Card & Dynamic Headline Callout ─── */
+.topProductsCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.topProductsHeaderRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px dashed var(--color-wood-line);
+  padding-bottom: var(--space-2);
+}
+
+.topProductsHeading {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.topProductsContext {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.medalEmoji {
+  font-size: 1.15rem;
+  line-height: 1;
+  display: inline-block;
+}
+
+.itemBadgeGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.orderPctBadge {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.fillGold {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%) !important;
+}
+
+.fillSilver {
+  background: linear-gradient(90deg, #64748b 0%, #94a3b8 100%) !important;
+}
+
+.fillBronze {
+  background: linear-gradient(90deg, #ea580c 0%, #f97316 100%) !important;
+}
+
+.bestSellerHeadlineBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-3-5) var(--space-4);
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
+  animation: fadeIn 0.3s ease;
+}
+
+.headlineIconBox {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.headlineTextBox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.headlineText {
+  margin: 0;
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #065f46;
+  line-height: 1.3;
+}
+
+.headlineMeta {
+  font-size: 11px;
+  color: #047857;
+  font-weight: 500;
+  opacity: 0.85;
+}

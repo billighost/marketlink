@@ -11,6 +11,10 @@ export async function getFarmerInsights(range = '30d', signal) {
   return apiFetch('/farmer/insights', { query: { range }, signal });
 }
 
+export async function getFarmerBestSellers(signal) {
+  return apiFetch('/farmer/best-sellers', { signal });
+}
+
 /**
  * Farmer Profile & Settings
  */

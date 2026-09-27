@@ -229,13 +229,23 @@ export async function transitionOrder(orderOrId, to, actor, options = {}) {
       data: { orderId: orderId.toString(), orderNumber },
     });
   } else if (to === 'ready') {
-    const stall = order.pickup?.stallNumber || '';
+    const rawStall = order.pickup?.stallNumber || '';
+    const formattedStall = rawStall
+      ? (rawStall.toLowerCase().startsWith('stall') ? rawStall : `Stall ${rawStall}`)
+      : 'the stall';
+    const cleanOrderNumber = orderNumber.startsWith('ML-') ? orderNumber.replace('ML-', '') : orderNumber;
+
     notifications.push({
       userId: order.customerId,
       type: 'order_ready',
-      title: 'Ready for pickup',
-      body: `Order ${orderNumber} is ready at stall ${stall}.`,
-      data: { orderId: orderId.toString(), orderNumber, stallNumber: stall },
+      title: 'Your pickup is ready',
+      body: `🧺 Order #${cleanOrderNumber} is ready at ${formattedStall}.`,
+      data: {
+        orderId: orderId.toString(),
+        orderNumber,
+        stallNumber: formattedStall,
+        farmerName,
+      },
     });
   } else if (to === 'completed') {
     notifications.push({

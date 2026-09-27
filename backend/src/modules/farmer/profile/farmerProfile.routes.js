@@ -37,6 +37,8 @@ const ALLOWED_PROFILE_FIELDS = [
   'imagePublicId',
   'stallNumber',
   'acceptingOrders',
+  'availabilityMode',
+  'availabilityNote',
 ];
 
 const routes = [
@@ -233,6 +235,28 @@ const routes = [
             details.push({ field: 'acceptingOrders', message: 'acceptingOrders must be a boolean.' });
           } else {
             updates.acceptingOrders = req.body.acceptingOrders;
+          }
+        }
+
+        if (req.body.availabilityMode !== undefined) {
+          const allowedModes = ['open', 'limited', 'closed', 'auto'];
+          if (!allowedModes.includes(req.body.availabilityMode)) {
+            details.push({ field: 'availabilityMode', message: 'availabilityMode must be open, limited, closed, or auto.' });
+          } else {
+            updates.availabilityMode = req.body.availabilityMode;
+            if (req.body.availabilityMode === 'closed') {
+              updates.acceptingOrders = false;
+            } else if (req.body.availabilityMode === 'open') {
+              updates.acceptingOrders = true;
+            }
+          }
+        }
+
+        if (req.body.availabilityNote !== undefined) {
+          if (req.body.availabilityNote !== null && typeof req.body.availabilityNote !== 'string') {
+            details.push({ field: 'availabilityNote', message: 'availabilityNote must be a string or null.' });
+          } else {
+            updates.availabilityNote = req.body.availabilityNote ? req.body.availabilityNote.trim() : null;
           }
         }
 

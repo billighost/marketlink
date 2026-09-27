@@ -113,7 +113,38 @@ export function toFarmerCard(f, { markets = [], lowStockCount, soldOutCount, now
   const logoUrl = f.logoUrl ?? null;
   const operatingDayNumbers = toOperatingDayNumbers(f.operatingDays);
   const defaultTz = markets[0]?.timezone || 'America/New_York';
-  const openToday = f.listingEnabled !== false && computeOpenToday(operatingDayNumbers, defaultTz, now);
+  const baseOpenToday = f.listingEnabled !== false && computeOpenToday(operatingDayNumbers, defaultTz, now);
+
+  const numLow = typeof lowStockCount === 'number' ? lowStockCount : (f.lowStockCount ?? 0);
+  const numOut = typeof soldOutCount === 'number' ? soldOutCount : (f.soldOutCount ?? 0);
+
+  // MarketLink Availability Mode: 'open' | 'limited' | 'closed'
+  let availabilityMode = f.availabilityMode;
+  let availabilityNote = f.availabilityNote || null;
+
+  if (!availabilityMode || availabilityMode === 'auto') {
+    if (f.acceptingOrders === false || f.listingEnabled === false || f.vacationMode === true || !baseOpenToday) {
+      availabilityMode = 'closed';
+    } else if (numLow > 0 && (numLow >= 3 || numOut > 0)) {
+      availabilityMode = 'limited';
+    } else {
+      availabilityMode = 'open';
+    }
+  }
+
+  const openToday = availabilityMode === 'closed'
+    ? false
+    : (availabilityMode === 'open' || availabilityMode === 'limited')
+      ? true
+      : baseOpenToday;
+
+  const availabilityStatus = {
+    mode: availabilityMode,
+    badge: availabilityMode === 'open' ? '🟢 OPEN TODAY' : availabilityMode === 'limited' ? '🟡 LIMITED AVAILABILITY' : '🔴 CLOSED TODAY',
+    dot: availabilityMode === 'open' ? '🟢' : availabilityMode === 'limited' ? '🟡' : '🔴',
+    label: availabilityMode === 'open' ? 'OPEN TODAY' : availabilityMode === 'limited' ? 'LIMITED AVAILABILITY' : 'CLOSED TODAY',
+    note: availabilityNote,
+  };
 
   return {
     id: f._id ? f._id.toString() : f.id,
@@ -129,8 +160,11 @@ export function toFarmerCard(f, { markets = [], lowStockCount, soldOutCount, now
     operatingDays: Array.isArray(f.operatingDays) ? f.operatingDays : [],
     operatingDayNumbers,
     openToday,
-    lowStockCount: typeof lowStockCount === 'number' ? lowStockCount : (f.lowStockCount ?? 0),
-    soldOutCount: typeof soldOutCount === 'number' ? soldOutCount : (f.soldOutCount ?? 0),
+    availabilityMode,
+    availabilityNote,
+    availabilityStatus,
+    lowStockCount: numLow,
+    soldOutCount: numOut,
     markets: markets.map((m) => ({
       id: m._id ? m._id.toString() : m.id,
       name: m.name,
@@ -157,8 +191,23 @@ export function toFarmerDetail(f, { markets = [], ratingBreakdown = {}, productC
   const card = toFarmerCard(f, { markets, lowStockCount, soldOutCount, now });
   const loc = fromGeoPoint(f.location) || { lat: 0, lng: 0 };
 
+  const activeProducts = Math.max(0, productCount - (soldOutCount || 0));
+  let detailNote = card.availabilityNote;
+  if (card.availabilityMode === 'limited' && !detailNote) {
+    detailNote = activeProducts > 0
+      ? `Only ${activeProducts} ${activeProducts === 1 ? 'product' : 'products'} currently available.`
+      : 'Limited products currently available.';
+  }
+
+  const detailStatus = {
+    ...card.availabilityStatus,
+    note: detailNote,
+  };
+
   return {
     ...card,
+    availabilityNote: detailNote,
+    availabilityStatus: detailStatus,
     story: f.story || '',
     since: f.since || 0,
     contactPerson: f.contactPerson || '',

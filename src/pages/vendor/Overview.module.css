@@ -622,6 +622,28 @@
   color: #111827;
 }
 
+.bestSellerHeadlineBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.orderPctPill {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
 /* ─── 5. TOP HARVEST PERFORMERS & INVENTORY WIDGET ───────────────────────── */
 .productListRow {
   display: flex;

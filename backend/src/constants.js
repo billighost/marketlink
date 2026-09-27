@@ -65,6 +65,8 @@ export const NOTIFICATION_TYPES = [
   'order_declined',
   'order_cancelled',
   'restock',
+  'favorite_restock',
+  'market_reminder',
   'announcement',
   'review_reply',
   'account',

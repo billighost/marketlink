@@ -44,8 +44,10 @@ export async function createNotifications(items, dbInstance) {
 
       if (item.type === 'order_ready') {
         if (prefs.readyAlerts === false) continue;
-      } else if (item.type === 'restock') {
+      } else if (item.type === 'restock' || item.type === 'favorite_restock') {
         if (prefs.restockAlerts === false) continue;
+      } else if (item.type === 'market_reminder') {
+        if (prefs.marketReminders === false) continue;
       } else if (
         [
           'order_placed',

@@ -148,10 +148,20 @@ export async function getFarmerInsights(farmerId, range = '30d', { now = new Dat
             { $unwind: '$items' },
             {
               $group: {
-                _id: '$items.productId',
+                _id: { productId: '$items.productId', orderId: '$_id' },
+                productId: { $first: '$items.productId' },
                 name: { $first: '$items.name' },
                 qty: { $sum: '$items.quantity' },
                 revenue: { $sum: '$items.lineTotalCents' },
+              },
+            },
+            {
+              $group: {
+                _id: '$productId',
+                name: { $first: '$name' },
+                qty: { $sum: '$qty' },
+                revenue: { $sum: '$revenue' },
+                ordersCount: { $sum: 1 },
               },
             },
             { $sort: { qty: -1 } },
@@ -223,12 +233,27 @@ export async function getFarmerInsights(farmerId, range = '30d', { now = new Dat
   });
 
   // 5. Best sellers
-  const bestSellers = (facetResult?.best || []).map((b) => ({
-    productId: b._id ? b._id.toString() : '',
-    name: b.name || 'Product',
-    quantity: b.qty,
-    revenueCents: b.revenue,
-  }));
+  const medals = ['🥇', '🥈', '🥉'];
+  const relevantOrders = completedOrders > 0 ? completedOrders : totalOrders;
+  const bestSellers = (facetResult?.best || []).map((b, index) => {
+    const ordersCount = b.ordersCount || 1;
+    const orderPercentage = relevantOrders > 0 ? Math.round((ordersCount / relevantOrders) * 100) : 0;
+    return {
+      productId: b._id ? b._id.toString() : '',
+      name: b.name || 'Product',
+      quantity: b.qty,
+      revenueCents: b.revenue,
+      ordersCount,
+      orderPercentage,
+      rank: index + 1,
+      medal: medals[index] || `#${index + 1}`,
+    };
+  });
+
+  const topProduct = bestSellers[0];
+  const topProductSummary = (topProduct && relevantOrders > 0)
+    ? `${topProduct.name} generated ${topProduct.orderPercentage}% of your orders this month.`
+    : null;
 
   const data = {
     range,
@@ -240,6 +265,8 @@ export async function getFarmerInsights(farmerId, range = '30d', { now = new Dat
     averageOrderCents,
     repeatCustomers,
     bestSellers,
+    bestSellingProducts: bestSellers,
+    topProductSummary,
     ordersByDay,
   };
 

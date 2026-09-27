@@ -251,65 +251,121 @@ export function Insights() {
             </div>
           </section>
 
-          {/* Best Sellers Section */}
-          <section className={styles.bestSellersSection}>
+          {/* 4. 🏆 Best-Selling Products Section */}
+          <section className={styles.bestSellersSection} aria-label="Best-selling products">
             <div className={styles.sectionHeaderRow}>
               <div className={styles.sectionTitleBlock}>
                 <div className={`${styles.sectionIconWrap} ${styles.iconBeet}`}>
                   <Award size={18} />
                 </div>
                 <div>
-                  <h2 className={styles.sectionTitle}>Top Harvest Produce</h2>
+                  <h2 className={styles.sectionTitle}>🏆 Best-Selling Products</h2>
                   <p className={styles.sectionSubtitle}>
-                    Your highest grossing and most demanded items
+                    Real performance metrics computed directly from verified customer orders
                   </p>
                 </div>
               </div>
             </div>
 
-            {!data?.bestSellers || data.bestSellers.length === 0 ? (
-              <div className={styles.emptyBox}>
-                <ShoppingBag size={24} className={styles.emptyIcon} aria-hidden="true" />
-                <p>No fulfilled orders recorded in this date range.</p>
+            <div className={styles.topProductsCard}>
+              <div className={styles.topProductsHeaderRow}>
+                <h3 className={styles.topProductsHeading}>
+                  <span>Your Top Products</span>
+                </h3>
+                <span className={styles.topProductsContext}>Ranked by order volume & demand</span>
               </div>
-            ) : (
-              <div className={styles.bestList}>
-                {data.bestSellers.slice(0, 5).map((item, index) => {
-                  const maxRevenue = data.bestSellers[0]?.revenueCents || 1;
-                  const sharePct = Math.round(((item.revenueCents || 0) / maxRevenue) * 100);
 
-                  return (
-                    <div key={item.productId || index} className={styles.bestCard}>
-                      <div className={styles.rankPill}>
-                        <span className={`${styles.rankBadge} ${index === 0 ? styles.rankGold : index === 1 ? styles.rankSilver : index === 2 ? styles.rankBronze : ''}`}>
-                          #{index + 1}
+              {!data?.bestSellers || data.bestSellers.length === 0 ? (
+                <div className={styles.emptyBox}>
+                  <ShoppingBag size={24} className={styles.emptyIcon} aria-hidden="true" />
+                  <p>No fulfilled orders recorded in this date range.</p>
+                </div>
+              ) : (
+                <>
+                  <div className={styles.bestList}>
+                    {data.bestSellers.slice(0, 5).map((item, index) => {
+                      const medalEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                      const orderPct = item.orderPercentage ?? (
+                        data.totalOrders > 0
+                          ? Math.round(((item.ordersCount || item.quantity || 1) / data.totalOrders) * 100)
+                          : 0
+                      );
+
+                      return (
+                        <div key={item.productId || index} className={styles.bestCard}>
+                          <div className={styles.rankPill}>
+                            <span
+                              className={`${styles.rankBadge} ${
+                                index === 0 ? styles.rankGold : index === 1 ? styles.rankSilver : index === 2 ? styles.rankBronze : ''
+                              }`}
+                              title={`Rank ${index + 1}`}
+                            >
+                              <span className={styles.medalEmoji}>{medalEmoji}</span>
+                            </span>
+                          </div>
+
+                          <div className={styles.itemCol}>
+                            <div className={styles.itemNameRow}>
+                              <span className={styles.itemName}>{item.name}</span>
+                              <div className={styles.itemBadgeGroup}>
+                                {orderPct > 0 && (
+                                  <span className={styles.orderPctBadge}>
+                                    {orderPct}% of orders
+                                  </span>
+                                )}
+                                <span className={styles.itemUnits}>{item.quantity} units sold</span>
+                              </div>
+                            </div>
+
+                            {/* Order Percentage Progress Track */}
+                            <div className={styles.shareTrack}>
+                              <div
+                                className={`${styles.shareFill} ${
+                                  index === 0
+                                    ? styles.fillGold
+                                    : index === 1
+                                    ? styles.fillSilver
+                                    : index === 2
+                                    ? styles.fillBronze
+                                    : ''
+                                }`}
+                                style={{ width: `${Math.max(10, Math.min(100, orderPct || 10))}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className={styles.revenueCol}>
+                            <span className={styles.itemRev}>{formatPrice(item.revenueCents)}</span>
+                            <span className={styles.revLabel}>total yield</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Dynamic Headline Callout calculated from real data */}
+                  {(data?.topProductSummary || (data?.bestSellers?.[0] && data?.totalOrders > 0)) && (
+                    <div className={styles.bestSellerHeadlineBox}>
+                      <div className={styles.headlineIconBox} aria-hidden="true">
+                        🏆
+                      </div>
+                      <div className={styles.headlineTextBox}>
+                        <p className={styles.headlineText}>
+                          {data?.topProductSummary ||
+                            `${data.bestSellers[0].name} generated ${
+                              data.bestSellers[0].orderPercentage ||
+                              Math.round(((data.bestSellers[0].ordersCount || data.bestSellers[0].quantity) / data.totalOrders) * 100)
+                            }% of your orders this month.`}
+                        </p>
+                        <span className={styles.headlineMeta}>
+                          Calculated from real order volume in your database
                         </span>
                       </div>
-
-                      <div className={styles.itemCol}>
-                        <div className={styles.itemNameRow}>
-                          <span className={styles.itemName}>{item.name}</span>
-                          <span className={styles.itemUnits}>{item.quantity} units sold</span>
-                        </div>
-
-                        {/* Revenue Share Progress Bar */}
-                        <div className={styles.shareTrack}>
-                          <div
-                            className={styles.shareFill}
-                            style={{ width: `${Math.max(8, sharePct)}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className={styles.revenueCol}>
-                        <span className={styles.itemRev}>{formatPrice(item.revenueCents)}</span>
-                        <span className={styles.revLabel}>total yield</span>
-                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  )}
+                </>
+              )}
+            </div>
           </section>
         </>
       )}

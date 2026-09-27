@@ -392,6 +392,7 @@ export function Products() {
               {currentMarketName ? ` at ${currentMarketName}` : ''}
             </p>
           </div>
+
           <button
             type="button"
             onClick={() => openSmartBasket({ marketId: selectedMarketIdState })}
@@ -400,14 +401,14 @@ export function Products() {
               alignItems: 'center',
               gap: 'var(--space-2)',
               padding: 'var(--space-2-5) var(--space-4)',
-              background: 'linear-gradient(135deg, var(--color-primary), #7a1d2f)',
+              background: 'linear-gradient(135deg, #15803d, #047857)',
               color: '#fff',
               border: 'none',
               borderRadius: 'var(--radius-lg)',
               fontWeight: 600,
               fontSize: 'var(--text-sm)',
               cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(84, 23, 34, 0.25)',
+              boxShadow: '0 2px 8px rgba(21, 128, 61, 0.25)',
               transition: 'transform 0.15s, opacity 0.15s',
             }}
           >
@@ -453,13 +454,13 @@ export function Products() {
               onClick={() => openSmartBasket({ marketId: selectedMarketIdState })}
               className={styles.categoryChip}
               style={{
-                background: 'linear-gradient(135deg, rgba(84, 23, 34, 0.08), rgba(224, 109, 40, 0.08))',
-                borderColor: 'var(--color-primary)',
-                color: 'var(--color-primary)',
+                background: 'linear-gradient(135deg, rgba(21, 128, 61, 0.1), rgba(16, 185, 129, 0.1))',
+                borderColor: '#15803d',
+                color: '#15803d',
                 fontWeight: 700,
               }}
             >
-              <Sparkles size={13} aria-hidden="true" />
+              <Sparkles size={14} aria-hidden="true" />
               <span>Smart Basket</span>
             </button>
             <button

@@ -144,6 +144,45 @@
   color: var(--color-ink-faint);
 }
 
+.openBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #065f46;
+  background: #ecfdf5;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.limitedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.closedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #991b1b;
+  background: #fee2e2;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
 .lowStockRow {
   min-height: calc(var(--text-sm) * var(--lh-ui));
   display: flex;

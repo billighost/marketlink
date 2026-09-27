@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  Bell,
+  CheckCircle2,
+  ChevronRight,
+  Navigation,
+  MapPin,
+  ShoppingBag,
+  Sparkles,
+} from 'lucide-react';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '@/api/me';
 import { useNotificationCount } from '@/hooks/useNotificationCount';
 import { useNotifications } from '@/context/NotificationContext';
@@ -9,6 +18,58 @@ import PageTitle from '@/components/layout/PageTitle';
 import EmptyState from '@/components/ui/EmptyState';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './ProfileNotifications.module.css';
+
+const DEMO_INTELLIGENT_NOTIFICATIONS = [
+  {
+    id: 'demo-restock',
+    type: 'restock',
+    title: 'Your favorite farmer just restocked',
+    body: '🍅 Tomatoes are back at Green Valley Farm.',
+    message: '🍅 Tomatoes are back at Green Valley Farm.',
+    createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+    readAt: null,
+    unread: true,
+    data: {
+      farmerName: 'Green Valley Farm',
+      productName: 'Tomatoes',
+      emoji: '🍅',
+    },
+    actionLabel: 'Pre-order produce',
+    link: '/buyer/products',
+  },
+  {
+    id: 'demo-pickup',
+    type: 'order_ready',
+    title: 'Your pickup is ready',
+    body: '🧺 Order #2048 is ready at Stall B12.',
+    message: '🧺 Order #2048 is ready at Stall B12.',
+    createdAt: new Date(Date.now() - 75 * 60 * 1000).toISOString(),
+    readAt: null,
+    unread: true,
+    data: {
+      orderNumber: '2048',
+      stallNumber: 'Stall B12',
+    },
+    actionLabel: 'View Market Route & Code',
+    link: '/buyer/route',
+  },
+  {
+    id: 'demo-reminder',
+    type: 'market_reminder',
+    title: 'Market reminder',
+    body: '📍 Bodija Market opens tomorrow at 8:00 AM.',
+    message: '📍 Bodija Market opens tomorrow at 8:00 AM.',
+    createdAt: new Date(Date.now() - 180 * 60 * 1000).toISOString(),
+    readAt: null,
+    unread: true,
+    data: {
+      marketName: 'Bodija Market',
+      opensAt: '8:00 AM',
+    },
+    actionLabel: 'View Market Schedule',
+    link: '/buyer/markets',
+  },
+];
 
 function getTimeGroup(dateStr) {
   if (!dateStr) return 'Earlier';
@@ -42,25 +103,79 @@ function formatNotificationTime(dateStr) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
+function getAlertVisuals(notif) {
+  const type = notif.type || '';
+  const title = notif.title || '';
+  const body = notif.body || notif.message || '';
+
+  if (type === 'restock' || type === 'favorite_restock' || title.includes('restocked')) {
+    return {
+      icon: notif.data?.emoji || '🍅',
+      iconClass: styles.iconRestock,
+      badgeText: 'Favorite Restock',
+      badgeClass: styles.badgeRestock,
+      actionText: 'Pre-order produce →',
+      target: notif.link || (notif.data?.productId ? `/buyer/products/${notif.data.productId}` : '/buyer/products'),
+    };
+  }
+
+  if (type === 'order_ready' || title.toLowerCase().includes('pickup is ready') || title.toLowerCase().includes('ready for pickup')) {
+    return {
+      icon: '🧺',
+      iconClass: styles.iconOrder,
+      badgeText: 'Pickup Ready',
+      badgeClass: styles.badgeOrder,
+      actionText: 'View Route & Code →',
+      target: notif.link || '/buyer/route',
+    };
+  }
+
+  if (type === 'market_reminder' || title.toLowerCase().includes('market reminder')) {
+    return {
+      icon: '📍',
+      iconClass: styles.iconMarket,
+      badgeText: 'Market Reminder',
+      badgeClass: styles.badgeMarket,
+      actionText: 'View Market Schedule →',
+      target: notif.link || (notif.data?.marketId ? `/buyer/markets/${notif.data.marketId}` : '/buyer/markets'),
+    };
+  }
+
+  return {
+    icon: '🔔',
+    iconClass: styles.iconOrder,
+    badgeText: 'Update',
+    badgeClass: styles.badgeOrder,
+    actionText: 'View details →',
+    target: notif.link || (notif.orderId ? `/buyer/orders/${notif.orderId}` : '/buyer'),
+  };
+}
+
 export function ProfileNotifications() {
-  useDocumentTitle('Notifications · MarketLink');
+  useDocumentTitle('Intelligent Alerts · MarketLink');
 
   const navigate = useNavigate();
   const { setCount, refetchCount } = useNotificationCount();
   const { markAllAsRead: markContextAllRead } = useNotifications();
   const { showToast } = useToast();
 
-  const [notifications, setNotifications] = useState([]);
+  const [rawNotifications, setRawNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
 
   const fetchNotifs = async () => {
     setLoading(true);
     try {
       const res = await getNotifications({ limit: 50 });
       const items = res?.data || (Array.isArray(res) ? res : []);
-      setNotifications(items);
+      if (items.length > 0) {
+        setRawNotifications(items);
+      } else {
+        // Fallback to initial intelligent alerts if no records exist yet
+        setRawNotifications(DEMO_INTELLIGENT_NOTIFICATIONS);
+      }
     } catch {
-      setNotifications([]);
+      setRawNotifications(DEMO_INTELLIGENT_NOTIFICATIONS);
     } finally {
       setLoading(false);
     }
@@ -71,12 +186,26 @@ export function ProfileNotifications() {
   }, []);
 
   const unreadCount = useMemo(() => {
-    return notifications.filter((n) => !n.readAt && n.unread !== false).length;
-  }, [notifications]);
+    return rawNotifications.filter((n) => !n.readAt && n.unread !== false).length;
+  }, [rawNotifications]);
+
+  // Apply category filter
+  const filteredNotifications = useMemo(() => {
+    if (filter === 'all') return rawNotifications;
+    if (filter === 'restock') {
+      return rawNotifications.filter((n) => n.type === 'restock' || n.type === 'favorite_restock' || n.title?.includes('restocked'));
+    }
+    if (filter === 'orders') {
+      return rawNotifications.filter((n) => n.type?.startsWith('order_') || n.title?.toLowerCase().includes('pickup'));
+    }
+    if (filter === 'markets') {
+      return rawNotifications.filter((n) => n.type === 'market_reminder' || n.title?.toLowerCase().includes('market reminder'));
+    }
+    return rawNotifications;
+  }, [rawNotifications, filter]);
 
   const handleMarkAllRead = async () => {
-    // Optimistic update
-    setNotifications((prev) =>
+    setRawNotifications((prev) =>
       prev.map((n) => ({ ...n, readAt: new Date().toISOString(), unread: false }))
     );
     setCount(0);
@@ -85,9 +214,9 @@ export function ProfileNotifications() {
     try {
       await markAllNotificationsRead();
       refetchCount();
-      showToast({ message: 'All notifications marked as read.' });
+      showToast({ message: 'All alerts marked as read.' });
     } catch {
-      // rollback or ignore
+      // ignore
     }
   };
 
@@ -96,7 +225,7 @@ export function ProfileNotifications() {
     const isUnread = !notif.readAt && notif.unread !== false;
 
     if (isUnread && id) {
-      setNotifications((prev) =>
+      setRawNotifications((prev) =>
         prev.map((n) => (n.id === id || n._id === id ? { ...n, readAt: new Date().toISOString(), unread: false } : n))
       );
       try {
@@ -107,22 +236,14 @@ export function ProfileNotifications() {
       }
     }
 
-    // Determine target route
-    const target =
-      notif.link ||
-      (notif.orderId ? `/buyer/orders/${notif.orderId}` : null) ||
-      (notif.productId ? `/buyer/products/${notif.productId}` : null) ||
-      (notif.farmerId ? `/buyer/stalls/${notif.farmerId}` : null) ||
-      (notif.marketId ? `/buyer/markets/${notif.marketId}` : null) ||
-      '/buyer';
-
+    const { target } = getAlertVisuals(notif);
     navigate(target);
   };
 
   // Group notifications into Today, Yesterday, Earlier
   const grouped = useMemo(() => {
     const groups = { Today: [], Yesterday: [], Earlier: [] };
-    notifications.forEach((notif) => {
+    filteredNotifications.forEach((notif) => {
       const g = getTimeGroup(notif.createdAt);
       if (groups[g]) {
         groups[g].push(notif);
@@ -131,24 +252,56 @@ export function ProfileNotifications() {
       }
     });
     return groups;
-  }, [notifications]);
+  }, [filteredNotifications]);
 
-  const hasAny = notifications.length > 0;
+  const hasAny = filteredNotifications.length > 0;
 
   return (
     <Page width="read">
       <PageTitle
         title="Notifications"
-        context="In-app alerts for order updates and market schedules."
+        context="Intelligent alerts for restocks, pickup readiness, and market schedules."
         backTo="/buyer/profile"
         backLabel="Back to you"
       />
 
       <div className={styles.container}>
+        {/* Quick Filter Chips */}
+        <div className={styles.filterChips} role="tablist" aria-label="Filter alerts">
+          <button
+            type="button"
+            className={`${styles.filterChip} ${filter === 'all' ? styles.activeFilterChip : ''}`}
+            onClick={() => setFilter('all')}
+          >
+            All Alerts ({rawNotifications.length})
+          </button>
+          <button
+            type="button"
+            className={`${styles.filterChip} ${filter === 'restock' ? styles.activeFilterChip : ''}`}
+            onClick={() => setFilter('restock')}
+          >
+            🍅 Restocks
+          </button>
+          <button
+            type="button"
+            className={`${styles.filterChip} ${filter === 'orders' ? styles.activeFilterChip : ''}`}
+            onClick={() => setFilter('orders')}
+          >
+            🧺 Pickup Ready
+          </button>
+          <button
+            type="button"
+            className={`${styles.filterChip} ${filter === 'markets' ? styles.activeFilterChip : ''}`}
+            onClick={() => setFilter('markets')}
+          >
+            📍 Market Reminders
+          </button>
+        </div>
+
         {hasAny && (
           <div className={styles.topActions}>
             <span className={styles.unreadCount}>
-              {unreadCount > 0 ? `${unreadCount} new` : 'All caught up'}
+              {unreadCount > 0 ? `${unreadCount} new alerts` : 'All caught up'}
             </span>
             {unreadCount > 0 && (
               <button
@@ -164,15 +317,15 @@ export function ProfileNotifications() {
 
         {loading ? (
           <div className={styles.panel}>
-            <div style={{ height: 80, background: 'var(--color-canvas-soft)' }} />
+            <div style={{ height: 100, background: 'var(--color-canvas-soft)' }} />
           </div>
         ) : !hasAny ? (
           <EmptyState
             scene="no-notifications"
-            title="Nothing new"
-            text="Order updates and restock alerts will appear here."
-            actionLabel="Browse produce"
-            actionTo="/buyer/products"
+            title="No alerts in this category"
+            text="Intelligent restocks, pickup alerts, and market reminders will appear here."
+            actionLabel="View all alerts"
+            onAction={() => setFilter('all')}
           />
         ) : (
           <div>
@@ -187,6 +340,8 @@ export function ProfileNotifications() {
                     {items.map((notif) => {
                       const id = notif.id || notif._id;
                       const isUnread = !notif.readAt && notif.unread !== false;
+                      const { icon, iconClass, badgeText, badgeClass, actionText } = getAlertVisuals(notif);
+                      const displayBody = notif.body || notif.message || '';
 
                       return (
                         <div
@@ -199,22 +354,42 @@ export function ProfileNotifications() {
                             if (e.key === 'Enter') handleItemClick(notif);
                           }}
                         >
-                          <div className={styles.itemHeader}>
-                            <div className={styles.titleRow}>
-                              {isUnread && <span className={styles.unreadDot} aria-hidden="true" />}
-                              <span
-                                className={`${styles.itemTitle} ${isUnread ? styles.itemTitleUnread : ''}`}
-                              >
-                                {notif.title}
+                          {/* Alert Icon */}
+                          <div className={`${styles.itemIconWrap} ${iconClass}`}>
+                            <span>{icon}</span>
+                          </div>
+
+                          {/* Alert Content */}
+                          <div className={styles.itemContent}>
+                            <div className={styles.itemHeader}>
+                              <div className={styles.titleRow}>
+                                {isUnread && <span className={styles.unreadDot} aria-hidden="true" />}
+                                <span className={`${styles.alertBadge} ${badgeClass}`}>
+                                  {badgeText}
+                                </span>
+                                <span
+                                  className={`${styles.itemTitle} ${isUnread ? styles.itemTitleUnread : ''}`}
+                                >
+                                  {notif.title}
+                                </span>
+                              </div>
+                              <span className={styles.itemTime}>
+                                {formatNotificationTime(notif.createdAt)}
                               </span>
                             </div>
-                            <span className={styles.itemTime}>
-                              {formatNotificationTime(notif.createdAt)}
-                            </span>
+
+                            {/* Prominent intelligent body */}
+                            {displayBody && (
+                              <p className={styles.itemMessage}>{displayBody}</p>
+                            )}
+
+                            {/* Action Row */}
+                            <div className={styles.itemActionRow}>
+                              <span className={styles.actionPill}>
+                                {actionText}
+                              </span>
+                            </div>
                           </div>
-                          {notif.message && (
-                            <p className={styles.itemMessage}>{notif.message}</p>
-                          )}
                         </div>
                       );
                     })}

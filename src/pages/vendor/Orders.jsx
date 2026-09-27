@@ -334,9 +334,9 @@ export function Orders() {
             gap: '6px',
             padding: '10px 14px',
             borderRadius: 'var(--radius-lg)',
-            border: smartBasketOnly ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-            background: smartBasketOnly ? 'rgba(84, 23, 34, 0.08)' : 'var(--color-surface)',
-            color: smartBasketOnly ? 'var(--color-primary)' : 'var(--color-ink)',
+            border: smartBasketOnly ? '1px solid #16a34a' : '1px solid var(--color-border)',
+            background: smartBasketOnly ? '#ecfdf5' : 'var(--color-surface)',
+            color: smartBasketOnly ? '#15803d' : 'var(--color-ink)',
             fontWeight: 600,
             fontSize: 'var(--text-xs)',
             cursor: 'pointer',
@@ -351,7 +351,7 @@ export function Orders() {
           {counts.smartBasket > 0 && (
             <span
               style={{
-                background: 'var(--color-primary)',
+                background: '#16a34a',
                 color: '#fff',
                 borderRadius: '10px',
                 padding: '1px 6px',
@@ -459,9 +459,9 @@ export function Orders() {
                             borderRadius: 'var(--radius-full)',
                             fontSize: '10px',
                             fontWeight: 700,
-                            background: 'linear-gradient(135deg, rgba(84, 23, 34, 0.08), rgba(224, 109, 40, 0.12))',
-                            border: '1px solid rgba(84, 23, 34, 0.25)',
-                            color: 'var(--color-primary)',
+                            background: 'linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(16, 185, 129, 0.12))',
+                            border: '1px solid rgba(22, 163, 74, 0.3)',
+                            color: '#15803d',
                           }}
                         >
                           <Sparkles size={10} aria-hidden="true" />
