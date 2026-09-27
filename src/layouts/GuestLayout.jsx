@@ -4,6 +4,7 @@ import TopBar from '@/components/layout/TopBar';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import Footer from '@/components/layout/Footer';
 import BackToTop from '@/components/ui/BackToTop';
+import GuestBottomNav from '@/components/layout/GuestBottomNav';
 import styles from './GuestLayout.module.css';
 
 /**
@@ -41,6 +42,9 @@ export function GuestLayout() {
 
       {/* Floating Back to Top Button */}
       <BackToTop showAfter={350} />
+
+      {/* Mobile persistent app navigation */}
+      <GuestBottomNav />
     </div>
   );
 }

@@ -61,15 +61,44 @@
   border-radius: 0;
 }
 
-/* Header bar: handle + close button (and optional back button) */
+/* Top grabber indicator */
+.grabberZone {
+  width: 100%;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+  touch-action: none;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.grabberZone:active {
+  cursor: grabbing;
+}
+
+.handle {
+  width: 38px;
+  height: 4.5px;
+  border-radius: 999px;
+  background-color: #d8d3cb;
+  pointer-events: none;
+  transition: background-color 150ms ease;
+}
+
+.grabberZone:active .handle {
+  background-color: #a8a095;
+}
+
+/* Header bar: back button + title + close button */
 .header {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: var(--tap-min);
-  height: var(--tap-min);
-  padding: 0 var(--space-3);
+  padding: 2px 14px 10px 14px;
+  border-bottom: 1px solid #f1ece6;
   flex-shrink: 0;
   touch-action: none;
   user-select: none;
@@ -81,30 +110,37 @@
   cursor: grabbing;
 }
 
-.handle {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: var(--space-10);
-  height: var(--space-1);
-  border-radius: var(--radius-full);
-  background-color: var(--color-wood-line);
-  pointer-events: none;
+.sheetTitle {
+  font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-align: center;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 8px;
 }
 
 .backButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--tap-min);
-  height: var(--tap-min);
-  color: var(--color-ink);
+  width: 32px;
+  height: 32px;
+  color: #4b5563;
   cursor: pointer;
-  border-radius: var(--radius-full);
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: none;
   flex-shrink: 0;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: transform var(--duration-fast) var(--ease-standard);
+  transition: transform var(--duration-fast) var(--ease-standard),
+              background var(--duration-fast) var(--ease-standard);
 }
 
 .backButton:active {
@@ -117,7 +153,7 @@
 }
 
 .headerSpacer {
-  width: var(--tap-min);
+  width: 32px;
   flex-shrink: 0;
 }
 
@@ -125,24 +161,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--tap-min);
-  height: var(--tap-min);
-  color: var(--color-ink-soft);
+  width: 32px;
+  height: 32px;
+  color: #6b7280;
   cursor: pointer;
-  border-radius: var(--radius-full);
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: none;
   flex-shrink: 0;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: color var(--duration-fast) var(--ease-standard),
-              transform var(--duration-fast) var(--ease-standard);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.closeButton:hover {
+  background: #e5e7eb;
+  color: #111827;
 }
 
 .closeButton:active {
   transform: scale(0.92);
-}
-
-.closeButton:hover {
-  color: var(--color-ink);
 }
 
 .closeButton:focus-visible {

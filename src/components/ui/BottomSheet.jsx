@@ -20,6 +20,7 @@ import styles from './BottomSheet.module.css';
  */
 export function BottomSheet({
   open,
+  isOpen,
   onClose,
   title,
   size = 'tall',
@@ -30,6 +31,7 @@ export function BottomSheet({
   children,
   className = '',
 }) {
+  const effectiveOpen = Boolean(open ?? isOpen);
   const overlayRef = useRef(null);
   const sheetRef = useRef(null);
   const bodyRef = useRef(null);
@@ -366,7 +368,7 @@ export function BottomSheet({
 
   // Keyboard, focus management, body scroll lock, and app isolation via inert
   useEffect(() => {
-    if (!open) return;
+    if (!effectiveOpen) return;
 
     isDismissingRef.current = false;
     previousFocusRef.current = document.activeElement;
@@ -433,9 +435,9 @@ export function BottomSheet({
         previousFocusRef.current.focus();
       }
     };
-  }, [open, dismiss]);
+  }, [effectiveOpen, dismiss]);
 
-  if (!open) return null;
+  if (!effectiveOpen) return null;
 
   const content = (
     <div
@@ -455,7 +457,19 @@ export function BottomSheet({
         aria-modal="true"
         aria-labelledby={title ? 'sheet-title' : undefined}
       >
-        {/* Unified header bar: handle + close button (and optional back button) */}
+        {/* Top grabber drag handle */}
+        <div
+          className={styles.grabberZone}
+          data-drag-zone
+          onPointerDown={onPointerDownHandle}
+          onPointerMove={onPointerMoveHandle}
+          onPointerUp={onPointerUpHandle}
+          onPointerCancel={onPointerCancelHandle}
+        >
+          <div className={styles.handle} aria-hidden="true" />
+        </div>
+
+        {/* Unified header bar: handle + title + close button (and optional back button) */}
         <div
           className={styles.header}
           data-drag-zone
@@ -471,14 +485,15 @@ export function BottomSheet({
               onClick={onBack}
               aria-label="Go back"
             >
-              <ArrowLeft size={20} strokeWidth={1.5} aria-hidden="true" />
+              <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
             </button>
           ) : (
             <div className={styles.headerSpacer} aria-hidden="true" />
           )}
 
-          {/* Grabber handle in center */}
-          <div className={styles.handle} aria-hidden="true" />
+          <h3 id="sheet-title" className={styles.sheetTitle}>
+            {title || ''}
+          </h3>
 
           <button
             type="button"
@@ -486,7 +501,7 @@ export function BottomSheet({
             onClick={dismiss}
             aria-label="Close sheet"
           >
-            <X size={20} strokeWidth={1.5} aria-hidden="true" />
+            <X size={18} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
 

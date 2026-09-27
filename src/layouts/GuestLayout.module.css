@@ -12,3 +12,10 @@
   flex-direction: column;
   outline: none;
 }
+
+@media (max-width: 767px) {
+  .main {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
