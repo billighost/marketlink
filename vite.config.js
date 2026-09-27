@@ -22,6 +22,21 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:4000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (err, _req, res) => {
+            console.warn(`[vite proxy] Backend at 127.0.0.1:4000 is temporarily unreachable (${err.code || err.message}). Server may be restarting.`);
+            if (res && !res.headersSent && typeof res.writeHead === 'function') {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                success: false,
+                error: {
+                  code: 'BACKEND_STARTING',
+                  message: 'The backend server is starting or reloading. Please refresh in a moment.',
+                },
+              }));
+            }
+          });
+        },
       },
     },
   },
