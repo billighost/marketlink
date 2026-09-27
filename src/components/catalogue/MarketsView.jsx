@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, MapPin, LayoutList, X, CalendarDays } from 'lucide-react';
 import { getMarkets } from '@/api/catalog';
 import { useQuery } from '@/hooks/useQuery';
 import PageTitle from '@/components/layout/PageTitle';
@@ -13,7 +13,7 @@ import { useCatalogueRoutes } from './routes';
 import styles from './MarketsView.module.css';
 
 const DAY_OPTIONS = [
-  { label: 'Any day', val: undefined },
+  { label: 'Any day', val: undefined, icon: CalendarDays },
   { label: 'Sun', val: 'sun' },
   { label: 'Mon', val: 'mon' },
   { label: 'Tue', val: 'tue' },
@@ -168,8 +168,8 @@ export function MarketsView({ audience = 'guest' }) {
               value={viewMode}
               onChange={setViewMode}
               options={[
-                { value: 'map', label: 'Map' },
-                { value: 'list', label: 'List' },
+                { value: 'map', label: 'Map', icon: MapPin },
+                { value: 'list', label: 'List', icon: LayoutList },
               ]}
             />
           </div>
@@ -182,17 +182,28 @@ export function MarketsView({ audience = 'guest' }) {
             <input
               type="search"
               className={styles.searchInput}
-              placeholder="Search markets by name or location"
+              placeholder="Search markets by name, city, or neighborhood..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Search markets"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                className={styles.clearSearchBtn}
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search text"
+              >
+                <X size={15} />
+              </button>
+            )}
           </form>
 
           {/* Day filter chips row */}
           <div className={styles.dayChips} role="tablist" aria-label="Filter markets by day">
             {DAY_OPTIONS.map((opt) => {
               const isSelected = selectedDay === opt.val;
+              const Icon = opt.icon;
               return (
                 <button
                   key={opt.label}
@@ -205,7 +216,8 @@ export function MarketsView({ audience = 'guest' }) {
                   ].filter(Boolean).join(' ')}
                   onClick={() => handleSelectDay(opt.val)}
                 >
-                  {opt.label}
+                  {Icon && <Icon size={13} className={styles.chipIcon} aria-hidden="true" />}
+                  <span>{opt.label}</span>
                 </button>
               );
             })}
@@ -275,6 +287,14 @@ export function MarketsView({ audience = 'guest' }) {
 
           {/* Sidebar with all market cards */}
           <div className={styles.mapSidebar}>
+            <div className={styles.sidebarHeader}>
+              <span className={styles.sidebarCount}>
+                <MapPin size={13} className={styles.sidebarPinIcon} aria-hidden="true" />
+                <span>{markets.length} {markets.length === 1 ? 'Location' : 'Locations'}</span>
+              </span>
+              <span className={styles.sidebarHint}>Select to locate</span>
+            </div>
+
             {markets.map((market) => {
               const id = market.id || market._id;
               const isSelected = id === selectedMarketId;

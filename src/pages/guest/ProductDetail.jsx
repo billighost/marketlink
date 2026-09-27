@@ -7,7 +7,7 @@ import ProduceView from '@/components/catalogue/ProduceView';
  */
 export function ProductDetail() {
   return (
-    <Page width="detail">
+    <Page width="wide">
       <ProduceView audience="guest" />
     </Page>
   );

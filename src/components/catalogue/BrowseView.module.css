@@ -8,21 +8,7 @@
 }
 
 .container {
-  max-width: var(--container-max);
-  margin-inline: auto;
-  padding-inline: var(--page-pad);
-}
-
-@media (max-width: 359px) {
-  .container {
-    padding-inline: var(--space-3);
-  }
-}
-
-@media (min-width: 1280px) {
-  .container {
-    padding-inline: var(--space-8);
-  }
+  width: 100%;
 }
 
 /* ─── Desktop Page Header (1024px+) ─── */
@@ -458,73 +444,33 @@
 /* ─── Produce Catalog Grid: minmax(0, 1fr) ─── */
 .catalogGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-5, 20px);
   width: 100%;
+  align-items: stretch;
 }
 
-@media (min-width: 420px) {
+@media (max-width: 480px) {
   .catalogGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-4);
-  }
-}
-
-@media (min-width: 768px) {
-  .catalogGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-5);
-  }
-}
-
-@media (min-width: 1024px) {
-  .catalogGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-5);
-  }
-}
-
-@media (min-width: 1280px) {
-  .catalogGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+    gap: var(--space-3, 12px);
   }
 }
 
 /* Loading tail grid mirrors the catalog grid exactly */
 .tailGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-5, 20px);
   width: 100%;
-  margin-top: var(--space-4);
+  margin-top: var(--space-5, 20px);
+  align-items: stretch;
 }
 
-@media (min-width: 420px) {
+@media (max-width: 480px) {
   .tailGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-4);
-  }
-}
-
-@media (min-width: 768px) {
-  .tailGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-5);
-  }
-}
-
-@media (min-width: 1024px) {
-  .tailGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-5);
-  }
-}
-
-@media (min-width: 1280px) {
-  .tailGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+    gap: var(--space-3, 12px);
   }
 }
 

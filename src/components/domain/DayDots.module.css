@@ -32,18 +32,19 @@
 }
 
 .on {
-  background-color: var(--color-ink);
-  color: var(--color-white);
-  border: 1px solid var(--color-ink);
+  background-color: var(--color-ink, #2E2B26);
+  color: #ffffff;
+  border: 1px solid var(--color-ink, #2E2B26);
+  font-weight: var(--weight-bold, 700);
+  box-shadow: 0 2px 4px rgba(46, 43, 38, 0.18);
 }
 
 .off {
-  background-color: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-ink-faint);
+  background-color: rgba(245, 239, 227, 0.5);
+  border: 1px solid var(--color-border, #E3D3B8);
+  color: var(--color-ink-soft, #8C8276);
 }
 
 .today {
-  outline: 1px solid var(--color-ink-soft);
-  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--color-white, #ffffff), 0 0 0 3.5px var(--color-beet, #7A2E3B);
 }

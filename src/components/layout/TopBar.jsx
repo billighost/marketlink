@@ -46,10 +46,10 @@ export function TopBar() {
   // Five nav items: logo is the home link
   const navItems = [
     { name: 'Markets', path: PATHS.MARKETS || '/markets', icon: Store },
-    { name: 'Stalls',  path: PATHS.FARMERS  || '/farmers', icon: Users },
-    { name: 'Produce', path: PATHS.PRODUCTS  || '/products', icon: Sparkles },
-    { name: 'About',   path: PATHS.ABOUT     || '/about', icon: Info },
-    { name: 'Contact', path: PATHS.CONTACT   || '/contact', icon: PhoneCall },
+    { name: 'Stalls', path: PATHS.FARMERS || '/farmers', icon: Users },
+    { name: 'Produce', path: PATHS.PRODUCTS || '/products', icon: Sparkles },
+    { name: 'About', path: PATHS.ABOUT || '/about', icon: Info },
+    { name: 'Contact', path: PATHS.CONTACT || '/contact', icon: PhoneCall },
   ];
 
   const isActive = (path) => {
@@ -145,14 +145,14 @@ export function TopBar() {
           {/* Right actions */}
           <div className={styles.actions}>
             {/* Search — desktop only */}
-            <button
+            {/* <button
               type="button"
               className={`${styles.iconBtn} ${styles.searchBtn}`}
               onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
               aria-label="Search produce"
             >
               <Search size={18} strokeWidth={1.8} aria-hidden="true" />
-            </button>
+            </button> */}
 
             {/* Sign in — text link (hidden if already on login page) */}
             {location.pathname !== (PATHS.LOGIN || '/login') && (
@@ -190,7 +190,7 @@ export function TopBar() {
           className={styles.backdrop}
           onClick={closeDrawer}
           aria-hidden="true"
-          // background inert: all interactables are in the drawer
+        // background inert: all interactables are in the drawer
         />
       )}
 
@@ -203,7 +203,7 @@ export function TopBar() {
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
-          // inert on background handled by backdrop pointer-events + body scroll lock
+        // inert on background handled by backdrop pointer-events + body scroll lock
         >
           {/* Drawer header */}
           <div className={styles.drawerHead}>

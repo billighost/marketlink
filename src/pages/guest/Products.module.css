@@ -1,1 +1,294 @@
-/* Products.module.css — superseded by BrowseView.module.css */
+/* Products.module.css — Guest Produce Page Enrichment */
+
+.page {
+  padding-bottom: var(--space-12, 3rem);
+}
+
+.hero {
+  position: relative;
+  background: linear-gradient(135deg, var(--color-beet, #7A2E3B) 0%, var(--color-beet-dark, #5E212B) 100%);
+  border-radius: var(--radius-xl, 14px);
+  padding: 2.25rem 2rem;
+  color: #ffffff;
+  margin-bottom: var(--space-8, 2rem);
+  box-shadow: 0 8px 24px rgba(94, 33, 43, 0.18);
+  overflow: hidden;
+}
+
+.heroGlow {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(176, 134, 85, 0.28) 0%, transparent 72%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full, 999px);
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--weight-bold, 700);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-canvas, #F5EFE3);
+  margin-bottom: var(--space-3, 0.75rem);
+}
+
+.heroTitle {
+  font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.35rem);
+  font-weight: var(--weight-head, 400);
+  letter-spacing: var(--tracking-head, -0.01em);
+  color: #ffffff;
+  margin: 0 0 var(--space-2, 0.5rem);
+  line-height: 1.2;
+}
+
+.heroLead {
+  font-size: var(--text-base, 1rem);
+  line-height: var(--lh-relaxed, 1.55);
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 660px;
+  margin: 0 0 var(--space-5, 1.25rem);
+}
+
+.heroPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
+}
+
+.heroPill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 0.35rem);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full, 999px);
+  font-size: var(--text-xs, 0.76rem);
+  color: #ffffff;
+}
+
+/* ─── How Pre-Ordering Works ─── */
+.howSection {
+  margin-bottom: var(--space-8, 2rem);
+  background: var(--color-canvas-soft, #FAF7F0);
+  border: 1px solid var(--color-border, #E3D3B8);
+  border-radius: var(--radius-lg, 10px);
+  padding: var(--space-6, 1.5rem);
+}
+
+.howHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
+  margin-bottom: var(--space-5, 1.25rem);
+}
+
+.howTitle {
+  font-size: var(--text-base, 1.05rem);
+  font-weight: var(--weight-bold, 700);
+  color: var(--color-ink, #2E2B26);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+}
+
+.howSubtitle {
+  font-size: var(--text-xs, 0.82rem);
+  color: var(--color-ink-soft, #6B6259);
+}
+
+.howGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4, 1rem);
+}
+
+@media (max-width: 768px) {
+  .howGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.howCard {
+  background: var(--color-white, #ffffff);
+  border: 1px solid var(--color-border, #E3D3B8);
+  border-radius: var(--radius-md, 7px);
+  padding: var(--space-4, 1rem);
+  display: flex;
+  gap: var(--space-3, 0.75rem);
+}
+
+.howStepNum {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: var(--radius-full, 999px);
+  background: var(--color-beet, #7A2E3B);
+  color: #ffffff;
+  font-size: var(--text-xs, 0.8rem);
+  font-weight: var(--weight-bold, 700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.howCardContent h4 {
+  font-size: var(--text-sm, 0.9rem);
+  font-weight: var(--weight-bold, 700);
+  color: var(--color-ink, #2E2B26);
+  margin: 0 0 0.25rem;
+}
+
+.howCardContent p {
+  font-size: var(--text-xs, 0.82rem);
+  color: var(--color-ink-soft, #6B6259);
+  line-height: var(--lh-relaxed, 1.5);
+  margin: 0;
+}
+
+/* ─── Storage & Handling Tips Section ─── */
+.tipsSection {
+  margin-top: var(--space-12, 3rem);
+  padding-top: var(--space-8, 2rem);
+  border-top: 1px solid var(--color-border, #E3D3B8);
+}
+
+.sectionHeader {
+  text-align: center;
+  max-width: 620px;
+  margin: 0 auto var(--space-8, 2rem);
+}
+
+.sectionPre {
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--weight-bold, 700);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-beet, #7A2E3B);
+  margin-bottom: var(--space-1, 0.25rem);
+}
+
+.sectionTitle {
+  font-size: clamp(1.4rem, 1.2rem + 0.8vw, 1.85rem);
+  font-weight: var(--weight-head, 400);
+  color: var(--color-ink, #2E2B26);
+  margin: 0 0 var(--space-2, 0.5rem);
+}
+
+.sectionSub {
+  font-size: var(--text-sm, 0.9rem);
+  color: var(--color-ink-soft, #6B6259);
+  line-height: var(--lh-relaxed, 1.5);
+  margin: 0;
+}
+
+.tipsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4, 1rem);
+}
+
+@media (max-width: 992px) {
+  .tipsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .tipsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tipCard {
+  background: var(--color-white, #ffffff);
+  border: 1px solid var(--color-border, #E3D3B8);
+  border-radius: var(--radius-lg, 10px);
+  padding: var(--space-5, 1.25rem);
+  box-shadow: 0 2px 8px rgba(46, 43, 38, 0.04);
+}
+
+.tipBadge {
+  display: inline-block;
+  font-size: var(--text-xs, 0.72rem);
+  font-weight: var(--weight-bold, 700);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-herb, #5C7048);
+  margin-bottom: var(--space-2, 0.5rem);
+}
+
+.tipTitle {
+  font-size: var(--text-base, 1rem);
+  font-weight: var(--weight-bold, 700);
+  color: var(--color-ink, #2E2B26);
+  margin: 0 0 var(--space-2, 0.5rem);
+}
+
+.tipDesc {
+  font-size: var(--text-xs, 0.84rem);
+  color: var(--color-ink-soft, #6B6259);
+  line-height: var(--lh-relaxed, 1.55);
+  margin: 0;
+}
+
+/* ─── Register Pre-Order Banner ─── */
+.registerBanner {
+  margin-top: var(--space-10, 2.5rem);
+  background: var(--color-canvas, #F5EFE3);
+  border: 1px solid var(--color-border, #E3D3B8);
+  border-radius: var(--radius-xl, 14px);
+  padding: 2rem 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-5, 1.25rem);
+}
+
+.registerContent h3 {
+  font-size: var(--text-lg, 1.25rem);
+  font-weight: var(--weight-head, 400);
+  color: var(--color-ink, #2E2B26);
+  margin: 0 0 var(--space-1, 0.25rem);
+}
+
+.registerContent p {
+  font-size: var(--text-sm, 0.9rem);
+  color: var(--color-ink-soft, #6B6259);
+  max-width: 600px;
+  line-height: var(--lh-relaxed, 1.5);
+  margin: 0;
+}
+
+.registerAction {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  background: var(--color-beet, #7A2E3B);
+  color: #ffffff;
+  padding: 0.75rem 1.4rem;
+  border-radius: var(--radius-md, 7px);
+  font-size: var(--text-sm, 0.92rem);
+  font-weight: var(--weight-semibold, 600);
+  text-decoration: none;
+  transition: background-color var(--duration-fast, 0.15s) ease, transform var(--duration-fast, 0.15s) ease;
+}
+
+.registerAction:hover {
+  background: var(--color-beet-dark, #5E212B);
+  transform: translateY(-1px);
+}

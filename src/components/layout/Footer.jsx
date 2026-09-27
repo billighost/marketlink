@@ -27,7 +27,12 @@ export function Footer() {
           {/* Brand Col (Top on mobile, Col 4 on Desktop) */}
           <div className={styles.brandCol}>
             <Link to={PATHS.HOME || '/'} className={styles.brandLink} aria-label="MarketLink home">
-              <MarketLinkLogo size="md" />
+              <MarketLinkLogo
+                size="md"
+                marketColor="#FFFFFF"
+                linkColor="#A8D5BA"
+                leafColor="#A8D5BA"
+              />
             </Link>
             <p className={styles.productLine}>
               Reserve online. Collect and pay at the stall.

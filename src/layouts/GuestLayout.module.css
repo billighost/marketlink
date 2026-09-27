@@ -8,6 +8,11 @@
      Same pattern as BuyerLayout. Reversible: one declaration, no other role touched. */
   --color-border:   var(--color-hairline);
   --color-bg-muted: var(--color-white);
+
+  /* Match the guest TopBar navbar max-width across all guest pages */
+  --container-buyer:        var(--container-max);
+  --container-buyer-detail: var(--container-max);
+  --container-buyer-read:   var(--container-max);
 }
 
 .main {

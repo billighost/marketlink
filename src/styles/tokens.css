@@ -16,6 +16,7 @@
   --color-beet:         #7A2E3B;  /* "Beet root": primary button, active nav, links */
   --color-beet-dark:    #5E212B;  /* Beet hover / pressed */
   --color-beet-tint:    #F7EEF0;  /* Very light beet: selected nav item background */
+  --color-logo-burgundy: #5C1D2E; /* Logo burgundy: Market text in brand logo */
   --color-carrot:       #E07A2C;  /* Warning dot / icon only (fails contrast as text) */
   --color-carrot-bg:    #FCEADA;  /* Warning badge background */
   --color-carrot-text:  #9C4E14;  /* Warning text (passes contrast on carrot-bg) */
@@ -179,7 +180,7 @@
   --sheet-mid-height:   60dvh;                           /* two-stop mid resting height */
   --sheet-drawer-width: clamp(30rem, 36vw, 36rem);       /* desktop sheet drawer width */
   --drawer-width:       clamp(30rem, 36vw, 36rem);       /* token alias for drawer width */
-  --card-w-product:     clamp(11.5rem, 8.5rem + 10vw, 14.5rem); /* responsive horizontal row product card */
+  --card-w-product:     clamp(16.5rem, 14.5rem + 5vw, 19.5rem); /* responsive horizontal row product card */
   --card-w-feature:     clamp(14rem, 10rem + 12vw, 18rem); /* featured editorial card */
   --card-w-farmer:      clamp(10rem, 7rem + 10vw, 13rem);  /* farmer card in rows */
   --card-min:           10rem;                           /* minimum intrinsic card track */
