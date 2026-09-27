@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { login as apiLogin, logout as apiLogout, refresh as apiRefresh, getMe, registerCustomer as apiRegisterCustomer, registerFarmer as apiRegisterFarmer } from '@/api/auth';
 import { setHomeMarket } from '@/api/me';
 import { setAccessToken, clearAccessToken } from '@/api/client';
-import { invalidateQueries } from '@/hooks/useQuery';
+import { getMarkets } from '@/api/catalog';
+import { useQuery, invalidateQueries } from '@/hooks/useQuery';
 
 export const ROLE_PATHS = {
   customer: '/buyer',
@@ -142,15 +143,70 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // Fetch active markets to ensure selected market is always valid
+  const { data: marketsData } = useQuery(['markets'], ({ signal }) =>
+    getMarkets({}, signal)
+  );
+
+  const markets = useMemo(() => {
+    return Array.isArray(marketsData) ? marketsData : marketsData?.data || [];
+  }, [marketsData]);
+
   const [guestMarketId, setGuestMarketId] = useState(() => {
     try {
-      return localStorage.getItem('marketlink_selected_market') || 'market-elm';
+      const saved = localStorage.getItem('marketlink_selected_market');
+      // Only keep saved value if it is a valid 24-character hexadecimal MongoDB ObjectId
+      if (saved && /^[0-9a-fA-F]{24}$/.test(saved)) {
+        return saved;
+      }
+      return '';
     } catch {
-      return 'market-elm';
+      return '';
     }
   });
 
-  const selectedMarketId = user?.homeMarketId || user?.homeMarket?.id || guestMarketId;
+  const rawSelectedId = user?.homeMarketId || user?.homeMarket?.id || guestMarketId;
+
+  // Resolve valid active market ID:
+  // If rawSelectedId matches an active market in markets, keep it.
+  // If markets are loaded and rawSelectedId is not in markets (or is invalid/deleted/stale),
+  // fallback automatically to the first active market (e.g. Elm Street Market).
+  const selectedMarketId = useMemo(() => {
+    if (!markets || markets.length === 0) {
+      return /^[0-9a-fA-F]{24}$/.test(rawSelectedId) ? rawSelectedId : '';
+    }
+    const match = markets.find((m) => (m.id || m._id) === rawSelectedId);
+    if (match) {
+      return match.id || match._id;
+    }
+    return markets[0]?.id || markets[0]?._id || '';
+  }, [markets, rawSelectedId]);
+
+  // Auto-heal localStorage and user homeMarket when stale/invalid market is detected
+  useEffect(() => {
+    if (!markets || markets.length === 0 || !selectedMarketId) return;
+
+    if (rawSelectedId !== selectedMarketId) {
+      setGuestMarketId(selectedMarketId);
+      try {
+        localStorage.setItem('marketlink_selected_market', selectedMarketId);
+      } catch {
+        // ignore
+      }
+
+      if (isAuthenticated) {
+        setHomeMarket(selectedMarketId).catch(() => {});
+        setUser((prev) => (prev ? { ...prev, homeMarketId: selectedMarketId } : prev));
+      }
+
+      invalidateQueries('buyer-stalls');
+      invalidateQueries('market-detail');
+      invalidateQueries('market-farmers');
+      invalidateQueries('feed');
+      invalidateQueries('home-summary');
+      invalidateQueries('buyer-products');
+    }
+  }, [markets, rawSelectedId, selectedMarketId, isAuthenticated]);
 
   const switchMarket = useCallback(async (marketId) => {
     if (!marketId) return;
@@ -173,6 +229,9 @@ export function AuthProvider({ children }) {
     invalidateQueries('feed');
     invalidateQueries('markets');
     invalidateQueries('buyer-markets');
+    invalidateQueries('buyer-stalls');
+    invalidateQueries('market-detail');
+    invalidateQueries('market-farmers');
     invalidateQueries('home-summary');
     invalidateQueries('feed-meta');
     invalidateQueries('buyer-products');

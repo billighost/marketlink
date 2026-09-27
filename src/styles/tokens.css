@@ -168,7 +168,7 @@
   --sheet-mid-height:   60dvh;                           /* two-stop mid resting height */
   --sheet-drawer-width: 28rem;                           /* desktop sheet drawer width (28rem - 30rem) */
   --drawer-width:       28rem;                           /* token alias for drawer width */
-  --card-w-product:     clamp(9.5rem, 6rem + 12vw, 13rem); /* responsive horizontal row product card */
+  --card-w-product:     clamp(11.5rem, 8.5rem + 10vw, 14.5rem); /* responsive horizontal row product card */
   --card-w-feature:     clamp(14rem, 10rem + 12vw, 18rem); /* featured editorial card */
   --card-w-farmer:      clamp(10rem, 7rem + 10vw, 13rem);  /* farmer card in rows */
   --card-min:           10rem;                           /* minimum intrinsic card track */

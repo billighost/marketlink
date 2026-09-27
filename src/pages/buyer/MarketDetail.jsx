@@ -87,15 +87,15 @@ export function MarketDetail() {
   // 2. Fetch Stalls at this market
   const { data: farmersData, loading: farmersLoading } = useQuery(
     ['market-farmers', id],
-    ({ signal }) => getMarketFarmers(id, {}, signal),
-    { enabled: Boolean(id) }
+    ({ signal }) => getMarketFarmers(id, {}, signal).catch(() => ({ data: [] })),
+    { enabled: Boolean(id) && !marketError }
   );
 
   // 3. Fetch Products fresh at this market
   const { data: productsData } = useQuery(
     ['market-products', id],
-    ({ signal }) => getMarketProducts(id, { limit: 12 }, signal),
-    { enabled: Boolean(id) }
+    ({ signal }) => getMarketProducts(id, { limit: 12 }, signal).catch(() => ({ data: [] })),
+    { enabled: Boolean(id) && !marketError }
   );
 
   // 4. Fetch Saved Markets to know if this market is saved

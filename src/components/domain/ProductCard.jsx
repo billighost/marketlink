@@ -1,19 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatPrice } from '@/utils/format';
 import Illustration from '@/components/domain/Illustration';
 import AddToCartButton from '@/components/domain/AddToCartButton';
+import QuantityStepper from '@/components/ui/QuantityStepper';
 import Badge from '@/components/ui/Badge';
 import styles from './ProductCard.module.css';
 
 /**
  * Product card for MarketLink Customer experience.
- * Minimal design system specifications:
+ * Features:
  *  - Tile aspect ratio: 4/3 compact/grid, 16/10 feature
  *  - Reserved 2-line title height prevents ragged cards
- *  - Clean layout: image tile, name, one muted farm line, price + add button
- *  - Stock badge only when 'out' or 'low'
- *  - Card link covers upper card area without overlapping the add-to-cart button
+ *  - Clean layout: image tile, name, stall name
+ *  - Price + quantity incremental stepper on row 1
+ *  - Proper "Add to cart" button under the price and quantity incremental
+ *  - Card link covers upper card area without interfering with controls
  */
 export function ProductCard({
   product,
@@ -21,7 +23,8 @@ export function ProductCard({
   variant = 'compact',
   className = '',
 }) {
-  const [imgError, setImgError] = React.useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [selectedQty, setSelectedQty] = useState(1);
 
   if (!product) return null;
 
@@ -32,6 +35,7 @@ export function ProductCard({
   const displayPrice = product.priceCents != null ? product.priceCents : product.price;
 
   const aspectAttr = variant === 'feature' ? '16/10' : '4/3';
+  const maxQty = product.quantityLeft ? Math.min(99, product.quantityLeft) : 99;
 
   return (
     <article
@@ -92,10 +96,26 @@ export function ProductCard({
           )}
         </div>
 
+        {/* Footer: Price + Quantity Stepper Row, then Add to Cart button */}
         <div className={styles.footer}>
-          <div className={styles.priceGroup}>
-            <span className={styles.price}>{formatPrice(displayPrice)}</span>
-            <span className={styles.unit}>/ {product.unit}</span>
+          <div className={styles.priceRow}>
+            <div className={styles.priceGroup}>
+              <span className={styles.price}>{formatPrice(displayPrice)}</span>
+              <span className={styles.unit}>/ {product.unit}</span>
+            </div>
+
+            {!isSoldOut && (
+              <div className={styles.stepperWrapper}>
+                <QuantityStepper
+                  value={selectedQty}
+                  onChange={setSelectedQty}
+                  min={1}
+                  max={maxQty}
+                  size="sm"
+                  productName={product.name}
+                />
+              </div>
+            )}
           </div>
 
           <div className={styles.actionWrapper}>
@@ -103,7 +123,8 @@ export function ProductCard({
               productId={product.id}
               farmerId={farmer?.id || product.farmerId || product.farmer?.id}
               productName={product.name}
-              variant="icon"
+              quantity={selectedQty}
+              onAddSuccess={() => setSelectedQty(1)}
               disabled={isSoldOut}
             />
           </div>

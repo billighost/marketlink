@@ -85,8 +85,10 @@ export function CartProvider({ children }) {
             const p = await getProductDetail(item.productId, signal);
             fId = p?.farmer?.id;
             item.farmerId = fId;
-          } catch {
-            // ignore
+          } catch (err) {
+            if (err?.status === 404 || err?.message?.toLowerCase().includes('not found')) {
+              setItems((prev) => prev.filter((it) => it.productId !== item.productId));
+            }
           }
         }
         if (!fId) continue;
@@ -166,9 +168,10 @@ export function CartProvider({ children }) {
     };
   }, [items, fetchQuote]);
 
-  const add = useCallback((productId, meta = {}) => {
+  const add = useCallback((productId, meta = {}, count = 1) => {
     const farmerId = typeof meta === 'object' ? meta?.farmerId : null;
     const slotStart = typeof meta === 'object' ? (meta?.slotStart || meta?.slotId) : meta;
+    const qtyToAdd = typeof count === 'number' && count > 0 ? count : (meta?.quantity || 1);
 
     setItems((prev) => {
       const existing = prev.find((item) => item.productId === productId);
@@ -177,14 +180,14 @@ export function CartProvider({ children }) {
           item.productId === productId
             ? {
                 ...item,
-                quantity: item.quantity + 1,
+                quantity: item.quantity + qtyToAdd,
                 farmerId: farmerId || item.farmerId,
                 slotStart: slotStart || item.slotStart,
               }
             : item
         );
       }
-      return [...prev, { productId, quantity: 1, farmerId, slotStart }];
+      return [...prev, { productId, quantity: qtyToAdd, farmerId, slotStart }];
     });
   }, []);
 

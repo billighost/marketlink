@@ -20,13 +20,100 @@ import { GridSkeleton, SkeletonCard } from '@/components/layout/GridSkeleton';
 import styles from './Products.module.css';
 
 /**
- * Customer Browse / Products directory page (Stage 6).
- * Follows white-first design system specifications:
+ * Search input + suggestions/history dropdown. Rendered once inside the
+ * mobile header and once inside the desktop search row; only one copy is
+ * ever visible at a time (CSS controls that per breakpoint), and both
+ * share the same lifted state so they always agree.
+ */
+function SearchBox({
+  search,
+  onSearchChange,
+  onSubmit,
+  isFocused,
+  onFocus,
+  onBlur,
+  suggestions,
+  history,
+  debouncedSearch,
+  onPickSuggestion,
+}) {
+  const hasDropdownContent = suggestions.length > 0 || history.length > 0;
+
+  return (
+    <form className={styles.searchForm} onSubmit={onSubmit} role="search">
+      <Search size={18} className={styles.searchIcon} aria-hidden="true" />
+      <input
+        type="search"
+        className={styles.searchInput}
+        placeholder="Search produce..."
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        aria-label="Search produce"
+      />
+      {search && (
+        <button
+          type="button"
+          className={styles.clearSearchBtn}
+          onClick={() => onSearchChange('')}
+          aria-label="Clear search text"
+        >
+          <X size={16} />
+        </button>
+      )}
+
+      {isFocused && hasDropdownContent && (
+        <div className={styles.searchDropdown} role="listbox">
+          {suggestions.length > 0 && (
+            <div className={styles.dropdownSection}>
+              <span className={styles.dropdownTitle}>
+                <Sparkles size={13} /> Suggestions
+              </span>
+              {suggestions.slice(0, 4).map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={styles.dropdownItem}
+                  onClick={() => onPickSuggestion(p.name)}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!debouncedSearch && history.length > 0 && (
+            <div className={styles.dropdownSection}>
+              <span className={styles.dropdownTitle}>
+                <History size={13} /> Recent Searches
+              </span>
+              {history.slice(0, 4).map((item, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={styles.dropdownItem}
+                  onClick={() => onPickSuggestion(item.term || item)}
+                >
+                  {item.term || item}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </form>
+  );
+}
+
+/**
+ * Customer Browse / Products directory page.
+ * Follows the white-first design system:
  *  - Persistent left rail filter panel on desktop (>=1024px)
  *  - BottomSheet container below 1024px
  *  - Single chip row on mobile/tablet that never wraps
  *  - Active category chip is strictly ink-filled, never beet
- *  - 2 columns <768px, 3 columns at 768px, 4 columns at 1024px
+ *  - 1 column down to ~300px, 2 at 380px, 3 at 768px, 4 at 1024px, 5 at 1440px
  */
 export function Products() {
   const { selectedMarketId } = useAuth();
@@ -85,12 +172,14 @@ export function Products() {
     ({ signal }) => (debouncedSearch ? getSearchSuggestions(debouncedSearch, signal) : Promise.resolve(null)),
     { enabled: Boolean(debouncedSearch && isSearchFocused) }
   );
+  const suggestions = suggestionsData?.products || [];
 
   const { data: historyData } = useQuery(
     ['search-history'],
     ({ signal }) => getSearchHistory(signal),
     { enabled: Boolean(isSearchFocused && !debouncedSearch) }
   );
+  const history = historyData || [];
 
   // Active market display name
   const currentMarketName = useMemo(() => {
@@ -228,6 +317,11 @@ export function Products() {
     setIsSearchFocused(false);
   };
 
+  const handlePickSuggestion = (term) => {
+    setSearch(term);
+    setIsSearchFocused(false);
+  };
+
   const activeFilterCount =
     (selectedCategory !== 'All' ? 1 : 0) +
     (inStockOnly ? 1 : 0) +
@@ -247,7 +341,42 @@ export function Products() {
     maxPriceCents: selectedMaxPriceCents,
   }), [inStockOnly, selectedSort, selectedCategory, selectedMarketIdState, selectedDay, selectedMaxPriceCents]);
 
+  // Removable filter tags, driven by data instead of five near-identical blocks
+  const activeTags = useMemo(() => [
+    selectedCategory !== 'All' && {
+      key: 'category',
+      label: selectedCategory,
+      ariaLabel: `Remove category filter ${selectedCategory}`,
+      onRemove: () => setSelectedCategory('All'),
+    },
+    inStockOnly && {
+      key: 'stock',
+      label: 'In stock',
+      ariaLabel: 'Remove in stock filter',
+      onRemove: () => setInStockOnly(false),
+    },
+    selectedDay && {
+      key: 'day',
+      label: `Day: ${selectedDay.toUpperCase()}`,
+      ariaLabel: `Remove day filter ${selectedDay}`,
+      onRemove: () => setSelectedDay(''),
+    },
+    selectedMaxPriceCents && {
+      key: 'price',
+      label: `Up to £${(selectedMaxPriceCents / 100).toFixed(0)}`,
+      ariaLabel: 'Remove price ceiling filter',
+      onRemove: () => setSelectedMaxPriceCents(null),
+    },
+    selectedMarketIdState && {
+      key: 'market',
+      label: currentMarketName || 'Market',
+      ariaLabel: 'Remove market filter',
+      onRemove: () => setSelectedMarketIdState(''),
+    },
+  ].filter(Boolean), [selectedCategory, inStockOnly, selectedDay, selectedMaxPriceCents, selectedMarketIdState, currentMarketName]);
+
   const visibleCategories = categoriesList.slice(0, 5);
+  const resultsLabel = `${productsList.length} ${productsList.length === 1 ? 'item' : 'items'}`;
 
   return (
     <div className={styles.page}>
@@ -256,7 +385,7 @@ export function Products() {
         <header className={styles.desktopHeader}>
           <h1 className={styles.pageTitle}>Browse produce</h1>
           <p className={styles.pageContext}>
-            {productsList.length} {productsList.length === 1 ? 'item' : 'items'}
+            {resultsLabel}
             {currentMarketName ? ` at ${currentMarketName}` : ''}
           </p>
         </header>
@@ -264,76 +393,18 @@ export function Products() {
         {/* ── Mobile/Tablet Header (<1024px) ───────────────────────── */}
         <div className={styles.mobileHeader}>
           <div className={styles.searchRow}>
-            <form className={styles.searchForm} onSubmit={handleSearchSubmit} role="search">
-              <Search size={18} className={styles.searchIcon} aria-hidden="true" />
-              <input
-                type="search"
-                className={styles.searchInput}
-                placeholder="Search produce..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setTimeout(() => setIsSearchFocused(false), 250)}
-                aria-label="Search produce"
-              />
-              {search && (
-                <button
-                  type="button"
-                  className={styles.clearSearchBtn}
-                  onClick={() => setSearch('')}
-                  aria-label="Clear search text"
-                >
-                  <X size={16} />
-                </button>
-              )}
-
-              {/* Suggestions & History dropdown */}
-              {isSearchFocused && (suggestionsData?.products?.length > 0 || historyData?.length > 0) && (
-                <div className={styles.searchDropdown} role="listbox">
-                  {suggestionsData?.products?.length > 0 && (
-                    <div className={styles.dropdownSection}>
-                      <span className={styles.dropdownTitle}>
-                        <Sparkles size={13} /> Suggestions
-                      </span>
-                      {suggestionsData.products.slice(0, 4).map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          className={styles.dropdownItem}
-                          onClick={() => {
-                            setSearch(p.name);
-                            setIsSearchFocused(false);
-                          }}
-                        >
-                          {p.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {!debouncedSearch && historyData?.length > 0 && (
-                    <div className={styles.dropdownSection}>
-                      <span className={styles.dropdownTitle}>
-                        <History size={13} /> Recent Searches
-                      </span>
-                      {historyData.slice(0, 4).map((item, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          className={styles.dropdownItem}
-                          onClick={() => {
-                            setSearch(item.term || item);
-                            setIsSearchFocused(false);
-                          }}
-                        >
-                          {item.term || item}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </form>
+            <SearchBox
+              search={search}
+              onSearchChange={setSearch}
+              onSubmit={handleSearchSubmit}
+              isFocused={isSearchFocused}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 250)}
+              suggestions={suggestions}
+              history={history}
+              debouncedSearch={debouncedSearch}
+              onPickSuggestion={handlePickSuggestion}
+            />
 
             <button
               type="button"
@@ -403,152 +474,45 @@ export function Products() {
           <section className={styles.gridArea} aria-label="Produce results">
             {/* Desktop Search Row */}
             <div className={styles.desktopSearchRow}>
-              <form className={styles.searchForm} onSubmit={handleSearchSubmit} role="search">
-                <Search size={18} className={styles.searchIcon} aria-hidden="true" />
-                <input
-                  type="search"
-                  className={styles.searchInput}
-                  placeholder="Search produce..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 250)}
-                  aria-label="Search produce"
-                />
-                {search && (
-                  <button
-                    type="button"
-                    className={styles.clearSearchBtn}
-                    onClick={() => setSearch('')}
-                    aria-label="Clear search"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-
-                {/* Suggestions & History dropdown for desktop */}
-                {isSearchFocused && (suggestionsData?.products?.length > 0 || historyData?.length > 0) && (
-                  <div className={styles.searchDropdown} role="listbox">
-                    {suggestionsData?.products?.length > 0 && (
-                      <div className={styles.dropdownSection}>
-                        <span className={styles.dropdownTitle}>
-                          <Sparkles size={13} /> Suggestions
-                        </span>
-                        {suggestionsData.products.slice(0, 4).map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            className={styles.dropdownItem}
-                            onClick={() => {
-                              setSearch(p.name);
-                              setIsSearchFocused(false);
-                            }}
-                          >
-                            {p.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {!debouncedSearch && historyData?.length > 0 && (
-                      <div className={styles.dropdownSection}>
-                        <span className={styles.dropdownTitle}>
-                          <History size={13} /> Recent Searches
-                        </span>
-                        {historyData.slice(0, 4).map((item, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            className={styles.dropdownItem}
-                            onClick={() => {
-                              setSearch(item.term || item);
-                              setIsSearchFocused(false);
-                            }}
-                          >
-                            {item.term || item}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </form>
+              <SearchBox
+                search={search}
+                onSearchChange={setSearch}
+                onSubmit={handleSearchSubmit}
+                isFocused={isSearchFocused}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 250)}
+                suggestions={suggestions}
+                history={history}
+                debouncedSearch={debouncedSearch}
+                onPickSuggestion={handlePickSuggestion}
+              />
             </div>
 
             {/* Results count & Reset link */}
             <div className={styles.summaryRow}>
-              <span className={styles.countText}>
-                {productsList.length} {productsList.length === 1 ? 'item' : 'items'}
-              </span>
+              <span className={styles.countText}>{resultsLabel}</span>
               {activeFilterCount > 0 && (
-                <button
-                  type="button"
-                  className={styles.resetLink}
-                  onClick={handleReset}
-                >
+                <button type="button" className={styles.resetLink} onClick={handleReset}>
                   Reset
                 </button>
               )}
             </div>
 
             {/* Removable active filter tags */}
-            {activeFilterCount > 0 && (
+            {activeTags.length > 0 && (
               <div className={styles.activeTagsRow} aria-label="Active filters">
-                {selectedCategory !== 'All' && (
+                {activeTags.map((tag) => (
                   <button
+                    key={tag.key}
                     type="button"
                     className={styles.activeTag}
-                    onClick={() => setSelectedCategory('All')}
-                    aria-label={`Remove category filter ${selectedCategory}`}
+                    onClick={tag.onRemove}
+                    aria-label={tag.ariaLabel}
                   >
-                    <span>{selectedCategory}</span>
+                    <span>{tag.label}</span>
                     <X size={14} className={styles.removeIcon} />
                   </button>
-                )}
-                {inStockOnly && (
-                  <button
-                    type="button"
-                    className={styles.activeTag}
-                    onClick={() => setInStockOnly(false)}
-                    aria-label="Remove in stock filter"
-                  >
-                    <span>In stock</span>
-                    <X size={14} className={styles.removeIcon} />
-                  </button>
-                )}
-                {selectedDay && (
-                  <button
-                    type="button"
-                    className={styles.activeTag}
-                    onClick={() => setSelectedDay('')}
-                    aria-label={`Remove day filter ${selectedDay}`}
-                  >
-                    <span>Day: {selectedDay.toUpperCase()}</span>
-                    <X size={14} className={styles.removeIcon} />
-                  </button>
-                )}
-                {selectedMaxPriceCents && (
-                  <button
-                    type="button"
-                    className={styles.activeTag}
-                    onClick={() => setSelectedMaxPriceCents(null)}
-                    aria-label="Remove price ceiling filter"
-                  >
-                    <span>Up to £{(selectedMaxPriceCents / 100).toFixed(0)}</span>
-                    <X size={14} className={styles.removeIcon} />
-                  </button>
-                )}
-                {selectedMarketIdState && (
-                  <button
-                    type="button"
-                    className={styles.activeTag}
-                    onClick={() => setSelectedMarketIdState('')}
-                    aria-label="Remove market filter"
-                  >
-                    <span>{currentMarketName || 'Market'}</span>
-                    <X size={14} className={styles.removeIcon} />
-                  </button>
-                )}
+                ))}
               </div>
             )}
 
@@ -558,11 +522,7 @@ export function Products() {
             ) : productsList.length > 0 ? (
               <div className={styles.catalogGrid}>
                 {productsList.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    variant="grid"
-                  />
+                  <ProductCard key={product.id} product={product} variant="grid" />
                 ))}
               </div>
             ) : (

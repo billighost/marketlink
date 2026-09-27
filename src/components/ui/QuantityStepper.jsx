@@ -13,18 +13,29 @@ export function QuantityStepper({
   max = 99,
   productName = 'item',
   compact = false,
+  size = 'md',
   className = '',
 }) {
-  const handleDecrement = () => {
+  const handleDecrement = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     if (value > min) onChange(value - 1);
   };
 
-  const handleIncrement = () => {
+  const handleIncrement = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     if (value < max) onChange(value + 1);
   };
 
+  const sizeClass = size === 'sm' ? styles.sm : '';
+
   return (
-    <div className={`${styles.stepper} ${compact ? styles.compact : ''} ${className}`} role="group" aria-label={`Quantity for ${productName}`}>
+    <div
+      className={`${styles.stepper} ${compact ? styles.compact : ''} ${sizeClass} ${className}`}
+      role="group"
+      aria-label={`Quantity for ${productName}`}
+    >
       <button
         type="button"
         className={styles.button}

@@ -1,11 +1,17 @@
 /* GridSkeleton — layout-matched produce catalog skeleton */
 
 .grid {
-  --cols: 2;
+  --cols: 1;
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   gap: var(--space-4);
   width: 100%;
+}
+
+@media (min-width: 380px) {
+  .grid {
+    --cols: 2;
+  }
 }
 
 @media (min-width: 768px) {
@@ -17,6 +23,12 @@
 @media (min-width: 1024px) {
   .grid {
     --cols: 4;
+  }
+}
+
+@media (min-width: 1440px) {
+  .grid {
+    --cols: 5;
   }
 }
 

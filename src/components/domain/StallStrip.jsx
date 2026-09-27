@@ -26,7 +26,7 @@ export function StallStrip({ marketId }) {
   const fetchFarmers = useCallback(
     ({ signal }) => {
       if (!effectiveMarketId) return Promise.resolve({ data: [] });
-      return getMarketFarmers(effectiveMarketId, {}, signal);
+      return getMarketFarmers(effectiveMarketId, {}, signal).catch(() => ({ data: [] }));
     },
     [effectiveMarketId]
   );

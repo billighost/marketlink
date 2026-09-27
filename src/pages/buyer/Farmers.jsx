@@ -32,7 +32,7 @@ export function Farmers() {
   // Fetch current market details for context name
   const { data: marketData } = useQuery(
     ['market-detail', selectedMarketId],
-    ({ signal }) => getMarketDetail(selectedMarketId, signal),
+    ({ signal }) => getMarketDetail(selectedMarketId, signal).catch(() => null),
     { enabled: Boolean(selectedMarketId) }
   );
 
@@ -198,10 +198,11 @@ export function Farmers() {
       {!loading && filteredStalls.length === 0 && (
         <EmptyState
           scene="market-closed"
-          title="No stalls listed"
-          text="Try another market, or check back before market day."
-          actionLabel="Browse markets"
-          actionTo="/buyer/markets"
+          title={rawStalls.length > 0 ? "No stalls in this category" : "No stalls listed"}
+          text={rawStalls.length > 0 ? "Try choosing another filter above." : "Try another market, or check back before market day."}
+          actionLabel={rawStalls.length > 0 ? "Show all stalls" : "Browse markets"}
+          actionTo={rawStalls.length > 0 ? undefined : "/buyer/markets"}
+          onAction={rawStalls.length > 0 ? () => setSelectedFilter('all') : undefined}
         />
       )}
 

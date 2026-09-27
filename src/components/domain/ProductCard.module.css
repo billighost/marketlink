@@ -29,7 +29,7 @@
   top: 0;
   left: 0;
   right: 0;
-  bottom: calc(var(--tap-min) + var(--space-4));
+  bottom: 86px;
   z-index: 1;
   text-decoration: none;
   border-top-left-radius: var(--radius-lg);
@@ -164,22 +164,21 @@
   min-width: 0;
 }
 
-/* Footer: Price and Add button */
+/* Footer: Price + Quantity Stepper row, and Add to Cart button below */
 .footer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--space-2);
   margin-top: auto;
-  min-height: var(--tap-min);
   min-width: 0;
-  flex-wrap: nowrap;
+  position: relative;
+  z-index: 2;
 }
 
 @media (max-width: 480px) {
   .content {
     padding: var(--space-2);
-    gap: var(--space-1);
+    gap: var(--space-2);
   }
 
   .name {
@@ -194,6 +193,17 @@
 .list .footer {
   margin-top: 0;
   flex-shrink: 0;
+  width: 220px;
+  gap: var(--space-2);
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .priceGroup {
@@ -215,8 +225,14 @@
   color: var(--color-ink-soft);
 }
 
-.actionWrapper {
+.stepperWrapper {
   position: relative;
   z-index: 2;
   flex-shrink: 0;
+}
+
+.actionWrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
 }
