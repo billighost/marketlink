@@ -25,7 +25,7 @@ export function useFeed() {
       const res = await getFeed(nextCursor);
       const incomingSections = res?.data?.sections || [];
       const newCursor = res?.meta?.nextCursor || null;
-      const more = Boolean(res?.meta?.hasMore && newCursor);
+      let hasNewValidSections = false;
 
       setSections((prev) => {
         const base = isRefresh ? [] : prev;
@@ -37,6 +37,11 @@ export function useFeed() {
         });
 
         const deduplicatedIncoming = incomingSections.map((sec) => {
+          const isFarmer =
+            sec.type === 'farmers' ||
+            sec.type === 'farmerRow' ||
+            sec.type === 'farmer';
+
           const filteredItems = (sec.items || []).filter((item) => {
             if (seenItemIds.has(item.id)) return false;
             seenItemIds.add(item.id);
@@ -45,14 +50,20 @@ export function useFeed() {
           return {
             ...sec,
             items: filteredItems,
-            cardVariant: sec.type === 'farmers' ? 'row' : (sec.cardVariant || (sec.id === 'bestsellers' ? 'feature' : 'compact')),
+            cardVariant: isFarmer
+              ? 'stall'
+              : (sec.cardVariant || (sec.id === 'bestsellers' ? 'feature' : 'compact')),
           };
         }).filter((sec) => (sec.items || []).length > 0);
 
+        hasNewValidSections = deduplicatedIncoming.length > 0;
         const merged = [...base, ...deduplicatedIncoming];
         cachedSections = merged;
         return merged;
       });
+
+      // Only continue pagination if server says hasMore, there is a next cursor, and new non-empty sections were actually returned
+      const more = Boolean(res?.meta?.hasMore && newCursor && incomingSections.length > 0 && hasNewValidSections);
 
       setCursor(newCursor);
       setHasMore(more);

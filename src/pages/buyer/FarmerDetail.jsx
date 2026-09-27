@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Check, Heart } from 'lucide-react';
 import {
@@ -33,6 +33,22 @@ function getStallInitials(name) {
     return `${words[0][0]}${words[1][0]}`.toUpperCase();
   }
   return (words[0]?.slice(0, 2) || 'ML').toUpperCase();
+}
+
+function getProductCategoryName(p) {
+  if (!p) return '';
+  if (typeof p.category === 'object' && p.category !== null) {
+    return p.category.name || p.category.slug || '';
+  }
+  return p.categoryName || (typeof p.category === 'string' ? p.category : '') || p.categorySlug || '';
+}
+
+function getProductCategorySlug(p) {
+  if (!p) return '';
+  if (typeof p.category === 'object' && p.category !== null) {
+    return p.category.slug || p.category.name || '';
+  }
+  return p.categorySlug || (typeof p.category === 'string' ? p.category : '') || p.categoryName || '';
 }
 
 /**
@@ -211,18 +227,27 @@ export function FarmerDetail() {
   const categories = useMemo(() => {
     const set = new Set();
     for (const p of allProducts) {
-      const cat = p.categoryName || p.categorySlug || p.category;
-      if (cat) set.add(cat);
+      const catName = getProductCategoryName(p);
+      if (catName && typeof catName === 'string') {
+        set.add(catName.trim());
+      }
     }
-    return ['All', ...Array.from(set)];
+    return ['All', ...Array.from(set).sort()];
   }, [allProducts]);
+
+  // Reset category selection when switching stalls
+  useEffect(() => {
+    setSelectedCategory('All');
+  }, [id]);
 
   // Filtered products by category chip
   const filteredProducts = useMemo(() => {
     if (selectedCategory === 'All') return allProducts;
+    const target = selectedCategory.toLowerCase();
     return allProducts.filter((p) => {
-      const cat = p.categoryName || p.categorySlug || p.category;
-      return cat?.toLowerCase() === selectedCategory.toLowerCase();
+      const name = getProductCategoryName(p).toLowerCase();
+      const slug = getProductCategorySlug(p).toLowerCase();
+      return name === target || slug === target;
     });
   }, [allProducts, selectedCategory]);
 

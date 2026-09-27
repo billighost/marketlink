@@ -168,182 +168,180 @@ export function ProfileDetails() {
         backLabel="Back to you"
       />
 
-      <div className={styles.container}>
-        {/* Section 1: Details */}
-        <section className={styles.section} aria-labelledby="details-heading">
-          <h2 id="details-heading" className={styles.sectionTitle}>
-            Account details
-          </h2>
-          <p className={styles.sectionDesc}>
-            These details identify your pre-orders and pickup collection codes.
-          </p>
+      {/* Section 1: Details */}
+      <section className={styles.section} aria-labelledby="details-heading">
+        <h2 id="details-heading" className={styles.sectionTitle}>
+          Account details
+        </h2>
+        <p className={styles.sectionDesc}>
+          These details identify your pre-orders and pickup collection codes.
+        </p>
 
-          <form onSubmit={handleSaveDetails}>
-            <div className={styles.fields}>
-              <FormField
-                id="name"
-                label="Full name"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: undefined }));
-                }}
-                error={fieldErrors.name}
-                required
-              />
-
-              <FormField
-                id="email"
-                label="Email address"
-                type="email"
-                value={user?.email || ''}
-                disabled
-                hint="Contact support if you need to update your registered email."
-              />
-
-              <FormField
-                id="phone"
-                label="Contact number"
-                type="tel"
-                value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                  if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: undefined }));
-                }}
-                error={fieldErrors.phone}
-                placeholder="07700 900077"
-                hint="Used for morning pickup and stall reminder alerts."
-              />
-
-              <FormField
-                id="address"
-                label="Address"
-                value={address}
-                onChange={(e) => {
-                  setAddress(e.target.value);
-                  if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: undefined }));
-                }}
-                error={fieldErrors.address}
-                placeholder="Street address, Town, Postcode"
-                hint="Your registered residential location."
-              />
-            </div>
-
-            <footer className={styles.footer}>
-              <button
-                type="submit"
-                className={styles.saveBtn}
-                disabled={savingDetails || !isDirty}
-              >
-                {savingDetails ? 'Saving...' : 'Save changes'}
-              </button>
-            </footer>
-          </form>
-        </section>
-
-        {/* Section 2: Change password */}
-        <section className={styles.section} aria-labelledby="password-heading">
-          <h2 id="password-heading" className={styles.sectionTitle}>
-            Change password
-          </h2>
-          <p className={styles.sectionDesc}>
-            Update the credentials used to sign in to your MarketLink account.
-          </p>
-
-          <form onSubmit={handlePasswordSubmit}>
-            <div className={styles.fields}>
-              <FormField
-                id="currentPassword"
-                label="Current password"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => {
-                  setCurrentPassword(e.target.value);
-                  if (passwordErrors.currentPassword) {
-                    setPasswordErrors((prev) => ({ ...prev, currentPassword: undefined }));
-                  }
-                }}
-                error={passwordErrors.currentPassword}
-                autoComplete="current-password"
-                required
-              />
-
-              <FormField
-                id="newPassword"
-                label="New password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  if (passwordErrors.newPassword) {
-                    setPasswordErrors((prev) => ({ ...prev, newPassword: undefined }));
-                  }
-                }}
-                error={passwordErrors.newPassword}
-                hint="At least 8 characters."
-                autoComplete="new-password"
-                required
-              />
-
-              <FormField
-                id="confirmPassword"
-                label="Confirm new password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  if (passwordErrors.confirmPassword) {
-                    setPasswordErrors((prev) => ({ ...prev, confirmPassword: undefined }));
-                  }
-                }}
-                error={passwordErrors.confirmPassword}
-                autoComplete="new-password"
-                required
-              />
-            </div>
-
-            <footer className={styles.footer}>
-              <button
-                type="submit"
-                className={styles.dangerBtn}
-                disabled={savingPassword || !currentPassword || !newPassword}
-              >
-                {savingPassword ? 'Updating...' : 'Update password'}
-              </button>
-            </footer>
-          </form>
-        </section>
-
-        {/* Section 3: Sign out of all devices */}
-        <section className={styles.section} aria-labelledby="sessions-heading">
-          <h2 id="sessions-heading" className={styles.sectionTitle}>
-            Active sessions
-          </h2>
-          <p className={styles.sectionDesc}>
-            If you signed in on a public or shared computer, you can invalidate all existing sessions.
-          </p>
-
-          {!isSignOutAllConfirm ? (
-            <button
-              type="button"
-              className={styles.dangerBtn}
-              onClick={() => setIsSignOutAllConfirm(true)}
-            >
-              Sign out of all devices
-            </button>
-          ) : (
-            <ConfirmStep
-              title="Sign out everywhere?"
-              message="This will terminate all active logins across all browsers and devices. You will need to sign in again."
-              confirmLabel="Sign out everywhere"
-              confirmVariant="danger"
-              onConfirm={handleSignOutAllDevices}
-              onCancel={() => setIsSignOutAllConfirm(false)}
-              isLoading={signingOutAll}
+        <form onSubmit={handleSaveDetails}>
+          <div className={styles.fields}>
+            <FormField
+              id="name"
+              label="Full name"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: undefined }));
+              }}
+              error={fieldErrors.name}
+              required
             />
-          )}
-        </section>
-      </div>
+
+            <FormField
+              id="email"
+              label="Email address"
+              type="email"
+              value={user?.email || ''}
+              disabled
+              hint="Contact support if you need to update your registered email."
+            />
+
+            <FormField
+              id="phone"
+              label="Contact number"
+              type="tel"
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: undefined }));
+              }}
+              error={fieldErrors.phone}
+              placeholder="07700 900077"
+              hint="Used for morning pickup and stall reminder alerts."
+            />
+
+            <FormField
+              id="address"
+              label="Address"
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: undefined }));
+              }}
+              error={fieldErrors.address}
+              placeholder="Street address, Town, Postcode"
+              hint="Your registered residential location."
+            />
+          </div>
+
+          <footer className={styles.footer}>
+            <button
+              type="submit"
+              className={styles.saveBtn}
+              disabled={savingDetails || !isDirty}
+            >
+              {savingDetails ? 'Saving...' : 'Save changes'}
+            </button>
+          </footer>
+        </form>
+      </section>
+
+      {/* Section 2: Change password */}
+      <section className={styles.section} aria-labelledby="password-heading">
+        <h2 id="password-heading" className={styles.sectionTitle}>
+          Change password
+        </h2>
+        <p className={styles.sectionDesc}>
+          Update the credentials used to sign in to your MarketLink account.
+        </p>
+
+        <form onSubmit={handlePasswordSubmit}>
+          <div className={styles.fields}>
+            <FormField
+              id="currentPassword"
+              label="Current password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => {
+                setCurrentPassword(e.target.value);
+                if (passwordErrors.currentPassword) {
+                  setPasswordErrors((prev) => ({ ...prev, currentPassword: undefined }));
+                }
+              }}
+              error={passwordErrors.currentPassword}
+              autoComplete="current-password"
+              required
+            />
+
+            <FormField
+              id="newPassword"
+              label="New password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                if (passwordErrors.newPassword) {
+                  setPasswordErrors((prev) => ({ ...prev, newPassword: undefined }));
+                }
+              }}
+              error={passwordErrors.newPassword}
+              hint="At least 8 characters."
+              autoComplete="new-password"
+              required
+            />
+
+            <FormField
+              id="confirmPassword"
+              label="Confirm new password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                if (passwordErrors.confirmPassword) {
+                  setPasswordErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                }
+              }}
+              error={passwordErrors.confirmPassword}
+              autoComplete="new-password"
+              required
+            />
+          </div>
+
+          <footer className={styles.footer}>
+            <button
+              type="submit"
+              className={styles.dangerBtn}
+              disabled={savingPassword || !currentPassword || !newPassword}
+            >
+              {savingPassword ? 'Updating...' : 'Update password'}
+            </button>
+          </footer>
+        </form>
+      </section>
+
+      {/* Section 3: Sign out of all devices */}
+      <section className={styles.section} aria-labelledby="sessions-heading">
+        <h2 id="sessions-heading" className={styles.sectionTitle}>
+          Active sessions
+        </h2>
+        <p className={styles.sectionDesc}>
+          If you signed in on a public or shared computer, you can invalidate all existing sessions.
+        </p>
+
+        {!isSignOutAllConfirm ? (
+          <button
+            type="button"
+            className={styles.dangerBtn}
+            onClick={() => setIsSignOutAllConfirm(true)}
+          >
+            Sign out of all devices
+          </button>
+        ) : (
+          <ConfirmStep
+            title="Sign out everywhere?"
+            message="This will terminate all active logins across all browsers and devices. You will need to sign in again."
+            confirmLabel="Sign out everywhere"
+            confirmVariant="danger"
+            onConfirm={handleSignOutAllDevices}
+            onCancel={() => setIsSignOutAllConfirm(false)}
+            isLoading={signingOutAll}
+          />
+        )}
+      </section>
     </Page>
   );
 }

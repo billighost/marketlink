@@ -1,12 +1,30 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ExternalLink } from 'lucide-react';
+import {
+  ExternalLink,
+  Plus,
+  Minus,
+  LocateFixed,
+  Maximize2,
+  Minimize2,
+  RotateCcw,
+} from 'lucide-react';
 import styles from './MapView.module.css';
+
+const BRISTOL_FALLBACK = [51.4545, -2.5879];
+
+function isValidMarker(m) {
+  return m && typeof m.lat === 'number' && !isNaN(m.lat) && typeof m.lng === 'number' && !isNaN(m.lng);
+}
 
 /**
  * Shared MapView component powered by Leaflet and OpenStreetMap.
  * Free OpenStreetMap tiles without API key requirements.
+ *
+ * Ships its own control cluster (zoom, locate me, recenter, fullscreen) built
+ * as normal React buttons rather than imperative Leaflet controls, so they
+ * stay themeable, keyboard-focusable and consistent with the rest of the app.
  */
 export function MapView({
   markers = [],
@@ -18,61 +36,73 @@ export function MapView({
   zoom,
   interactive = true,
   showDirectionsLink = true,
+  showControls = true,
   className = '',
   ariaLabel = 'Interactive map of market locations',
 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markerLayersRef = useRef(new Map());
+  const userLayerRef = useRef(null);
+  const reducedMotionRef = useRef(false);
+
   const [tileError, setTileError] = useState(false);
+  const [tilesLoaded, setTilesLoaded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [zoomState, setZoomState] = useState({ atMin: false, atMax: false });
+  const [locateStatus, setLocateStatus] = useState({ state: 'idle', message: '' });
 
-  // Validate coordinates
-  const validMarkers = markers.filter(
-    (m) =>
-      m &&
-      typeof m.lat === 'number' &&
-      !isNaN(m.lat) &&
-      typeof m.lng === 'number' &&
-      !isNaN(m.lng)
-  );
+  const validMarkers = markers.filter(isValidMarker);
 
+  const fitToMarkers = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (validMarkers.length === 1) {
+      map.flyTo([validMarkers[0].lat, validMarkers[0].lng], zoom || 15, {
+        animate: !reducedMotionRef.current,
+      });
+    } else if (validMarkers.length > 1) {
+      const bounds = L.latLngBounds(validMarkers.map((m) => [m.lat, m.lng]));
+      map.flyToBounds(bounds, { padding: [30, 30], animate: !reducedMotionRef.current });
+    } else {
+      map.flyTo(BRISTOL_FALLBACK, zoom || 12, { animate: !reducedMotionRef.current });
+    }
+  }, [JSON.stringify(validMarkers), zoom]);
+
+  // ---- Mount: create the map once ----
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Detect reduced motion preference
-    const prefersReducedMotion =
+    reducedMotionRef.current =
       typeof window !== 'undefined' &&
       window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Initialize Leaflet map instance
     const map = L.map(containerRef.current, {
-      zoomControl: interactive,
+      zoomControl: false,
       dragging: interactive,
       touchZoom: interactive,
       scrollWheelZoom: false,
       doubleClickZoom: interactive,
-      zoomAnimation: !prefersReducedMotion,
-      fadeAnimation: !prefersReducedMotion,
+      zoomAnimation: !reducedMotionRef.current,
+      fadeAnimation: !reducedMotionRef.current,
       attributionControl: true,
     });
 
     mapRef.current = map;
 
-    // Add OpenStreetMap tile layer with required attribution
     const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
     });
 
-    tileLayer.on('tileerror', () => {
-      setTileError(true);
-    });
-
+    tileLayer.on('tileerror', () => setTileError(true));
+    tileLayer.once('load', () => setTilesLoaded(true));
     tileLayer.addTo(map);
 
-    // Initial center/bounds
+    L.control.scale({ position: 'bottomleft', imperial: false, maxWidth: 110 }).addTo(map);
+
     if (validMarkers.length > 0) {
       if (validMarkers.length === 1) {
         map.setView([validMarkers[0].lat, validMarkers[0].lng], zoom || 15);
@@ -81,28 +111,33 @@ export function MapView({
         map.fitBounds(bounds, { padding: [30, 30] });
       }
     } else {
-      map.setView([51.4545, -2.5879], zoom || 12);
+      map.setView(BRISTOL_FALLBACK, zoom || 12);
     }
 
-    // Accessible keyboard zoom control labels
-    const zoomInBtn = containerRef.current.querySelector('.leaflet-control-zoom-in');
-    if (zoomInBtn) zoomInBtn.setAttribute('aria-label', 'Zoom in');
-    const zoomOutBtn = containerRef.current.querySelector('.leaflet-control-zoom-out');
-    if (zoomOutBtn) zoomOutBtn.setAttribute('aria-label', 'Zoom out');
+    const updateZoomState = () => {
+      setZoomState({
+        atMin: map.getZoom() <= map.getMinZoom(),
+        atMax: map.getZoom() >= map.getMaxZoom(),
+      });
+    };
+    updateZoomState();
+    map.on('zoomend', updateZoomState);
 
     return () => {
+      map.off('zoomend', updateZoomState);
       map.remove();
       mapRef.current = null;
       markerLayersRef.current.clear();
+      userLayerRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Mount once
 
-  // Synchronize markers
+  // ---- Sync markers ----
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Clear old markers
     for (const layer of markerLayersRef.current.values()) {
       layer.remove();
     }
@@ -113,9 +148,8 @@ export function MapView({
     validMarkers.forEach((marker) => {
       const isSelected = selectedId && marker.id === selectedId;
       const isHighlighted = Boolean(marker.highlight);
-      const markerType = marker.markerType || 'market'; // 'market' | 'farmer' | 'pickup'
+      const markerType = marker.markerType || 'market';
 
-      // Custom divIcon with type-aware colors
       const customIcon = L.divIcon({
         className: 'marketlink-map-pin',
         html: `
@@ -133,6 +167,8 @@ export function MapView({
         icon: customIcon,
         title: marker.label || 'Location',
         draggable: isDraggable,
+        keyboard: true,
+        alt: marker.label || 'Map marker',
       }).addTo(map);
 
       if (isDraggable) {
@@ -158,15 +194,12 @@ export function MapView({
       }
 
       leafletMarker.on('click', () => {
-        if (onSelect) {
-          onSelect(marker);
-        }
+        if (onSelect) onSelect(marker);
       });
 
       markerLayersRef.current.set(marker.id, leafletMarker);
     });
 
-    // Map click for repositioning pin when in draggable mode
     if (draggable && onMove) {
       map.on('click', (e) => {
         const newPos = {
@@ -177,14 +210,80 @@ export function MapView({
       });
     }
 
-    // Update bounds when markers change
     if (validMarkers.length === 1) {
       map.setView([validMarkers[0].lat, validMarkers[0].lng], zoom || 15);
     } else if (validMarkers.length > 1) {
       const bounds = L.latLngBounds(validMarkers.map((m) => [m.lat, m.lng]));
       map.fitBounds(bounds, { padding: [30, 30] });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(validMarkers), selectedId, draggable]);
+
+  // ---- Fullscreen: resize the Leaflet canvas after the layout settles ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const id = window.setTimeout(() => map.invalidateSize(), 80);
+    return () => window.clearTimeout(id);
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    if (!isFullscreen) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setIsFullscreen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isFullscreen]);
+
+  const handleZoomIn = () => mapRef.current?.zoomIn();
+  const handleZoomOut = () => mapRef.current?.zoomOut();
+
+  const handleLocate = () => {
+    if (!navigator.geolocation) {
+      setLocateStatus({ state: 'error', message: "Your browser can't share your location." });
+      return;
+    }
+    setLocateStatus({ state: 'locating', message: 'Finding your location…' });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const map = mapRef.current;
+        const { latitude, longitude, accuracy } = position.coords;
+        if (map) {
+          if (userLayerRef.current) userLayerRef.current.remove();
+          const userIcon = L.divIcon({
+            className: 'marketlink-map-pin',
+            html: '<div class="marketlink-pin-badge you-are-here"><div class="marketlink-pin-inner"></div></div>',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+          });
+          userLayerRef.current = L.marker([latitude, longitude], {
+            icon: userIcon,
+            zIndexOffset: 500,
+            keyboard: false,
+            alt: 'Your location',
+          }).addTo(map);
+          map.flyTo([latitude, longitude], Math.max(map.getZoom(), 15), {
+            animate: !reducedMotionRef.current,
+          });
+        }
+        setLocateStatus({
+          state: 'done',
+          message: accuracy ? `Located you within ${Math.round(accuracy)}m` : 'Located you',
+        });
+        window.setTimeout(() => setLocateStatus({ state: 'idle', message: '' }), 4000);
+      },
+      (error) => {
+        const message =
+          error.code === error.PERMISSION_DENIED
+            ? 'Location access was denied.'
+            : "Couldn't find your location.";
+        setLocateStatus({ state: 'error', message });
+        window.setTimeout(() => setLocateStatus({ state: 'idle', message: '' }), 4000);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
 
   const singleMarker = validMarkers.length === 1 ? validMarkers[0] : null;
   const directionsUrl = singleMarker
@@ -193,8 +292,8 @@ export function MapView({
 
   return (
     <div
-      className={`${styles.mapWrapper} ${className}`}
-      style={{ height }}
+      className={`${styles.mapWrapper} ${isFullscreen ? styles.fullscreen : ''} ${className}`}
+      style={isFullscreen ? undefined : { height }}
       aria-label={ariaLabel}
       role="region"
     >
@@ -204,6 +303,12 @@ export function MapView({
         tabIndex={0}
         aria-label="Map viewport. Use arrow keys to pan and plus/minus to zoom."
       />
+
+      {!tilesLoaded && !tileError && (
+        <div className={styles.loadingOverlay} aria-hidden="true">
+          <div className={styles.loadingPulse} />
+        </div>
+      )}
 
       {showDirectionsLink && directionsUrl && (
         <div className={styles.directionsOverlay}>
@@ -217,6 +322,79 @@ export function MapView({
             <ExternalLink size={14} aria-hidden="true" />
             <span>Get directions</span>
           </a>
+        </div>
+      )}
+
+      {showControls && interactive && !tileError && (
+        <div className={styles.controlCluster} role="group" aria-label="Map controls">
+          <div className={styles.controlGroup}>
+            <button
+              type="button"
+              className={styles.controlButton}
+              onClick={handleZoomIn}
+              disabled={zoomState.atMax}
+              aria-label="Zoom in"
+              title="Zoom in"
+            >
+              <Plus size={16} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={styles.controlButton}
+              onClick={handleZoomOut}
+              disabled={zoomState.atMin}
+              aria-label="Zoom out"
+              title="Zoom out"
+            >
+              <Minus size={16} aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className={styles.controlGroup}>
+            <button
+              type="button"
+              className={`${styles.controlButton} ${locateStatus.state === 'locating' ? styles.controlButtonBusy : ''}`}
+              onClick={handleLocate}
+              aria-label="Find my location"
+              title="Find my location"
+            >
+              <LocateFixed size={16} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={styles.controlButton}
+              onClick={fitToMarkers}
+              aria-label="Recenter map"
+              title="Recenter map"
+            >
+              <RotateCcw size={16} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={styles.controlButton}
+              onClick={() => setIsFullscreen((v) => !v)}
+              aria-label={isFullscreen ? 'Exit fullscreen map' : 'Expand map to fullscreen'}
+              title={isFullscreen ? 'Exit fullscreen' : 'Expand map'}
+            >
+              {isFullscreen ? (
+                <Minimize2 size={16} aria-hidden="true" />
+              ) : (
+                <Maximize2 size={16} aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className={styles.statusLive} role="status" aria-live="polite">
+        {locateStatus.message}
+      </div>
+
+      {locateStatus.message && (
+        <div
+          className={`${styles.statusPill} ${locateStatus.state === 'error' ? styles.statusPillError : ''}`}
+        >
+          {locateStatus.message}
         </div>
       )}
 

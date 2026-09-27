@@ -97,7 +97,7 @@ export function Profile() {
             <h1 className={styles.userName}>{user?.name || 'Customer'}</h1>
             <span className={styles.userEmail}>{user?.email || 'customer@marketlink.org'}</span>
             {homeMarketName && (
-              <span className={styles.homeMarket}>{homeMarketName} · home market</span>
+              <span className={styles.homeMarket}>{homeMarketName}</span>
             )}
           </div>
         </header>

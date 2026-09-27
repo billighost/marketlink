@@ -143,7 +143,8 @@ export function Stock() {
     let hiddenCount = 0;
 
     products.forEach((p) => {
-      if (p.category) catSet.add(p.category);
+      const cat = typeof p.category === 'object' ? p.category?.name : (p.category || p.categoryName);
+      if (cat) catSet.add(cat);
       const qty = p.quantity || 0;
       const price = p.priceCents || 0;
       totalCents += qty * price;
@@ -158,7 +159,8 @@ export function Stock() {
 
     // Secondary client filter for category
     const filtered = products.filter((p) => {
-      if (selectedCategory !== 'all' && p.category !== selectedCategory) return false;
+      const cat = typeof p.category === 'object' ? p.category?.name : (p.category || p.categoryName);
+      if (selectedCategory !== 'all' && cat !== selectedCategory) return false;
       return true;
     });
 
@@ -601,7 +603,7 @@ export function Stock() {
                     tabIndex={0}
                   >
                     <h3 className={styles.gridName}>{p.name}</h3>
-                    {p.category && <span className={styles.gridCategory}>{p.category}</span>}
+                    {p.category && <span className={styles.gridCategory}>{typeof p.category === 'object' ? p.category?.name : p.category}</span>}
                   </div>
 
                   {/* Stock Bar Meter */}
@@ -713,7 +715,7 @@ export function Stock() {
 
                   <div className={styles.metaRow}>
                     {p.category && (
-                      <span className={styles.categoryBadge}>{p.category}</span>
+                      <span className={styles.categoryBadge}>{typeof p.category === 'object' ? p.category?.name : p.category}</span>
                     )}
                     <span className={styles.stockSummary}>
                       <strong>{p.quantity}</strong> in stock

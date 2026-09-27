@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUp, Sparkles, AlertCircle, Store, Leaf, Receipt, MapPin } from 'lucide-react';
 import { streamAssistantMessage, sendAssistantMessage } from '@/api/assistant';
+import { getProductDetail, getFarmerDetail, getMarketDetail } from '@/api/catalog';
+import ProductCard from '@/components/domain/ProductCard';
+import FarmerCard from '@/components/domain/FarmerCard';
+import MarketCard from '@/components/domain/MarketCard';
 import Page from '@/components/layout/Page';
 import PageTitle from '@/components/layout/PageTitle';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -43,6 +47,119 @@ function getChipPath(type, id) {
     default:
       return `/buyer/markets/${id}`;
   }
+}
+
+function AssistantEntityCard({ card }) {
+  const [data, setData] = useState(card.data || null);
+  const [loading, setLoading] = useState(!card.data && Boolean(card.id));
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (data || !card.id) return;
+    let mounted = true;
+
+    async function loadEntity() {
+      try {
+        setLoading(true);
+        if (card.type === 'product' || card.type === 'produce') {
+          const res = await getProductDetail(card.id);
+          if (mounted) setData(res);
+        } else if (card.type === 'farmer' || card.type === 'stall') {
+          const res = await getFarmerDetail(card.id);
+          if (mounted) setData(res);
+        } else if (card.type === 'market') {
+          const res = await getMarketDetail(card.id);
+          if (mounted) setData(res);
+        }
+      } catch {
+        if (mounted) setError(true);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadEntity();
+    return () => {
+      mounted = false;
+    };
+  }, [card.id, card.type, data]);
+
+  if (loading) {
+    return (
+      <div className={styles.cardSkeleton} aria-label="Loading recommendation...">
+        <div className={styles.skeletonMedia} />
+        <div className={styles.skeletonBody}>
+          <div className={styles.skeletonLineShort} />
+          <div className={styles.skeletonLineFull} />
+        </div>
+      </div>
+    );
+  }
+
+  if (card.type === 'action' && card.action === 'open-smart-basket') {
+    return (
+      <div className={styles.actionCard}>
+        <div className={styles.actionCardHeader}>
+          <div className={styles.actionIconBadge} aria-hidden="true">
+            <Sparkles size={18} />
+          </div>
+          <div>
+            <h4 className={styles.actionCardTitle}>{card.label || 'Build Smart Basket'}</h4>
+            <p className={styles.actionCardSub}>
+              {card.params?.budget
+                ? `Custom basket curated within ${card.params.budget}`
+                : 'Custom basket curated from fresh market produce'}
+            </p>
+          </div>
+        </div>
+        <Link to="/buyer/basket" className={styles.actionCardBtn}>
+          Start Smart Basket
+        </Link>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    const Icon = getChipIcon(card.type);
+    return (
+      <Link to={card.path || getChipPath(card.type, card.id)} className={styles.entityPillFallback}>
+        <Icon size={14} className={styles.fallbackIcon} aria-hidden="true" />
+        <span className={styles.fallbackLabel}>{card.label || `View ${card.type}`}</span>
+      </Link>
+    );
+  }
+
+  if (card.type === 'product' || card.type === 'produce') {
+    return (
+      <div className={styles.cardWrapper}>
+        <ProductCard product={data} variant="compact" />
+      </div>
+    );
+  }
+
+  if (card.type === 'farmer' || card.type === 'stall') {
+    return (
+      <div className={styles.cardWrapper}>
+        <FarmerCard farmer={data} variant={data.openToday !== undefined ? 'stall' : 'row'} />
+      </div>
+    );
+  }
+
+  if (card.type === 'market') {
+    return (
+      <div className={styles.marketCardWrapper}>
+        <MarketCard market={data} />
+      </div>
+    );
+  }
+
+  const Icon = getChipIcon(card.type);
+  return (
+    <Link to={card.path || getChipPath(card.type, card.id)} className={styles.entityPillFallback}>
+      <Icon size={14} className={styles.fallbackIcon} aria-hidden="true" />
+      <span className={styles.fallbackLabel}>{card.label || `View ${card.type}`}</span>
+    </Link>
+  );
 }
 
 export function Assistant() {
@@ -94,7 +211,9 @@ export function Assistant() {
       id: asstMsgId,
       sender: 'assistant',
       text: '',
+      cards: [],
       chips: [],
+      suggestions: [],
       streaming: true,
     };
 
@@ -131,22 +250,22 @@ export function Assistant() {
 
       const replyText =
         res?.reply || accumulatedText || 'I have checked the market schedule and stock for you.';
-      const cards = res?.cards || [];
+      const rawCards = res?.cards || [];
 
-      // Build navigation chips from structured cards, then from any
-      // [product:id] / [stall:id] / [farmer:id] / [market:id] / [order:id]
-      // tokens left in the reply text. Dedupe on type+id, not id alone,
-      // since ids are only unique within their own type.
-      const chipMap = new Map();
+      // Collect structured cards and text entity tags [type:id]
+      const cardMap = new Map();
 
-      cards.forEach((c) => {
+      rawCards.forEach((c) => {
         const type = c.type === 'farmer' ? 'stall' : c.type;
-        const key = `${type}:${c.id}`;
-        if (!chipMap.has(key)) {
-          chipMap.set(key, {
+        const key = `${type}:${c.id || c.action || Math.random()}`;
+        if (!cardMap.has(key)) {
+          cardMap.set(key, {
             type,
             id: c.id,
-            label: c.name || c.title || c.stallName || `View ${type}`,
+            data: c.data || null,
+            action: c.action,
+            label: c.name || c.title || c.stallName || c.label || `View ${type}`,
+            params: c.params,
             path: getChipPath(type, c.id),
           });
         }
@@ -159,10 +278,11 @@ export function Assistant() {
         const id = match[2];
         const type = rawType === 'farmer' ? 'stall' : rawType;
         const key = `${type}:${id}`;
-        if (!chipMap.has(key)) {
-          chipMap.set(key, {
+        if (!cardMap.has(key)) {
+          cardMap.set(key, {
             type,
             id,
+            data: null,
             label: `View ${type}`,
             path: getChipPath(type, id),
           });
@@ -173,13 +293,17 @@ export function Assistant() {
         .replace(/\[(product|farmer|stall|market|order):([a-zA-Z0-9_-]+)\]/g, '')
         .trim();
 
+      const collectedCards = Array.from(cardMap.values());
+
       setMessages((prev) =>
         prev.map((m) =>
           m.id === asstMsgId
             ? {
                 ...m,
                 text: cleanReply,
-                chips: Array.from(chipMap.values()),
+                cards: collectedCards,
+                chips: collectedCards,
+                suggestions: res?.suggestions || [],
                 streaming: false,
               }
             : m
@@ -289,17 +413,35 @@ export function Assistant() {
                     )}
                   </div>
 
-                  {!isUser && msg.chips && msg.chips.length > 0 && (
-                    <div className={styles.chipsRow} aria-label="Related links">
-                      {msg.chips.map((chip) => {
-                        const Icon = getChipIcon(chip.type);
-                        return (
-                          <Link key={`${chip.type}-${chip.id}`} to={chip.path} className={styles.chipLink}>
-                            <Icon size={12} strokeWidth={1.75} aria-hidden="true" />
-                            <span>{chip.label}</span>
-                          </Link>
-                        );
-                      })}
+                  {/* Proper entity cards shelf */}
+                  {!isUser && msg.cards && msg.cards.length > 0 && (
+                    <div className={styles.cardsShelf} aria-label="Recommended items">
+                      <div className={styles.cardsTrack}>
+                        {msg.cards.map((card, cIdx) => (
+                          <AssistantEntityCard
+                            key={`${card.type}-${card.id || card.action || cIdx}`}
+                            card={card}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contextual follow-up suggestions */}
+                  {!isUser && msg.suggestions && msg.suggestions.length > 0 && (
+                    <div className={styles.followupSuggestions} aria-label="Suggested follow-up questions">
+                      {msg.suggestions.map((suggestion, sIdx) => (
+                        <button
+                          key={`${sIdx}-${suggestion}`}
+                          type="button"
+                          className={styles.followupChip}
+                          onClick={() => handleSend(suggestion)}
+                          disabled={isTyping}
+                        >
+                          <Sparkles size={12} className={styles.followupIcon} aria-hidden="true" />
+                          <span>{suggestion}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>

@@ -226,46 +226,47 @@ export function MarketDetail() {
           </div>
         </header>
 
-        {/* Opening Days */}
-        <Section title="Opening days">
-          <div className={styles.openingDaysWrap}>
-            <DayDots days={operatingDays} size="sm" />
-            {scheduleLine && <p className={styles.scheduleText}>{scheduleLine}</p>}
-          </div>
-        </Section>
+        {/* Visit this market: opening days + location share one section */}
+        <Section title="Visit this market">
+          <div className={styles.visitBody}>
+            <div className={styles.openingDaysWrap}>
+              <DayDots days={operatingDays} size="sm" />
+              {scheduleLine && <p className={styles.scheduleText}>{scheduleLine}</p>}
+            </div>
 
-        {/* Where to find it */}
-        <Section title="Where to find it">
-          <LocationBlock
-            markers={mapMarkers}
-            addressLine={market.address}
-            title={market.name}
-            mapHeight="280px"
-            actionSlot={
-              <button
-                type="button"
-                className={[
-                  styles.saveMarketButton,
-                  isSaved ? styles.savedActive : '',
-                ].filter(Boolean).join(' ')}
-                onClick={handleToggleSaveMarket}
-                disabled={savingAction}
-                aria-pressed={isSaved}
-              >
-                {isSaved ? (
-                  <>
-                    <Check size={16} strokeWidth={2} aria-hidden="true" />
-                    <span>Saved</span>
-                  </>
-                ) : (
-                  <>
-                    <Bookmark size={16} aria-hidden="true" />
-                    <span>Save this market</span>
-                  </>
-                )}
-              </button>
-            }
-          />
+            <hr className={styles.divider} />
+
+            <LocationBlock
+              markers={mapMarkers}
+              addressLine={market.address}
+              title={market.name}
+              mapHeight="280px"
+              actionSlot={
+                <button
+                  type="button"
+                  className={[
+                    styles.saveMarketButton,
+                    isSaved ? styles.savedActive : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={handleToggleSaveMarket}
+                  disabled={savingAction}
+                  aria-pressed={isSaved}
+                >
+                  {isSaved ? (
+                    <>
+                      <Check size={16} strokeWidth={2} aria-hidden="true" />
+                      <span>Saved</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark size={16} aria-hidden="true" />
+                      <span>Save this market</span>
+                    </>
+                  )}
+                </button>
+              }
+            />
+          </div>
         </Section>
 
         {/* Stalls at this market — do not render section if no stalls are available */}
