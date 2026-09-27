@@ -67,10 +67,10 @@ export async function forgotPassword(email) {
   return res.data;
 }
 
-export async function resetPassword({ token, newPassword, confirmPassword }) {
+export async function resetPassword({ token, password, newPassword }) {
   const res = await apiFetch('/auth/reset-password', {
     method: 'POST',
-    body: { token, newPassword, confirmPassword },
+    body: { token, password: password || newPassword },
   });
   return res.data;
 }

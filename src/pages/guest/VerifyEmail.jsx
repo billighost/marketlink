@@ -1,237 +1,205 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { CheckCircle2, AlertCircle, Mail, ArrowRight, RefreshCw } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
-import useDocumentTitle from '@/hooks/useDocumentTitle';
-import PageHeader from '@/components/layout/PageHeader';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import FormField from '@/components/ui/FormField';
-import { useAuth } from '@/context/AuthContext';
 import { verifyEmail, resendVerification } from '@/api/auth';
+import { useAuth, homePathFor } from '@/context/AuthContext';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
+import AuthCard from '@/components/guest/AuthCard';
+import authStyles from '@/components/guest/AuthCard.module.css';
 import styles from './VerifyEmail.module.css';
 
 export function VerifyEmail() {
-  useDocumentTitle('Verify Email · MarketLink');
-
+  useDocumentTitle('Verify Email — MarketLink');
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') || '';
-  const navigate = useNavigate();
-  const { user, isAuthenticated, role, refreshUser, homePathFor } = useAuth();
+  const token = searchParams.get('token');
+  const { isAuthenticated, user } = useAuth();
 
-  const [loading, setLoading] = useState(Boolean(token));
-  const [success, setSuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    token ? '' : 'No verification token was found in this link. Please check your email or request a new link below.'
-  );
-
-  // Resend form states
-  const [resendEmail, setResendEmail] = useState(user?.email || '');
+  // States: 'idle' | 'verifying' | 'success' | 'expired' | 'no-token'
+  const [state, setState] = useState(token ? 'verifying' : 'no-token');
+  const [resendEmail, setResendEmail] = useState('');
   const [resending, setResending] = useState(false);
-  const [resendSent, setResendSent] = useState(false);
+  const [resendNotice, setResendNotice] = useState(null);
   const [resendError, setResendError] = useState('');
 
-  const verifyingRef = useRef(false);
-  const verifiedTokenRef = useRef('');
+  // Latch for React StrictMode so verification token is only consumed once
+  const fired = useRef(false);
 
   useEffect(() => {
-    if (user?.emailVerified) {
-      setSuccess(true);
-      setLoading(false);
+    if (!token) {
+      setState('no-token');
       return;
     }
 
-    if (!token) return;
-    if (verifiedTokenRef.current === token) return;
-    if (verifyingRef.current) return;
-
-    verifyingRef.current = true;
-    let mounted = true;
+    if (fired.current) return;
+    fired.current = true;
 
     async function executeVerification() {
+      setState('verifying');
       try {
-        setLoading(true);
-        setErrorMessage('');
-        await verifyEmail(token);
-        verifiedTokenRef.current = token;
-        if (mounted) {
-          setSuccess(true);
-          // Refresh user context if authenticated
-          if (typeof refreshUser === 'function') {
-            try {
-              await refreshUser();
-            } catch {
-              // Ignore background refresh failure
-            }
-          }
-        }
+        const res = await verifyEmail(token);
+        // Both fresh verification and alreadyVerified are treated as success
+        setState('success');
       } catch (err) {
-        if (mounted) {
-          if (user?.emailVerified) {
-            setSuccess(true);
-            return;
-          }
-          setSuccess(false);
-          if (err.code === 'INVALID_VERIFICATION_TOKEN') {
-            setErrorMessage('This verification link is invalid, expired, or has already been used.');
-          } else {
-            setErrorMessage(err.message || 'Unable to verify email address. Please try requesting a new link.');
-          }
-        }
-      } finally {
-        verifyingRef.current = false;
-        if (mounted) {
-          setLoading(false);
+        if (
+          err.code === 'ALREADY_VERIFIED' ||
+          err.message?.toLowerCase().includes('already verified')
+        ) {
+          setState('success');
+        } else if (
+          err.code === 'INVALID_VERIFICATION_TOKEN' ||
+          err.statusCode === 422 ||
+          err.statusCode === 400 ||
+          err.message?.toLowerCase().includes('expired') ||
+          err.message?.toLowerCase().includes('invalid')
+        ) {
+          setState('expired');
+        } else {
+          setState('expired');
         }
       }
     }
 
     executeVerification();
-    return () => {
-      mounted = false;
-    };
-  }, [token, user?.emailVerified, refreshUser]);
+  }, [token]);
 
   const handleResend = async (e) => {
     e.preventDefault();
-    if (!resendEmail || !resendEmail.trim()) {
-      setResendError('Please enter your email address.');
+    const trimmed = resendEmail.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setResendError('Please enter a valid email address.');
       return;
     }
 
     setResending(true);
+    setResendNotice(null);
     setResendError('');
-    setResendSent(false);
-
     try {
-      await resendVerification(resendEmail.trim().toLowerCase());
-      setResendSent(true);
+      const res = await resendVerification(trimmed);
+      setResendNotice(res?.message || "If an unverified account with that email exists, we've sent a new verification link.");
     } catch (err) {
-      if (err.status === 429) {
-        setResendError('Too many verification requests. Please wait a few minutes before trying again.');
-      } else {
-        setResendError(err.message || 'Unable to send verification email. Please try again later.');
-      }
+      setResendError(err.message || 'Unable to send verification email right now.');
     } finally {
       setResending(false);
     }
   };
 
-  const handleContinue = () => {
-    if (isAuthenticated) {
-      navigate(homePathFor(role));
-    } else {
-      navigate(PATHS.LOGIN);
-    }
-  };
+  const nextDestination = isAuthenticated ? homePathFor(user?.role) : PATHS.LOGIN;
+  const nextLabel = isAuthenticated ? 'Continue to your dashboard' : 'Sign in to your account';
 
+  // 1. Verifying State
+  if (state === 'verifying') {
+    return (
+      <AuthCard title="Verifying email" lead="Checking your confirmation link…">
+        <div className={styles.centerState}>
+          <Loader2 size={32} className={styles.spinner} aria-hidden="true" />
+          <p className={styles.stateText}>Verifying your email…</p>
+        </div>
+      </AuthCard>
+    );
+  }
+
+  // 2. Success State (and Already Verified)
+  if (state === 'success') {
+    return (
+      <AuthCard
+        title="Email verified"
+        lead="Your email address has been verified."
+        footer={
+          <Link to={PATHS.HOME} className={authStyles.link}>
+            Back to home
+          </Link>
+        }
+      >
+        <div className={styles.centerState}>
+          <CheckCircle2 size={40} className={styles.successIcon} aria-hidden="true" />
+          <p className={styles.stateHeading}>Your email is verified.</p>
+          <p className={styles.stateText}>You can now place pre-orders and receive market updates.</p>
+
+          <Link to={nextDestination} className={styles.submitBtn}>
+            {nextLabel}
+          </Link>
+        </div>
+      </AuthCard>
+    );
+  }
+
+  // 3. Expired or Invalid Token State
+  if (state === 'expired') {
+    return (
+      <AuthCard
+        title="Link expired"
+        lead="That verification link has expired or has already been used."
+        footer={
+          <Link to={PATHS.LOGIN} className={authStyles.link}>
+            Back to sign in
+          </Link>
+        }
+      >
+        <div role="alert" className={authStyles.bannerError}>
+          <p>That link has expired. Request a new verification email below.</p>
+        </div>
+
+        {resendNotice && (
+          <div role="status" className={authStyles.bannerSuccess}>
+            <p>{resendNotice}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleResend} noValidate className={authStyles.form}>
+          <div className={authStyles.field}>
+            <label htmlFor="verify-email-input" className={authStyles.label}>
+              Email address
+            </label>
+            <input
+              id="verify-email-input"
+              type="email"
+              value={resendEmail}
+              onChange={(e) => {
+                setResendEmail(e.target.value);
+                if (resendError) setResendError('');
+              }}
+              placeholder="name@example.com"
+              autoComplete="email"
+              aria-invalid={Boolean(resendError)}
+              aria-describedby={resendError ? 'verify-resend-err' : undefined}
+              className={`${authStyles.input} ${resendError ? authStyles.inputInvalid : ''}`}
+              required
+            />
+            {resendError && (
+              <span id="verify-resend-err" role="alert" className={authStyles.errorText}>
+                {resendError}
+              </span>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={resending}
+            className={styles.submitBtn}
+          >
+            {resending ? 'Sending link…' : 'Resend verification email'}
+          </button>
+        </form>
+      </AuthCard>
+    );
+  }
+
+  // 4. No Token Provided State
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <PageHeader
-          title="Email Verification"
-          subtitle={loading ? 'Confirming your MarketLink account...' : undefined}
-          backTo={PATHS.HOME}
-          backLabel="Home"
-        />
-
-        <Card className={styles.card}>
-          {loading && (
-            <div className={styles.centerState}>
-              <div className={styles.spinner} aria-label="Verifying token" />
-              <h2 className={styles.stateTitle}>Verifying your email...</h2>
-              <p className={styles.stateSubtitle}>This will only take a moment.</p>
-            </div>
-          )}
-
-          {!loading && success && (
-            <div className={styles.centerState}>
-              <div className={styles.successIconBubble}>
-                <CheckCircle2 size={44} className={styles.successIcon} />
-              </div>
-              <h2 className={styles.stateTitle}>Your email is confirmed!</h2>
-              <p className={styles.stateSubtitle}>
-                Thank you for verifying your email address. Your MarketLink account is now fully active.
-              </p>
-              <div className={styles.actionRow}>
-                <Button variant="primary" onClick={handleContinue} className={styles.actionBtn}>
-                  <span>Continue to MarketLink</span>
-                  <ArrowRight size={16} />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {!loading && !success && (
-            <div className={styles.errorContainer}>
-              <div className={styles.centerState}>
-                <div className={styles.errorIconBubble}>
-                  <AlertCircle size={44} className={styles.errorIcon} />
-                </div>
-                <h2 className={styles.stateTitle}>Verification Link Expired or Invalid</h2>
-                <p className={styles.errorMessage}>{errorMessage}</p>
-              </div>
-
-              <div className={styles.resendCard}>
-                <h3 className={styles.resendHeading}>Request a new verification link</h3>
-                <p className={styles.resendPrompt}>
-                  Enter the email address associated with your account, and we’ll send a fresh confirmation link right away.
-                </p>
-
-                {resendSent ? (
-                  <div className={styles.sentNotification} role="status">
-                    <CheckCircle2 size={18} className={styles.inlineCheck} />
-                    <span>A new verification link has been sent to <strong>{resendEmail}</strong>. Please check your inbox.</span>
-                  </div>
-                ) : (
-                  <form onSubmit={handleResend} className={styles.resendForm}>
-                    <FormField
-                      label="Email address"
-                      name="email"
-                      type="email"
-                      value={resendEmail}
-                      onChange={(e) => setResendEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      required
-                      error={resendError}
-                    />
-
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      disabled={resending}
-                      className={styles.resendBtn}
-                    >
-                      {resending ? (
-                        <>
-                          <RefreshCw size={15} className={styles.spinningIcon} />
-                          <span>Sending link...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Mail size={15} />
-                          <span>Send verification link</span>
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                )}
-
-                <div className={styles.footerLinkRow}>
-                  <Link to={PATHS.LOGIN} className={styles.subtleLink}>
-                    Return to Sign in
-                  </Link>
-                  <span className={styles.dotSeparator}>·</span>
-                  <Link to={PATHS.HOME} className={styles.subtleLink}>
-                    Return to Home
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
+    <AuthCard
+      title="Verification link needed"
+      lead="Please check the link in the confirmation email we sent you."
+      footer={
+        <Link to={PATHS.LOGIN} className={authStyles.link}>
+          Back to sign in
+        </Link>
+      }
+    >
+      <div role="alert" className={authStyles.bannerError}>
+        <p>No verification token was provided in the URL. Please click the full link in your verification email.</p>
       </div>
-    </div>
+    </AuthCard>
   );
 }
 

@@ -1,1 +1,108 @@
-/* Farmers.module.css — superseded by StallsView.module.css */
+/* Stalls index — Page A */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.chipScroll {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: var(--space-2);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.chipScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
+}
+
+.chip:hover {
+  border-color: var(--color-ink-soft);
+}
+
+.chip:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Active chip is ink-filled, NEVER beet */
+.activeChip {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-white);
+}
+
+.activeChip:hover {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-white);
+}
+
+/* 1 column under 420px so a card never gets squeezed past readable width,
+   then 2 / 3 / 4 as the viewport grows. Page already supplies the vertical
+   gap above this grid — nothing here duplicates it. */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 420px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+}
+
+.skeletonCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background-color: var(--color-white);
+  min-width: 0;
+}

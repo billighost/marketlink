@@ -1,104 +1,57 @@
-.page {
+/* Unauthorized.module.css — under 40 lines, exactly ONE beet element */
+
+.contentWrap {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - var(--header-height, 64px) - var(--space-20, 5rem) * 2);
-  padding-block: var(--space-12, 3rem);
+  gap: var(--space-4);
 }
 
-.container {
-  width: 100%;
-  max-width: var(--container-form, 480px);
-  margin-inline: auto;
-  padding-inline: var(--page-pad, 1.5rem);
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: var(--space-8, 2rem) var(--space-6, 1.5rem);
-}
-
-@media (min-width: 480px) {
-  .card {
-    padding: var(--space-12, 3rem) var(--space-8, 2rem);
-  }
-}
-
-.statusBadge {
-  position: relative;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 35% 35%,
-    var(--color-canvas-soft, #FAF7F0) 0%,
-    var(--color-canvas, #F5EFE3) 100%
-  );
-  border: 1px solid var(--color-wood-line, #E3D3B8);
-  box-shadow: 0 0 0 8px rgba(176, 134, 85, 0.08), 0 4px 16px rgba(46, 43, 38, 0.06);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-beet, #7A2E3B);
-  margin-bottom: var(--space-6, 1.5rem);
-}
-
-.badgeCode {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--color-ink-soft, #6B6259);
-  line-height: 1;
-  margin-bottom: 2px;
-}
-
-.badgeIcon {
-  color: var(--color-beet, #7A2E3B);
-}
-
-.title {
-  font-family: var(--font-head, 'Idiqlat', Georgia, serif);
-  font-size: var(--text-h2, 1.75rem);
-  font-weight: var(--weight-head, 400);
-  color: var(--color-ink, #2E2B26);
-  line-height: var(--lh-h2, 1.2);
-  margin: 0 0 var(--space-2, 0.5rem) 0;
-}
-
-.text {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: var(--text-body, 0.9375rem);
-  color: var(--color-ink-soft, #6B6259);
-  line-height: var(--lh-body, 1.7);
-  margin: 0 0 var(--space-6, 1.5rem) 0;
-  max-width: var(--measure-narrow, 46ch);
+.explanation {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-relaxed);
+  margin: 0;
 }
 
 .actions {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-4, 1rem);
-  width: 100%;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 
-.homeLink {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: var(--text-sm, 0.8125rem);
-  color: var(--color-ink-soft, #6B6259);
+/* The ONE beet element on the page */
+.submitBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  background: var(--color-beet);
+  color: var(--color-on-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  border: none;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.submitBtn:hover { background: var(--color-beet-dark); }
+.submitBtn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+.signOutBtn {
+  min-height: var(--tap-min);
+  background: transparent;
+  border: none;
+  color: var(--color-ink-soft);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
   text-decoration: underline;
-  text-underline-offset: var(--underline-offset, 2px);
-  min-height: var(--tap-min, 44px);
-  display: inline-flex;
-  align-items: center;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  padding: 0;
 }
-
-.homeLink:hover {
-  color: var(--color-ink, #2E2B26);
-}
+.signOutBtn:hover { color: var(--color-ink); }

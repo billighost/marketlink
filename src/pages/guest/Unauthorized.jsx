@@ -1,46 +1,67 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ShieldAlert } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { PATHS } from '@/routes/paths';
+import { useAuth, homePathFor } from '@/context/AuthContext';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
+import AuthCard from '@/components/guest/AuthCard';
+import authStyles from '@/components/guest/AuthCard.module.css';
 import styles from './Unauthorized.module.css';
 
-/**
- * Friendly, professional 403 page
- */
 export function Unauthorized() {
-  useDocumentTitle('Closed for the Day · MarketLink');
+  useDocumentTitle('Access Denied — MarketLink');
+  const navigate = useNavigate();
+  const { user, role, logout } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate(PATHS.LOGIN, { replace: true });
+    }
+  };
+
+  const roleName = role === 'customer'
+    ? 'Customer'
+    : role === 'farmer'
+    ? 'Farmer'
+    : role === 'admin'
+    ? 'Administrator'
+    : 'Guest';
+
+  const dashboardPath = homePathFor(role);
+  const dashboardLabel = `Go to ${roleName} dashboard`;
 
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <Card className={styles.card}>
-          <div className={styles.statusBadge} aria-hidden="true">
-            <span className={styles.badgeCode}>403</span>
-            <ShieldAlert size={28} strokeWidth={1.85} className={styles.badgeIcon} />
-          </div>
-          <h1 className={styles.title}>Closed for the day</h1>
-          <p className={styles.text}>
-            You're signed in, but this counter is reserved for a different kind of stall or account.
-          </p>
-          <div className={styles.actions}>
-            <Button
-              as={Link}
-              to={PATHS.LOGIN}
-              variant="primary"
-              size="md"
-            >
-              Sign in with another account
-            </Button>
-            <Link to={PATHS.HOME} className={styles.homeLink}>
-              Back to Elm Street
-            </Link>
-          </div>
-        </Card>
+    <AuthCard
+      title="That area is not for your account."
+      lead={`You are signed in as a ${roleName}. You can only access features designed for your role.`}
+      footer={
+        <Link to={PATHS.HOME} className={authStyles.link}>
+          Back to Elm Street
+        </Link>
+      }
+    >
+      <div className={styles.contentWrap}>
+        <p className={styles.explanation}>
+          If you need access to this page, please sign in with an account that has the required role.
+        </p>
+
+        <div className={styles.actions}>
+          {/* The ONE beet element on the page */}
+          <Link to={dashboardPath} className={styles.submitBtn}>
+            {dashboardLabel}
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className={styles.signOutBtn}
+          >
+            Sign out of {user?.email || 'this account'}
+          </button>
+        </div>
       </div>
-    </div>
+    </AuthCard>
   );
 }
 

@@ -1,19 +1,46 @@
-/* AuthCard — centred card for all six auth pages */
+/* AuthCard — centred card and shared form primitives for all auth pages */
 
 .wrap {
+  position: relative;
   width: 100%;
-  min-height: 100%;
+  min-height: 100vh;
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding: var(--space-8) var(--page-pad) var(--space-12);
+  box-sizing: border-box;
 }
 
 @media (min-width: 480px) {
-  .wrap { align-items: center; }
+  .wrap {
+    align-items: center;
+  }
+}
+
+.bgOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bgImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-overlay);
 }
 
 .card {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: var(--container-form);
   background: var(--color-white);
@@ -23,13 +50,19 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  box-shadow: 0 8px 32px rgba(46, 43, 38, 0.16);
+}
+
+@media (min-width: 768px) {
+  .cardWide {
+    max-width: var(--container-narrow);
+  }
 }
 
 @media (max-width: 479px) {
   .card {
-    border: none;
-    border-radius: 0;
-    padding: var(--space-6) 0;
+    border-radius: var(--radius-lg);
+    padding: var(--space-6) var(--space-4);
   }
 }
 
@@ -40,13 +73,18 @@
   margin-bottom: var(--space-2);
   transition: opacity var(--duration-fast) var(--ease-standard);
 }
-.logoLink:hover { opacity: 0.85; }
-.logoLink:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.logoLink:hover {
+  opacity: 0.85;
+}
+.logoLink:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
 
 .title {
   font-family: var(--font-head);
   font-size: var(--text-h2);
-  font-weight: var(--weight-head);
+  font-weight: var(--weight-head, 400);
   line-height: var(--lh-h2);
   color: var(--color-ink);
   margin: 0;
@@ -73,4 +111,166 @@
   font-size: var(--text-sm);
   color: var(--color-ink-soft);
   text-align: center;
+}
+
+/* ─── Shared Form Primitives for Auth Pages ─── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.link {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.link:hover {
+  color: var(--color-ink);
+}
+
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-ink);
+  background: var(--color-white);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+.input:focus {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.inputInvalid {
+  border-color: var(--color-danger);
+}
+.inputWithToggle {
+  padding-right: var(--tap-min);
+}
+
+.toggleBtn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+.toggleBtn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.errorText {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+}
+
+.bannerError {
+  padding: var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-bg);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.bannerError p {
+  margin: 0;
+}
+
+.bannerSuccess {
+  padding: var(--space-3);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-success);
+}
+.bannerSuccess p {
+  margin: 0;
+}
+
+/* Password rules checklist */
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  list-style: none;
+  margin: 0;
+}
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+.checkItemMet {
+  color: var(--color-success);
+}
+.checkIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Hairline notice panel (Farmer review notice, etc.) */
+.noticePanel {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-canvas-soft);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  line-height: var(--lh-relaxed);
+}
+.noticePanel strong {
+  color: var(--color-ink);
 }

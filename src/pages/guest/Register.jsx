@@ -1,852 +1,540 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams, useNavigate, Navigate } from 'react-router-dom';
-import {
-  User,
-  Store,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Phone,
-  MapPin,
-  Check,
-  CheckCircle2,
-  ArrowRight,
-  ArrowLeft,
-  Sparkles,
-  ShieldCheck,
-  Leaf,
-  ShoppingBag,
-  Award,
-} from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Eye, EyeOff, Check, X } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
-import useDocumentTitle from '@/hooks/useDocumentTitle';
 import { useAuth, homePathFor } from '@/context/AuthContext';
-import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
+import AuthCard from '@/components/guest/AuthCard';
+import authStyles from '@/components/guest/AuthCard.module.css';
 import styles from './Register.module.css';
-
-const FARM_CATEGORIES = [
-  'Vegetables & Leafy Greens',
-  'Orchard Fruits & Berries',
-  'Artisan Bakery & Grains',
-  'Dairy, Butter & Farmhouse Cheese',
-  'Raw Honey & Fruit Preserves',
-  'Cut Flowers & Potted Herbs',
-  'Pasture-Raised Poultry & Meats',
-];
-
-const PREFERRED_MARKETS = [
-  'Greenwich Village Farmers Market (Abingdon Square)',
-  'Union Square Greenmarket (Manhattan)',
-  'Brooklyn Grand Army Plaza (Prospect Park)',
-  'Chelsea Farmers Market (W 23rd St)',
-  'Tompkins Square Greenmarket (East Village)',
-  'Riverside Park Market (Upper West Side)',
-];
 
 export function Register() {
   useDocumentTitle('Create Account — MarketLink');
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated, role: userRole } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { register, isAuthenticated, user } = useAuth();
 
-  const roleParam = searchParams.get('role')?.toLowerCase();
+  // Role: preselected from query param ?role=farmer, default 'customer'
+  const roleFromUrl = searchParams.get('role') === 'farmer' ? 'farmer' : 'customer';
+  const [role, setRole] = useState(roleFromUrl);
 
-  const [step, setStep] = useState(1);
-  const [role, setRole] = useState(
-    roleParam === 'customer' || roleParam === 'farmer' ? roleParam : 'customer'
-  );
-
-  const initiallyAuthenticatedRef = useRef(isAuthenticated);
-
-  useEffect(() => {
-    // Only redirect if already authenticated on initial page load (not after completing step 2 into step 3)
-    if (initiallyAuthenticatedRef.current) {
-      navigate(homePathFor(userRole), { replace: true });
-    }
-  }, [userRole, navigate]);
+  // Sync role changes to URL
+  const handleRoleChange = (newRole) => {
+    setRole(newRole);
+    setSearchParams({ role: newRole }, { replace: true });
+    setFieldErrors({});
+    setBannerError(null);
+  };
 
   useEffect(() => {
-    if (roleParam === 'customer' || roleParam === 'farmer') {
-      setRole(roleParam);
-      setStep(2);
+    if (isAuthenticated) {
+      navigate(homePathFor(user?.role), { replace: true });
     }
-  }, [roleParam]);
+  }, [isAuthenticated, user, navigate]);
 
-  const { registerCustomer, registerFarmer } = useAuth();
-
-  const [customerData, setCustomerData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    address: 'Elm Street Neighborhood',
-    market: 'Greenwich Village Farmers Market (Abingdon Square)',
-    password: '',
-    confirmPassword: '',
-    agreedTerms: true,
-  });
-
-  const [farmerData, setFarmerData] = useState({
-    farmName: '',
+  // Form states
+  const [formData, setFormData] = useState({
+    name: '',
+    stallName: '',
     contactPerson: '',
-    category: 'Vegetables & Leafy Greens',
-    farmLocation: 'Hudson Valley, NY',
-    email: '',
     phone: '',
+    email: '',
+    address: '',
     password: '',
     confirmPassword: '',
-    agreedTerms: true,
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [bannerError, setBannerError] = useState(null);
 
-  const firstInputRef = useRef(null);
+  // Password rules
+  const password = formData.password;
+  const ruleMinLength = password.length >= 8;
+  const ruleHasLetter = /[a-zA-Z]/.test(password);
+  const ruleHasNumber = /[0-9]/.test(password);
 
-  const handleCustomerChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setCustomerData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+  const validateField = (name, val) => {
+    const trimmed = (val || '').trim();
+    if (name === 'name' && role === 'customer') {
+      if (!trimmed) return 'Full name is required.';
+      if (trimmed.length < 2) return 'Full name must be at least 2 characters.';
+    }
+    if (name === 'stallName' && role === 'farmer') {
+      if (!trimmed) return 'Stall or business name is required.';
+      if (trimmed.length < 2) return 'Stall name must be at least 2 characters.';
+    }
+    if (name === 'contactPerson' && role === 'farmer') {
+      if (!trimmed) return 'Contact person name is required.';
+      if (trimmed.length < 2) return 'Contact person must be at least 2 characters.';
+    }
+    if (name === 'email') {
+      if (!trimmed) return 'Email is required.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return 'Please enter a valid email address.';
+    }
+    if (name === 'phone') {
+      if (!trimmed) return 'Contact number is required.';
+      if (trimmed.length < 7) return 'Contact number must be at least 7 characters.';
+    }
+    if (name === 'address') {
+      if (!trimmed) return 'Address is required.';
+      if (trimmed.length < 3) return 'Address must be at least 3 characters.';
+    }
+    if (name === 'password') {
+      if (!val) return 'Password is required.';
+      if (val.length < 8) return 'Password must be at least 8 characters long.';
+      if (!/[a-zA-Z]/.test(val) || !/[0-9]/.test(val)) {
+        return 'Password must contain at least one letter and one number.';
+      }
+    }
+    if (name === 'confirmPassword') {
+      if (!val) return 'Please confirm your password.';
+      if (val !== formData.password) return 'Passwords do not match.';
+    }
+    return '';
   };
 
-  const handleFarmerChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFarmerData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    const error = validateField(name, value);
+    setFieldErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  const validateStep2 = () => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (bannerError) setBannerError(null);
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+    if (name === 'password' && touched.confirmPassword && formData.confirmPassword) {
+      if (value !== formData.confirmPassword) {
+        setFieldErrors((prev) => ({ ...prev, confirmPassword: 'Passwords do not match.' }));
+      } else {
+        setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+      }
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setBannerError(null);
+
+    // Validate all fields
+    const requiredKeys = role === 'customer'
+      ? ['name', 'email', 'phone', 'address', 'password', 'confirmPassword']
+      : ['stallName', 'contactPerson', 'email', 'phone', 'address', 'password', 'confirmPassword'];
+
     const newErrors = {};
-    const data = role === 'customer' ? customerData : farmerData;
+    const newTouched = {};
+    let firstInvalid = null;
 
-    if (role === 'customer') {
-      if (!data.fullName.trim()) newErrors.fullName = 'Please enter your full name.';
-    } else {
-      if (!data.farmName.trim()) newErrors.farmName = 'Please enter your farm or business name.';
-      if (!data.contactPerson.trim()) newErrors.contactPerson = 'Please enter a contact name.';
+    for (const key of requiredKeys) {
+      newTouched[key] = true;
+      const err = validateField(key, formData[key]);
+      if (err) {
+        newErrors[key] = err;
+        if (!firstInvalid) firstInvalid = key;
+      }
     }
 
-    if (!data.email.trim()) {
-      newErrors.email = 'Please provide an email address.';
-    } else if (!data.email.includes('@') || !data.email.includes('.')) {
-      newErrors.email = 'Please provide a valid email address.';
-    }
+    setTouched(newTouched);
+    setFieldErrors(newErrors);
 
-    if (!data.phone.trim()) {
-      newErrors.phone = 'Please provide a contact phone number.';
-    }
-
-    if (!data.password) {
-      newErrors.password = 'Please create a password.';
-    } else if (data.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters.';
-    }
-
-    if (!data.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password.';
-    } else if (data.password !== data.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match.';
-    }
-
-    if (!data.agreedTerms) {
-      newErrors.agreedTerms = 'You must agree to MarketLink community standards.';
-    }
-
-    return newErrors;
-  };
-
-  const handleStep1Submit = (e) => {
-    e.preventDefault();
-    if (!role) return;
-    setStep(2);
-  };
-
-  const handleStep2Submit = async (e) => {
-    e.preventDefault();
-    const valErrors = validateStep2();
-    if (Object.keys(valErrors).length > 0) {
-      setErrors(valErrors);
-      firstInputRef.current?.focus();
+    if (firstInvalid) {
+      document.getElementById(`register-${firstInvalid}`)?.focus();
       return;
     }
 
-    setSubmitting(true);
-    setErrors({});
+    setLoading(true);
     try {
+      let payload;
       if (role === 'customer') {
-        await registerCustomer({
-          name: customerData.fullName.trim(),
-          phone: customerData.phone.trim(),
-          email: customerData.email.trim().toLowerCase(),
-          address: customerData.address?.trim() || 'Elm Street Neighborhood',
-          password: customerData.password,
-        });
+        payload = {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          address: formData.address.trim(),
+          password: formData.password,
+        };
       } else {
-        await registerFarmer({
-          stallName: farmerData.farmName.trim(),
-          contactPerson: farmerData.contactPerson.trim(),
-          phone: farmerData.phone.trim(),
-          email: farmerData.email.trim().toLowerCase(),
-          address: farmerData.farmLocation?.trim() || 'Hudson Valley, NY',
-          password: farmerData.password,
-        });
+        payload = {
+          stallName: formData.stallName.trim(),
+          contactPerson: formData.contactPerson.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          address: formData.address.trim(),
+          password: formData.password,
+        };
       }
-      setStep(3);
+
+      const data = await register(role, payload);
+      const userRole = data?.user?.role || role;
+      navigate(homePathFor(userRole), { replace: true });
     } catch (err) {
-      if (err.code === 'EMAIL_TAKEN' || err.status === 409) {
-        setErrors((prev) => ({
+      if (err.code === 'EMAIL_TAKEN' || err.statusCode === 409) {
+        setFieldErrors((prev) => ({
           ...prev,
-          email: 'That email already has an account. Try signing in.',
+          email: 'An account with this email already exists.',
         }));
+        document.getElementById('register-email')?.focus();
+      } else if (err.code === 'RATE_LIMITED' || err.statusCode === 429) {
+        setBannerError(err.message || 'Too many accounts created from this IP. Please try again later.');
       } else if (err.details && Array.isArray(err.details)) {
         const mapped = {};
         for (const d of err.details) {
-          if (d.field === 'name') mapped.fullName = d.message;
-          else if (d.field === 'stallName') mapped.farmName = d.message;
-          else if (d.field) mapped[d.field] = d.message;
+          if (d.field) mapped[d.field] = d.message;
         }
-        setErrors(mapped);
+        setFieldErrors(mapped);
+      } else if (err.name === 'TypeError' || err.message?.includes('fetch') || err.message?.includes('network')) {
+        setBannerError('Cannot reach MarketLink. Check your connection.');
       } else {
-        setErrors({ general: err.message || 'Registration failed. Please check your details.' });
+        setBannerError(err.message || 'Unable to create account. Please check your information.');
       }
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const activeName =
-    role === 'customer' ? customerData.fullName : farmerData.contactPerson;
-
   return (
-    <div className={styles.registerPage}>
-      <div className={styles.registerContainer}>
-        {/* ── LEFT SHOWCASE PANEL ── */}
-        <div className={styles.showcasePanel}>
-          <img
-            src="/images/riverbend-farm.jpg"
-            alt="Organic farm fields in the morning"
-            className={styles.showcaseBgImg}
-          />
-          <div className={styles.showcaseOverlay}>
-            <div className={styles.showcaseTop}>
-              <div className={styles.showcaseLogoWrap}>
-                <MarketLinkLogo size="md" />
-              </div>
-              <span className={styles.showcaseBadge}>
-                <Sparkles size={13} />
-                Community Food Network
-              </span>
+    <AuthCard
+      title="Create your account"
+      lead={role === 'customer' ? 'Sign up to reserve Saturday produce at the market.' : 'Sign up to list produce and receive market pre-orders.'}
+      wide={true}
+      footer={
+        <span>
+          Already have an account?{' '}
+          <Link to={PATHS.LOGIN} className={authStyles.link}>
+            Sign in
+          </Link>
+        </span>
+      }
+    >
+      {/* Role selector first: real radio group */}
+      <fieldset className={styles.roleFieldset}>
+        <legend className="srOnly">Choose account type</legend>
+        <div role="radiogroup" aria-label="Account type" className={styles.roleGrid}>
+          {/* Customer Option */}
+          <label className={`${styles.roleCard} ${role === 'customer' ? styles.roleCardActive : ''}`}>
+            <input
+              type="radio"
+              name="accountRole"
+              value="customer"
+              checked={role === 'customer'}
+              onChange={() => handleRoleChange('customer')}
+              className={styles.roleRadio}
+            />
+            <div className={styles.roleContent}>
+              <span className={styles.roleTitle}>I am shopping</span>
+              <span className={styles.roleDesc}>Reserve produce and collect it at the stall.</span>
             </div>
+          </label>
 
-            <div className={styles.showcaseQuoteBlock}>
-              <h2 className={styles.showcaseHeading}>
-                {role === 'farmer'
-                  ? 'Connect directly with neighbours who value your harvest.'
-                  : 'Saturday mornings, simplified and guaranteed.'}
-              </h2>
-              <p className={styles.showcaseLead}>
-                {role === 'farmer'
-                  ? 'Zero commission markups. Receive exact Friday pre-order manifests so you harvest strictly to demand at dawn.'
-                  : 'Reserve crisp heirloom crops throughout the week. Sleep in knowing your brown paper tote is set aside under the canopy.'}
-              </p>
-
-              <div className={styles.showcasePoints}>
-                <div className={styles.showcasePoint}>
-                  <ShieldCheck size={16} className={styles.pointCheck} />
-                  <span>100% Certified Producer-Only standards</span>
-                </div>
-                <div className={styles.showcasePoint}>
-                  <CheckCircle2 size={16} className={styles.pointCheck} />
-                  <span>Zero subscription fees · Pay directly at the stall</span>
-                </div>
-                <div className={styles.showcasePoint}>
-                  <Leaf size={16} className={styles.pointCheck} />
-                  <span>Reduce food waste by harvesting strictly to order</span>
-                </div>
-              </div>
+          {/* Farmer Option */}
+          <label className={`${styles.roleCard} ${role === 'farmer' ? styles.roleCardActive : ''}`}>
+            <input
+              type="radio"
+              name="accountRole"
+              value="farmer"
+              checked={role === 'farmer'}
+              onChange={() => handleRoleChange('farmer')}
+              className={styles.roleRadio}
+            />
+            <div className={styles.roleContent}>
+              <span className={styles.roleTitle}>I sell at a market</span>
+              <span className={styles.roleDesc}>List stock and take pre-orders.</span>
             </div>
-
-            <div className={styles.showcaseFooter}>
-              <div className={styles.footerStepIndicator}>
-                <span>Step {step} of 3</span>
-                <div className={styles.stepProgressDots}>
-                  <span className={`${styles.dot} ${step >= 1 ? styles.dotActive : ''}`} />
-                  <span className={`${styles.dot} ${step >= 2 ? styles.dotActive : ''}`} />
-                  <span className={`${styles.dot} ${step >= 3 ? styles.dotActive : ''}`} />
-                </div>
-              </div>
-            </div>
-          </div>
+          </label>
         </div>
+      </fieldset>
 
-        {/* ── RIGHT REGISTRATION FORM PANEL ── */}
-        <div className={styles.formPanel}>
-          <div className={styles.formInner}>
-            {/* Top Navigation Row */}
-            <div className={styles.navRow}>
-              {step === 2 && !roleParam ? (
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className={styles.backBtn}
-                >
-                  <ArrowLeft size={14} />
-                  <span>Change account type</span>
-                </button>
-              ) : (
-                <Link to={PATHS.HOME} className={styles.backBtn}>
-                  <ArrowLeft size={14} />
-                  <span>Back to home</span>
-                </Link>
-              )}
+      {/* Banner error */}
+      {bannerError && (
+        <div role="alert" className={authStyles.bannerError}>
+          <p>{bannerError}</p>
+        </div>
+      )}
 
-              <span className={styles.stepCounterText}>Step {step} of 3</span>
-            </div>
+      <form onSubmit={handleSubmit} noValidate className={authStyles.form}>
+        {/* Section Heading: Identity */}
+        <h2 className={styles.sectionHeading}>
+          {role === 'customer' ? 'About you' : 'Your stall'}
+        </h2>
 
-            {/* ── STEP 1: CHOOSE ROLE ── */}
-            {step === 1 && (
-              <div className={styles.stepBlock}>
-                <div className={styles.formHeader}>
-                  <span className={styles.formKicker}>Get Started with MarketLink</span>
-                  <h1 className={styles.formTitle}>How will you use MarketLink?</h1>
-                  <p className={styles.formSubtitle}>
-                    Choose the account type that best describes your weekend market routine.
-                  </p>
-                </div>
-
-                <form onSubmit={handleStep1Submit} className={styles.roleSelectionForm}>
-                  <div className={styles.roleCardsGrid}>
-                    {/* Customer Card */}
-                    <label
-                      className={`${styles.roleOptionCard} ${
-                        role === 'customer' ? styles.roleOptionActive : ''
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="accountRole"
-                        value="customer"
-                        checked={role === 'customer'}
-                        onChange={() => setRole('customer')}
-                        className={styles.roleRadioHidden}
-                      />
-                      <div className={styles.roleIconBox}>
-                        <ShoppingBag size={22} />
-                      </div>
-                      <div className={styles.roleCardText}>
-                        <div className={styles.roleTitleRow}>
-                          <strong className={styles.roleCardTitle}>Market Shopper / Household</strong>
-                          {role === 'customer' && (
-                            <CheckCircle2 size={16} className={styles.roleActiveCheck} />
-                          )}
-                        </div>
-                        <p className={styles.roleCardDesc}>
-                          I want to browse local markets, reserve heirloom produce and fresh sourdough
-                          during the week, and pay farmers directly at pickup.
-                        </p>
-                      </div>
-                    </label>
-
-                    {/* Farmer Card */}
-                    <label
-                      className={`${styles.roleOptionCard} ${
-                        role === 'farmer' ? styles.roleOptionActive : ''
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="accountRole"
-                        value="farmer"
-                        checked={role === 'farmer'}
-                        onChange={() => setRole('farmer')}
-                        className={styles.roleRadioHidden}
-                      />
-                      <div className={styles.roleIconBox}>
-                        <Store size={22} />
-                      </div>
-                      <div className={styles.roleCardText}>
-                        <div className={styles.roleTitleRow}>
-                          <strong className={styles.roleCardTitle}>Farmer / Artisan Producer</strong>
-                          {role === 'farmer' && (
-                            <CheckCircle2 size={16} className={styles.roleActiveCheck} />
-                          )}
-                        </div>
-                        <p className={styles.roleCardDesc}>
-                          I cultivate regional crops, bake breads, make cheese, or harvest honey and
-                          want to list weekly pre-order availability for Saturday stalls.
-                        </p>
-                      </div>
-                    </label>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className={styles.continueBtn}
-                  >
-                    <span>Continue as {role === 'customer' ? 'Shopper' : 'Producer'}</span>
-                    <ArrowRight size={16} />
-                  </button>
-
-                  <div className={styles.formFooterPrompt}>
-                    <p>
-                      Already have an account?{' '}
-                      <Link to={PATHS.LOGIN} className={styles.loginLink}>
-                        Sign in here
-                      </Link>
-                    </p>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* ── STEP 2: PROFILE DETAILS ── */}
-            {step === 2 && (
-              <div className={styles.stepBlock}>
-                <div className={styles.formHeader}>
-                  <span className={styles.formKicker}>
-                    {role === 'customer' ? 'Shopper Registration' : 'Producer Admission'}
-                  </span>
-                  <h1 className={styles.formTitle}>
-                    {role === 'customer'
-                      ? 'Create your customer account'
-                      : 'Register your farm or bakery stall'}
-                  </h1>
-                  <p className={styles.formSubtitle}>
-                    {role === 'customer'
-                      ? 'Pre-order from 40+ family farms and pick up your bag every Saturday.'
-                      : 'Join our verified producer-only directory across 8 historic New York markets.'}
-                  </p>
-                </div>
-
-                <form onSubmit={handleStep2Submit} noValidate className={styles.detailsForm}>
-                  {role === 'customer' ? (
-                    /* Customer Form Fields */
-                    <>
-                      <div className={styles.fieldGroup}>
-                        <label htmlFor="reg-fullname" className={styles.fieldLabel}>
-                          Full Name <span className={styles.requiredStar}>*</span>
-                        </label>
-                        <div className={`${styles.inputWrapper} ${errors.fullName ? styles.inputError : ''}`}>
-                          <User size={16} className={styles.fieldIcon} />
-                          <input
-                            ref={firstInputRef}
-                            id="reg-fullname"
-                            type="text"
-                            name="fullName"
-                            value={customerData.fullName}
-                            onChange={handleCustomerChange}
-                            placeholder="e.g. Eleanor Vance"
-                            autoComplete="name"
-                            className={styles.textInput}
-                            required
-                          />
-                        </div>
-                        {errors.fullName && <span className={styles.errorText}>{errors.fullName}</span>}
-                      </div>
-
-                      <div className={styles.twoFieldsGrid}>
-                        <div className={styles.fieldGroup}>
-                          <label htmlFor="reg-email" className={styles.fieldLabel}>
-                            Email Address <span className={styles.requiredStar}>*</span>
-                          </label>
-                          <div className={`${styles.inputWrapper} ${errors.email ? styles.inputError : ''}`}>
-                            <Mail size={16} className={styles.fieldIcon} />
-                            <input
-                              id="reg-email"
-                              type="email"
-                              name="email"
-                              value={customerData.email}
-                              onChange={handleCustomerChange}
-                              placeholder="name@example.com"
-                              autoComplete="email"
-                              className={styles.textInput}
-                              required
-                            />
-                          </div>
-                          {errors.email && <span className={styles.errorText}>{errors.email}</span>}
-                        </div>
-
-                        <div className={styles.fieldGroup}>
-                          <label htmlFor="reg-phone" className={styles.fieldLabel}>
-                            Mobile Phone <span className={styles.requiredStar}>*</span>
-                          </label>
-                          <div className={`${styles.inputWrapper} ${errors.phone ? styles.inputError : ''}`}>
-                            <Phone size={16} className={styles.fieldIcon} />
-                            <input
-                              id="reg-phone"
-                              type="tel"
-                              name="phone"
-                              value={customerData.phone}
-                              onChange={handleCustomerChange}
-                              placeholder="(212) 555-0123"
-                              autoComplete="tel"
-                              className={styles.textInput}
-                              required
-                            />
-                          </div>
-                          {errors.phone && <span className={styles.errorText}>{errors.phone}</span>}
-                        </div>
-                      </div>
-
-                      <div className={styles.fieldGroup}>
-                        <label htmlFor="reg-market" className={styles.fieldLabel}>
-                          Primary Market You Shop
-                        </label>
-                        <div className={styles.inputWrapper}>
-                          <MapPin size={16} className={styles.fieldIcon} />
-                          <select
-                            id="reg-market"
-                            name="market"
-                            value={customerData.market}
-                            onChange={handleCustomerChange}
-                            className={styles.selectInput}
-                          >
-                            {PREFERRED_MARKETS.map((m, idx) => (
-                              <option key={idx} value={m}>
-                                {m}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    /* Farmer Form Fields */
-                    <>
-                      <div className={styles.twoFieldsGrid}>
-                        <div className={styles.fieldGroup}>
-                          <label htmlFor="reg-farmname" className={styles.fieldLabel}>
-                            Farm or Bakery Name <span className={styles.requiredStar}>*</span>
-                          </label>
-                          <div className={`${styles.inputWrapper} ${errors.farmName ? styles.inputError : ''}`}>
-                            <Store size={16} className={styles.fieldIcon} />
-                            <input
-                              ref={firstInputRef}
-                              id="reg-farmname"
-                              type="text"
-                              name="farmName"
-                              value={farmerData.farmName}
-                              onChange={handleFarmerChange}
-                              placeholder="e.g. Riverbend Organic Farm"
-                              className={styles.textInput}
-                              required
-                            />
-                          </div>
-                          {errors.farmName && <span className={styles.errorText}>{errors.farmName}</span>}
-                        </div>
-
-                        <div className={styles.fieldGroup}>
-                          <label htmlFor="reg-contact" className={styles.fieldLabel}>
-                            Primary Contact Name <span className={styles.requiredStar}>*</span>
-                          </label>
-                          <div className={`${styles.inputWrapper} ${errors.contactPerson ? styles.inputError : ''}`}>
-                            <User size={16} className={styles.fieldIcon} />
-                            <input
-                              id="reg-contact"
-                              type="text"
-                              name="contactPerson"
-                              value={farmerData.contactPerson}
-                              onChange={handleFarmerChange}
-                              placeholder="e.g. Elena Vance"
-                              className={styles.textInput}
-                              required
-                            />
-                          </div>
-                          {errors.contactPerson && (
-                            <span className={styles.errorText}>{errors.contactPerson}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className={styles.fieldGroup}>
-                        <label htmlFor="reg-category" className={styles.fieldLabel}>
-                          Primary Harvest Category
-                        </label>
-                        <div className={styles.inputWrapper}>
-                          <Leaf size={16} className={styles.fieldIcon} />
-                          <select
-                            id="reg-category"
-                            name="category"
-                            value={farmerData.category}
-                            onChange={handleFarmerChange}
-                            className={styles.selectInput}
-                          >
-                            {FARM_CATEGORIES.map((cat, idx) => (
-                              <option key={idx} value={cat}>
-                                {cat}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className={styles.twoFieldsGrid}>
-                        <div className={styles.fieldGroup}>
-                          <label htmlFor="reg-farmer-email" className={styles.fieldLabel}>
-                            Business Email <span className={styles.requiredStar}>*</span>
-                          </label>
-                          <div className={`${styles.inputWrapper} ${errors.email ? styles.inputError : ''}`}>
-                            <Mail size={16} className={styles.fieldIcon} />
-                            <input
-                              id="reg-farmer-email"
-                              type="email"
-                              name="email"
-                              value={farmerData.email}
-                              onChange={handleFarmerChange}
-                              placeholder="grower@farm.org"
-                              autoComplete="email"
-                              className={styles.textInput}
-                              required
-                            />
-                          </div>
-                          {errors.email && <span className={styles.errorText}>{errors.email}</span>}
-                        </div>
-
-                        <div className={styles.fieldGroup}>
-                          <label htmlFor="reg-farmer-phone" className={styles.fieldLabel}>
-                            Phone Number <span className={styles.requiredStar}>*</span>
-                          </label>
-                          <div className={`${styles.inputWrapper} ${errors.phone ? styles.inputError : ''}`}>
-                            <Phone size={16} className={styles.fieldIcon} />
-                            <input
-                              id="reg-farmer-phone"
-                              type="tel"
-                              name="phone"
-                              value={farmerData.phone}
-                              onChange={handleFarmerChange}
-                              placeholder="(555) 012-3456"
-                              autoComplete="tel"
-                              className={styles.textInput}
-                              required
-                            />
-                          </div>
-                          {errors.phone && <span className={styles.errorText}>{errors.phone}</span>}
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Password & Confirm Password Row */}
-                  <div className={styles.twoFieldsGrid}>
-                    <div className={styles.fieldGroup}>
-                      <label htmlFor="reg-password" className={styles.fieldLabel}>
-                        Password <span className={styles.requiredStar}>*</span>
-                      </label>
-                      <div
-                        className={`${styles.inputWrapper} ${
-                          errors.password ? styles.inputError : ''
-                        }`}
-                      >
-                        <Lock size={16} className={styles.fieldIcon} />
-                        <input
-                          id="reg-password"
-                          type={showPassword ? 'text' : 'password'}
-                          name="password"
-                          value={
-                            role === 'customer'
-                              ? customerData.password
-                              : farmerData.password
-                          }
-                          onChange={
-                            role === 'customer'
-                              ? handleCustomerChange
-                              : handleFarmerChange
-                          }
-                          placeholder="Min. 8 characters"
-                          autoComplete="new-password"
-                          className={styles.textInput}
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className={styles.togglePasswordBtn}
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
-                        >
-                          {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                        </button>
-                      </div>
-                      {errors.password && <span className={styles.errorText}>{errors.password}</span>}
-                    </div>
-
-                    <div className={styles.fieldGroup}>
-                      <label htmlFor="reg-confirm-password" className={styles.fieldLabel}>
-                        Confirm Password <span className={styles.requiredStar}>*</span>
-                      </label>
-                      <div
-                        className={`${styles.inputWrapper} ${
-                          errors.confirmPassword ? styles.inputError : ''
-                        }`}
-                      >
-                        <Lock size={16} className={styles.fieldIcon} />
-                        <input
-                          id="reg-confirm-password"
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          name="confirmPassword"
-                          value={
-                            role === 'customer'
-                              ? customerData.confirmPassword
-                              : farmerData.confirmPassword
-                          }
-                          onChange={
-                            role === 'customer'
-                              ? handleCustomerChange
-                              : handleFarmerChange
-                          }
-                          placeholder="Repeat password"
-                          autoComplete="new-password"
-                          className={styles.textInput}
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className={styles.togglePasswordBtn}
-                          aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                        >
-                          {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                        </button>
-                      </div>
-                      {errors.confirmPassword && (
-                        <span className={styles.errorText}>{errors.confirmPassword}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Terms & Standards Checkbox */}
-                  <div className={styles.termsRow}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        name="agreedTerms"
-                        checked={
-                          role === 'customer'
-                            ? customerData.agreedTerms
-                            : farmerData.agreedTerms
-                        }
-                        onChange={
-                          role === 'customer'
-                            ? handleCustomerChange
-                            : handleFarmerChange
-                        }
-                        className={styles.checkboxInput}
-                      />
-                      <span>
-                        I agree to MarketLink's community pledge and 100% Producer-Only standards.
-                      </span>
-                    </label>
-                    {errors.agreedTerms && (
-                      <span className={styles.errorText}>{errors.agreedTerms}</span>
-                    )}
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className={styles.submitBtn}
-                  >
-                    {submitting ? (
-                      <span>Creating your account...</span>
-                    ) : (
-                      <>
-                        <span>Complete Registration</span>
-                        <ArrowRight size={16} />
-                      </>
-                    )}
-                  </button>
-
-                  <div className={styles.formFooterPrompt}>
-                    <p>
-                      Already registered?{' '}
-                      <Link to={PATHS.LOGIN} className={styles.loginLink}>
-                        Sign in to your account
-                      </Link>
-                    </p>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* ── STEP 3: REGISTRATION SUCCESS CELEBRATION ── */}
-            {step === 3 && (
-              <div className={styles.successBlock}>
-                <div className={styles.successIconBubble}>
-                  <CheckCircle2 size={44} />
-                </div>
-                <h2 className={styles.successHeading}>Welcome to MarketLink, {activeName || 'Friend'}!</h2>
-                <span className={styles.successBadgePill}>
-                  ✓ Account Created · Confirmation Email Sent
+        <div className={styles.twoCol}>
+          {role === 'customer' ? (
+            <div className={authStyles.field}>
+              <label htmlFor="register-name" className={authStyles.label}>
+                Full name
+              </label>
+              <input
+                id="register-name"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="name"
+                aria-invalid={Boolean(fieldErrors.name)}
+                aria-describedby={fieldErrors.name ? 'register-name-err' : undefined}
+                className={`${authStyles.input} ${fieldErrors.name ? authStyles.inputInvalid : ''}`}
+                required
+              />
+              {fieldErrors.name && (
+                <span id="register-name-err" role="alert" className={authStyles.errorText}>
+                  {fieldErrors.name}
                 </span>
-
-                <div
-                  style={{
-                    margin: 'var(--space-4) 0',
-                    padding: 'var(--space-3) var(--space-4)',
-                    backgroundColor: '#fef7e0',
-                    border: '1px solid #f9e2af',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: 'var(--text-sm)',
-                    color: '#744210',
-                    textAlign: 'left',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 'var(--space-2)',
-                  }}
-                >
-                  <Mail size={18} style={{ flexShrink: 0, marginTop: '2px', color: '#b7791f' }} />
-                  <div>
-                    <strong>Check your email:</strong> We've sent a confirmation link to{' '}
-                    <strong>{role === 'customer' ? customerData.email : farmerData.email}</strong>.
-                    {role === 'farmer'
-                      ? ' Producer stall approval requires a verified email address.'
-                      : ' Click the link to complete your email verification.'}
-                  </div>
-                </div>
-
-                <p className={styles.successMessage}>
-                  {role === 'customer'
-                    ? 'Your account is ready for Saturday market pre-orders. Browse this week’s freshly picked harvest and hold your favorite crops safely under the canopy.'
-                    : 'Your farm stall application has been submitted to our regional market operations desk. Our coordinator will contact you shortly to confirm your stall location.'}
-                </p>
-
-                <div className={styles.successActionButtons}>
-                  {role === 'customer' ? (
-                    <>
-                      <Link to={PATHS.BUYER} className={styles.successPrimaryBtn}>
-                        <span>Enter Customer App</span>
-                        <ArrowRight size={16} />
-                      </Link>
-                      <Link to={PATHS.MARKETS} className={styles.successSecondaryBtn}>
-                        <span>Explore Farmers Markets</span>
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <Link to={PATHS.VENDOR} className={styles.successPrimaryBtn}>
-                        <span>Go to Producer Area</span>
-                        <ArrowRight size={16} />
-                      </Link>
-                      <Link to={PATHS.HOME} className={styles.successSecondaryBtn}>
-                        <span>Back to Home</span>
-                      </Link>
-                    </>
-                  )}
-                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className={authStyles.field}>
+                <label htmlFor="register-stallName" className={authStyles.label}>
+                  Stall / business name
+                </label>
+                <input
+                  id="register-stallName"
+                  name="stallName"
+                  type="text"
+                  value={formData.stallName}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  autoComplete="organization"
+                  aria-invalid={Boolean(fieldErrors.stallName)}
+                  aria-describedby={fieldErrors.stallName ? 'register-stallName-err' : undefined}
+                  className={`${authStyles.input} ${fieldErrors.stallName ? authStyles.inputInvalid : ''}`}
+                  required
+                />
+                {fieldErrors.stallName && (
+                  <span id="register-stallName-err" role="alert" className={authStyles.errorText}>
+                    {fieldErrors.stallName}
+                  </span>
+                )}
               </div>
+
+              <div className={authStyles.field}>
+                <label htmlFor="register-contactPerson" className={authStyles.label}>
+                  Contact person
+                </label>
+                <input
+                  id="register-contactPerson"
+                  name="contactPerson"
+                  type="text"
+                  value={formData.contactPerson}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  autoComplete="name"
+                  aria-invalid={Boolean(fieldErrors.contactPerson)}
+                  aria-describedby={fieldErrors.contactPerson ? 'register-contactPerson-err' : undefined}
+                  className={`${authStyles.input} ${fieldErrors.contactPerson ? authStyles.inputInvalid : ''}`}
+                  required
+                />
+                {fieldErrors.contactPerson && (
+                  <span id="register-contactPerson-err" role="alert" className={authStyles.errorText}>
+                    {fieldErrors.contactPerson}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Email field */}
+          <div className={authStyles.field}>
+            <label htmlFor="register-email" className={authStyles.label}>
+              Email
+            </label>
+            <input
+              id="register-email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              autoComplete="email"
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? 'register-email-err' : undefined}
+              className={`${authStyles.input} ${fieldErrors.email ? authStyles.inputInvalid : ''}`}
+              required
+            />
+            {fieldErrors.email && (
+              <span id="register-email-err" role="alert" className={authStyles.errorText}>
+                {fieldErrors.email}{' '}
+                {fieldErrors.email.includes('already exists') && (
+                  <Link to={`${PATHS.LOGIN}?email=${encodeURIComponent(formData.email)}`} className={authStyles.link}>
+                    Sign in instead
+                  </Link>
+                )}
+              </span>
+            )}
+          </div>
+
+          {/* Contact number */}
+          <div className={authStyles.field}>
+            <label htmlFor="register-phone" className={authStyles.label}>
+              Contact number
+            </label>
+            <input
+              id="register-phone"
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              autoComplete="tel"
+              aria-invalid={Boolean(fieldErrors.phone)}
+              aria-describedby={fieldErrors.phone ? 'register-phone-err' : undefined}
+              className={`${authStyles.input} ${fieldErrors.phone ? authStyles.inputInvalid : ''}`}
+              required
+            />
+            {fieldErrors.phone && (
+              <span id="register-phone-err" role="alert" className={authStyles.errorText}>
+                {fieldErrors.phone}
+              </span>
             )}
           </div>
         </div>
-      </div>
-    </div>
+
+        {/* Address field (full width in 2-col layout) */}
+        <div className={authStyles.field}>
+          <label htmlFor="register-address" className={authStyles.label}>
+            Address
+          </label>
+          <input
+            id="register-address"
+            name="address"
+            type="text"
+            value={formData.address}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            autoComplete="street-address"
+            aria-invalid={Boolean(fieldErrors.address)}
+            aria-describedby={fieldErrors.address ? 'register-address-err' : undefined}
+            className={`${authStyles.input} ${fieldErrors.address ? authStyles.inputInvalid : ''}`}
+            required
+          />
+          {fieldErrors.address && (
+            <span id="register-address-err" role="alert" className={authStyles.errorText}>
+              {fieldErrors.address}
+            </span>
+          )}
+        </div>
+
+        {/* Section Heading: Security */}
+        <h2 className={styles.sectionHeading}>Security</h2>
+
+        <div className={styles.twoCol}>
+          {/* Password */}
+          <div className={authStyles.field}>
+            <label htmlFor="register-password" className={authStyles.label}>
+              Password
+            </label>
+            <div className={authStyles.inputWrap}>
+              <input
+                id="register-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="new-password"
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? 'register-password-err' : 'register-password-rules'}
+                className={`${authStyles.input} ${authStyles.inputWithToggle} ${fieldErrors.password ? authStyles.inputInvalid : ''}`}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className={authStyles.toggleBtn}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            </div>
+            {fieldErrors.password && (
+              <span id="register-password-err" role="alert" className={authStyles.errorText}>
+                {fieldErrors.password}
+              </span>
+            )}
+
+            {/* Live password rule checklist */}
+            <ul id="register-password-rules" className={authStyles.checklist} aria-label="Password requirements">
+              <li className={`${authStyles.checkItem} ${ruleMinLength ? authStyles.checkItemMet : ''}`}>
+                {ruleMinLength ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
+                <span>At least 8 characters</span>
+              </li>
+              <li className={`${authStyles.checkItem} ${ruleHasLetter ? authStyles.checkItemMet : ''}`}>
+                {ruleHasLetter ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
+                <span>At least one letter</span>
+              </li>
+              <li className={`${authStyles.checkItem} ${ruleHasNumber ? authStyles.checkItemMet : ''}`}>
+                {ruleHasNumber ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
+                <span>At least one number</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Confirm Password */}
+          <div className={authStyles.field}>
+            <label htmlFor="register-confirmPassword" className={authStyles.label}>
+              Confirm password
+            </label>
+            <div className={authStyles.inputWrap}>
+              <input
+                id="register-confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="new-password"
+                aria-invalid={Boolean(fieldErrors.confirmPassword)}
+                aria-describedby={fieldErrors.confirmPassword ? 'register-confirmPassword-err' : undefined}
+                className={`${authStyles.input} ${authStyles.inputWithToggle} ${fieldErrors.confirmPassword ? authStyles.inputInvalid : ''}`}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className={authStyles.toggleBtn}
+                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                aria-pressed={showConfirmPassword}
+              >
+                {showConfirmPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            </div>
+            {fieldErrors.confirmPassword && (
+              <span id="register-confirmPassword-err" role="alert" className={authStyles.errorText}>
+                {fieldErrors.confirmPassword}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Farmer approval notice directly above submit */}
+        {role === 'farmer' && (
+          <div className={authStyles.noticePanel}>
+            <strong>Stalls are reviewed before they go live.</strong> You can set up your stall straight away. An
+            administrator approves it before your produce appears to customers.
+          </div>
+        )}
+
+        {/* Submit button — the ONE beet element */}
+        <button
+          type="submit"
+          disabled={loading}
+          className={styles.submitBtn}
+        >
+          {loading ? 'Creating account…' : 'Create account'}
+        </button>
+      </form>
+    </AuthCard>
   );
 }
 

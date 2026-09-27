@@ -367,7 +367,17 @@ export function About() {
               <div key={idx} className={styles.teamCard}>
                 <div className={styles.teamImgWrap}>
                   {member.image ? (
-                    <img src={member.image} alt={member.name} className={styles.teamImg} />
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className={styles.teamImg}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        if (member.fallbackImage && !e.target.src.includes(member.fallbackImage)) {
+                          e.target.src = member.fallbackImage;
+                        }
+                      }}
+                    />
                   ) : (
                     <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-beet)', fontFamily: 'var(--font-head)', fontSize: 'var(--text-h3)' }}>
                       {member.name.charAt(0)}

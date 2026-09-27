@@ -9,22 +9,28 @@ export const siteContent = {
   // Team members
   team: [
     {
-      name: 'Elena Rostova', // TEAM: fill in
-      role: 'Co-Founder & Producer Lead', // TEAM: fill in
-      bio: 'Lifelong advocate for regenerative farming with 12 years managing regional growers collectives.', // TEAM: fill in
-      photo: null, // TEAM: fill in
+      name: 'Bello Bilal Olamiposi',
+      role: 'Systems Architect & Software Engineer',
+      bio: 'Self-taught systems architect and tech entrepreneur with a passion for civic platforms. Bilal began programming at 14 and has engineered digital platforms including DevDrill, Dezola Studio, and inDeck.',
+      photo: '/images/team/billal.png',
     },
     {
-      name: 'Marcus Chen', // TEAM: fill in
-      role: 'Co-Founder & Technical Architect', // TEAM: fill in
-      bio: 'Software engineer passionate about building low-friction civic technology for local food security.', // TEAM: fill in
-      photo: null, // TEAM: fill in
+      name: 'Ayomide Alao',
+      role: 'Software Developer & Systems Engineer',
+      bio: 'Self-taught software developer and systems engineer based in Ibadan. An alumnus of the ALX Software Engineering program, Ayomide specializes in web technologies and systems engineering at Aptech.',
+      photo: '/images/team/ayo.png',
     },
     {
-      name: 'Sophia Patel', // TEAM: fill in
-      role: 'Community & Market Coordinator', // TEAM: fill in
-      bio: 'Liaises weekly with market managers, vendors, and neighborhood volunteers to keep pickup running smoothly.', // TEAM: fill in
-      photo: null, // TEAM: fill in
+      name: 'Okunola Abdulmaleek',
+      role: 'Software Developer & Creative Technologist',
+      bio: 'Creative technologist pursuing an ADSE at Aptech. Experienced in web development, databases, and digital products, Abdulmaleek is also building Mandrixx Music, a streaming platform.',
+      photo: '/images/team/malik.png',
+    },
+    {
+      name: 'Aliyah Adeleke',
+      role: 'Software Developer & Team Leader',
+      bio: 'Software developer and team leader skilled in React, React Native, and Node.js. Aliyah is passionate about engineering impactful web and mobile solutions to solve real-life problems.',
+      photo: '/images/team/Aliyah.jpeg',
     },
   ],
 

@@ -1,0 +1,240 @@
+/* ==========================================================================
+   FloatingActions.module.css — Coordinated AI Assistant & Back to Top Stack
+   ========================================================================== */
+
+.floatingStack {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 12px;
+  z-index: var(--z-sticky, 100);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+/* On mobile / tablet with bottom nav bar, lift the stack above the bar */
+@media (max-width: 1023px) {
+  .floatingStack {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .floatingStack {
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+    gap: 8px;
+  }
+}
+
+/* Completely hide floating actions when any sheet, modal, or overlay is active */
+:global(body.noScroll) .floatingStack,
+:global(html.noScroll) .floatingStack,
+:global(body:has([data-sheet-overlay])) .floatingStack,
+:global(body:has([role="dialog"])) .floatingStack,
+:global(body:has([aria-modal="true"])) .floatingStack {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* ─── BASE ROUND FLOATING BUTTON ─────────────────────────────── */
+.floatBtn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: floatPopIn 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes floatPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 600px) {
+  .floatBtn {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* ─── AI ASSISTANT BUTTON ────────────────────────────────────── */
+.aiBtn {
+  background: linear-gradient(135deg, #6a1b29 0%, #3e0e16 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(84, 23, 34, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  animation: floatPopIn 220ms ease, aiGlowPulse 4s infinite ease-in-out;
+}
+
+@keyframes aiGlowPulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(84, 23, 34, 0.4), 0 0 0 0 rgba(224, 122, 44, 0.35);
+  }
+  50% {
+    box-shadow: 0 6px 22px rgba(84, 23, 34, 0.5), 0 0 0 6px rgba(224, 122, 44, 0);
+  }
+}
+
+.aiBtn:hover {
+  background: linear-gradient(135deg, #7e2233 0%, #4a1521 100%);
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 8px 24px rgba(84, 23, 34, 0.55), 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.aiBtn:active {
+  transform: translateY(-1px) scale(0.96);
+}
+
+.aiIcon {
+  color: #ffecd1;
+  transition: transform 220ms ease;
+}
+
+.aiBtn:hover .aiIcon {
+  transform: rotate(15deg) scale(1.12);
+  color: #ffffff;
+}
+
+/* Small amber dot badge on AI button indicating live intelligence */
+.aiDotBadge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #e07a2c;
+  border: 2px solid #541722;
+}
+
+/* ─── SMART BASKET BUTTON ───────────────────────────────────── */
+.smartBasketBtn {
+  background: linear-gradient(135deg, #166534 0%, #0d4420 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(22, 101, 52, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  animation: floatPopIn 220ms ease, basketGlowPulse 4s infinite ease-in-out 1.2s;
+}
+
+@keyframes basketGlowPulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(22, 101, 52, 0.4), 0 0 0 0 rgba(74, 222, 128, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 22px rgba(22, 101, 52, 0.55), 0 0 0 6px rgba(74, 222, 128, 0);
+  }
+}
+
+.smartBasketBtn:hover {
+  background: linear-gradient(135deg, #15803d 0%, #14532d 100%);
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 8px 24px rgba(22, 101, 52, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.smartBasketBtn:active {
+  transform: translateY(-1px) scale(0.96);
+}
+
+.basketIcon {
+  color: #dcfce7;
+  transition: transform 220ms ease;
+}
+
+.smartBasketBtn:hover .basketIcon {
+  transform: rotate(-10deg) scale(1.12);
+  color: #ffffff;
+}
+
+.basketDotBadge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #f59e0b;
+  border: 2px solid #0d4420;
+}
+
+
+/* ─── BACK TO TOP BUTTON ─────────────────────────────────────── */
+.topBtn {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #2e2b26;
+  border-color: rgba(46, 43, 38, 0.12);
+  box-shadow: 0 3px 12px rgba(46, 43, 38, 0.12);
+}
+
+.topBtn:hover {
+  background: #ffffff;
+  color: #541722;
+  border-color: #541722;
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 6px 18px rgba(46, 43, 38, 0.18);
+}
+
+.topBtn:active {
+  transform: translateY(-1px) scale(0.96);
+}
+
+.topIcon {
+  transition: transform 180ms ease;
+}
+
+.topBtn:hover .topIcon {
+  transform: translateY(-2px);
+}
+
+/* ─── TOOLTIP ON HOVER ───────────────────────────────────────── */
+.tooltip {
+  position: absolute;
+  right: 54px;
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  background-color: #24201c;
+  color: #ffffff;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 160ms ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+}
+
+.floatBtn:hover .tooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+@media (max-width: 768px) {
+  .tooltip {
+    display: none;
+  }
+}
