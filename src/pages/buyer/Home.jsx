@@ -266,6 +266,15 @@ export function Home() {
             );
           })}
 
+          {/* Initial loading skeletons for feed */}
+          {loading && sections.length === 0 && (
+            <div className={styles.skeletonRow} aria-label="Loading fresh market harvest">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+          )}
+
           {/* Skeletons while loading more feed batches */}
           {loading && sections.length > 0 && (
             <div className={styles.skeletonRow} aria-label="Loading more market items">

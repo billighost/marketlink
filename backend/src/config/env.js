@@ -112,7 +112,7 @@ export function getClientBaseUrl(req) {
       const origin = req.get?.('origin') || (req.get?.('referer') ? new URL(req.get('referer')).origin : null);
       if (origin) {
         const clean = origin.replace(/\/+$/, '');
-        if (corsOrigins.includes(clean) || (isDevelopment && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(clean))) {
+        if (clean.startsWith('http://') || clean.startsWith('https://')) {
           return clean;
         }
       }

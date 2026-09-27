@@ -75,7 +75,7 @@ export function OrderDetail({ orderId: propOrderId, onClose, onUpdated }) {
     }
   };
 
-  if (loading) {
+  if (loading || (!order && !error)) {
     return (
       <div className={styles.loadingContainer}>
         <Skeleton height="32px" width="60%" />

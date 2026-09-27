@@ -45,7 +45,7 @@ export function StallStrip({ marketId }) {
     return [...list].sort(byOpenThenScarcity);
   }, [farmersData]);
 
-  if (!loading && sortedStalls.length === 0) {
+  if (!loading && farmersData != null && sortedStalls.length === 0) {
     return null;
   }
 
@@ -55,7 +55,7 @@ export function StallStrip({ marketId }) {
       seeAllLabel="See all"
       onSeeAll={() => navigate('/buyer/stalls')}
     >
-      {loading && sortedStalls.length === 0 ? (
+      {(loading || !farmersData) && sortedStalls.length === 0 ? (
         <>
           <div className={styles.skeletonCard} aria-hidden="true">
             <div className={styles.skeletonAvatar} />

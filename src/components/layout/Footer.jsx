@@ -24,6 +24,16 @@ export function Footer() {
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <div className={styles.grid}>
+          {/* Brand Col (Top on mobile, Col 4 on Desktop) */}
+          <div className={styles.brandCol}>
+            <Link to={PATHS.HOME || '/'} className={styles.brandLink} aria-label="MarketLink home">
+              <MarketLinkLogo size="md" />
+            </Link>
+            <p className={styles.productLine}>
+              Reserve online. Collect and pay at the stall.
+            </p>
+          </div>
+
           {/* Col 1: Explore */}
           <div className={styles.col}>
             <h2 className={styles.colTitle}>Explore</h2>
@@ -52,16 +62,6 @@ export function Footer() {
               <li><Link to={`${PATHS.REGISTER || '/register'}?role=customer`} className={styles.link}>Sign up as a customer</Link></li>
               <li><Link to={`${PATHS.REGISTER || '/register'}?role=farmer`} className={styles.link}>Sell at a market</Link></li>
             </ul>
-          </div>
-
-          {/* Col 4: Brand */}
-          <div className={styles.brandCol}>
-            <Link to={PATHS.HOME} className={styles.brandLink} aria-label="MarketLink home">
-              <MarketLinkLogo size="md" />
-            </Link>
-            <p className={styles.productLine}>
-              Reserve online. Collect and pay at the stall.
-            </p>
           </div>
         </div>
 

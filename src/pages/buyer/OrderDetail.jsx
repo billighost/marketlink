@@ -61,6 +61,8 @@ export function OrderDetail() {
   useDocumentTitle(`Order ${order?.orderNumber || ''} · MarketLink`);
 
   const fetchOrder = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
       const data = await getOrderDetail(id);
       setOrder(data);
@@ -76,7 +78,7 @@ export function OrderDetail() {
     fetchOrder();
   }, [fetchOrder]);
 
-  if (loading) {
+  if (loading || (!order && !error)) {
     return (
       <Page width="detail" className={styles.page}>
         <div className={styles.skeletonContainer}>

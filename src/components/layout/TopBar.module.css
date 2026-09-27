@@ -7,11 +7,11 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: var(--z-sticky);
+  /* Must be above Leaflet's tile pane (z:200) + overlay pane (z:400) + tooltip pane (z:650). */
+  z-index: 800;
   width: 100%;
   height: var(--topbar-h);
   background: var(--color-white);
-  /* Border is transparent at rest so box height never changes */
   border-bottom: 1px solid transparent;
   transition: border-color var(--duration-base) var(--ease-standard);
 }
@@ -30,10 +30,17 @@
   height: 100%;
   margin-inline: auto;
   padding-inline: var(--page-pad);
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .barInner {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+  }
 }
 
 @media (max-width: 480px) {
@@ -120,6 +127,8 @@
   align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
+  margin-left: auto;
+  justify-self: end;
 }
 
 /* Search icon button — desktop only */
@@ -180,7 +189,7 @@
   white-space: nowrap;
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
-.signUpBtn:hover { background: var(--color-beet-dark); }
+.signUpBtn:hover { background: var(--color-beet-dark); color: var(--color-on-primary); }
 .signUpBtn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
 @media (min-width: 1024px) { .signUpBtn { display: inline-flex; } }
@@ -393,7 +402,7 @@
   text-decoration: none;
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
-.drawerSignUp:hover { background: var(--color-beet-dark); }
+.drawerSignUp:hover { background: var(--color-beet-dark); color: var(--color-on-primary); }
 .drawerSignUp:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
 /* Body scroll lock — :global is required here: the noScroll class is set on

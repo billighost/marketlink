@@ -275,10 +275,10 @@ export async function generateBasket({
     : parsed.budget || 10000;
 
   // Determine budget unit
-  // In the DB, prices are integers like 450, 600, 700, 1600.
-  // If budget >= 100 (e.g. 10000 for ₦10,000), treat as direct integer.
-  // If budget < 100 (e.g. 50 for $50), scale by 100.
-  const budgetCents = effectiveBudget >= 100
+  // In the DB, prices are integers in cents like 450 ($4.50), 600 ($6.00), 1200 ($12.00).
+  // If budget >= 1000 (e.g. 5000 for $50.00, or legacy 10000), treat as direct cents.
+  // If budget < 1000 (e.g. 50 for $50.00), scale by 100 to convert to cents.
+  const budgetCents = effectiveBudget >= 1000
     ? Math.round(effectiveBudget)
     : Math.round(effectiveBudget * 100);
 
@@ -864,10 +864,10 @@ export async function getSmartBasketOptions() {
     })),
     operatingDays: upcomingDays,
     presetPrompts: [
-      'I have ₦10,000. I need vegetables, fruits and eggs for Saturday.',
-      'Fresh fruit and honey for Sunday pickup within ₦5,000',
-      'Weekend family basket with fresh bakery, eggs and veggies for ₦12,000',
-      'Organic vegetables and fresh catch for Wednesday within ₦8,000',
+      'I have $50. I need vegetables, fruits and eggs for Saturday.',
+      'Fresh fruit and raw honey for Sunday pickup within $35',
+      'Weekend family basket with fresh bakery, eggs and veggies for $65',
+      'Organic greens and farm dairy for Wednesday within $40',
     ],
   };
 }

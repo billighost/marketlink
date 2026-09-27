@@ -21,6 +21,6 @@
 
 /* The ONE beet element on the page */
 .submitBtn { min-height: var(--tap-min); padding: 0 var(--space-4); background: var(--color-beet); color: var(--color-on-primary); font-family: var(--font-body); font-size: var(--text-body); font-weight: var(--weight-medium); border: none; border-radius: var(--radius-md); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-standard); margin-top: var(--space-2); }
-.submitBtn:hover:not(:disabled) { background: var(--color-beet-dark); }
+.submitBtn:hover:not(:disabled) { background: var(--color-beet-dark); color: var(--color-on-primary); }
 .submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 .submitBtn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }

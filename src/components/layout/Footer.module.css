@@ -17,65 +17,22 @@
   padding-inline: var(--page-pad);
 }
 
-/* Four-column grid */
+/* Mobile-first: Compact Option C studio layout */
 .grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
-  padding-block: var(--space-10) var(--space-8);
+  grid-template-columns: 1fr 1fr 1.25fr;
+  gap: var(--space-4) var(--space-2);
+  padding-block: var(--space-4) var(--space-3);
 }
 
-@media (min-width: 640px) {
-  .grid { grid-template-columns: 1fr 1fr; }
-}
-
-@media (min-width: 1024px) {
-  .grid { grid-template-columns: 1fr 1fr 1fr 1.5fr; gap: var(--space-6); }
-}
-
-/* Column */
-.col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.colTitle {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
-  color: var(--color-ink);
-  margin: 0;
-  letter-spacing: var(--tracking-normal);
-}
-
-.linkList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.link {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-  text-decoration: none;
-  min-height: var(--tap-min);
-  display: inline-flex;
-  align-items: center;
-  transition: color var(--duration-fast) var(--ease-standard);
-}
-.link:hover { color: var(--color-beet); }
-.link:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
-
-/* Brand column */
+/* Brand column — anchored at top on mobile, 4th column on desktop */
 .brandCol {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-1);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-hairline);
 }
 
 .brandLink {
@@ -90,21 +47,63 @@
 .productLine {
   margin: 0;
   font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  line-height: 1.35;
+}
+
+/* Columns (Explore, MarketLink, Account) */
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.colTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.linkList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   color: var(--color-ink-soft);
-  line-height: var(--lh-relaxed);
-  max-width: var(--measure-narrow);
+  text-decoration: none;
+  line-height: 1.35;
+  padding-block: var(--space-1);
+  display: inline-flex;
+  align-items: center;
+  transition: color var(--duration-fast) var(--ease-standard);
+  word-break: break-word;
 }
+.link:hover { color: var(--color-beet); }
+.link:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
 /* Bottom bar */
 .bottom {
-  border-top: 1px solid var(--color-border-warm);
-  padding-block: var(--space-4);
+  border-top: 1px solid var(--color-hairline);
+  padding-block: var(--space-3);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2);
+  gap: var(--space-1) var(--space-3);
+  padding-right: 48px; /* Safe area for floating BackToTop button on mobile */
 }
 
 .copyright {
@@ -129,3 +128,72 @@
   transition: color var(--duration-fast) var(--ease-standard);
 }
 .osmLink:hover { color: var(--color-beet); }
+
+/* =========================================================
+   Tablet Breakpoint (640px to 1023px)
+   ========================================================= */
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    padding-block: var(--space-6);
+  }
+
+  .brandCol {
+    grid-column: auto;
+    order: 4;
+    padding-bottom: 0;
+    border-bottom: none;
+    gap: var(--space-3);
+  }
+
+  .col {
+    gap: var(--space-3);
+  }
+
+  .colTitle {
+    font-size: var(--text-sm);
+    text-transform: none;
+    letter-spacing: var(--tracking-normal);
+  }
+
+  .linkList {
+    gap: var(--space-2);
+  }
+
+  .link {
+    min-height: 36px;
+    padding-block: 0;
+  }
+
+  .productLine {
+    font-size: var(--text-sm);
+    line-height: var(--lh-relaxed);
+    max-width: var(--measure-narrow);
+  }
+
+  .bottom {
+    padding-right: 0;
+    padding-block: var(--space-4);
+  }
+}
+
+/* =========================================================
+   Desktop Breakpoint (>= 1024px)
+   ========================================================= */
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr 1fr 1fr 1.5fr;
+    gap: var(--space-6);
+    padding-block: var(--space-10) var(--space-8);
+  }
+
+  .brandCol {
+    order: 4;
+    grid-column: auto;
+  }
+
+  .bottom {
+    border-top: 1px solid var(--color-border-warm);
+  }
+}

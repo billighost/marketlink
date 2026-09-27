@@ -125,7 +125,7 @@
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  z-index: 1200;
+  z-index: 9999;
   width: max-content;
   min-width: 280px;
   max-width: min(92vw, 380px);

@@ -145,7 +145,12 @@ export function TopBar() {
           {/* Right actions */}
           <div className={styles.actions}>
             {/* Search — desktop only */}
-            <button type="button" className={`${styles.iconBtn} ${styles.searchBtn}`} aria-label="Search produce">
+            <button
+              type="button"
+              className={`${styles.iconBtn} ${styles.searchBtn}`}
+              onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+              aria-label="Search produce"
+            >
               <Search size={18} strokeWidth={1.8} aria-hidden="true" />
             </button>
 

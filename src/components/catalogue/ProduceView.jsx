@@ -136,7 +136,7 @@ export function ProduceView({ audience = 'guest' }) {
   }, [pickupSlots, selectedSlot, isBuyer]);
 
   // Loading skeleton state
-  if (productLoading) {
+  if (productLoading || (!product && !productError)) {
     return (
       <div className={styles.pageWrap}>
         <div className={styles.backRow}>

@@ -80,6 +80,7 @@ export function Orders() {
   const handleTabChange = (newTab) => {
     if (newTab === currentTab) return;
     setSearchParams(newTab === 'past' ? { tab: 'past' } : {}, { replace: true });
+    setLoading(true);
     setOrders([]);
     setNextCursor(null);
   };

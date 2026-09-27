@@ -155,7 +155,7 @@ export function MarketView({ audience = 'guest' }) {
     (Array.isArray(market?.schedule) ? market.schedule.map((s) => s.day) : []);
 
   // Handle Loading
-  if (marketLoading && !market) {
+  if (marketLoading || (!market && !marketError)) {
     return (
       <div className={styles.container}>
         <div className={styles.backRow}>

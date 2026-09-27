@@ -402,6 +402,29 @@
   margin-bottom: var(--space-1);
 }
 
+/* ---- Hover tooltip (market name popover) ---- */
+:global(.marketlink-tooltip.leaflet-tooltip) {
+  background-color: var(--color-ink, #24201c);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+:global(.marketlink-tooltip.leaflet-tooltip::before) {
+  border-top-color: var(--color-ink, #24201c);
+}
+
+:global(.marketlink-tooltip-name) {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
 /* Leaflet's own scale control, restyled to match tokens */
 :global(.leaflet-control-scale-line) {
   background-color: var(--color-white);

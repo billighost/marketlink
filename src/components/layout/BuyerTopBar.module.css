@@ -3,7 +3,9 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: var(--z-sticky);
+  /* Must be above Leaflet's tile pane (z:200) + overlay pane (z:400) + tooltip pane (z:650).
+     Using 800 keeps us safely above all Leaflet internal panes but below full-screen modal overlays. */
+  z-index: 800;
   background-color: var(--color-white);
   border-bottom: 1px solid transparent;
   height: var(--topbar-h);

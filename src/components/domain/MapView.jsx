@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -27,7 +27,7 @@ function isValidMarker(m) {
  * as normal React buttons rather than imperative Leaflet controls, so they
  * stay themeable, keyboard-focusable and consistent with the rest of the app.
  */
-export function MapView({
+export const MapView = forwardRef(function MapView({
   markers = [],
   routePath = [],
   selectedId,
@@ -41,7 +41,7 @@ export function MapView({
   showControls = true,
   className = '',
   ariaLabel = 'Interactive map of market locations',
-}) {
+}, ref) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markerLayersRef = useRef(new Map());
@@ -54,6 +54,19 @@ export function MapView({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoomState, setZoomState] = useState({ atMin: false, atMax: false });
   const [locateStatus, setLocateStatus] = useState({ state: 'idle', message: '' });
+
+  // Expose flyTo and openMarkerPopup to parent via ref
+  useImperativeHandle(ref, () => ({
+    flyTo(lat, lng, z) {
+      const map = mapRef.current;
+      if (!map) return;
+      map.flyTo([lat, lng], z || map.getZoom(), { animate: true, duration: 0.5 });
+    },
+    openMarkerPopup(id) {
+      const layer = markerLayersRef.current.get(id);
+      if (layer) layer.openTooltip();
+    },
+  }));
 
   const validMarkers = markers.filter(isValidMarker);
 
@@ -192,6 +205,18 @@ export function MapView({
         });
       }
 
+      // Hover tooltip showing market name
+      leafletMarker.bindTooltip(
+        `<div class="marketlink-tooltip-name">${marker.title || marker.label || 'Market'}</div>`,
+        {
+          direction: 'top',
+          offset: [0, -34],
+          className: 'marketlink-tooltip',
+          sticky: false,
+          permanent: false,
+        }
+      );
+
       if (marker.label) {
         leafletMarker.bindPopup(
           `
@@ -204,6 +229,7 @@ export function MapView({
 
       leafletMarker.on('click', () => {
         if (onSelect) onSelect(marker);
+        leafletMarker.openTooltip();
       });
 
       markerLayersRef.current.set(marker.id, leafletMarker);
@@ -460,16 +486,11 @@ export function MapView({
 
   // While fullscreen, escape any ancestor that creates its own stacking
   // context (position: sticky and position: fixed both do, unconditionally).
-  // Left in place, the map's z-index would only ever be compared against
-  // siblings inside that ancestor's context — never against page content
-  // that comes later in the DOM, like a product grid or reviews list, which
-  // would then paint over it regardless of z-index. Portaling to <body>
-  // gives it a clean, top-level stacking context instead.
   if (isFullscreen && typeof document !== 'undefined') {
     return createPortal(content, document.body);
   }
 
   return content;
-}
+});
 
 export default MapView;

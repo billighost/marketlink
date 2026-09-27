@@ -34,9 +34,29 @@ export function useQuery(key, fetcher, options = {}) {
   const [loading, setLoading] = useState(() => (enabled && serializedKey ? !isFresh : false));
   const [error, setError] = useState(null);
 
+  // Synchronize state during render when serializedKey or enabled changes
+  const [prevKey, setPrevKey] = useState(serializedKey);
+  const [prevEnabled, setPrevEnabled] = useState(enabled);
+
+  if (prevKey !== serializedKey || prevEnabled !== enabled) {
+    setPrevKey(serializedKey);
+    setPrevEnabled(enabled);
+    const newCached = getCachedEntry();
+    const newFresh = newCached && Date.now() - newCached.timestamp < STALE_TIME_MS;
+    if (newCached) {
+      setData(newCached.data);
+      setLoading(enabled && serializedKey ? !newFresh : false);
+    } else {
+      if (!keepPrevious) {
+        setData(null);
+      }
+      setLoading(Boolean(enabled && serializedKey));
+    }
+    setError(null);
+  }
+
   const abortControllerRef = useRef(null);
   const mountedRef = useRef(true);
-  const lastKeyRef = useRef(serializedKey);
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
 
@@ -48,8 +68,9 @@ export function useQuery(key, fetcher, options = {}) {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-      abortControllerRef.current = new AbortController();
-      const signal = abortControllerRef.current.signal;
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      const signal = controller.signal;
 
       if (!isBackground) {
         setLoading(true);
@@ -73,7 +94,7 @@ export function useQuery(key, fetcher, options = {}) {
               if (err.name === 'AbortError' || signal.aborted) return null;
               throw err;
             });
-          inFlightRequests.set(serializedKey, { promise, controller: abortControllerRef.current });
+          inFlightRequests.set(serializedKey, { promise, controller });
           promise.finally(() => {
             const current = inFlightRequests.get(serializedKey);
             if (current && current.promise === promise) {
@@ -84,25 +105,24 @@ export function useQuery(key, fetcher, options = {}) {
 
         const result = await promise;
 
-        if (mountedRef.current && !signal.aborted && result !== null) {
+        // If this specific fetch was aborted or component unmounted, ignore result without touching loading
+        if (signal.aborted || !mountedRef.current) {
+          return;
+        }
+
+        if (result !== undefined) {
           queryCache.set(serializedKey, { data: result, timestamp: Date.now() });
           setData(result);
           setError(null);
           setLoading(false);
-        } else if (mountedRef.current && signal.aborted) {
-          setLoading(false);
         }
       } catch (err) {
-        if (err.name === 'AbortError' || signal.aborted) {
-          if (mountedRef.current) {
-            setLoading(false);
-          }
+        // If aborted or unmounted, DO NOT set loading false or touch error
+        if (signal.aborted || !mountedRef.current || err.name === 'AbortError') {
           return;
         }
-        if (mountedRef.current) {
-          setError(err);
-          setLoading(false);
-        }
+        setError(err);
+        setLoading(false);
       }
     },
     [serializedKey, enabled, keepPrevious]
@@ -110,8 +130,6 @@ export function useQuery(key, fetcher, options = {}) {
 
   useEffect(() => {
     mountedRef.current = true;
-    const keyChanged = lastKeyRef.current !== serializedKey;
-    lastKeyRef.current = serializedKey;
 
     if (!enabled || !serializedKey) {
       setLoading(false);
@@ -137,7 +155,6 @@ export function useQuery(key, fetcher, options = {}) {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-      inFlightRequests.delete(serializedKey);
     };
   }, [serializedKey, enabled, executeFetch]);
 

@@ -47,7 +47,7 @@
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
-.submitBtn:hover { background: var(--color-beet-dark); }
+.submitBtn:hover { background: var(--color-beet-dark); color: var(--color-on-primary); }
 .submitBtn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
 .footerLinks {

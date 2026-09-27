@@ -71,13 +71,23 @@
 
 .heroTitle {
   font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.85rem, 2.2rem + 3.4vw, 4.6rem);
+  font-size: clamp(2rem, 1.4rem + 2.8vw, 4.4rem);
   font-weight: 700;
   color: #5C7048;
-  line-height: 1.13;
+  line-height: 1.15;
   letter-spacing: -0.025em;
-  margin: 0 0 clamp(1.1rem, 1.5vw, 1.6rem) 0;
+  margin: 0 0 clamp(1rem, 1.4vw, 1.5rem) 0;
   text-shadow: 0 1px 24px rgba(255, 255, 255, 0.7);
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .heroTitle {
+    font-size: clamp(1.7rem, 1.4rem + 1.5vw, 2.2rem);
+    line-height: 1.22;
+    letter-spacing: -0.015em;
+    margin-bottom: 0.85rem;
+  }
 }
 
 .heroLead {
@@ -89,6 +99,15 @@
   margin: 0 auto clamp(1.85rem, 2.4vw, 2.6rem);
   font-weight: 450;
   text-shadow: 0 1px 16px rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 640px) {
+  .heroLead {
+    font-size: 0.95rem;
+    line-height: 1.52;
+    margin-bottom: 1.5rem;
+    padding-inline: 0.25rem;
+  }
 }
 
 .heroActions {
@@ -605,6 +624,22 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .productPriceRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .productPrice {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
 }
 
 .productPrice {
@@ -639,6 +674,16 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color var(--duration-fast, 120ms) ease;
+}
+
+@media (max-width: 640px) {
+  .reserveBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    border-radius: var(--radius-sm, 6px);
+  }
 }
 
 .reserveBtn:hover {

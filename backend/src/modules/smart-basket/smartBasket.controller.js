@@ -81,10 +81,10 @@ export async function generateBasketController(req, res) {
       const budgetNum = Number(body.budget);
       if (!Number.isFinite(budgetNum) || budgetNum <= 0) {
         details.push({ field: 'budget', message: 'budget must be a positive number.' });
-      } else if (budgetNum < 100) {
-        details.push({ field: 'budget', message: 'Minimum budget is ₦100.' });
+      } else if (budgetNum < 1) {
+        details.push({ field: 'budget', message: 'Minimum budget is $1.00.' });
       } else if (budgetNum > 10_000_000) {
-        details.push({ field: 'budget', message: 'Maximum budget is ₦10,000,000.' });
+        details.push({ field: 'budget', message: 'Maximum budget is $100,000.00.' });
       } else {
         validatedBudget = budgetNum;
       }
@@ -92,7 +92,7 @@ export async function generateBasketController(req, res) {
   } else {
     if (body.budget !== undefined && body.budget !== null && body.budget !== '') {
       const budgetNum = Number(body.budget);
-      if (Number.isFinite(budgetNum) && budgetNum >= 100) {
+      if (Number.isFinite(budgetNum) && budgetNum >= 1) {
         validatedBudget = budgetNum;
       }
     }
