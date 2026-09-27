@@ -143,6 +143,17 @@ export default function ProfileTab() {
             </div>
 
             <form onSubmit={handleSavePassword} className={styles.formGrid}>
+              {/* Hidden username field for browser accessibility and password manager compliance */}
+              <input
+                type="text"
+                name="username"
+                value={user?.email || ''}
+                autoComplete="username"
+                style={{ display: 'none' }}
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
+              />
               <div className={styles.formGroup}>
                 <label>Current Password</label>
                 <input
@@ -150,6 +161,7 @@ export default function ProfileTab() {
                   name="currentPassword"
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
+                  autoComplete="current-password"
                   className={styles.input}
                   placeholder="Enter current password"
                 />
@@ -162,6 +174,7 @@ export default function ProfileTab() {
                     name="newPassword"
                     value={passwordData.newPassword}
                     onChange={handlePasswordChange}
+                    autoComplete="new-password"
                     className={styles.input}
                     placeholder="Enter new password"
                   />
@@ -173,6 +186,7 @@ export default function ProfileTab() {
                     name="confirmPassword"
                     value={passwordData.confirmPassword}
                     onChange={handlePasswordChange}
+                    autoComplete="new-password"
                     className={styles.input}
                     placeholder="Confirm new password"
                   />

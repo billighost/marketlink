@@ -50,16 +50,21 @@ export function Register() {
   const navigate = useNavigate();
   const { isAuthenticated, role: userRole } = useAuth();
 
-  if (isAuthenticated) {
-    return <Navigate to={homePathFor(userRole)} replace />;
-  }
-
   const roleParam = searchParams.get('role')?.toLowerCase();
 
   const [step, setStep] = useState(1);
   const [role, setRole] = useState(
     roleParam === 'customer' || roleParam === 'farmer' ? roleParam : 'customer'
   );
+
+  const initiallyAuthenticatedRef = useRef(isAuthenticated);
+
+  useEffect(() => {
+    // Only redirect if already authenticated on initial page load (not after completing step 2 into step 3)
+    if (initiallyAuthenticatedRef.current) {
+      navigate(homePathFor(userRole), { replace: true });
+    }
+  }, [userRole, navigate]);
 
   useEffect(() => {
     if (roleParam === 'customer' || roleParam === 'farmer') {
@@ -597,6 +602,7 @@ export function Register() {
                               value={farmerData.email}
                               onChange={handleFarmerChange}
                               placeholder="grower@farm.org"
+                              autoComplete="email"
                               className={styles.textInput}
                               required
                             />
@@ -617,6 +623,7 @@ export function Register() {
                               value={farmerData.phone}
                               onChange={handleFarmerChange}
                               placeholder="(555) 012-3456"
+                              autoComplete="tel"
                               className={styles.textInput}
                               required
                             />
@@ -654,6 +661,7 @@ export function Register() {
                               : handleFarmerChange
                           }
                           placeholder="Min. 8 characters"
+                          autoComplete="new-password"
                           className={styles.textInput}
                           required
                         />
@@ -694,6 +702,7 @@ export function Register() {
                               : handleFarmerChange
                           }
                           placeholder="Repeat password"
+                          autoComplete="new-password"
                           className={styles.textInput}
                           required
                         />

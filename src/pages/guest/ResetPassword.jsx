@@ -125,6 +125,16 @@ export function ResetPassword() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} noValidate className={styles.form}>
+              {/* Hidden username field for browser accessibility and password manager compliance */}
+              <input
+                type="text"
+                name="username"
+                autoComplete="username"
+                style={{ display: 'none' }}
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
+              />
               {globalError && (
                 <div className={styles.globalError} role="alert">
                   {globalError}

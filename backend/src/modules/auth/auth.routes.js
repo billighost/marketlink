@@ -109,6 +109,9 @@ const routes = [
       mailer.sendVerificationEmail(user, verifyLink).catch((err) => {
         console.warn('[REGISTER] Failed to dispatch customer verification email:', err.message);
       });
+      if (env.isDevelopment) {
+        console.log(`[AUTH] Verification link for ${user.email}: ${verifyLink}`);
+      }
 
       const accessToken = signAccessToken({
         sub: user._id.toString(),
@@ -181,6 +184,9 @@ const routes = [
       mailer.sendVerificationEmail(user, verifyLink).catch((err) => {
         console.warn('[REGISTER] Failed to dispatch farmer verification email:', err.message);
       });
+      if (env.isDevelopment) {
+        console.log(`[AUTH] Verification link for ${user.email}: ${verifyLink}`);
+      }
 
       const accessToken = signAccessToken({
         sub: user._id.toString(),
@@ -305,27 +311,6 @@ const routes = [
 
       // Reuse detection: token was already revoked or rotated
       if (session.revokedAt || session.replacedBy) {
-        // Concurrency grace period (15 seconds in dev/prod; 0 in test mode)
-        const gracePeriodMs = env.isTest ? 0 : 15000;
-        const revokedTime = session.revokedAt ? new Date(session.revokedAt).getTime() : 0;
-        const isWithinGracePeriod = session.replacedBy && (Date.now() - revokedTime < gracePeriodMs);
-
-        if (isWithinGracePeriod) {
-          const user = await findUserById(session.userId);
-          if (user && user.status !== 'inactive' && user.status !== 'suspended' && user.status !== 'rejected') {
-            const accessToken = signAccessToken({
-              sub: user._id.toString(),
-              role: user.role,
-            });
-            return res.status(200).json({
-              data: {
-                accessToken,
-                user: toApi(user),
-              },
-            });
-          }
-        }
-
         await revokeAllUserSessions(session.userId);
         res.clearCookie('refreshToken', { path: '/api/auth' });
         throw AppError.unauthorized(
@@ -477,7 +462,7 @@ const routes = [
 
       const resetRecord = await findValidPasswordReset(token);
       if (!resetRecord) {
-        throw new AppError(422, 'INVALID_RESET_TOKEN', 'Invalid, expired, or already used password reset link.');
+        throw new AppError(400, 'INVALID_RESET_TOKEN', 'Invalid, expired, or already used password reset link.');
       }
 
       const newPasswordHash = await bcrypt.hash(password, 10);
@@ -518,7 +503,7 @@ const routes = [
 
       res.status(200).json({
         data: {
-          message: 'Your email has been verified successfully.',
+          message: result.alreadyVerified ? 'Your email is already verified.' : 'Your email has been verified successfully.',
           user: toApi(result.user),
         },
       });
@@ -542,7 +527,7 @@ const routes = [
 
       res.status(200).json({
         data: {
-          message: 'Your email has been verified successfully.',
+          message: result.alreadyVerified ? 'Your email is already verified.' : 'Your email has been verified successfully.',
           user: toApi(result.user),
         },
       });

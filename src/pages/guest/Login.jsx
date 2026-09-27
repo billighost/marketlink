@@ -23,15 +23,6 @@ export function Login() {
   const location = useLocation();
   const { login, isAuthenticated, role: userRole } = useAuth();
 
-  const targetFrom = location.state?.from?.pathname;
-  const destination = targetFrom && targetFrom !== PATHS.LOGIN && targetFrom !== PATHS.REGISTER && targetFrom !== PATHS.UNAUTHORIZED
-    ? targetFrom
-    : homePathFor(userRole);
-
-  if (isAuthenticated) {
-    return <Navigate to={destination} replace />;
-  }
-
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -44,6 +35,21 @@ export function Login() {
 
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+
+  const targetFrom = location.state?.from?.pathname;
+  const destination = targetFrom && targetFrom !== PATHS.LOGIN && targetFrom !== PATHS.REGISTER && targetFrom !== PATHS.UNAUTHORIZED
+    ? targetFrom
+    : homePathFor(userRole);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(destination, { replace: true });
+    }
+  }, [isAuthenticated, destination, navigate]);
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
