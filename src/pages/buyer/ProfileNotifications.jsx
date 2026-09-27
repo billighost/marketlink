@@ -140,8 +140,8 @@ export function ProfileNotifications() {
       <PageTitle
         title="Notifications"
         context="In-app alerts for order updates and market schedules."
-        backTo="/buyer"
-        backLabel="Back to today"
+        backTo="/buyer/profile"
+        backLabel="Back to you"
       />
 
       <div className={styles.container}>

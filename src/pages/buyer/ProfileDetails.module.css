@@ -1,28 +1,23 @@
-.container {
-  padding-bottom: var(--space-12);
-}
-
 .section {
   background: var(--color-white);
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  margin-bottom: var(--space-8);
+  padding: var(--card-padding);
 }
 
 .sectionTitle {
   margin: 0 0 var(--space-1) 0;
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-body);
   font-weight: var(--weight-medium);
   color: var(--color-ink);
 }
 
 .sectionDesc {
-  margin: 0 0 var(--space-6) 0;
+  margin: 0 0 var(--space-5) 0;
   font-size: var(--text-sm);
   color: var(--color-ink-soft);
-  line-height: var(--leading-normal);
+  line-height: var(--lh-body);
 }
 
 .fields {
@@ -32,7 +27,7 @@
 }
 
 .footer {
-  margin-top: var(--space-6);
+  margin-top: var(--space-5);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -42,16 +37,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-3) var(--space-6);
+  min-height: var(--control-h);
+  padding-inline: var(--space-6);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-white);
+  color: var(--color-on-primary);
   background: var(--color-beet);
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: opacity var(--transition-fast);
+  transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
 .saveBtn:hover:not(:disabled) {
@@ -64,18 +60,37 @@
 }
 
 .dangerBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-h);
+  padding-inline: var(--space-4);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--color-danger);
   background: transparent;
   border: 1px solid var(--color-hairline);
-  padding: var(--space-2-5) var(--space-4);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
 .dangerBtn:hover {
   background: var(--color-canvas-soft);
+}
+
+@media (max-width: 420px) {
+  .section {
+    padding: var(--space-4);
+  }
+
+  .saveBtn,
+  .footer {
+    width: 100%;
+  }
+
+  .dangerBtn {
+    width: 100%;
+  }
 }

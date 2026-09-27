@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Sparkles, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useFeed } from '@/hooks/useFeed';
 import { useQuery } from '@/hooks/useQuery';
@@ -104,22 +104,39 @@ export function Home() {
     <Page width="wide" className={styles.pageRoot}>
       {/* Single wrapper — keeps Page's section-gap from blowing apart the header/feed */}
       <div className={styles.pageBody}>
-        {/* Bespoke Header Area: Greeting + MarketClock + Search Field */}
+        {/* Bespoke Header Area: Greeting + MarketClock + AI Action + Search Field */}
         <header className={styles.header}>
-          <div className={styles.headGroup}>
-            <h1 className={styles.greeting}>{getGreeting(greetingName)}</h1>
-            {metaLoading && !feedMeta ? (
-              <div className={styles.clockSkeleton} aria-hidden="true" />
-            ) : (
-              <MarketClock
-                marketName={feedMeta?.homeMarket?.name || 'Your market'}
-                openNow={feedMeta?.clock?.openNow}
-                windowLabel={feedMeta?.clock?.windowLabel}
-                nextOpenLabel={feedMeta?.clock?.nextOpenLabel}
-                closesAtLabel={feedMeta?.clock?.closesAtLabel}
-                progress={feedMeta?.clock?.todayProgress ?? 0}
-              />
-            )}
+          <div className={styles.headerTop}>
+            <div className={styles.headGroup}>
+              <h1 className={styles.greeting}>{getGreeting(greetingName)}</h1>
+              {metaLoading && !feedMeta ? (
+                <div className={styles.clockSkeleton} aria-hidden="true" />
+              ) : (
+                <MarketClock
+                  marketName={feedMeta?.homeMarket?.name || 'Your market'}
+                  openNow={feedMeta?.clock?.openNow}
+                  windowLabel={feedMeta?.clock?.windowLabel}
+                  nextOpenLabel={feedMeta?.clock?.nextOpenLabel}
+                  closesAtLabel={feedMeta?.clock?.closesAtLabel}
+                  progress={feedMeta?.clock?.todayProgress ?? 0}
+                />
+              )}
+            </div>
+
+            <Link
+              to="/buyer/assistant"
+              className={styles.aiButton}
+              aria-label="Talk to MarketLink AI assistant"
+            >
+              <div className={styles.aiIconBadge} aria-hidden="true">
+                <Sparkles size={16} className={styles.aiSparkleIcon} />
+              </div>
+              <div className={styles.aiContent}>
+                <span className={styles.aiTitle}>Talk to MarketLink AI</span>
+                <span className={styles.aiSubtitle}>Ask about stalls, seasonal produce & recipes</span>
+              </div>
+              <ArrowRight size={15} className={styles.aiArrow} aria-hidden="true" />
+            </Link>
           </div>
 
           {/* Full-width Search Field */}
@@ -145,50 +162,68 @@ export function Home() {
           <StallStrip marketId={selectedMarketId} />
 
           {/* Server curated sections */}
-          {sections.map((section, idx) => (
-            <React.Fragment key={section.id}>
-              <div className={styles.sectionWrap}>
-                <HorizontalRow
-                  title={section.title}
-                  subtitle={section.subtitle}
-                  seeAllLabel="See all"
-                  onSeeAll={() => navigate(section.seeAllPath || '/buyer/products')}
-                >
-                  {section.items.map((item) => {
-                    if (section.type === 'farmers') {
+          {sections.map((section, idx) => {
+            const isFarmerSection =
+              section.type === 'farmerRow' ||
+              section.type === 'farmers' ||
+              section.type === 'farmer' ||
+              (Array.isArray(section.items) && section.items.some((it) => it && Boolean(it.stallName)));
+
+            // If section has no items or if it's a farmer section with 0 farmers, do not display at all
+            if (!section.items || section.items.length === 0) {
+              return null;
+            }
+
+            return (
+              <React.Fragment key={section.id}>
+                <div className={styles.sectionWrap}>
+                  <HorizontalRow
+                    title={section.title}
+                    subtitle={section.subtitle}
+                    seeAllLabel="See all"
+                    onSeeAll={() =>
+                      navigate(
+                        section.seeAllPath ||
+                          (isFarmerSection ? '/buyer/stalls' : '/buyer/products')
+                      )
+                    }
+                  >
+                    {section.items.map((item) => {
+                      if (isFarmerSection || item.stallName) {
+                        return (
+                          <FarmerCard
+                            key={item.id}
+                            farmer={item}
+                            variant="stall"
+                          />
+                        );
+                      }
                       return (
-                        <FarmerCard
+                        <ProductCard
                           key={item.id}
-                          farmer={item}
-                          variant={section.cardVariant || 'row'}
+                          product={item}
+                          variant={section.cardVariant || 'compact'}
                         />
                       );
-                    }
-                    return (
-                      <ProductCard
-                        key={item.id}
-                        product={item}
-                        variant={section.cardVariant || 'compact'}
-                      />
-                    );
-                  })}
-                </HorizontalRow>
-              </div>
-
-              {/* Quiet assistant line after the 3rd server section */}
-              {idx === 2 && (
-                <div className={styles.assistantCallout}>
-                  <p className={styles.assistantText}>
-                    Not sure what to cook?{' '}
-                    <Link to="/buyer/assistant" className={styles.assistantLink}>
-                      Ask MarketLink
-                    </Link>
-                    .
-                  </p>
+                    })}
+                  </HorizontalRow>
                 </div>
-              )}
-            </React.Fragment>
-          ))}
+
+                {/* Quiet assistant line after the 3rd server section */}
+                {idx === 2 && (
+                  <div className={styles.assistantCallout}>
+                    <p className={styles.assistantText}>
+                      Not sure what to cook?{' '}
+                      <Link to="/buyer/assistant" className={styles.assistantLink}>
+                        Ask MarketLink AI
+                      </Link>
+                      .
+                    </p>
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
 
           {/* Skeletons while loading more feed batches */}
           {loading && sections.length > 0 && (
@@ -210,8 +245,24 @@ export function Home() {
             />
           )}
 
-          {/* Endless scroll sentinel */}
-          <div ref={sentinelRef} className={styles.sentinel} aria-hidden="true" />
+          {/* End of feed notification */}
+          {!hasMore && sections.length > 0 && (
+            <div className={styles.endOfFeed} role="status">
+              <div className={styles.endOfFeedDivider} aria-hidden="true" />
+              <div className={styles.endOfFeedBadge}>
+                <span className={styles.endOfFeedDot} aria-hidden="true" />
+                <span className={styles.endOfFeedText}>You've reached the end of today's market</span>
+              </div>
+              <p className={styles.endOfFeedSub}>
+                Check back before market day for new harvest drops and updated stalls.
+              </p>
+            </div>
+          )}
+
+          {/* Endless scroll sentinel: only rendered when there is more content to load */}
+          {hasMore && !loading && (
+            <div ref={sentinelRef} className={styles.sentinel} aria-hidden="true" />
+          )}
         </div>
       </div>
     </Page>
