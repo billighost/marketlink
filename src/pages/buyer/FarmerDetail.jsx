@@ -54,18 +54,16 @@ function getProductCategorySlug(p) {
 /**
  * Page B: Stall page (/buyer/stalls/:id)
  *
- * The single strongest expression of the market metaphor:
- *  - White-first tokens, maximum 1 beet element (the Save stall button)
- *  - 56px round avatar, initials on --color-beet-tint
- *  - Stall name (Idiqlat h1) + farmer name + rating
- *  - Seven DayDots (size="md", 28px) with today's ring
- *  - Open-state line (success when open, ink-soft when here today, ink-faint when not here)
- *  - Collect from this stall: PickupWindows
- *  - About the stall (max 62ch)
- *  - On the table today: current weekly stock with category chips, sold-out visible and sorted last
- *  - LocationBlock with OpenStreetMap directions link and embedded MapView (omitted if no coords)
- *  - Reviews with Stars and replies
- *  - Two columns at 1024+ with sticky right rail
+ * Content order (matches DOM order, which is also the mobile reading order):
+ *  1. Identity — avatar, stall name, farmer name, rating
+ *  2. Info card — open state, day dots, save button, pickup windows, location
+ *  3. About the stall
+ *  4. On the table today — current weekly stock, with category chips
+ *  5. Reviews
+ *
+ * At 1024px+, a CSS grid re-flows this into two columns (identity/about/products/reviews
+ * on the left, a sticky info card on the right) without changing the underlying DOM order,
+ * so the logical reading order and the mobile visual order stay identical.
  */
 export function FarmerDetail() {
   const { id } = useParams();
@@ -179,7 +177,7 @@ export function FarmerDetail() {
           ? `closes ${marketClock.closesAtLabel}`
           : '8:00–13:00';
       return {
-        text: `● Open today · ${windowStr}`,
+        text: `Open today · ${windowStr}`,
         type: 'open',
       };
     }
@@ -187,7 +185,7 @@ export function FarmerDetail() {
     if (isOpenToday && !isMarketOpenNow) {
       const opensAt = marketClock?.todayWindow?.opensAt || '8:00';
       return {
-        text: `● Here today · opens ${opensAt}`,
+        text: `Here today · opens ${opensAt}`,
         type: 'here',
       };
     }
@@ -207,7 +205,7 @@ export function FarmerDetail() {
     }
 
     return {
-      text: `● Not here today · next ${nextDayName}`,
+      text: `Not here today · next ${nextDayName}`,
       type: 'not-here',
     };
   }, [farmer, operatingDays, marketClock, todayIndex]);
@@ -320,11 +318,14 @@ export function FarmerDetail() {
             <Skeleton height="1.5rem" width="8rem" />
           </div>
           <div className={styles.identityHeader}>
-            <Skeleton height="3.5rem" width="3.5rem" borderRadius="var(--radius-full)" />
-            <Skeleton height="2rem" width="60%" />
-            <Skeleton height="1rem" width="40%" />
+            <Skeleton height="4rem" width="4rem" borderRadius="var(--radius-full)" />
+            <div className={styles.textCol}>
+              <Skeleton height="2rem" width="12rem" />
+              <Skeleton height="1rem" width="8rem" />
+            </div>
           </div>
-          <Skeleton height="10rem" borderRadius="var(--radius-lg)" />
+          <Skeleton height="9rem" borderRadius="var(--radius-lg)" />
+          <Skeleton height="12rem" borderRadius="var(--radius-lg)" />
         </div>
       </Page>
     );
@@ -359,27 +360,22 @@ export function FarmerDetail() {
           </Link>
         </div>
 
-        {/* Two column grid at 1024+, single column on mobile */}
         <div className={styles.layout}>
-          {/* Left Column: Identity, About, Table Today, Reviews */}
-          <div className={styles.leftCol}>
-            {/* 1. Identity Header */}
-            <header className={styles.identityHeader}>
-              <div className={styles.avatar} aria-hidden="true">
-                {initials}
-              </div>
-
+          {/* 1. Identity */}
+          <header className={styles.identityHeader}>
+            <div className={styles.avatar} aria-hidden="true">
+              {initials}
+            </div>
+            <div className={styles.textCol}>
               <h1 className={styles.stallHeading}>{farmer.stallName}</h1>
-
               {farmerPersonName && (
                 <p className={styles.farmerName}>{farmerPersonName}</p>
               )}
-
               <div className={styles.ratingRow}>
                 {ratingAvg ? (
                   <>
-                    <Stars rating={Number(ratingAvg)} size={14} />
-                    <span className={styles.starRating}>★ {Number(ratingAvg).toFixed(1)}</span>
+                    <Stars rating={Number(ratingAvg)} />
+                    <span className={styles.starRating}>{Number(ratingAvg).toFixed(1)}</span>
                     <span className={styles.dot} aria-hidden="true">·</span>
                     <span>{totalReviewsCount} {totalReviewsCount === 1 ? 'review' : 'reviews'}</span>
                   </>
@@ -387,128 +383,29 @@ export function FarmerDetail() {
                   <span>New stall · No reviews yet</span>
                 )}
               </div>
-            </header>
+            </div>
+          </header>
 
-            {/* 2. About the stall */}
-            {farmer.description && (
-              <Section title="About the stall">
-                <p className={styles.aboutText}>{farmer.description}</p>
-              </Section>
-            )}
+          {/* 2. Info card: status, save, pickup, location — sticky rail at 1024px+ */}
+          <aside className={styles.rail}>
+            <div className={styles.infoCard}>
+              <div className={styles.scheduleBlock}>
+                <DayDots days={operatingDays} size="md" today={todayIndex} />
+                <p
+                  className={[
+                    styles.statusLine,
+                    openState.type === 'open'
+                      ? styles.statusOpen
+                      : openState.type === 'here'
+                      ? styles.statusHere
+                      : styles.statusNotHere,
+                  ].join(' ')}
+                >
+                  {openState.text}
+                </p>
+                <p className={styles.marketLocation}>{stallLocationText}</p>
+              </div>
 
-            {/* 3. On the table today (Current weekly stock) */}
-            <Section
-              title="On the table today"
-              subtitle={`${filteredProducts.length} ${filteredProducts.length === 1 ? 'item' : 'items'}`}
-            >
-              {/* Category chip row */}
-              {categories.length > 2 && (
-                <div className={styles.catScroll} role="tablist" aria-label="Stall categories">
-                  {categories.map((cat) => {
-                    const isSelected = selectedCategory === cat;
-                    return (
-                      <button
-                        key={cat}
-                        type="button"
-                        role="tab"
-                        aria-selected={isSelected}
-                        className={[
-                          styles.catChip,
-                          isSelected ? styles.activeCatChip : '',
-                        ].filter(Boolean).join(' ')}
-                        onClick={() => setSelectedCategory(cat)}
-                      >
-                        {cat}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Products Grid or Empty */}
-              {productsLoading && allProducts.length === 0 ? (
-                <div className={styles.produceGrid}>
-                  <Skeleton height="12rem" borderRadius="var(--radius-lg)" />
-                  <Skeleton height="12rem" borderRadius="var(--radius-lg)" />
-                </div>
-              ) : filteredProducts.length === 0 ? (
-                <EmptyState
-                  scene="stall-empty"
-                  title="Nothing on the table yet"
-                  text="This stall has not listed stock for the coming market day."
-                />
-              ) : (
-                <div className={styles.produceGrid}>
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id || product._id} product={product} variant="grid" />
-                  ))}
-                </div>
-              )}
-            </Section>
-
-            {/* 4. Reviews */}
-            <Section
-              title="Reviews"
-              subtitle={
-                ratingAvg
-                  ? `★ ${Number(ratingAvg).toFixed(1)} · ${totalReviewsCount} reviews`
-                  : 'Customer feedback'
-              }
-            >
-              {reviews.length === 0 ? (
-                <EmptyState
-                  scene="first-review"
-                  title="No reviews yet"
-                  text="Reviews appear after customers collect their orders."
-                />
-              ) : (
-                <div className={styles.reviewsList}>
-                  {reviews.map((review) => (
-                    <ReviewItem
-                      key={review.id || review._id}
-                      review={review}
-                      farmerName={farmer.stallName}
-                    />
-                  ))}
-                  {totalReviewsCount > 3 && (
-                    <div>
-                      <Link
-                        to={`/buyer/reviews?farmer=${farmer.id}`}
-                        className={styles.showAllReviewsLink}
-                      >
-                        Show all {totalReviewsCount} reviews →
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-            </Section>
-          </div>
-
-          {/* Right Rail: Schedule, Collect, LocationBlock, Save Button */}
-          <aside className={styles.rightCol}>
-            <div className={styles.scheduleCard}>
-              {/* Seven DayDots */}
-              <DayDots days={operatingDays} size="md" today={todayIndex} />
-
-              {/* Open-state line */}
-              <p
-                className={[
-                  styles.statusLine,
-                  openState.type === 'open'
-                    ? styles.statusOpen
-                    : openState.type === 'here'
-                    ? styles.statusHere
-                    : styles.statusNotHere,
-                ].join(' ')}
-              >
-                {openState.text}
-              </p>
-
-              {/* Market name and city */}
-              <p className={styles.marketLocation}>{stallLocationText}</p>
-
-              {/* Save this stall button (The ONE permitted beet element) */}
               <button
                 type="button"
                 className={[
@@ -531,27 +428,119 @@ export function FarmerDetail() {
                   </>
                 )}
               </button>
+
+              <div className={styles.divider} role="presentation" />
+
+              <div className={styles.railBlock}>
+                <h2 className={styles.railHeading}>Collect from this stall</h2>
+                <PickupWindows windows={pickupWindows} cutoffLabel={cutoffLabel} />
+              </div>
+
+              <div className={styles.divider} role="presentation" />
+
+              <div className={styles.railBlock}>
+                <h2 className={styles.railHeading}>Where to find it</h2>
+                <LocationBlock
+                  markers={mapMarkers}
+                  addressLine={marketAddress}
+                  pitchLine={farmer.stallPitch || `Stall ${farmer.stallNumber || ''}, ${marketName}`.trim()}
+                  title={farmer.stallName}
+                  mapHeight="200px"
+                />
+              </div>
             </div>
-
-            {/* Collect from this stall */}
-            <Section title="Collect from this stall">
-              <PickupWindows
-                windows={pickupWindows}
-                cutoffLabel={cutoffLabel}
-              />
-            </Section>
-
-            {/* Where to find it */}
-            <Section title="Where to find it">
-              <LocationBlock
-                markers={mapMarkers}
-                addressLine={marketAddress}
-                pitchLine={farmer.stallPitch || `Stall ${farmer.stallNumber || ''}, ${marketName}`.trim()}
-                title={farmer.stallName}
-                mapHeight="240px"
-              />
-            </Section>
           </aside>
+
+          {/* 3. About the stall */}
+          {farmer.description && (
+            <Section title="About the stall" className={styles.about}>
+              <p className={styles.aboutText}>{farmer.description}</p>
+            </Section>
+          )}
+
+          {/* 4. On the table today */}
+          <Section
+            title="On the table today"
+            subtitle={`${filteredProducts.length} ${filteredProducts.length === 1 ? 'item' : 'items'}`}
+            className={styles.products}
+          >
+            {categories.length > 2 && (
+              <div className={styles.catScroll} role="tablist" aria-label="Stall categories">
+                {categories.map((cat) => {
+                  const isSelected = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      className={[
+                        styles.catChip,
+                        isSelected ? styles.activeCatChip : '',
+                      ].filter(Boolean).join(' ')}
+                      onClick={() => setSelectedCategory(cat)}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {productsLoading && allProducts.length === 0 ? (
+              <div className={styles.produceGrid}>
+                <Skeleton height="12rem" borderRadius="var(--radius-lg)" />
+                <Skeleton height="12rem" borderRadius="var(--radius-lg)" />
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <EmptyState
+                scene="stall-empty"
+                title="Nothing on the table yet"
+                text="This stall has not listed stock for the coming market day."
+              />
+            ) : (
+              <div className={styles.produceGrid}>
+                {filteredProducts.map((product) => (
+                  <ProductCard key={product.id || product._id} product={product} variant="grid" />
+                ))}
+              </div>
+            )}
+          </Section>
+
+          {/* 5. Reviews */}
+          <Section
+            title="Reviews"
+            subtitle={ratingAvg ? `${Number(ratingAvg).toFixed(1)} · ${totalReviewsCount} reviews` : 'Customer feedback'}
+            className={styles.reviews}
+          >
+            {reviews.length === 0 ? (
+              <EmptyState
+                scene="first-review"
+                title="No reviews yet"
+                text="Reviews appear after customers collect their orders."
+              />
+            ) : (
+              <div className={styles.reviewsList}>
+                {reviews.map((review) => (
+                  <ReviewItem
+                    key={review.id || review._id}
+                    review={review}
+                    farmerName={farmer.stallName}
+                  />
+                ))}
+                {totalReviewsCount > 3 && (
+                  <div>
+                    <Link
+                      to={`/buyer/reviews?farmer=${farmer.id}`}
+                      className={styles.showAllReviewsLink}
+                    >
+                      Show all {totalReviewsCount} reviews
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </Section>
         </div>
       </div>
     </Page>

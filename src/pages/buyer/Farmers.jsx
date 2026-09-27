@@ -19,7 +19,7 @@ import styles from './Farmers.module.css';
  *  - PageTitle title="Stalls" with context line from count and market
  *  - One non-wrapping chip row (max seven: All, Open today, top categories)
  *  - Active chip is ink-filled, never beet
- *  - Grid of FarmerCard variant="stall" (2 / 3 / 4 columns)
+ *  - Grid of FarmerCard variant="stall" (1 / 2 / 3 / 4 columns)
  *  - byOpenThenScarcity sorting
  *  - EmptyState with "market-closed" scene
  */
@@ -122,6 +122,10 @@ export function Farmers() {
     ? `${countText} at ${marketName}`
     : countText;
 
+  const showLoading = loading && rawStalls.length === 0;
+  const showEmpty = !loading && filteredStalls.length === 0;
+  const showGrid = !loading && filteredStalls.length > 0;
+
   return (
     <Page width="wide">
       <header className={styles.header}>
@@ -180,40 +184,41 @@ export function Farmers() {
         </div>
       </header>
 
-      {/* Loading Skeletons */}
-      {loading && rawStalls.length === 0 && (
-        <div className={styles.grid}>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className={styles.skeletonCard} aria-hidden="true">
-              <Skeleton height="2.5rem" width="2.5rem" borderRadius="var(--radius-full)" />
-              <Skeleton height="1.25rem" width="70%" />
-              <Skeleton height="0.875rem" width="50%" />
-              <Skeleton height="1rem" width="40%" />
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Single results region: loading skeletons, empty state, or the grid.
+          aria-live announces the new count whenever a chip changes the filter. */}
+      <div aria-live="polite">
+        {showLoading && (
+          <div className={styles.grid}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className={styles.skeletonCard} aria-hidden="true">
+                <Skeleton height="2.5rem" width="2.5rem" borderRadius="var(--radius-full)" />
+                <Skeleton height="1.25rem" width="70%" />
+                <Skeleton height="0.875rem" width="50%" />
+                <Skeleton height="1rem" width="40%" />
+              </div>
+            ))}
+          </div>
+        )}
 
-      {/* Empty State */}
-      {!loading && filteredStalls.length === 0 && (
-        <EmptyState
-          scene="market-closed"
-          title={rawStalls.length > 0 ? "No stalls in this category" : "No stalls listed"}
-          text={rawStalls.length > 0 ? "Try choosing another filter above." : "Try another market, or check back before market day."}
-          actionLabel={rawStalls.length > 0 ? "Show all stalls" : "Browse markets"}
-          actionTo={rawStalls.length > 0 ? undefined : "/buyer/markets"}
-          onAction={rawStalls.length > 0 ? () => setSelectedFilter('all') : undefined}
-        />
-      )}
+        {showEmpty && (
+          <EmptyState
+            scene="market-closed"
+            title={rawStalls.length > 0 ? "No stalls in this category" : "No stalls listed"}
+            text={rawStalls.length > 0 ? "Try choosing another filter above." : "Try another market, or check back before market day."}
+            actionLabel={rawStalls.length > 0 ? "Show all stalls" : "Browse markets"}
+            actionTo={rawStalls.length > 0 ? undefined : "/buyer/markets"}
+            onAction={rawStalls.length > 0 ? () => setSelectedFilter('all') : undefined}
+          />
+        )}
 
-      {/* Stalls Grid: 2 / 3 / 4 columns */}
-      {!loading && filteredStalls.length > 0 && (
-        <div className={styles.grid}>
-          {filteredStalls.map((farmer) => (
-            <FarmerCard key={farmer.id} farmer={farmer} variant="stall" />
-          ))}
-        </div>
-      )}
+        {showGrid && (
+          <div className={styles.grid}>
+            {filteredStalls.map((farmer) => (
+              <FarmerCard key={farmer.id} farmer={farmer} variant="stall" />
+            ))}
+          </div>
+        )}
+      </div>
     </Page>
   );
 }
