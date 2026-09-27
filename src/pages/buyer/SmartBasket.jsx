@@ -25,7 +25,7 @@ export function SmartBasket() {
     <Page width="wide">
       <PageTitle
         title="Smart Basket"
-        context="AI-powered inventory basket curated within your budget from local market stalls."
+        context="Curate a complete harvest basket within your weekly budget from attending farmers."
         backTo="/buyer"
         backLabel="Back to marketplace"
       />

@@ -200,7 +200,7 @@ export function Markets() {
         </header>
 
         {/* Loading Skeletons */}
-        {loading && markets.length === 0 && (
+        {(loading || (!marketsData && markets.length === 0)) && (
           <div className={styles.listGrid}>
             <div className={styles.skeletonCard} aria-hidden="true">
               <Skeleton height="1.75rem" width="60%" />
@@ -216,7 +216,7 @@ export function Markets() {
         )}
 
         {/* Empty State: No nearby markets / filters */}
-        {!loading && markets.length === 0 && (
+        {!loading && marketsData != null && markets.length === 0 && (
           <EmptyState
             scene="lost-path"
             title={

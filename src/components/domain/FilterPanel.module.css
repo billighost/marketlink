@@ -125,17 +125,17 @@
   outline-offset: var(--focus-offset);
 }
 
-/* Active chip: INK-FILLED, NEVER BEET */
+/* Active chip: BEET-FILLED (MarketLink design system) */
 .filterChipActive {
-  background-color: var(--color-ink);
-  color: var(--color-white);
-  border: 1px solid var(--color-ink);
+  background-color: var(--color-beet);
+  color: var(--color-on-primary, #ffffff);
+  border: 1px solid var(--color-beet);
 }
 
 .filterChipActive:hover {
-  background-color: var(--color-ink-dark, var(--color-ink));
-  color: var(--color-white);
-  border-color: var(--color-ink-dark, var(--color-ink));
+  background-color: var(--color-beet-dark);
+  color: var(--color-on-primary, #ffffff);
+  border-color: var(--color-beet-dark);
 }
 
 /* Reset button in rail */

@@ -140,9 +140,11 @@ export function BrowseView({ audience = 'guest' }) {
   // Products and cursor pagination
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const inFlightRef = useRef(false);
+  const abortFetchRef = useRef(null);
   const sentinelRef = useRef(null);
 
   // Categories & Markets from API
@@ -184,7 +186,15 @@ export function BrowseView({ audience = 'guest' }) {
 
   // Fetch products batch
   const fetchProductsBatch = useCallback(async (nextCursor = null, isFresh = false) => {
-    if (inFlightRef.current) return;
+    if (isFresh) {
+      if (abortFetchRef.current) {
+        abortFetchRef.current.abort();
+      }
+      abortFetchRef.current = new AbortController();
+    } else {
+      if (inFlightRef.current) return;
+    }
+    const signal = abortFetchRef.current?.signal;
     inFlightRef.current = true;
     setLoading(true);
 
@@ -201,7 +211,9 @@ export function BrowseView({ audience = 'guest' }) {
         maxPrice: selectedMaxPriceCents || undefined,
         cursor: nextCursor || undefined,
         limit: 20,
-      });
+      }, signal);
+
+      if (signal?.aborted) return;
 
       let items = res?.data || [];
       // Client-side day / maxPrice fallback if backend did not filter
@@ -218,11 +230,16 @@ export function BrowseView({ audience = 'guest' }) {
       setProductsList((prev) => (isFresh ? items : [...prev, ...items]));
       setCursor(newCursor);
       setHasMore(more);
+      setHasLoadedInitial(true);
     } catch (err) {
+      if (err?.name === 'AbortError' || signal?.aborted) return;
       console.error('[BrowseView] Error fetching products:', err);
+      setHasLoadedInitial(true);
     } finally {
-      setLoading(false);
-      inFlightRef.current = false;
+      if (!signal || !signal.aborted) {
+        setLoading(false);
+        inFlightRef.current = false;
+      }
     }
   }, [
     debouncedSearch,
@@ -510,12 +527,12 @@ export function BrowseView({ audience = 'guest' }) {
             </div>
 
             {/* Initial loading state */}
-            {loading && productsList.length === 0 && (
+            {(loading || !hasLoadedInitial) && productsList.length === 0 && (
               <GridSkeleton count={8} columns="products" />
             )}
 
             {/* Empty state */}
-            {!loading && productsList.length === 0 && (
+            {!loading && hasLoadedInitial && productsList.length === 0 && (
               <EmptyState
                 scene="farm-basket"
                 title="No produce found"
@@ -536,7 +553,7 @@ export function BrowseView({ audience = 'guest' }) {
                   <ProductCard
                     key={product.id || product._id}
                     product={product}
-                    variant="compact"
+                    variant="grid"
                     audience={audience}
                   />
                 ))}

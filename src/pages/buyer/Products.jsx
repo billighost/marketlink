@@ -148,9 +148,11 @@ export function Products() {
   // Products and cursor pagination
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const inFlightRef = useRef(false);
+  const abortFetchRef = useRef(null);
   const sentinelRef = useRef(null);
 
   // Categories & Markets from API
@@ -192,7 +194,15 @@ export function Products() {
 
   // Fetch products batch
   const fetchProductsBatch = useCallback(async (nextCursor = null, isFresh = false) => {
-    if (inFlightRef.current) return;
+    if (isFresh) {
+      if (abortFetchRef.current) {
+        abortFetchRef.current.abort();
+      }
+      abortFetchRef.current = new AbortController();
+    } else {
+      if (inFlightRef.current) return;
+    }
+    const signal = abortFetchRef.current?.signal;
     inFlightRef.current = true;
     setLoading(true);
 
@@ -209,7 +219,9 @@ export function Products() {
         maxPrice: selectedMaxPriceCents || undefined,
         cursor: nextCursor || undefined,
         limit: 20,
-      });
+      }, signal);
+
+      if (signal?.aborted) return;
 
       let items = res?.data || [];
       // Client-side day / maxPrice fallback if backend did not filter
@@ -226,11 +238,16 @@ export function Products() {
       setProductsList((prev) => (isFresh ? items : [...prev, ...items]));
       setCursor(newCursor);
       setHasMore(more);
+      setHasLoadedInitial(true);
     } catch (err) {
+      if (err?.name === 'AbortError' || signal?.aborted) return;
       console.error('[Products] Error fetching products:', err);
+      setHasLoadedInitial(true);
     } finally {
-      setLoading(false);
-      inFlightRef.current = false;
+      if (!signal || !signal.aborted) {
+        setLoading(false);
+        inFlightRef.current = false;
+      }
     }
   }, [
     debouncedSearch,
@@ -384,8 +401,8 @@ export function Products() {
     <div className={styles.page}>
       <div className={styles.container}>
         {/* ── Desktop Page Header (1024px+) ───────────────────────── */}
-        <header className={styles.desktopHeader} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
+        <header className={styles.desktopHeader}>
+          <div className={styles.headerTitles}>
             <h1 className={styles.pageTitle}>Browse produce</h1>
             <p className={styles.pageContext}>
               {resultsLabel}
@@ -394,25 +411,12 @@ export function Products() {
           </div>
           <button
             type="button"
+            className={styles.smartBasketHeaderBtn}
             onClick={() => openSmartBasket({ marketId: selectedMarketIdState })}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 'var(--space-2)',
-              padding: 'var(--space-2-5) var(--space-4)',
-              background: 'linear-gradient(135deg, var(--color-primary), #7a1d2f)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 'var(--radius-lg)',
-              fontWeight: 600,
-              fontSize: 'var(--text-sm)',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(84, 23, 34, 0.25)',
-              transition: 'transform 0.15s, opacity 0.15s',
-            }}
+            aria-label="Build Smart Basket"
           >
             <Sparkles size={16} aria-hidden="true" />
-            <span>AI Smart Basket</span>
+            <span>Smart Basket</span>
           </button>
         </header>
 
@@ -434,6 +438,17 @@ export function Products() {
 
             <button
               type="button"
+              className={styles.smartBasketMobileBtn}
+              onClick={() => openSmartBasket({ marketId: selectedMarketIdState })}
+              aria-label="Smart Basket"
+              title="Build Smart Basket"
+            >
+              <Sparkles size={16} aria-hidden="true" />
+              <span className={styles.smartBasketMobileText}>Smart Basket</span>
+            </button>
+
+            <button
+              type="button"
               className={`${styles.filterTriggerBtn} ${activeFilterCount > 0 ? styles.filterTriggerActive : ''}`}
               onClick={() => setIsFilterSheetOpen(true)}
               aria-label={`Open filter sheet${activeFilterCount > 0 ? `, ${activeFilterCount} active` : ''}`}
@@ -448,20 +463,6 @@ export function Products() {
 
           {/* Exactly one horizontal chip row on mobile/tablet — never wraps */}
           <div className={styles.chipRow} role="tablist" aria-label="Product categories">
-            <button
-              type="button"
-              onClick={() => openSmartBasket({ marketId: selectedMarketIdState })}
-              className={styles.categoryChip}
-              style={{
-                background: 'linear-gradient(135deg, rgba(84, 23, 34, 0.08), rgba(224, 109, 40, 0.08))',
-                borderColor: 'var(--color-primary)',
-                color: 'var(--color-primary)',
-                fontWeight: 700,
-              }}
-            >
-              <Sparkles size={13} aria-hidden="true" />
-              <span>Smart Basket</span>
-            </button>
             <button
               type="button"
               className={`${styles.categoryChip} ${selectedCategory === 'All' ? styles.categoryChipActive : ''}`}
@@ -557,7 +558,7 @@ export function Products() {
             )}
 
             {/* Produce Grid or Empty State */}
-            {loading && productsList.length === 0 ? (
+            {(loading || !hasLoadedInitial) && productsList.length === 0 ? (
               <GridSkeleton count={8} />
             ) : productsList.length > 0 ? (
               <div className={styles.catalogGrid}>

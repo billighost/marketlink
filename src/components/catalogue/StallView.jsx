@@ -312,7 +312,7 @@ export function StallView({ audience = 'guest' }) {
     : marketName;
 
   // Loading State
-  if (farmerLoading && !farmer) {
+  if (farmerLoading || (!farmer && !farmerError)) {
     return (
       <div className={styles.container}>
         <div className={styles.backRow}>

@@ -117,8 +117,8 @@ export function StallsView({ audience = 'guest' }) {
     ? `${countText} at ${marketName}`
     : countText;
 
-  const showLoading = loading && rawStalls.length === 0;
-  const showEmpty = !loading && filteredStalls.length === 0;
+  const showLoading = loading || (!farmersData && rawStalls.length === 0);
+  const showEmpty = !loading && farmersData != null && filteredStalls.length === 0;
   const showGrid = !loading && filteredStalls.length > 0;
 
   return (

@@ -463,27 +463,31 @@
   width: 100%;
 }
 
-@media (min-width: 380px) {
+@media (min-width: 420px) {
   .catalogGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
   }
 }
 
 @media (min-width: 768px) {
   .catalogGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
   }
 }
 
 @media (min-width: 1024px) {
   .catalogGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
   }
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1280px) {
   .catalogGrid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-6);
   }
 }
 
@@ -496,27 +500,31 @@
   margin-top: var(--space-4);
 }
 
-@media (min-width: 380px) {
+@media (min-width: 420px) {
   .tailGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
   }
 }
 
 @media (min-width: 768px) {
   .tailGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
   }
 }
 
 @media (min-width: 1024px) {
   .tailGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
   }
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1280px) {
   .tailGrid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-6);
   }
 }
 

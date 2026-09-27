@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Tag,
   SlidersHorizontal,
+  Star,
 } from 'lucide-react';
 import {
   generateSmartBasket,
@@ -30,11 +31,11 @@ import {
 } from '@/api/smartBasket';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
-import { formatNaira } from '@/utils/format';
+import { formatPrice } from '@/utils/format';
 import Illustration from '@/components/domain/Illustration';
 import styles from './SmartBasketExperience.module.css';
 
-const DEFAULT_PRESET_PROMPT = 'I have ₦10,000. I need vegetables, fruits and eggs for Saturday.';
+const DEFAULT_PRESET_PROMPT = 'I have $50. I need vegetables, fruits and eggs for Saturday.';
 
 export function SmartBasketExperience({
   initialParams,
@@ -58,7 +59,7 @@ export function SmartBasketExperience({
 
   // ── Form State ────────────────────────────────────────────────────────────
   const [prompt, setPrompt] = useState(initialParams?.prompt || DEFAULT_PRESET_PROMPT);
-  const [budget, setBudget] = useState(initialParams?.budget || 10000);
+  const [budget, setBudget] = useState(initialParams?.budget || 50);
   const [selectedMarketId, setSelectedMarketId] = useState(initialParams?.marketId || '');
   const [selectedDay, setSelectedDay] = useState(initialParams?.day || 'sat');
   const [selectedPickupDate, setSelectedPickupDate] = useState(initialParams?.pickupDate || '');
@@ -158,7 +159,7 @@ export function SmartBasketExperience({
   useEffect(() => {
     handleGenerate({
       prompt: initialParams?.prompt || DEFAULT_PRESET_PROMPT,
-      budget: initialParams?.budget ? Number(initialParams.budget) : 10000,
+      budget: initialParams?.budget ? Number(initialParams.budget) : 50,
       marketId: initialParams?.marketId || undefined,
       day: initialParams?.day || 'sat',
       pickupDate: initialParams?.pickupDate || undefined,
@@ -171,10 +172,11 @@ export function SmartBasketExperience({
     return items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
   }, [items]);
 
-  const currentBudget = Number(budget) || 10000;
-  const currentRemaining = Math.max(0, currentBudget - currentTotal);
-  const spentPercent = currentBudget > 0 ? Math.min(100, Math.round((currentTotal / currentBudget) * 100)) : 0;
-  const isOverBudget = currentTotal > currentBudget;
+  const currentBudget = Number(budget) || 50;
+  const currentBudgetCents = currentBudget < 1000 ? Math.round(currentBudget * 100) : Math.round(currentBudget);
+  const currentRemaining = Math.max(0, currentBudgetCents - currentTotal);
+  const spentPercent = currentBudgetCents > 0 ? Math.min(100, Math.round((currentTotal / currentBudgetCents) * 100)) : 0;
+  const isOverBudget = currentTotal > currentBudgetCents;
 
   // ── Quantity Adjustments ──────────────────────────────────────────────────
   const handleIncreaseQty = (productId) => {
@@ -197,7 +199,7 @@ export function SmartBasketExperience({
         ...prev,
         items: updated,
         totalCents: newTotal,
-        remainingBudgetCents: Math.max(0, currentBudget - newTotal),
+        remainingBudgetCents: Math.max(0, currentBudgetCents - newTotal),
       };
     });
   };
@@ -225,7 +227,7 @@ export function SmartBasketExperience({
         ...prev,
         items: updated,
         totalCents: newTotal,
-        remainingBudgetCents: Math.max(0, currentBudget - newTotal),
+        remainingBudgetCents: Math.max(0, currentBudgetCents - newTotal),
       };
     });
   };
@@ -243,7 +245,7 @@ export function SmartBasketExperience({
         ...prev,
         items: updated,
         totalCents: newTotal,
-        remainingBudgetCents: Math.max(0, currentBudget - newTotal),
+        remainingBudgetCents: Math.max(0, currentBudgetCents - newTotal),
       };
     });
   };
@@ -284,7 +286,7 @@ export function SmartBasketExperience({
         ...prev,
         items: updated,
         totalCents: newTotal,
-        remainingBudgetCents: Math.max(0, currentBudget - newTotal),
+        remainingBudgetCents: Math.max(0, currentBudgetCents - newTotal),
       };
     });
     setReplaceTarget(null);
@@ -354,7 +356,7 @@ export function SmartBasketExperience({
         ...prev,
         items: updated,
         totalCents: newTotal,
-        remainingBudgetCents: Math.max(0, currentBudget - newTotal),
+        remainingBudgetCents: Math.max(0, currentBudgetCents - newTotal),
       };
     });
     setSearchQuery('');
@@ -379,7 +381,7 @@ export function SmartBasketExperience({
       try {
         const recalcData = await recalculateSmartBasket({
           items: basket.items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
-          budget: currentBudget,
+          budget: currentBudgetCents,
           marketId: selectedMarketId || undefined,
         });
 
@@ -462,8 +464,8 @@ export function SmartBasketExperience({
         <div className={styles.heroContent}>
           <div className={styles.heroTopBar}>
             <div className={styles.heroBadge}>
-              <Sparkles size={14} className={styles.sparkleIcon} />
-              <span>AI Smart Basket</span>
+              <ShoppingBasket size={14} className={styles.sparkleIcon} />
+              <span>Smart Basket Builder</span>
             </div>
 
             {onClose && (
@@ -479,11 +481,11 @@ export function SmartBasketExperience({
           </div>
 
           <h2 id="smart-basket-heading" className={styles.heroTitle}>
-            <span>Describe What You Need</span>
+            <span>Curate Your Farm-Fresh Basket</span>
           </h2>
 
           <p className={styles.heroSub}>
-            Provide your budget and market day. We curate fresh produce, dairy, bakery, and meats directly from real farmers currently in stock at local markets.
+            Tell us your budget and harvest preferences. We match live inventory from attending farmers so you can reserve your weekly harvest in one step.
           </p>
 
           <form
@@ -501,7 +503,7 @@ export function SmartBasketExperience({
                   className={styles.promptInput}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder='e.g. "I have ₦10,000. I need vegetables, fruits and eggs for Saturday."'
+                  placeholder='e.g. "I have $50. I need vegetables, fruits and eggs for Saturday."'
                   aria-label="Describe what you want to buy and your budget"
                 />
               </div>
@@ -511,7 +513,7 @@ export function SmartBasketExperience({
                 disabled={loading}
                 aria-label="Generate Smart Basket suggestions"
               >
-                {loading ? <RefreshCw size={18} className={styles.spin} /> : <Sparkles size={18} />}
+                {loading ? <RefreshCw size={18} className={styles.spin} /> : <ShoppingBasket size={18} />}
                 <span>{loading ? 'Curating...' : 'Generate Basket'}</span>
               </button>
             </div>
@@ -522,10 +524,10 @@ export function SmartBasketExperience({
               {(options.presetPrompts?.length > 0
                 ? options.presetPrompts
                 : [
-                    'I have ₦10,000. I need vegetables, fruits and eggs for Saturday.',
-                    'Fresh salad greens & tomatoes under ₦4,000',
-                    'Weekend family basket with meat, honey & bakery for ₦15,000',
-                    'Healthy fruit and dairy for Sunday within ₦6,000',
+                    'I have $50. I need vegetables, fruits and eggs for Saturday.',
+                    'Fresh salad greens & sweet tomatoes under $25',
+                    'Weekend family basket with bakery, eggs and cheese for $60',
+                    'Seasonal fruit and raw honey for Sunday within $35',
                   ]
               ).map((preset, idx) => (
                 <button
@@ -557,22 +559,22 @@ export function SmartBasketExperience({
             <span>Budget</span>
           </label>
           <div className={styles.budgetInputWrapper}>
-            <span className={styles.budgetCurrencyPrefix}>₦</span>
+            <span className={styles.budgetCurrencyPrefix}>$</span>
             <input
               id="smart-basket-budget"
               type="number"
               className={styles.controlInput}
               value={budget}
-              min="100"
-              max="10000000"
-              step="500"
+              min="5"
+              max="1000"
+              step="5"
               onChange={(e) => setBudget(Number(e.target.value))}
               onBlur={() => handleGenerate()}
-              aria-label="Target budget in Naira"
+              aria-label="Target budget in dollars"
             />
           </div>
           <div className={styles.budgetQuickPills}>
-            {[5000, 10000, 15000, 20000, 30000].map((amt) => (
+            {[25, 50, 75, 100].map((amt) => (
               <button
                 key={amt}
                 type="button"
@@ -582,7 +584,7 @@ export function SmartBasketExperience({
                   handleGenerate({ budget: amt });
                 }}
               >
-                ₦{(amt / 1000)}k
+                ${amt}
               </button>
             ))}
           </div>
@@ -684,7 +686,7 @@ export function SmartBasketExperience({
           <div className={styles.budgetValues}>
             <div className={styles.budgetValueItem}>
               <span className={styles.budgetLabel}>Budget</span>
-              <span className={styles.budgetValue}>{formatNaira(currentBudget)}</span>
+              <span className={styles.budgetValue}>{formatPrice(currentBudgetCents)}</span>
             </div>
 
             <div className={styles.budgetValueDivider} />
@@ -692,7 +694,7 @@ export function SmartBasketExperience({
             <div className={styles.budgetValueItem}>
               <span className={styles.budgetLabel}>Basket Total</span>
               <span className={`${styles.budgetValue} ${styles.budgetSpent}`}>
-                {formatNaira(currentTotal)}
+                {formatPrice(currentTotal)}
               </span>
             </div>
 
@@ -706,7 +708,7 @@ export function SmartBasketExperience({
                     isOverBudget ? styles.over : currentRemaining === 0 ? styles.exact : ''
                   }`}
                 >
-                  {isOverBudget ? `- ${formatNaira(currentTotal - currentBudget)}` : formatNaira(currentRemaining)}
+                  {isOverBudget ? `- ${formatPrice(currentTotal - currentBudgetCents)}` : formatPrice(currentRemaining)}
                 </span>
                 <span
                   className={`${styles.budgetStatusPill} ${
@@ -768,8 +770,8 @@ export function SmartBasketExperience({
             <span>{spentPercent}% of budget allocated</span>
             <span>
               {isOverBudget
-                ? `Exceeds budget by ${formatNaira(currentTotal - currentBudget)}`
-                : `${formatNaira(currentRemaining)} left to spend`}
+                ? `Exceeds budget by ${formatPrice(currentTotal - currentBudgetCents)}`
+                : `${formatPrice(currentRemaining)} left to spend`}
             </span>
           </div>
         </div>
@@ -889,7 +891,10 @@ export function SmartBasketExperience({
                         {item.farmerName}
                       </Link>
                       {item.farmerRatingAvg > 0 && (
-                        <span className={styles.farmerRating}>★ {item.farmerRatingAvg.toFixed(1)}</span>
+                        <span className={styles.farmerRating}>
+                          <Star size={11} fill="var(--color-wood)" color="var(--color-wood)" aria-hidden="true" />
+                          <span>{item.farmerRatingAvg.toFixed(1)}</span>
+                        </span>
                       )}
                     </div>
 
@@ -902,7 +907,7 @@ export function SmartBasketExperience({
                         Available: {item.quantityAvailable} {item.unit || 'units'}
                       </span>
                       <span className={styles.pricePerUnit}>
-                        {formatNaira(item.priceCents)} / {item.unit || 'unit'}
+                        {formatPrice(item.priceCents)} / {item.unit || 'unit'}
                       </span>
                     </div>
                   </div>
@@ -935,7 +940,7 @@ export function SmartBasketExperience({
 
                   <div className={styles.lineTotalBlock}>
                     <div className={styles.lineTotalAmount}>
-                      {formatNaira(item.priceCents * item.quantity)}
+                      {formatPrice(item.priceCents * item.quantity)}
                     </div>
                   </div>
 

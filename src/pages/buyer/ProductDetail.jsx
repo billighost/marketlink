@@ -138,7 +138,7 @@ export function ProductDetail() {
   }, [pickupSlots, selectedSlot]);
 
   // Loading skeleton state
-  if (productLoading) {
+  if (productLoading || (!product && !productError)) {
     return (
       <Page width="detail" className={styles.pageWrap}>
         <div className={styles.backRow}>

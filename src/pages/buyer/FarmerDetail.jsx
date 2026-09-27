@@ -310,7 +310,7 @@ export function FarmerDetail() {
     : marketName;
 
   // Handle Loading State
-  if (farmerLoading && !farmer) {
+  if (farmerLoading || (!farmer && !farmerError)) {
     return (
       <Page width="detail">
         <div className={styles.container}>
