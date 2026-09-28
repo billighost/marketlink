@@ -28,12 +28,13 @@
 .addToCartBtn:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(122, 46, 59, 0.32);
 }
 
 .addToCartBtn:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(1.5px) scale(0.96) !important;
+  box-shadow: 0 1px 3px rgba(122, 46, 59, 0.18) !important;
 }
 
 .addToCartBtn:focus-visible {

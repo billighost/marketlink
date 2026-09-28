@@ -50,11 +50,21 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   min-width: 0;
-  transition: color var(--duration-fast) var(--ease-standard);
+  transition: color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) cubic-bezier(0.2, 0, 0, 1);
+}
+
+.option:hover:not(.active) {
+  background-color: rgba(46, 43, 38, 0.05);
+}
+
+.option:hover:not(.active) .label {
+  color: var(--color-ink);
 }
 
 .option:active {
-  transform: scale(0.98);
+  transform: scale(0.95) !important;
 }
 
 .label {

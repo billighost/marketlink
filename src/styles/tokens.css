@@ -138,11 +138,11 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
   --z-base:    0;
-  --z-sticky:  100;   
-  --z-dropdown:200;
-  --z-overlay: 300;   
-  --z-modal:   400;
-  --z-toast:   500;
+  --z-sticky:  800;   
+  --z-dropdown:900;
+  --z-overlay: 1000;   
+  --z-modal:   1100;
+  --z-toast:   1200;
 
   --wave-height:   clamp(2rem, 1.4rem + 2.4vw, 4.5rem);  
   --illus-stroke:  1.5px;                                 

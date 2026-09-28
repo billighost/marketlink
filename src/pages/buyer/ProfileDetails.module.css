@@ -47,16 +47,29 @@
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: opacity var(--duration-fast) var(--ease-standard);
+  box-shadow: 0 2px 6px rgba(122, 46, 59, 0.2);
+  transition: transform var(--duration-fast) cubic-bezier(0.2, 0, 0, 1),
+              box-shadow var(--duration-fast) cubic-bezier(0.2, 0, 0, 1),
+              background-color var(--duration-fast) var(--ease-standard),
+              opacity var(--duration-fast) var(--ease-standard);
 }
 
 .saveBtn:hover:not(:disabled) {
-  opacity: 0.9;
+  background: #64232f;
+  transform: translateY(-1.5px);
+  box-shadow: 0 5px 14px rgba(122, 46, 59, 0.35);
+}
+
+.saveBtn:active:not(:disabled) {
+  transform: translateY(1.5px) scale(0.97) !important;
+  box-shadow: 0 1px 3px rgba(122, 46, 59, 0.2) !important;
 }
 
 .saveBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .dangerBtn {
@@ -73,11 +86,22 @@
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease-standard);
+  transition: transform var(--duration-fast) cubic-bezier(0.2, 0, 0, 1),
+              box-shadow var(--duration-fast) cubic-bezier(0.2, 0, 0, 1),
+              background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
 }
 
-.dangerBtn:hover {
-  background: var(--color-canvas-soft);
+.dangerBtn:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: var(--color-danger);
+  transform: translateY(-1.5px);
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.15);
+}
+
+.dangerBtn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97) !important;
+  background: #fee2e2;
 }
 
 @media (max-width: 420px) {

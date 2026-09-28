@@ -229,7 +229,16 @@ input[type="search"]::-webkit-search-cancel-button {
   box-shadow: none !important;
 }
 
-button {
+/* ==========================================================================
+   Universal Interactive Button & Action Elements
+   Gives every button in the web app a lively, responsive hover and tactile click feel.
+   ========================================================================== */
+
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
   background: none;
   border: none;
   cursor: pointer;
@@ -238,14 +247,114 @@ button {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform var(--duration-fast, 120ms) cubic-bezier(0.2, 0, 0, 1),
+              box-shadow var(--duration-fast, 120ms) cubic-bezier(0.2, 0, 0, 1),
+              filter var(--duration-fast, 120ms) cubic-bezier(0.2, 0, 0, 1),
+              background-color var(--duration-fast, 120ms) ease,
+              border-color var(--duration-fast, 120ms) ease,
+              color var(--duration-fast, 120ms) ease,
+              opacity var(--duration-fast, 120ms) ease;
 }
 
+/* Base hover feedback for all clickable buttons */
+button:hover:not(:disabled):not([aria-disabled="true"]),
+[role="button"]:hover:not([aria-disabled="true"]),
+input[type="button"]:hover:not(:disabled),
+input[type="submit"]:hover:not(:disabled) {
+  cursor: pointer;
+}
+
+/* Tactile Click / Press feedback: crisp down-press on every button in the app */
+button:active:not(:disabled):not([aria-disabled="true"]),
+[role="button"]:active:not([aria-disabled="true"]),
+input[type="button"]:active:not(:disabled),
+input[type="submit"]:active:not(:disabled),
+input[type="reset"]:active:not(:disabled) {
+  transform: translateY(1.5px) scale(0.97) !important;
+  filter: brightness(0.93) !important;
+  outline: none !important;
+}
+
+/* Disabled button state */
+button:disabled,
+button[aria-disabled="true"],
+[role="button"][aria-disabled="true"],
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled {
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  opacity: 0.55;
+  transform: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Button-styled anchor links interactive states */
+a[class*="btn" i],
+a[class*="button" i],
+a[class*="Btn" i],
+a[class*="Button" i],
+a[class*="cta" i],
+a[class*="Cta" i] {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform var(--duration-fast, 120ms) cubic-bezier(0.2, 0, 0, 1),
+              box-shadow var(--duration-fast, 120ms) cubic-bezier(0.2, 0, 0, 1),
+              filter var(--duration-fast, 120ms) cubic-bezier(0.2, 0, 0, 1),
+              background-color var(--duration-fast, 120ms) ease,
+              border-color var(--duration-fast, 120ms) ease,
+              color var(--duration-fast, 120ms) ease;
+}
+
+a[class*="btn" i]:hover:not([aria-disabled="true"]),
+a[class*="button" i]:hover:not([aria-disabled="true"]),
+a[class*="Btn" i]:hover:not([aria-disabled="true"]),
+a[class*="Button" i]:hover:not([aria-disabled="true"]),
+a[class*="cta" i]:hover:not([aria-disabled="true"]),
+a[class*="Cta" i]:hover:not([aria-disabled="true"]) {
+  filter: brightness(1.04);
+}
+
+a[class*="btn" i]:active:not([aria-disabled="true"]),
+a[class*="button" i]:active:not([aria-disabled="true"]),
+a[class*="Btn" i]:active:not([aria-disabled="true"]),
+a[class*="Button" i]:active:not([aria-disabled="true"]),
+a[class*="cta" i]:active:not([aria-disabled="true"]),
+a[class*="Cta" i]:active:not([aria-disabled="true"]) {
+  transform: translateY(1.5px) scale(0.97) !important;
+  filter: brightness(0.93) !important;
+}
+
+/* Icon Buttons hover & click enhancement */
+button[class*="icon" i]:hover:not(:disabled),
+button[class*="Icon" i]:hover:not(:disabled),
+button[class*="close" i]:hover:not(:disabled),
+button[class*="Close" i]:hover:not(:disabled),
+button[class*="back" i]:hover:not(:disabled),
+button[class*="Back" i]:hover:not(:disabled) {
+  transform: scale(1.08);
+  filter: brightness(1.06);
+}
+
+button[class*="icon" i]:active:not(:disabled),
+button[class*="Icon" i]:active:not(:disabled),
+button[class*="close" i]:active:not(:disabled),
+button[class*="Close" i]:active:not(:disabled),
+button[class*="back" i]:active:not(:disabled),
+button[class*="Back" i]:active:not(:disabled) {
+  transform: scale(0.92) !important;
+}
+
+/* Outline focus suppression when active */
 button:focus,
-button:active,
 [role="button"]:focus,
-[role="button"]:active,
 a:focus,
-a:active,
 summary:focus,
 summary:active {
   outline: none !important;

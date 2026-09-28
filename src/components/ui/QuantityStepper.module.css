@@ -25,12 +25,21 @@
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color var(--duration-fast) var(--ease-standard);
+  transition: transform var(--duration-fast) cubic-bezier(0.2, 0, 0, 1),
+              background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
   flex-shrink: 0;
 }
 
 .button:hover:not(:disabled) {
   background-color: var(--color-canvas-soft);
+  color: var(--color-beet);
+  transform: scale(1.1);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.88) !important;
+  background-color: var(--color-hairline, #ece4de);
 }
 
 .button:focus-visible {
@@ -41,6 +50,7 @@
 .button:disabled {
   color: var(--color-text-disabled);
   cursor: not-allowed;
+  transform: none !important;
 }
 
 .value {

@@ -8,7 +8,7 @@
   position: sticky;
   top: 0;
   /* Must be above Leaflet internal panes (z:650) but below full-screen modals */
-  z-index: 800;
+  z-index: var(--z-sticky, 800);
   width: 100%;
   height: var(--topbar-h, 56px);
   background-color: rgba(255, 255, 255, 0.94);

@@ -549,6 +549,13 @@
   background: #fef2f2;
   border-color: #dc2626;
   color: #b91c1c;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+}
+
+.signOutTrigger:active {
+  transform: translateY(1px) scale(0.97) !important;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.1) !important;
 }
 
 .signOutTrigger:focus-visible {
@@ -806,10 +813,18 @@
   color: #ffffff;
   background: #dc2626;
   border: none;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
 }
 
-.signOutButton:hover {
+.signOutButton:hover:not(:disabled) {
   background-color: #b91c1c;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+}
+
+.signOutButton:active:not(:disabled) {
+  transform: translateY(1.5px) scale(0.97) !important;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.2) !important;
 }
 
 .cancelButton {
@@ -818,9 +833,16 @@
   border: 1px solid rgba(46, 43, 38, 0.12);
 }
 
-.cancelButton:hover {
+.cancelButton:hover:not(:disabled) {
   color: var(--color-ink, #2E2B26);
   background: #faf7f2;
+  border-color: rgba(46, 43, 38, 0.25);
+  transform: translateY(-1px);
+}
+
+.cancelButton:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98) !important;
+  background: #f0ebe4;
 }
 
 @media (max-width: 900px) {
