@@ -29,7 +29,7 @@ export function Register() {
   useDocumentTitle('Create Account — MarketLink');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { register, isAuthenticated, user } = useAuth();
+  const { registerCustomer, registerFarmer, isAuthenticated, user } = useAuth();
 
   const roleFromUrl = searchParams.get('role') === 'farmer' ? 'farmer' : 'customer';
   const [role, setRole] = useState(roleFromUrl);
@@ -195,7 +195,9 @@ export function Register() {
         };
       }
 
-      const data = await register(role, payload);
+      const data = role === 'farmer'
+        ? await registerFarmer(payload)
+        : await registerCustomer(payload);
       const userRole = data?.user?.role || role;
       navigate(homePathFor(userRole), { replace: true });
     } catch (err) {
@@ -214,6 +216,7 @@ export function Register() {
         }
         setFieldErrors(mapped);
       } else if (err.name === 'TypeError' || err.message?.includes('fetch') || err.message?.includes('network')) {
+        console.error('Register failed:', err);
         setBannerError('Cannot reach MarketLink. Check your connection.');
       } else {
         setBannerError(err.message || 'Unable to create account. Please check your information.');
