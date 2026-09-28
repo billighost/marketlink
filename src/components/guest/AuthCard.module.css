@@ -28,6 +28,7 @@
 .card {
   position: relative;
   z-index: 1;
+  view-transition-name: auth-card;
   width: 100%;
   max-width: var(--container-form);
   background: var(--color-white);
@@ -58,7 +59,8 @@
 }
 
 .splitCard {
-  max-width: 1040px;
+  /* Same size on Sign In and Create Account, so only the panels move */
+  max-width: 1140px;
   display: grid;
   grid-template-columns: 1fr;
   padding: 0;
@@ -68,21 +70,33 @@
 }
 
 @media (min-width: 960px) {
+  /* Sign In: showcase on the left, form on the right */
   .splitCard {
-    grid-template-columns: 1.05fr 1.2fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    grid-template-areas: 'showcase form';
   }
-}
 
-@media (min-width: 1120px) {
-  .splitCard.cardWide {
-    max-width: 1140px;
-    grid-template-columns: 1fr 1.35fr;
+  /* Create Account: panels swapped */
+  .splitCard.splitFlip {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    grid-template-areas: 'form showcase';
+  }
+
+  .splitCard .showcaseSide {
+    grid-area: showcase;
+  }
+
+  .splitCard .formSide {
+    grid-area: form;
   }
 }
 
 .showcaseSide {
   display: none;
   position: relative;
+  /* Sits above the form and the tab bar while the panels swap sides */
+  z-index: 3;
+  view-transition-name: auth-showcase;
   background: linear-gradient(145deg, #2a241f 0%, #1c1815 100%);
   color: #fff;
   padding: var(--space-10) var(--space-8);
@@ -95,6 +109,14 @@
   .showcaseSide {
     display: flex;
     flex-direction: column;
+    /* Matches the card corners so it looks right mid-transition too */
+    border-radius: calc(var(--radius-xl) - 1px) 0 0 calc(var(--radius-xl) - 1px);
+  }
+
+  .splitFlip .showcaseSide {
+    border-radius: 0 calc(var(--radius-xl) - 1px) calc(var(--radius-xl) - 1px) 0;
+    border-right: none;
+    border-left: 1px solid rgba(227, 211, 184, 0.15);
   }
 }
 
@@ -118,6 +140,7 @@
 .showcaseContent {
   position: relative;
   z-index: 2;
+  view-transition-name: auth-showcase-content;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -466,19 +489,23 @@
 }
 
 .formSide {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   box-sizing: border-box;
+  view-transition-name: auth-form;
 }
 
 .splitCard .formSide {
   padding: var(--space-8);
+  gap: var(--space-4);
 }
 
 @media (min-width: 768px) {
   .splitCard .formSide {
-    padding: var(--space-10) var(--space-8);
+    padding: var(--space-8);
   }
 }
 
@@ -489,13 +516,40 @@
 }
 
 .tabSwitcher {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  position: relative;
   padding: 4px;
   background: var(--color-canvas-soft);
   border: 1px solid var(--color-hairline, rgba(46, 43, 38, 0.1));
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-2);
+  /* Stays put while the form content slides underneath it */
+  view-transition-name: auth-tabs-track;
+}
+
+/* The white highlight behind the active tab. It is the same element on both
+   pages, so the browser animates it from one side to the other. */
+.tabPill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 4px rgba(46, 43, 38, 0.1);
+  pointer-events: none;
+  view-transition-name: auth-tab-pill;
+}
+
+.tabSwitcher[data-active='register'] .tabPill {
+  left: 50%;
+}
+
+.tabLabels {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  view-transition-name: auth-tab-labels;
 }
 
 .tabBtn {
@@ -509,7 +563,7 @@
   color: var(--color-ink-soft);
   text-decoration: none;
   border-radius: var(--radius-md);
-  transition: all var(--duration-fast) var(--ease-standard);
+  transition: color var(--duration-fast) var(--ease-standard);
   text-align: center;
 }
 
@@ -517,11 +571,10 @@
   color: var(--color-ink);
 }
 
-.tabBtnActive {
-  background: var(--color-white);
+.tabBtnActive,
+.tabBtnActive:hover {
   color: var(--color-beet);
   font-weight: var(--weight-semibold, 600);
-  box-shadow: 0 1px 4px rgba(46, 43, 38, 0.1);
 }
 
 .tabBtn:focus-visible {

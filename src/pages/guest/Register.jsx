@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Eye,
   EyeOff,
@@ -22,6 +22,7 @@ import { PATHS } from '@/routes/paths';
 import { useAuth, homePathFor } from '@/context/AuthContext';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import AuthCard from '@/components/guest/AuthCard';
+import AuthSwitchLink from '@/components/guest/AuthSwitchLink';
 import authStyles from '@/components/guest/AuthCard.module.css';
 import styles from './Register.module.css';
 
@@ -29,7 +30,7 @@ export function Register() {
   useDocumentTitle('Create Account — MarketLink');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { register, isAuthenticated, user } = useAuth();
+  const { registerCustomer, registerFarmer, isAuthenticated, user } = useAuth();
 
   const roleFromUrl = searchParams.get('role') === 'farmer' ? 'farmer' : 'customer';
   const [role, setRole] = useState(roleFromUrl);
@@ -195,7 +196,9 @@ export function Register() {
         };
       }
 
-      const data = await register(role, payload);
+      const data = role === 'farmer'
+        ? await registerFarmer(payload)
+        : await registerCustomer(payload);
       const userRole = data?.user?.role || role;
       navigate(homePathFor(userRole), { replace: true });
     } catch (err) {
@@ -214,6 +217,7 @@ export function Register() {
         }
         setFieldErrors(mapped);
       } else if (err.name === 'TypeError' || err.message?.includes('fetch') || err.message?.includes('network')) {
+        console.error('Register failed:', err);
         setBannerError('Cannot reach MarketLink. Check your connection.');
       } else {
         setBannerError(err.message || 'Unable to create account. Please check your information.');
@@ -432,9 +436,9 @@ export function Register() {
         <div className={styles.cardFooterContent}>
           <span>
             Already have an account?{' '}
-            <Link to={PATHS.LOGIN} className={authStyles.link}>
+            <AuthSwitchLink to={PATHS.LOGIN} className={authStyles.link}>
               Sign in
-            </Link>
+            </AuthSwitchLink>
           </span>
           <div className={styles.securityRow}>
             <ShieldCheck size={14} className={styles.securityIcon} aria-hidden="true" />
@@ -446,7 +450,7 @@ export function Register() {
       
       <fieldset className={styles.roleFieldset}>
         <legend className={styles.roleLegend}>
-          <span className={styles.roleStepNum}>1</span> Select your account role
+          Select your account role
         </legend>
         <div role="radiogroup" aria-label="Account type" className={styles.roleGrid}>
           
@@ -460,7 +464,7 @@ export function Register() {
               className={styles.roleRadio}
             />
             <div className={styles.roleIconWrap}>
-              <ShoppingBag size={22} className={styles.customerIcon} aria-hidden="true" />
+              <ShoppingBag size={20} className={styles.customerIcon} aria-hidden="true" />
             </div>
             <div className={styles.roleContent}>
               <div className={styles.roleHeaderRow}>
@@ -468,12 +472,8 @@ export function Register() {
                 {role === 'customer' && <span className={styles.activePill}>Selected</span>}
               </div>
               <span className={styles.roleDesc}>
-                Reserve produce, bread, and goods to collect at the Saturday market stall.
+                Reserve produce and goods to collect at the Saturday market.
               </span>
-              <div className={styles.perkTags}>
-                <span className={styles.perkTag}><Check size={12} className={styles.perkCheck} /> Free pickup</span>
-                <span className={styles.perkTag}><Check size={12} className={styles.perkCheck} /> No prepayment</span>
-              </div>
             </div>
           </label>
 
@@ -487,7 +487,7 @@ export function Register() {
               className={styles.roleRadio}
             />
             <div className={`${styles.roleIconWrap} ${styles.farmerIconWrap}`}>
-              <Store size={22} className={styles.farmerIcon} aria-hidden="true" />
+              <Store size={20} className={styles.farmerIcon} aria-hidden="true" />
             </div>
             <div className={styles.roleContent}>
               <div className={styles.roleHeaderRow}>
@@ -495,12 +495,8 @@ export function Register() {
                 {role === 'farmer' && <span className={styles.activePill}>Selected</span>}
               </div>
               <span className={styles.roleDesc}>
-                List your harvest, manage inventory, and take pre-orders before market morning.
+                List your harvest and take pre-orders before market morning.
               </span>
-              <div className={styles.perkTags}>
-                <span className={styles.perkTag}><Check size={12} className={styles.perkCheck} /> Stall dashboard</span>
-                <span className={styles.perkTag}><Check size={12} className={styles.perkCheck} /> Direct orders</span>
-              </div>
             </div>
           </label>
         </div>
@@ -512,15 +508,8 @@ export function Register() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className={authStyles.form}>
+      <form onSubmit={handleSubmit} noValidate className={`${authStyles.form} ${styles.registerForm}`}>
         
-        <div className={styles.sectionHeader}>
-          <span className={styles.roleStepNum}>2</span>
-          <h2 className={styles.sectionHeading}>
-            {role === 'customer' ? 'About you' : 'Your stall & contact information'}
-          </h2>
-        </div>
-
         <div className={styles.twoCol}>
           {role === 'customer' ? (
             <div className={authStyles.field}>
@@ -635,9 +624,9 @@ export function Register() {
               <span id="register-email-err" role="alert" className={authStyles.errorText}>
                 {fieldErrors.email}{' '}
                 {fieldErrors.email.includes('already exists') && (
-                  <Link to={`${PATHS.LOGIN}?email=${encodeURIComponent(formData.email)}`} className={authStyles.link}>
+                  <AuthSwitchLink to={`${PATHS.LOGIN}?email=${encodeURIComponent(formData.email)}`} className={authStyles.link}>
                     Sign in instead
-                  </Link>
+                  </AuthSwitchLink>
                 )}
               </span>
             )}
@@ -671,40 +660,35 @@ export function Register() {
               </span>
             )}
           </div>
-        </div>
-
-        <div className={authStyles.field}>
-          <label htmlFor="register-address" className={authStyles.label}>
-            {role === 'customer' ? 'Address or neighbourhood' : 'Farm / Stall location address'}
-          </label>
-          <div className={authStyles.inputWrap}>
-            <MapPin size={18} className={authStyles.inputIcon} aria-hidden="true" />
-            <input
-              id="register-address"
-              name="address"
-              type="text"
-              placeholder={role === 'customer' ? 'e.g. 14 Richmond Hill, London' : 'e.g. Unit 3, Elm Valley Farm, Kent'}
-              value={formData.address}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              autoComplete="street-address"
-              aria-invalid={Boolean(fieldErrors.address)}
-              aria-describedby={fieldErrors.address ? 'register-address-err' : undefined}
-              className={`${authStyles.input} ${authStyles.inputWithIcon} ${fieldErrors.address ? authStyles.inputInvalid : ''}`}
-              required
-            />
+          <div className={`${authStyles.field} ${role === 'farmer' ? styles.spanFull : ''}`}>
+            <label htmlFor="register-address" className={authStyles.label}>
+              {role === 'customer' ? 'Address or neighbourhood' : 'Farm / Stall location address'}
+            </label>
+            <div className={authStyles.inputWrap}>
+              <MapPin size={18} className={authStyles.inputIcon} aria-hidden="true" />
+              <input
+                id="register-address"
+                name="address"
+                type="text"
+                placeholder={role === 'customer' ? 'e.g. 14 Richmond Hill, London' : 'e.g. Unit 3, Elm Valley Farm, Kent'}
+                value={formData.address}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="street-address"
+                aria-invalid={Boolean(fieldErrors.address)}
+                aria-describedby={fieldErrors.address ? 'register-address-err' : undefined}
+                className={`${authStyles.input} ${authStyles.inputWithIcon} ${fieldErrors.address ? authStyles.inputInvalid : ''}`}
+                required
+              />
+            </div>
+            {fieldErrors.address && (
+              <span id="register-address-err" role="alert" className={authStyles.errorText}>
+                {fieldErrors.address}
+              </span>
+            )}
           </div>
-          {fieldErrors.address && (
-            <span id="register-address-err" role="alert" className={authStyles.errorText}>
-              {fieldErrors.address}
-            </span>
-          )}
         </div>
 
-        <div className={styles.sectionHeader}>
-          <span className={styles.roleStepNum}>3</span>
-          <h2 className={styles.sectionHeading}>Create secure password</h2>
-        </div>
 
         <div className={styles.twoCol}>
           
@@ -772,20 +756,6 @@ export function Register() {
               </div>
             )}
 
-            <ul id="register-password-rules" className={authStyles.checklist} aria-label="Password requirements">
-              <li className={`${authStyles.checkItem} ${ruleMinLength ? authStyles.checkItemMet : ''}`}>
-                {ruleMinLength ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
-                <span>At least 8 characters</span>
-              </li>
-              <li className={`${authStyles.checkItem} ${ruleHasLetter ? authStyles.checkItemMet : ''}`}>
-                {ruleHasLetter ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
-                <span>At least one letter</span>
-              </li>
-              <li className={`${authStyles.checkItem} ${ruleHasNumber ? authStyles.checkItemMet : ''}`}>
-                {ruleHasNumber ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
-                <span>At least one number</span>
-              </li>
-            </ul>
           </div>
 
           <div className={authStyles.field}>
@@ -830,6 +800,21 @@ export function Register() {
             )}
           </div>
         </div>
+
+        <ul id="register-password-rules" className={`${authStyles.checklist} ${styles.rulesRow}`} aria-label="Password requirements">
+          <li className={`${authStyles.checkItem} ${ruleMinLength ? authStyles.checkItemMet : ''}`}>
+            {ruleMinLength ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
+            <span>At least 8 characters</span>
+          </li>
+          <li className={`${authStyles.checkItem} ${ruleHasLetter ? authStyles.checkItemMet : ''}`}>
+            {ruleHasLetter ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
+            <span>At least one letter</span>
+          </li>
+          <li className={`${authStyles.checkItem} ${ruleHasNumber ? authStyles.checkItemMet : ''}`}>
+            {ruleHasNumber ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
+            <span>At least one number</span>
+          </li>
+        </ul>
 
         {role === 'farmer' && (
           <div className={authStyles.noticePanel}>

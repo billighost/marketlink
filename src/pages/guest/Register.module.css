@@ -9,7 +9,7 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold, 600);
   color: var(--color-ink);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -46,7 +46,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-  padding: var(--space-4);
+  padding: var(--space-3);
   border: 1.5px solid rgba(227, 211, 184, 0.7);
   border-radius: var(--radius-lg);
   background: var(--color-white);
@@ -74,8 +74,8 @@
 }
 
 .roleIconWrap {
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-md);
   background: var(--color-beet-tint);
   display: flex;
@@ -169,6 +169,30 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-3);
+}
+
+/* Lets a field take the full row (used for the farm address) */
+@media (min-width: 640px) {
+  .spanFull {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---- Compact registration form ----
+   Element + class selectors so these win over the shared AuthCard styles. */
+form.registerForm {
+  gap: var(--space-3);
+}
+
+form.registerForm input {
+  min-height: 42px;
+}
+
+ul.rulesRow {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px var(--space-4);
+  padding: 0;
 }
 
 @media (min-width: 640px) {
