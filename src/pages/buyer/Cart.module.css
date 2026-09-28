@@ -1,5 +1,5 @@
 .page {
-  padding-bottom: calc(var(--control-h) + var(--space-8));
+  padding-bottom: calc(var(--cta-h-mobile) + var(--space-12));
 }
 
 @media (min-width: 1024px) {
@@ -56,9 +56,12 @@
   color: #fff;
   border: none;
   border-radius: var(--radius-sm, 6px);
-  padding: 6px 14px;
+  min-height: var(--control-h-sm);
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
   font-family: var(--font-body);
-  font-size: var(--text-xs, 0.75rem);
+  font-size: var(--text-sm, 0.8125rem);
   font-weight: var(--weight-semibold, 600);
   cursor: pointer;
   transition: opacity 120ms ease;
@@ -198,9 +201,13 @@
   opacity: 0.5;
 }
 
-.desktopActionBtn {
+.desktopActionBtn.desktopActionBtn {
   width: 100%;
-  margin-top: var(--space-2);
+  min-height: var(--cta-h);
+  padding-inline: var(--space-6);
+  margin-top: var(--space-3);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
 }
 
 /* Mobile Sticky Footer */
@@ -255,8 +262,12 @@
   color: var(--color-ink-soft);
 }
 
-.mobileActionBtn {
+.mobileActionBtn.mobileActionBtn {
   flex-shrink: 0;
+  min-height: var(--cta-h-mobile);
+  padding-inline: var(--space-8);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
 }
 
 /* ─── SKELETON LOADING ─────────────────────────────────────────── */
