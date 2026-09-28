@@ -1,5 +1,5 @@
 .page {
-  padding-bottom: calc(var(--control-h) + var(--space-8));
+  padding-bottom: calc(var(--cta-h-mobile) + var(--space-12));
 }
 
 @media (min-width: 1024px) {
@@ -49,9 +49,12 @@
   color: var(--color-white, #ffffff);
   border: none;
   border-radius: var(--radius-sm);
-  padding: 6px 14px;
+  min-height: var(--control-h-sm);
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
   font-family: var(--font-body);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: opacity 120ms ease;
@@ -257,9 +260,13 @@
   line-height: var(--lh-ui);
 }
 
-.desktopSubmitBtn {
+.desktopSubmitBtn.desktopSubmitBtn {
   width: 100%;
+  min-height: var(--cta-h);
+  padding-inline: var(--space-6);
   margin-top: var(--space-3);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
 }
 
 /* Mobile Sticky Footer */
@@ -309,6 +316,10 @@
   color: var(--color-ink-soft);
 }
 
-.mobileSubmitBtn {
+.mobileSubmitBtn.mobileSubmitBtn {
   flex-shrink: 0;
+  min-height: var(--cta-h-mobile);
+  padding-inline: var(--space-8);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
 }
