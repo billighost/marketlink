@@ -94,6 +94,8 @@
 .showcaseSide {
   display: none;
   position: relative;
+  /* Sits above the form and the tab bar while the panels swap sides */
+  z-index: 3;
   view-transition-name: auth-showcase;
   background: linear-gradient(145deg, #2a241f 0%, #1c1815 100%);
   color: #fff;
@@ -322,6 +324,8 @@
 }
 
 .formSide {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -331,11 +335,12 @@
 
 .splitCard .formSide {
   padding: var(--space-8);
+  gap: var(--space-4);
 }
 
 @media (min-width: 768px) {
   .splitCard .formSide {
-    padding: var(--space-10) var(--space-8);
+    padding: var(--space-8);
   }
 }
 

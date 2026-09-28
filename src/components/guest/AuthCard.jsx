@@ -65,10 +65,7 @@ export function AuthCard({
                 <Link to={PATHS.HOME} className={styles.showcaseLogoLink} aria-label="MarketLink home">
                   <MarketLinkLogo size="md" />
                 </Link>
-                <span className={styles.showcasePill}>
-                  <Sparkles size={13} className={styles.pillIcon} aria-hidden="true" />
-                  Farm to Table
-                </span>
+                 
               </div>
 
               <div className={styles.showcasePitch}>
