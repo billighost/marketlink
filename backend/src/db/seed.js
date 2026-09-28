@@ -335,6 +335,23 @@ export async function runSeed(force = false, targetDb = null) {
   users.push(...customerUsers);
   const georgeUser = customerUsers[0];
 
+  const SEEDED_STALL_IMAGES = {
+    'Riverbend Farm': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551607/marketlink/farmers/dga545dhj29qy4y78szu.jpg',
+    'Oak & Mill Bakery': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551628/marketlink/farmers/bkmyeb7qftnzlhvfu3ah.jpg',
+    'Hollow Creek Apiary': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551610/marketlink/farmers/vkcwedr2vlb6c2jtddsz.jpg',
+    'Willow Bend Poultry': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551624/marketlink/farmers/dqtf9xe4jyf4cemom6yi.jpg',
+    'Maplecrest Creamery': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790545911/marketlink/farmers/faygpypahhptwprzmyen.jpg',
+    'Sunridge Berry Farm': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790545913/marketlink/farmers/blhn5fvdsjtgzlwn9fuv.jpg',
+    'Green Hollow Mushrooms': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551609/marketlink/farmers/hllchb2rjr9wmbpzi3ea.jpg',
+    'Thornberry Preserves': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551611/marketlink/farmers/ckvgizdlrsq5duou6dlj.jpg',
+    'Cedarbrook Flowers': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551626/marketlink/farmers/v2nqlagn4vzc1nifxhsc.jpg',
+    'Old Stone Fishmonger': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551613/marketlink/farmers/hzph1zmsjrfhcphv9tpq.jpg',
+    'Wild Meadow Meats': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551614/marketlink/farmers/t0iixrnaqvajyyx5abhm.jpg',
+    'Clearwater Orchards': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551618/marketlink/farmers/r6kfp33p4anxxswvylay.jpg',
+    'Pine Valley Apiary': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551610/marketlink/farmers/vkcwedr2vlb6c2jtddsz.jpg',
+    'Shadowbrook Orchard': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551620/marketlink/farmers/fm5wdfcclihlcoa3uzjv.jpg',
+  };
+
   // Farmers (14 total: 12 from placeholders + 1 pending + 1 suspended)
   const farmerRaw = [
     {
@@ -625,11 +642,11 @@ export async function runSeed(force = false, targetDb = null) {
         coordinates: [-74.172 + (farmers.length * 0.01), 40.735 + (farmers.length * 0.01)],
       },
       art: f.art,
-      imageUrl: null,
+      imageUrl: SEEDED_STALL_IMAGES[f.stallName] || null,
       imagePublicId: null,
       logoUrl: null,
       logoPublicId: null,
-      bannerUrl: null,
+      bannerUrl: SEEDED_STALL_IMAGES[f.stallName] || null,
       bannerPublicId: null,
       slotOverrides: [],
       maxOrdersPerSlot: 30,

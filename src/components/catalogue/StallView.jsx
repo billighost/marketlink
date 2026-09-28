@@ -357,6 +357,18 @@ export function StallView({ audience = 'guest' }) {
         </Link>
       </div>
 
+      {/* Stall Hero Banner */}
+      {(farmer.bannerUrl || farmer.imageUrl) && (
+        <div className={styles.stallBannerWrap}>
+          <img
+            src={farmer.bannerUrl || farmer.imageUrl}
+            alt={farmer.stallName}
+            className={styles.stallBannerImage}
+          />
+          <div className={styles.stallBannerOverlay} />
+        </div>
+      )}
+
       <div className={styles.layout}>
         {/* 1. Identity */}
         <header className={styles.identityHeader}>

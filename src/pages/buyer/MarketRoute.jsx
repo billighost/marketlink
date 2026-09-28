@@ -16,7 +16,7 @@ import {
   Flag,
   RotateCcw,
 } from 'lucide-react';
-import { getRoutePlan } from '@/api/orders';
+import { getRoutePlan, toggleRouteCollect, resetRouteProgress } from '@/api/orders';
 import Page from '@/components/layout/Page';
 import PageTitle from '@/components/layout/PageTitle';
 import { MapView } from '@/components/domain/MapView';
@@ -49,14 +49,24 @@ export function MarketRoute() {
   const [activeCodeStop, setActiveCodeStop] = useState(null);
   const [collectedStopIds, setCollectedStopIds] = useState(() => new Set());
 
-  // Fetch plan from backend
+  // Fetch plan from backend and synchronize database collection states
   const fetchPlan = useCallback(async (signal) => {
     try {
       setLoading(true);
       const data = await getRoutePlan(signal);
       setRouteData(data);
+
+      if (data?.stops && Array.isArray(data.stops)) {
+        const alreadyCollected = new Set(
+          data.stops.filter((s) => s.collected).map((s) => s.id)
+        );
+        setCollectedStopIds(alreadyCollected);
+      }
+
       if (!data?.hasRealOrders) {
         setUseDemo(true);
+      } else {
+        setUseDemo(false);
       }
     } catch {
       // Fallback to local demo data if network fails
@@ -93,21 +103,49 @@ export function MarketRoute() {
     return currentStops.find((s) => s.id === selectedStopId) || currentStops[0] || null;
   }, [currentStops, selectedStopId]);
 
-  // Toggle collection checkbox for a stop
-  const toggleCollected = (stopId) => {
+  // Toggle collection checkbox for a stop with optimistic DB sync
+  const toggleCollected = async (stopId) => {
+    const isCurrentlyCollected = collectedStopIds.has(stopId);
+    const nextState = !isCurrentlyCollected;
+
+    // Optimistic UI update
     setCollectedStopIds((prev) => {
       const next = new Set(prev);
-      if (next.has(stopId)) {
-        next.delete(stopId);
-      } else {
+      if (nextState) {
         next.add(stopId);
+      } else {
+        next.delete(stopId);
       }
       return next;
     });
+
+    try {
+      await toggleRouteCollect(stopId, nextState);
+    } catch (err) {
+      console.error('Failed to sync route stop collection status:', err);
+      // Revert optimistic state on failure
+      setCollectedStopIds((prev) => {
+        const reverted = new Set(prev);
+        if (isCurrentlyCollected) {
+          reverted.add(stopId);
+        } else {
+          reverted.delete(stopId);
+        }
+        return reverted;
+      });
+    }
   };
 
-  const resetAllCollected = () => {
+  // Reset checklist progress in database and local UI
+  const resetAllCollected = async () => {
+    const previous = new Set(collectedStopIds);
     setCollectedStopIds(new Set());
+    try {
+      await resetRouteProgress();
+    } catch (err) {
+      console.error('Failed to reset route collection progress:', err);
+      setCollectedStopIds(previous);
+    }
   };
 
   const totalStopsCount = currentStops.length;
@@ -228,6 +266,31 @@ export function MarketRoute() {
         </div>
       </header>
 
+      {/* Live vs Preview Info Banner */}
+      {(!routeData?.hasRealOrders || useDemo) && (
+        <div className={styles.previewBanner}>
+          <div className={styles.bannerContent}>
+            <Sparkles size={20} className={styles.bannerIcon} aria-hidden="true" />
+            <div>
+              <div className={styles.bannerHeading}>
+                {useDemo && routeData?.hasRealOrders
+                  ? 'Viewing sample preview route'
+                  : 'Market Route Preview · No Active Pre-orders Yet'}
+              </div>
+              <div className={styles.bannerSubtext}>
+                {useDemo && routeData?.hasRealOrders
+                  ? 'You are viewing a demonstration route. Switch to your live route above to guide your active pickups.'
+                  : 'This walking checklist connects real Saturday market stalls with GPS coordinates. Pre-order fresh produce to generate your live walking route with custom pickup codes!'}
+              </div>
+            </div>
+          </div>
+          <Link to="/buyer/products" className={styles.bannerCta}>
+            <ShoppingBag size={14} aria-hidden="true" />
+            Pre-order Produce
+          </Link>
+        </div>
+      )}
+
       {/* Progress Strip */}
       <section className={styles.progressCard} aria-label="Route collection progress">
         <div className={styles.progressHeader}>
@@ -318,6 +381,18 @@ export function MarketRoute() {
                         <div className={styles.stopCategory}>{stop.category}</div>
                       </div>
                     </div>
+
+                    {stop.farmerId && (
+                      <Link
+                        to={`/buyer/stalls/${stop.farmerId}`}
+                        className={styles.stallLink}
+                        onClick={(e) => e.stopPropagation()}
+                        title="View farm stall profile"
+                      >
+                        <span>Stall profile</span>
+                        <ChevronRight size={13} aria-hidden="true" />
+                      </Link>
+                    )}
                   </div>
 
                   {/* Status & Code pill row */}
@@ -472,6 +547,25 @@ export function MarketRoute() {
               <div className={styles.quickHandoffTip}>
                 Show this 6-character code at the counter. The farmer will cross-reference and hand over your packed produce.
               </div>
+
+              <div style={{ marginTop: 'var(--space-3)', display: 'flex', gap: 'var(--space-2)' }}>
+                <Button
+                  variant={collectedStopIds.has(activeStop.id) ? 'outline' : 'primary'}
+                  size="sm"
+                  onClick={() => toggleCollected(activeStop.id)}
+                  style={{ flex: 1 }}
+                >
+                  {collectedStopIds.has(activeStop.id) ? '✓ Collected' : 'Mark Collected'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setActiveCodeStop(activeStop)}
+                  title="Enlarge pickup code"
+                >
+                  <Eye size={14} aria-hidden="true" />
+                </Button>
+              </div>
             </div>
           )}
         </aside>
@@ -504,7 +598,14 @@ export function MarketRoute() {
 
             <PickupCode code={activeCodeStop.pickupCode} size="lg" />
 
-            <div style={{ marginTop: 'var(--space-6)' }}>
+            <div className={styles.modalActionRow}>
+              <Button
+                variant={collectedStopIds.has(activeCodeStop.id) ? 'outline' : 'primary'}
+                size="md"
+                onClick={() => toggleCollected(activeCodeStop.id)}
+              >
+                {collectedStopIds.has(activeCodeStop.id) ? '✓ Marked as Collected' : 'Mark as Collected'}
+              </Button>
               <Button
                 variant="secondary"
                 size="md"

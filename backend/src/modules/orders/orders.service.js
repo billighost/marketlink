@@ -429,111 +429,127 @@ export async function getReorderPreview(orderId, customerId) {
 export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}) {
   const db = getDb();
   const cid = toObjectId(customerId);
+  const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
-  // Load customer's active orders
+  // Load customer's active orders (and recently completed/collected orders for the current pickup cycle)
   const activeOrders = await db
     .collection(COLLECTIONS.ORDERS)
     .find({
       customerId: cid,
-      status: { $in: ['placed', 'accepted', 'ready'] },
+      $or: [
+        { status: { $in: ['placed', 'accepted', 'ready'] } },
+        { status: 'completed', updatedAt: { $gte: twoDaysAgo } },
+        { customerCollected: true },
+      ],
     })
     .sort({ createdAt: -1 })
     .toArray();
 
-  const demoStops = [
-    {
-      step: 1,
-      id: 'demo-green-valley',
-      stallName: 'Green Valley',
-      stallNumber: 'Stall A12',
-      farmerId: 'demo-farmer-1',
-      orderNumber: 'ML-1042',
-      pickupCode: 'ML-4819',
-      status: 'ready',
-      statusLabel: 'Ready for pickup',
-      category: 'Organic Vegetables & Eggs',
-      items: [
-        { name: 'Heritage Tomatoes', quantity: 2, unit: 'kg', priceCents: 900, art: 'tomatoes' },
-        { name: 'Free-Range Eggs', quantity: 1, unit: 'doz', priceCents: 450, art: 'egg-carton' },
-      ],
-      itemCount: 3,
-      totalCents: 1350,
-      pickupLabel: 'Saturday 8:00 AM – 1:00 PM',
-      lat: 51.4542,
-      lng: -2.5884,
-      collected: false,
-    },
-    {
-      step: 2,
-      id: 'demo-mama-grace',
-      stallName: 'Mama Grace',
-      stallNumber: 'Stall B05',
-      farmerId: 'demo-farmer-2',
-      orderNumber: 'ML-1043',
-      pickupCode: 'ML-9124',
-      status: 'ready',
-      statusLabel: 'Ready for pickup',
-      category: 'Roots & Local Greens',
-      items: [
-        { name: 'Sweet Potatoes', quantity: 3, unit: 'kg', priceCents: 1200, art: 'potatoes' },
-        { name: 'Fresh Spinach', quantity: 2, unit: 'bunch', priceCents: 500, art: 'spinach' },
-      ],
-      itemCount: 5,
-      totalCents: 1700,
-      pickupLabel: 'Saturday 8:00 AM – 1:00 PM',
-      lat: 51.4546,
-      lng: -2.5878,
-      collected: false,
-    },
-    {
-      step: 3,
-      id: 'demo-fresh-harvest',
-      stallName: 'Fresh Harvest',
-      stallNumber: 'Stall C08',
-      farmerId: 'demo-farmer-3',
-      orderNumber: 'ML-1044',
-      pickupCode: 'ML-3371',
-      status: 'accepted',
-      statusLabel: 'Being packed',
-      category: 'Berries & Orchard Fruits',
-      items: [
-        { name: 'Organic Strawberries', quantity: 1, unit: 'punnet', priceCents: 650, art: 'strawberries' },
-      ],
-      itemCount: 1,
-      totalCents: 650,
-      pickupLabel: 'Saturday 8:00 AM – 1:00 PM',
-      lat: 51.4550,
-      lng: -2.5871,
-      collected: false,
-    },
-  ];
-
-  const demoMarket = {
-    name: 'Bodija Market',
-    address: 'Bodija Market Pavilion, Ibadan',
-    entranceLabel: 'Main West Gate',
-    exitLabel: 'North Gate & Parking',
-    centerLat: 51.4545,
-    centerLng: -2.5879,
-    startPoint: { lat: 51.4538, lng: -2.5890, label: 'START — Main Entrance' },
-    finishPoint: { lat: 51.4554, lng: -2.5866, label: 'FINISH — Market Exit' },
-  };
-
-  // If no active orders, return demo route with hasRealOrders: false
+  // If no active orders, query the real database market and real farmers to build an authentic preview route
   if (!activeOrders || activeOrders.length === 0) {
+    const user = await db.collection(COLLECTIONS.USERS).findOne({ _id: cid });
+    let previewMarket = null;
+    if (user?.homeMarketId) {
+      previewMarket = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: toObjectId(user.homeMarketId) });
+    }
+    if (!previewMarket) {
+      previewMarket = await db.collection(COLLECTIONS.MARKETS).findOne({});
+    }
+
+    const mCoords = previewMarket?.location?.coordinates || [-74.172, 40.735];
+    const centerLng = typeof mCoords[0] === 'number' ? mCoords[0] : -74.172;
+    const centerLat = typeof mCoords[1] === 'number' ? mCoords[1] : 40.735;
+    const marketName = previewMarket?.name || 'Local Farmers Market';
+    const marketAddress = previewMarket?.address || 'Market Pavilion';
+
+    // Find real farmers from the database
+    const dbFarmers = await db
+      .collection(COLLECTIONS.FARMERS)
+      .find(
+        previewMarket?._id
+          ? {
+              $or: [
+                { marketId: previewMarket._id },
+                { marketId: previewMarket._id.toString() },
+                { attendingMarketIds: previewMarket._id },
+              ],
+            }
+          : {}
+      )
+      .limit(3)
+      .toArray();
+
+    // If fewer than 3 farmers for this market, fall back to any active farmers in the database
+    let realFarmers = dbFarmers;
+    if (realFarmers.length === 0) {
+      realFarmers = await db.collection(COLLECTIONS.FARMERS).find({}).limit(3).toArray();
+    }
+
+    const previewStops = (realFarmers.length > 0 ? realFarmers : [1, 2, 3]).map((f, idx) => {
+      const stallName = f.stallName || (idx === 0 ? 'Riverbend Farm' : idx === 1 ? 'Oak & Mill Bakery' : 'Sunridge Orchards');
+      const stallNum = f.stallNumber || `Stall ${String.fromCharCode(65 + idx)}${10 + idx * 4}`;
+      const farmerId = f._id ? f._id.toString() : `preview-farmer-${idx + 1}`;
+      const lat = centerLat + (idx === 0 ? -0.0004 : idx === 1 ? 0.0001 : 0.0005);
+      const lng = centerLng + (idx === 0 ? 0.0005 : idx === 1 ? -0.0006 : 0.0004);
+
+      return {
+        step: idx + 1,
+        id: `preview-${farmerId}`,
+        orderId: null,
+        stallName,
+        stallNumber: stallNum.startsWith('Stall') ? stallNum : `Stall ${stallNum}`,
+        farmerId,
+        orderNumber: `ML-${1040 + idx}`,
+        pickupCode: `ML-${4800 + idx * 111}`,
+        status: idx === 0 ? 'ready' : 'accepted',
+        statusLabel: idx === 0 ? 'Ready for pickup' : 'Being packed',
+        category: f.specialty || (idx === 0 ? 'Organic Produce & Greens' : idx === 1 ? 'Woodfired Breads' : 'Orchard Fruits'),
+        items: [
+          { name: idx === 0 ? 'Heritage Heirloom Tomatoes' : idx === 1 ? 'Country Sourdough Boule' : 'Crisp Honeycrisp Apples', quantity: 2, unit: 'kg', priceCents: 850, art: 'tomato' },
+        ],
+        itemCount: 2,
+        totalCents: 1700,
+        pickupLabel: 'Saturday 8:00 AM – 1:00 PM',
+        lat: parseFloat(lat.toFixed(6)),
+        lng: parseFloat(lng.toFixed(6)),
+        phone: f.phone || '',
+        collected: false,
+      };
+    });
+
+    const marketObj = {
+      id: previewMarket?._id ? previewMarket._id.toString() : '',
+      name: marketName,
+      address: marketAddress,
+      entranceLabel: 'Main Entrance',
+      exitLabel: 'Market Exit & Parking',
+      centerLat,
+      centerLng,
+      startPoint: {
+        lat: parseFloat((centerLat - 0.0010).toFixed(6)),
+        lng: parseFloat((centerLng - 0.0008).toFixed(6)),
+        label: `START — ${marketName} Main Entrance`,
+      },
+      finishPoint: {
+        lat: parseFloat((centerLat + 0.0010).toFixed(6)),
+        lng: parseFloat((centerLng + 0.0008).toFixed(6)),
+        label: 'FINISH — Collection Complete',
+      },
+    };
+
     return {
       hasRealOrders: false,
       routeTitle: 'Your Saturday Market Route',
       dayName: 'Saturday',
-      market: demoMarket,
-      stops: demoStops,
+      market: marketObj,
+      stops: previewStops,
       summary: {
-        totalStops: 3,
-        totalItems: 9,
-        estimatedWalkMinutes: 4,
-        totalCents: 3700,
+        totalStops: previewStops.length,
+        totalItems: previewStops.reduce((sum, s) => sum + s.itemCount, 0),
+        estimatedWalkMinutes: Math.max(3, previewStops.length * 2),
+        totalCents: previewStops.reduce((sum, s) => sum + s.totalCents, 0),
       },
-      demoStops,
+      demoStops: previewStops,
     };
   }
 
@@ -549,12 +565,22 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
   const farmerMap = new Map(farmersList.map((f) => [f._id.toString(), f]));
   const marketMap = new Map(marketsList.map((m) => [m._id.toString(), m]));
 
-  const primaryMarket = marketsList[0] || null;
+  let primaryMarket = marketsList[0] || null;
+  if (!primaryMarket) {
+    const user = await db.collection(COLLECTIONS.USERS).findOne({ _id: cid });
+    if (user?.homeMarketId) {
+      primaryMarket = await db.collection(COLLECTIONS.MARKETS).findOne({ _id: toObjectId(user.homeMarketId) });
+    }
+  }
+  if (!primaryMarket) {
+    primaryMarket = await db.collection(COLLECTIONS.MARKETS).findOne({});
+  }
+
   const primaryMarketName = primaryMarket?.name || 'Local Market';
   const primaryMarketAddress = primaryMarket?.address || '';
-  const mCoords = primaryMarket?.location?.coordinates || [-2.5879, 51.4545];
-  const centerLng = typeof mCoords[0] === 'number' ? mCoords[0] : -2.5879;
-  const centerLat = typeof mCoords[1] === 'number' ? mCoords[1] : 51.4545;
+  const mCoords = primaryMarket?.location?.coordinates || [-74.172, 40.735];
+  const centerLng = typeof mCoords[0] === 'number' ? mCoords[0] : -74.172;
+  const centerLat = typeof mCoords[1] === 'number' ? mCoords[1] : 40.735;
 
   // Determine pickup day name (e.g. Saturday)
   let dayName = 'Saturday';
@@ -597,6 +623,7 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
     }));
 
     const itemCount = items.reduce((sum, it) => sum + (it.quantity || 1), 0);
+    const isCollected = order.status === 'completed' || Boolean(order.customerCollected);
 
     return {
       step: idx + 1,
@@ -608,7 +635,13 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
       orderNumber: order.orderNumber || `ML-${1000 + idx}`,
       pickupCode: order.pickupCode || 'ML-4819',
       status: order.status,
-      statusLabel: order.status === 'ready' ? 'Ready for pickup' : order.status === 'accepted' ? 'Being packed' : 'Order placed',
+      statusLabel: isCollected
+        ? 'Collected'
+        : order.status === 'ready'
+          ? 'Ready for pickup'
+          : order.status === 'accepted'
+            ? 'Being packed'
+            : 'Order placed',
       category: f.specialty || 'Fresh Produce',
       items,
       itemCount,
@@ -617,7 +650,8 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
       lat: parseFloat(lat.toFixed(6)),
       lng: parseFloat(lng.toFixed(6)),
       phone: f.phone || '',
-      collected: false,
+      collected: isCollected,
+      customerCollectedAt: order.customerCollectedAt || null,
     };
   });
 
@@ -654,6 +688,65 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
       estimatedWalkMinutes: Math.max(3, stops.length * 2),
       totalCents,
     },
-    demoStops,
   };
+}
+
+/**
+ * Toggles or sets a customer's order route collection state in MongoDB.
+ *
+ * @param {string|ObjectId} customerId
+ * @param {string} orderId
+ * @param {boolean} collected
+ * @returns {Promise<object>}
+ */
+export async function setRouteStopCollected(customerId, orderId, collected) {
+  const db = getDb();
+  const cid = toObjectId(customerId);
+  const oid = toObjectId(orderId);
+
+  const order = await db.collection(COLLECTIONS.ORDERS).findOne({ _id: oid, customerId: cid });
+  if (!order) {
+    throw AppError.notFound('Order not found.');
+  }
+
+  await db.collection(COLLECTIONS.ORDERS).updateOne(
+    { _id: oid, customerId: cid },
+    {
+      $set: {
+        customerCollected: Boolean(collected),
+        customerCollectedAt: collected ? new Date() : null,
+        updatedAt: new Date(),
+      },
+    }
+  );
+
+  return {
+    orderId: oid.toString(),
+    stopId: oid.toString(),
+    collected: Boolean(collected),
+  };
+}
+
+/**
+ * Resets all route collection progress for a customer in MongoDB.
+ *
+ * @param {string|ObjectId} customerId
+ * @returns {Promise<object>}
+ */
+export async function resetCustomerRouteProgress(customerId) {
+  const db = getDb();
+  const cid = toObjectId(customerId);
+
+  await db.collection(COLLECTIONS.ORDERS).updateMany(
+    { customerId: cid },
+    {
+      $set: {
+        customerCollected: false,
+        customerCollectedAt: null,
+        updatedAt: new Date(),
+      },
+    }
+  );
+
+  return { success: true };
 }

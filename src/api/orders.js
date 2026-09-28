@@ -92,3 +92,18 @@ export async function getRoutePlan(signal) {
   const res = await apiFetch('/orders/route-plan', { signal });
   return res.data;
 }
+
+export async function toggleRouteCollect(stopId, collected) {
+  const res = await apiFetch('/orders/route-plan/collect', {
+    method: 'POST',
+    body: { stopId, collected },
+  });
+  return res.data;
+}
+
+export async function resetRouteProgress() {
+  const res = await apiFetch('/orders/route-plan/reset', {
+    method: 'POST',
+  });
+  return res.data;
+}

@@ -18,6 +18,8 @@ import {
   listCustomerOrders,
   getCustomerOrderDetail,
   getCustomerRoutePlan,
+  setRouteStopCollected,
+  resetCustomerRouteProgress,
   modifyCustomerOrder,
   cancelCustomerOrder,
   getReorderPreview,
@@ -211,6 +213,52 @@ const routes = [
       res.status(200).json({
         data: plan,
       });
+    },
+  },
+
+  // POST /orders/route-plan/collect (Toggle or update collection state for a stop/order)
+  {
+    method: 'post',
+    path: '/route-plan/collect',
+    auth: 'customer',
+    summary: 'Update or toggle market collection state for a route stop',
+    handler: async (req, res) => {
+      const { orderId, stopId, collected } = req.body || {};
+      const targetId = orderId || stopId;
+      if (!targetId || typeof targetId !== 'string') {
+        throw AppError.unprocessable([
+          { field: 'orderId', message: 'Valid orderId or stopId string is required.' },
+        ]);
+      }
+      if (!isValidObjectId(targetId)) {
+        // Safe support for preview mode mock stops
+        return res.status(200).json({
+          data: {
+            orderId: targetId,
+            stopId: targetId,
+            collected: Boolean(collected),
+            preview: true,
+          },
+        });
+      }
+      const result = await setRouteStopCollected(
+        req.user.id,
+        targetId,
+        collected !== undefined ? Boolean(collected) : true
+      );
+      res.status(200).json({ data: result });
+    },
+  },
+
+  // POST /orders/route-plan/reset (Reset collected status across customer's orders)
+  {
+    method: 'post',
+    path: '/route-plan/reset',
+    auth: 'customer',
+    summary: 'Reset customer market collection checklist progress',
+    handler: async (req, res) => {
+      const result = await resetCustomerRouteProgress(req.user.id);
+      res.status(200).json({ data: result });
     },
   },
 
