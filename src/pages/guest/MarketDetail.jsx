@@ -7,7 +7,7 @@ import MarketView from '@/components/catalogue/MarketView';
  */
 export function MarketDetail() {
   return (
-    <Page width="detail">
+    <Page width="wide">
       <MarketView audience="guest" />
     </Page>
   );

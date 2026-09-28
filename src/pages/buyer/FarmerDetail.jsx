@@ -502,7 +502,15 @@ export function FarmerDetail() {
           {/* 1. Identity */}
           <header className={styles.identityHeader}>
             <div className={styles.avatar} aria-hidden="true">
-              {initials}
+              {farmer.imageUrl ? (
+                <img
+                  src={farmer.imageUrl}
+                  alt={farmer.stallName}
+                  className={styles.avatarImg}
+                />
+              ) : (
+                initials
+              )}
             </div>
             <div className={styles.textCol}>
               <h1 className={styles.stallHeading}>{farmer.stallName}</h1>

@@ -296,20 +296,9 @@
 
 .marketsGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
   gap: var(--space-5, 1.25rem);
-}
-
-@media (min-width: 640px) {
-  .marketsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .marketsGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  align-items: stretch;
 }
 
 .marketCard {
@@ -320,6 +309,7 @@
   border: 1px solid rgba(122, 46, 59, 0.08);
   display: flex;
   flex-direction: column;
+  height: 100%;
   transition: transform var(--duration-fast, 120ms) ease,
               box-shadow var(--duration-fast, 120ms) ease;
 }
@@ -479,28 +469,15 @@
 
 .productsGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-3, 0.75rem);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-4, 1rem);
+  align-items: stretch;
 }
 
-@media (min-width: 360px) {
+@media (max-width: 480px) {
   .productsGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
     gap: var(--space-3, 0.75rem);
-  }
-}
-
-@media (min-width: 768px) {
-  .productsGrid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-4, 1rem);
-  }
-}
-
-@media (min-width: 1024px) {
-  .productsGrid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-5, 1.25rem);
   }
 }
 
@@ -512,6 +489,7 @@
   border: 1px solid rgba(122, 46, 59, 0.08);
   display: flex;
   flex-direction: column;
+  height: 100%;
   transition: transform var(--duration-fast, 120ms) ease,
               box-shadow var(--duration-fast, 120ms) ease;
 }

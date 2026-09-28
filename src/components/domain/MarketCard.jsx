@@ -1,21 +1,25 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { MapPin, Store, Clock, ArrowRight, Compass } from 'lucide-react';
 import DayDots from '@/components/domain/DayDots';
 import { useCatalogueRoutes } from '@/components/catalogue/routes';
 import styles from './MarketCard.module.css';
 
 /**
- * MarketCard rewritten as a full-width row card, not a tile.
- * Shows:
- *  - Market name (Idiqlat h3)
- *  - One-line open state from clock
- *  - Meta line (city · distance · stall count)
- *  - DayDots
+ * Premium MarketCard component.
+ * Features:
+ *  - Prominent market typography
+ *  - Real-time animated status pill (Open now vs next opening time)
+ *  - Artisanal meta chips (location, distance, stall count)
+ *  - DayDots schedule with clear labels
+ *  - Interactive hover states and directional CTA
  *
  * @param {object}   market
  * @param {Function} onSelect
  * @param {boolean}  isSelected
  * @param {string}   className
+ * @param {'guest'|'buyer'} audience
+ * @param {'list'|'map'} variant
  */
 export function MarketCard({
   market,
@@ -26,6 +30,8 @@ export function MarketCard({
   variant = 'list',
 }) {
   const routes = useCatalogueRoutes(audience);
+  const navigate = useNavigate();
+
   if (!market) return null;
 
   const marketId = market.id || market._id;
@@ -43,7 +49,7 @@ export function MarketCard({
   const distance =
     market.distance ||
     (typeof market.distanceKm === 'number'
-      ? `${market.distanceKm.toFixed(1)} km`
+      ? `${market.distanceKm.toFixed(1)} km away`
       : null);
 
   const farmerCount = market.farmerCount ?? market.stallCount ?? market.attendingCount ?? null;
@@ -52,19 +58,14 @@ export function MarketCard({
       ? `${farmerCount} ${farmerCount === 1 ? 'stall' : 'stalls'}`
       : null;
 
-  const metaParts = [city, distance, stallCountText].filter(Boolean);
-
   const days =
     market.operatingDayNumbers ||
     (Array.isArray(market.schedule) ? market.schedule.map((s) => s.day) : []);
 
-  const navigate = useNavigate();
-
-  const handleClick = (e) => {
+  const handleClick = () => {
     if (onSelect) {
       onSelect(market);
     } else if (variant === 'list') {
-      // stretchedLink handles this, but as a fallback:
       navigate(routes.market(marketId));
     }
   };
@@ -84,68 +85,77 @@ export function MarketCard({
         />
       )}
 
+      {/* Top row: Name & Live Status Badge */}
       <div className={styles.header}>
-        <h3 className={styles.name}>{market.name}</h3>
-      </div>
+        <div className={styles.titleArea}>
+          <h3 className={styles.name}>{market.name}</h3>
+        </div>
 
-      {/* One-line open state from clock */}
-      <div className={styles.statusLine}>
+        {/* Status Pill Badge */}
         {isOpen ? (
-          <>
-            <span className={styles.statusDotOpen} aria-hidden="true">●</span>
-            <span className={styles.statusOpen}>open now</span>
+          <span className={styles.statusPillOpen} aria-label="Open now">
+            <span className={styles.pulseDot} aria-hidden="true" />
+            <span className={styles.statusText}>Open now</span>
             {clock?.closesAtLabel && (
-              <>
-                <span className={styles.sep} aria-hidden="true">·</span>
-                <span className={styles.statusMuted}>closes {clock.closesAtLabel}</span>
-              </>
+              <span className={styles.statusSub}>· till {clock.closesAtLabel}</span>
             )}
-          </>
+          </span>
         ) : (
-          <>
-            <span className={styles.statusDotClosed} aria-hidden="true">●</span>
-            {clock?.windowLabel && <span className={styles.statusMuted}>{clock.windowLabel}</span>}
-            {clock?.windowLabel && clock?.nextOpenLabel && (
-              <span className={styles.sep} aria-hidden="true">·</span>
-            )}
-            {clock?.nextOpenLabel && (
-              <span className={styles.statusMuted}>{clock.nextOpenLabel}</span>
-            )}
-            {!clock?.windowLabel && !clock?.nextOpenLabel && (
-              <span className={styles.statusMuted}>Check schedule</span>
-            )}
-          </>
+          <span className={styles.statusPillClosed}>
+            <Clock size={12} className={styles.clockIcon} aria-hidden="true" />
+            <span className={styles.statusText}>
+              {clock?.nextOpenLabel || clock?.windowLabel || 'Check schedule'}
+            </span>
+          </span>
         )}
       </div>
 
-      {/* Meta line: city · distance · stall count */}
-      {metaParts.length > 0 && (
-        <div className={styles.metaLine}>
-          {metaParts.map((part, idx) => (
-            <React.Fragment key={idx}>
-              {idx > 0 && <span className={styles.sep} aria-hidden="true">·</span>}
-              <span>{part}</span>
-            </React.Fragment>
-          ))}
-        </div>
-      )}
+      {/* Meta Chips: City, Distance, Stall Count */}
+      <div className={styles.metaRow}>
+        {city && (
+          <span className={styles.metaChip}>
+            <MapPin size={12} className={styles.metaIcon} aria-hidden="true" />
+            <span>{city}</span>
+          </span>
+        )}
 
-      {/* Seven day-dots */}
-      <div className={styles.daysWrapper}>
-        <DayDots days={days} size="sm" />
+        {stallCountText && (
+          <span className={styles.metaChip}>
+            <Store size={12} className={styles.metaIcon} aria-hidden="true" />
+            <span>{stallCountText}</span>
+          </span>
+        )}
+
+        {distance && (
+          <span className={styles.metaChip}>
+            <Compass size={12} className={styles.metaIcon} aria-hidden="true" />
+            <span>{distance}</span>
+          </span>
+        )}
       </div>
 
-      {variant === 'map' && (
-        <div className={styles.mapActions}>
+      {/* Bottom Bar: Day Schedule & Interactive CTA */}
+      <div className={styles.bottomBar}>
+        <div className={styles.daysArea}>
+          <DayDots days={days} size="sm" />
+        </div>
+
+        {variant === 'map' ? (
           <Link
             to={routes.market(marketId)}
             className={styles.goToMarketBtn}
             onClick={(e) => e.stopPropagation()}
           >
-            Go to market
+            <span>Go to market</span>
+            <ArrowRight size={14} className={styles.btnArrow} aria-hidden="true" />
           </Link>
-        </div>
-      )}
+        ) : (
+          <div className={styles.listCardAction}>
+            <span>Explore stalls</span>
+            <ArrowRight size={14} className={styles.btnArrow} aria-hidden="true" />
+          </div>
+        )}
+      </div>
     </article>
   );
 }

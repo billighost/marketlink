@@ -7,7 +7,7 @@ import StallView from '@/components/catalogue/StallView';
  */
 export function FarmerDetail() {
   return (
-    <Page width="detail">
+    <Page width="wide">
       <StallView audience="guest" />
     </Page>
   );

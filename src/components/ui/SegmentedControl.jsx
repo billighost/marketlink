@@ -69,24 +69,30 @@ export function SegmentedControl({ options, value, onChange, name = 'segment', c
         }}
       />
 
-      {options.map((option, i) => (
-        <label
-          key={option.value}
-          ref={(el) => (optionRefs.current[i] = el)}
-          className={`${styles.option} ${value === option.value ? styles.active : ''}`}
-        >
-          <input
-            type="radio"
-            name={name}
-            value={option.value}
-            checked={value === option.value}
-            onChange={() => onChange(option.value)}
-            className="visuallyHidden"
-            tabIndex={value === option.value ? 0 : -1}
-          />
-          <span className={styles.label}>{option.label}</span>
-        </label>
-      ))}
+      {options.map((option, i) => {
+        const Icon = option.icon;
+        return (
+          <label
+            key={option.value}
+            ref={(el) => (optionRefs.current[i] = el)}
+            className={`${styles.option} ${value === option.value ? styles.active : ''}`}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={option.value}
+              checked={value === option.value}
+              onChange={() => onChange(option.value)}
+              className="visuallyHidden"
+              tabIndex={value === option.value ? 0 : -1}
+            />
+            <span className={styles.label}>
+              {Icon && <Icon size={14} className={styles.optionIcon} aria-hidden="true" />}
+              {option.label}
+            </span>
+          </label>
+        );
+      })}
     </div>
   );
 }

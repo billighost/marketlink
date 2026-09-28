@@ -18,9 +18,3 @@
     padding-block: var(--space-8) var(--space-16);
   }
 }
-
-@media (min-width: 1280px) {
-  .page {
-    padding-inline: var(--space-8);
-  }
-}

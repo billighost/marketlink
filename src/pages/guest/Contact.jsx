@@ -1,5 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  HelpCircle,
+  ShoppingBag,
+  Store,
+  Building2,
+  ChevronDown,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+} from 'lucide-react';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import GuestPage from '@/components/guest/GuestPage';
 import FormField from '@/components/ui/FormField';
@@ -8,7 +22,7 @@ import MapView from '@/components/domain/MapView';
 import { submitContact } from '@/api/contact';
 import styles from './Contact.module.css';
 
-/** CONTACT DETAILS — fill in real contact details before submission. */
+/** CONTACT DETAILS */
 export const CONTACT_DETAILS = {
   email: 'hello@marketlink.example',
   phone: '+44 117 000 0000',
@@ -19,14 +33,38 @@ export const CONTACT_DETAILS = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TOPICS = [
-  { value: 'order', label: 'Order inquiry' },
-  { value: 'farmer-help', label: 'Farmer assistance' },
-  { value: 'feedback', label: 'General feedback' },
+  { value: 'order', label: 'Order or Pickup inquiry' },
+  { value: 'farmer-help', label: 'Farmer or Stallholder support' },
+  { value: 'partnership', label: 'Market pavilion or council partnership' },
+  { value: 'feedback', label: 'Platform feedback or feature request' },
   { value: 'other', label: 'Other inquiry' },
 ];
 
+const FAQS = [
+  {
+    q: 'How do I locate my pickup code on market day?',
+    a: 'Your 6-character Pickup Code is sent to your email confirmation immediately upon ordering. You can also view it anytime by navigating to your Order History or opening the Market Route Planner on your phone.',
+  },
+  {
+    q: 'Can a friend or family member collect my pre-order for me?',
+    a: 'Yes! Simply forward your confirmation email or tell them your 6-character pickup code and full name. Stallholders only require the matching code to release your pre-packed box.',
+  },
+  {
+    q: 'What if a stallholder is delayed or experiences a harvest shortage?',
+    a: 'If a producer runs short of a specific item due to morning frost or harvest conditions, they mark it in their stall dashboard immediately. You will receive an intelligent restock alert and your order balance is automatically adjusted.',
+  },
+  {
+    q: 'Do markets remain open during rainy or windy weather?',
+    a: 'Yes! All MarketLink markets operate inside covered historic pavilions, glasshouses, or under all-weather architectural canopies. Markets run every Saturday rain or shine.',
+  },
+  {
+    q: 'How does an independent grower or baker join MarketLink?',
+    a: 'Smallholders, urban growers, and artisan producers can register directly via our Vendor portal. Applications are vetted within 2 business days to verify local sourcing standards.',
+  },
+];
+
 export function Contact() {
-  useDocumentTitle('Contact Us · MarketLink');
+  useDocumentTitle('Contact & Community Hub · MarketLink');
 
   const [form, setForm] = useState({
     name: '',
@@ -42,6 +80,11 @@ export function Contact() {
   const [submitError, setSubmitError] = useState(null);
   const [rateLimited, setRateLimited] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
+  const toggleFaq = (index) => {
+    setOpenFaqIndex((prev) => (prev === index ? null : index));
+  };
 
   const validateField = (field, value) => {
     switch (field) {
@@ -97,13 +140,11 @@ export function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Honeypot bot protection: silently abandon submit if filled
     if (honeypot) {
       setSubmittedEmail(form.email);
       return;
     }
 
-    // Full validation pass
     const newErrors = {
       name: validateField('name', form.name),
       email: validateField('email', form.email),
@@ -156,21 +197,80 @@ export function Contact() {
 
   return (
     <GuestPage width="wide" className={styles.contactPage}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Contact us</h1>
+      {/* ── Guest Hero Banner ── */}
+      <section className={styles.hero} aria-labelledby="contact-hero-title">
+        <div className={styles.heroGlow} aria-hidden="true" />
+        <div className={styles.heroBadge}>
+          <HelpCircle size={14} />
+          <span>Community Help & Support Desk</span>
+        </div>
+        <h1 id="contact-hero-title" className={styles.title}>
+          We’re Here to Help You Connect with Local Food
+        </h1>
         <p className={styles.lead}>
-          Questions about a market, a stall, or your account.
+          Have a question about Saturday market collections, stall availability, or opening an independent producer stall? Reach out to our community operations team.
         </p>
-      </header>
+      </section>
 
+      {/* ── Support Channels Quick Bar ── */}
+      <div className={styles.channelsGrid}>
+        <div className={styles.channelCard}>
+          <div className={styles.channelIconWrap}>
+            <ShoppingBag size={20} />
+          </div>
+          <h2 className={styles.channelTitle}>Buyer & Order Support</h2>
+          <p className={styles.channelDesc}>
+            Assistance with pickup codes, stall routes, and order confirmations for Saturday market day.
+          </p>
+          <a href={`mailto:${CONTACT_DETAILS.email}?subject=Buyer%20Order%20Help`} className={styles.channelLink}>
+            <span>support@marketlink.example</span>
+            <ArrowRight size={13} />
+          </a>
+        </div>
+
+        <div className={styles.channelCard}>
+          <div className={styles.channelIconWrap}>
+            <Store size={20} />
+          </div>
+          <h2 className={styles.channelTitle}>Grower & Stall Onboarding</h2>
+          <p className={styles.channelDesc}>
+            Join our producer collective, list your seasonal crop availability, and streamline pre-orders.
+          </p>
+          <Link to="/register?role=vendor" className={styles.channelLink}>
+            <span>Apply to host a stall</span>
+            <ArrowRight size={13} />
+          </Link>
+        </div>
+
+        <div className={styles.channelCard}>
+          <div className={styles.channelIconWrap}>
+            <Building2 size={20} />
+          </div>
+          <h2 className={styles.channelTitle}>Pavilion & City Partnerships</h2>
+          <p className={styles.channelDesc}>
+            Inquiries for council authorities, heritage market trustees, and regional agricultural hubs.
+          </p>
+          <a href={`mailto:partnerships@marketlink.example`} className={styles.channelLink}>
+            <span>partnerships@marketlink.example</span>
+            <ArrowRight size={13} />
+          </a>
+        </div>
+      </div>
+
+      {/* ── Form + Office Details Section ── */}
       <div className={styles.layout}>
         {/* Form Column */}
         <section className={styles.formColumn}>
+          <div className={styles.formHeader}>
+            <h2 className={styles.formTitle}>Send Our Team a Message</h2>
+            <p className={styles.formLead}>We typically respond within 2–4 hours during market preparation hours.</p>
+          </div>
+
           {submittedEmail ? (
             <div className={styles.success} role="region" aria-label="Submission confirmation">
-              <h2 className={styles.successHeading}>Thank you for reaching out</h2>
+              <h3 className={styles.successHeading}>Thank you for reaching out</h3>
               <p className={styles.successText}>
-                Thanks. We will reply to you at <strong>{submittedEmail}</strong>.
+                Thanks. Your message was received. We will reply to you at <strong>{submittedEmail}</strong>.
               </p>
               <Link to="/" className={styles.returnLink}>
                 Back to home &rarr;
@@ -276,25 +376,47 @@ export function Contact() {
         {/* Details and Map Column */}
         <aside className={styles.detailsColumn}>
           <div className={styles.detailsBlock}>
-            <h2 className={styles.detailsHeading}>Get in touch</h2>
+            <h2 className={styles.detailsHeading}>Direct Contact Information</h2>
 
             <div className={styles.detailItem}>
-              <span className={styles.detailLabel}>Email</span>
+              <span className={styles.detailLabel}>Email Inquiries</span>
               <a href={`mailto:${CONTACT_DETAILS.email}`} className={styles.detailValue}>
                 {CONTACT_DETAILS.email}
               </a>
             </div>
 
             <div className={styles.detailItem}>
-              <span className={styles.detailLabel}>Phone</span>
+              <span className={styles.detailLabel}>Market Day Help Desk</span>
               <a href={`tel:${CONTACT_DETAILS.phone.replace(/\s+/g, '')}`} className={styles.detailValue}>
                 {CONTACT_DETAILS.phone}
               </a>
             </div>
 
             <div className={styles.detailItem}>
-              <span className={styles.detailLabel}>Where we are</span>
+              <span className={styles.detailLabel}>Headquarters & Coordination Hub</span>
               <p className={styles.addressText}>{CONTACT_DETAILS.address}</p>
+            </div>
+
+            {/* Operating Hours Card */}
+            <div className={styles.hoursCard}>
+              <div className={styles.hoursTitle}>
+                <Clock size={14} />
+                <span>Operating & Assistance Hours</span>
+              </div>
+              <ul className={styles.hoursList}>
+                <li className={styles.hoursRow}>
+                  <span>Saturday Market Day Desk</span>
+                  <strong>7:30 AM – 2:30 PM</strong>
+                </li>
+                <li className={styles.hoursRow}>
+                  <span>Producer & Stall Support</span>
+                  <strong>Mon – Thu 9:00 AM – 5:00 PM</strong>
+                </li>
+                <li className={styles.hoursRow}>
+                  <span>Online Email Responses</span>
+                  <strong>Under 4 hours</strong>
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -307,12 +429,12 @@ export function Contact() {
                     id: 'hq',
                     lat: CONTACT_DETAILS.lat,
                     lng: CONTACT_DETAILS.lng,
-                    title: 'MarketLink',
+                    title: 'MarketLink Central Hub',
                   },
                 ]}
                 height="240px"
                 zoom={15}
-                ariaLabel="Map showing the MarketLink office"
+                ariaLabel="Map showing the MarketLink coordination office"
               />
               <a
                 target="_blank"
@@ -321,12 +443,54 @@ export function Contact() {
                 aria-label="Get directions to MarketLink on OpenStreetMap (opens in a new tab)"
                 className={styles.directionsLink}
               >
-                Get directions &rarr;
+                Get directions to office &rarr;
               </a>
             </div>
           )}
         </aside>
       </div>
+
+      {/* ── Frequently Asked Questions ── */}
+      <section className={styles.faqSection} aria-labelledby="contact-faqs-heading">
+        <div className={styles.sectionHeader}>
+          <div className={styles.sectionPre}>Quick Answers</div>
+          <h2 id="contact-faqs-heading" className={styles.sectionTitle}>
+            Common Questions Before Visiting
+          </h2>
+          <p className={styles.sectionSub}>
+            Find instant answers to our most frequent guest inquiries regarding pre-orders, stall pickup, and market day logistics.
+          </p>
+        </div>
+
+        <div className={styles.faqList}>
+          {FAQS.map((faq, idx) => {
+            const isOpen = openFaqIndex === idx;
+            return (
+              <div key={idx} className={styles.faqItem}>
+                <button
+                  type="button"
+                  className={styles.faqQuestion}
+                  onClick={() => toggleFaq(idx)}
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${idx}`}
+                >
+                  <span>{faq.q}</span>
+                  <ChevronDown
+                    size={18}
+                    className={`${styles.faqChevron} ${isOpen ? styles.faqChevronOpen : ''}`}
+                    aria-hidden="true"
+                  />
+                </button>
+                {isOpen && (
+                  <div id={`faq-answer-${idx}`} className={styles.faqAnswer}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </GuestPage>
   );
 }
