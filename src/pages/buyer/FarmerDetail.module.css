@@ -686,3 +686,68 @@
   margin: 0;
   line-height: 1.35;
 }
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - FarmerDetail.module.css
+   --------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .availabilityModeCard {
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
+  }
+  .availFarmName {
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    gap: var(--space-4);
+  }
+  .availabilityModeCard {
+    padding: 12px 14px;
+    gap: 10px;
+    margin-bottom: var(--space-3);
+  }
+  .availHeaderRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .availStatusBadge {
+    font-size: 0.85rem;
+  }
+  .availFarmName {
+    font-size: 1.05rem;
+  }
+  .availLocationRow,
+  .availHoursRow {
+    font-size: 0.82rem;
+  }
+  .infoCard {
+    padding: 14px 12px;
+  }
+  .stallHeading {
+    font-size: clamp(1.35rem, 5vw, 1.65rem);
+  }
+  .produceGrid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .produceGrid {
+    grid-template-columns: 1fr;
+  }
+  .avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.25rem;
+  }
+  .saveButton {
+    font-size: 0.88rem;
+    padding: 0 12px;
+  }
+}

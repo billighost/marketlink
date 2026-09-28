@@ -1,4 +1,5 @@
 import React from 'react';
+import ContextHelp from '@/components/onboarding/ContextHelp';
 import styles from './MarketClock.module.css';
 
 /**
@@ -29,6 +30,12 @@ export function MarketClock({
     <div className={styles.clock}>
       <p className={styles.line}>
         <span className={styles.market}>{marketName}</span>
+        <ContextHelp
+          title="Market Trading & Cutoff Hours"
+          content="This clock tracks your selected market's trading windows and order cutoff deadlines. Farmers close pre-orders before sunrise so crops can be harvested fresh for morning pickup."
+          icon="help"
+          size="xs"
+        />
         {hasSchedule && (
           <>
             <span className={styles.sep} aria-hidden="true">·</span>

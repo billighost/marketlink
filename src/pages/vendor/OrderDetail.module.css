@@ -295,4 +295,41 @@
     margin: 8px auto 80px;
     border-radius: 12px;
   }
+  .orderNumberRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .orderNumber {
+    font-size: 1.25rem;
+  }
+  .statusBadge {
+    font-size: 0.78rem;
+  }
+  .itemRow {
+    font-size: 0.88rem;
+    gap: 8px;
+  }
+  .itemName {
+    word-break: break-word;
+  }
+  .itemPrice {
+    flex-shrink: 0;
+  }
+  .totalRow {
+    font-size: 1.15rem;
+  }
+  .totalAmount {
+    font-size: 1.25rem;
+  }
 }
+
+@media (max-width: 360px) {
+  .standaloneContainer {
+    padding: 10px 8px;
+  }
+  .customerMeta {
+    gap: 6px;
+    font-size: 0.85rem;
+  }
+}
+

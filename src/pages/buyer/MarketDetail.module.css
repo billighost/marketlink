@@ -235,6 +235,12 @@
   gap: var(--space-3);
 }
 
+.stallsGrid > * {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
 @media (min-width: 640px) {
   .stallsGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

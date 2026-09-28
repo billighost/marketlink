@@ -89,6 +89,11 @@ export function FloatingActions({ showTopAfter = 350 }) {
     }
   };
 
+  // Only display floating actions on buyer pages (/buyer/*)
+  if (!location.pathname.startsWith('/buyer')) {
+    return null;
+  }
+
   // If a modal or sheet is open, do not render floating actions
   if (isOverlayOpen) {
     return null;

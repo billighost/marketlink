@@ -45,6 +45,7 @@ import {
   Edit3,
   Copy,
 } from 'lucide-react';
+import HorizontalScrollRow from '@/components/ui/HorizontalScrollRow';
 import styles from './Stock.module.css';
 
 const AVAILABILITY_FILTERS = [
@@ -526,7 +527,11 @@ export function Stock() {
       {/* Status & Category Filters */}
       <div className={styles.filterSection}>
         {/* Availability Filter Chips with Counts */}
-        <div className={styles.chipRow} role="tablist" aria-label="Filter stock by availability">
+        <HorizontalScrollRow
+          contentClassName={styles.chipRow}
+          role="tablist"
+          ariaLabel="Filter stock by availability"
+        >
           {AVAILABILITY_FILTERS.map((chip) => {
             let badge = stats.totalItems;
             if (chip.id === 'in') badge = stats.inCount;
@@ -550,11 +555,14 @@ export function Stock() {
               </button>
             );
           })}
-        </div>
+        </HorizontalScrollRow>
 
         {/* Dynamic Category Chips */}
         {categories.length > 0 && (
-          <div className={styles.categoryRow}>
+          <HorizontalScrollRow
+            contentClassName={styles.categoryRow}
+            ariaLabel="Filter stock by category"
+          >
             <span className={styles.categoryRowLabel}>Category:</span>
             <button
               type="button"
@@ -573,7 +581,7 @@ export function Stock() {
                 {cat}
               </button>
             ))}
-          </div>
+          </HorizontalScrollRow>
         )}
       </div>
 

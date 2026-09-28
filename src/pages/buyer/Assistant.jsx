@@ -122,7 +122,7 @@ function AssistantEntityCard({ card }) {
 
   if (card.type === 'action' && card.action === 'open-smart-basket') {
     const budgetNum = card.params?.budget;
-    const budgetLabel = budgetNum ? `₦${Number(budgetNum).toLocaleString()}` : 'your budget';
+    const budgetLabel = budgetNum ? `${Number(budgetNum).toLocaleString()}` : 'your budget';
 
     return (
       <div className={styles.actionCard}>

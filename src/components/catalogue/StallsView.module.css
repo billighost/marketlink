@@ -7,15 +7,23 @@
   min-width: 0;
 }
 
+@media (max-width: 640px) {
+  .header {
+    gap: var(--space-3);
+  }
+}
+
 .chipScroll {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   overflow-x: auto;
   white-space: nowrap;
-  padding-bottom: var(--space-2);
+  padding: 2px 2px var(--space-2) 2px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
 }
 
 .chipScroll::-webkit-scrollbar {
@@ -45,6 +53,14 @@
   box-sizing: border-box;
 }
 
+@media (max-width: 640px) {
+  .chip {
+    min-height: 38px;
+    padding: 0 var(--space-3-5, 0.875rem);
+    font-size: var(--text-xs);
+  }
+}
+
 .chip:hover {
   border-color: var(--color-ink-soft);
 }
@@ -67,7 +83,7 @@
   color: var(--color-white);
 }
 
-/* Responsive grid: minmax(0, 1fr) */
+/* Responsive grid: 1 column on mobile, 2 on tablet, 3 on laptop, 4 on desktop */
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -79,20 +95,21 @@
   min-width: 0 !important;
 }
 
-@media (min-width: 420px) {
+@media (min-width: 540px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 840px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-5);
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1140px) {
   .grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-6);

@@ -642,6 +642,15 @@
    COMPREHENSIVE RESPONSIVE IMPROVEMENTS - Reviews.module.css
    --------------------------------------------------------------- */
 
+/* -- Smooth touch-scroll for filter chips -- */
+.chipRow {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.chipRow::-webkit-scrollbar {
+  display: none;
+}
+
 /* -- Header -- */
 @media (max-width: 640px) {
   .header {
@@ -681,10 +690,45 @@
   }
 }
 
-/* -- Review cards -- */
+/* -- Review cards on mobile -- */
 @media (max-width: 480px) {
   .reviewCard {
-    padding: 14px;
+    padding: 14px 12px;
     border-radius: 12px;
+    gap: 10px;
+  }
+  .cardHeader {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .comment {
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  .replyBox {
+    padding: 10px 12px;
+    border-radius: 10px;
   }
 }
+
+@media (max-width: 380px) {
+  .avatarWrap {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+  .customerCol {
+    gap: 8px;
+  }
+  .author {
+    font-size: 0.85rem;
+  }
+  .modalActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .modalActions button {
+    width: 100%;
+  }
+}
+

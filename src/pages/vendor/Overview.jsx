@@ -597,7 +597,14 @@ export function Overview() {
                     <span className={styles.cardCountBadge}>{filteredOrders.length}</span>
                   </div>
 
-                  <div className={styles.pipelineFilters}>
+                  <div
+                    className={styles.pipelineFilters}
+                    onWheel={(e) => {
+                      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                        e.currentTarget.scrollLeft += e.deltaY;
+                      }
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={() => setActivePipelineFilter('all')}

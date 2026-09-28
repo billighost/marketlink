@@ -62,7 +62,7 @@ const DashboardTab = () => (
           <span>RESERVED VALUE</span>
           <BarChart2 size={18} />
         </div>
-        <h2 className={styles.statValue}>₦425,500</h2>
+        <h2 className={styles.statValue}>$4,255.00</h2>
         <div className={`${styles.statSubtext} ${styles.textGray}`}>Pay-at-pickup on Saturday</div>
         <Sparkline trend="up" />
       </div>
@@ -104,7 +104,7 @@ const DashboardTab = () => (
                 <span className={styles.tdPrimary}>Fresh Ugu Leaves (3 Bunches)</span>
                 <span className={styles.tdSecondary}>Order #ML-8821</span>
               </td>
-              <td><span className={styles.tdPrimary}>₦1,500</span></td>
+              <td><span className={styles.tdPrimary}>$15.00</span></td>
               <td><span className={`${styles.badge} ${styles.badgePending}`}>Pending</span></td>
               <td><button className={styles.btnPrimary}>Accept</button></td>
             </tr>
@@ -117,7 +117,7 @@ const DashboardTab = () => (
                 <span className={styles.tdPrimary}>Cherokee Purple Tomatoes (2kg)</span>
                 <span className={styles.tdSecondary}>Order #ML-8820</span>
               </td>
-              <td><span className={styles.tdPrimary}>₦4,200</span></td>
+              <td><span className={styles.tdPrimary}>$42.00</span></td>
               <td><span className={`${styles.badge} ${styles.badgeAccepted}`}>Accepted</span></td>
               <td><button className={styles.btnOutline}>Mark Ready</button></td>
             </tr>
@@ -130,7 +130,7 @@ const DashboardTab = () => (
                 <span className={styles.tdPrimary}>White Yams (5 Tubers)</span>
                 <span className={styles.tdSecondary}>Order #ML-8819</span>
               </td>
-              <td><span className={styles.tdPrimary}>₦12,500</span></td>
+              <td><span className={styles.tdPrimary}>$125.00</span></td>
               <td><span className={`${styles.badge} ${styles.badgePending}`}>Pending</span></td>
               <td><button className={styles.btnPrimary}>Accept</button></td>
             </tr>
@@ -143,7 +143,7 @@ const DashboardTab = () => (
                 <span className={styles.tdPrimary}>Lacinato Kale (4 Bunches)</span>
                 <span className={styles.tdSecondary}>Order #ML-8818</span>
               </td>
-              <td><span className={styles.tdPrimary}>₦3,000</span></td>
+              <td><span className={styles.tdPrimary}>$30.00</span></td>
               <td><span className={`${styles.badge} ${styles.badgePending}`}>Pending</span></td>
               <td><button className={styles.btnPrimary}>Accept</button></td>
             </tr>

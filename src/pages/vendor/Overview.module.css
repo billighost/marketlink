@@ -1,17 +1,21 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6, 24px);
+  gap: var(--space-5, 20px);
   max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
-  padding: var(--space-2, 8px) var(--space-2, 8px) var(--space-16, 64px);
+  padding: 0 0 var(--space-12, 48px);
+  min-width: 0;
   color: var(--color-ink, #212529);
   font-family: var(--font-body, system-ui, -apple-system, sans-serif);
 }
 
 @media (min-width: 640px) {
   .container {
-    padding: var(--space-4, 16px) var(--space-4, 16px) var(--space-16, 64px);
+    gap: var(--space-6, 24px);
+    padding: 0 0 var(--space-16, 64px);
   }
 }
 
@@ -208,21 +212,22 @@
 
 .bentoGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-4, 16px);
+  min-width: 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1100px) {
   .bentoGrid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-2, 8px);
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3, 12px);
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 580px) {
   .bentoGrid {
     grid-template-columns: 1fr;
-    gap: var(--space-2, 8px);
+    gap: var(--space-3, 12px);
   }
 }
 
@@ -335,11 +340,12 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-6, 24px);
+  min-width: 0;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1180px) {
   .cockpitColumns {
-    grid-template-columns: 2fr 1.1fr;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
   }
 }
 
@@ -401,9 +407,23 @@
   align-items: center;
   gap: 6px;
   overflow-x: auto;
-  padding-bottom: 2px;
+  overflow-y: hidden;
+  padding: 2px 2px;
   max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.pipelineFilters::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+
 
 .filterTabBtn {
   background: transparent;
@@ -415,6 +435,7 @@
   color: #4b5563;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
@@ -1014,131 +1035,340 @@
 }
 
 /* ---------------------------------------------------------------
-   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - Overview.module.css
-   Targets: xs (< 400px), sm (< 480px), md (< 768px)
+   MISSING STYLES: pendingCard (used in JSX but never defined)
+   --------------------------------------------------------------- */
+.pendingCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3, 12px);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-lg, 16px);
+  padding: var(--space-4, 16px) var(--space-5, 20px);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.1);
+}
+
+.pendingContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pendingTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: #92400e;
+}
+
+.pendingIcon {
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.pendingDescription {
+  font-size: 0.85rem;
+  color: #78350f;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.pendingLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #7A2E3B;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 10px;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.pendingLink:hover {
+  background: #5E212B;
+}
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE SUITE - Overview.module.css
+   Covers Desktop (1024-1280px), Tablet (768-1023px),
+   Mobile Landscape (600-767px), Mobile (380-599px), XS (320-379px)
    --------------------------------------------------------------- */
 
-/* -- Cockpit header -- */
-@media (max-width: 480px) {
-  .cockpitHeader {
-    border-radius: 16px;
-    padding: 14px 14px;
+/* Prevent flex/grid children from blowing out containers */
+.container,
+.cockpitHeader,
+.bentoGrid,
+.cockpitColumns,
+.leftColumn,
+.rightColumn,
+.sectionCard,
+.orderItemRow,
+.productQuickCard,
+.packingCenterCard {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Pipeline filters smooth scrolling without scrollbar */
+.pipelineFilters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  width: 100%;
+}
+.pipelineFilters::-webkit-scrollbar {
+  display: none;
+}
+.filterTabBtn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Stat card sub-row text wrap */
+.statSubRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Responsive layout adjustments for screens < 1200px (Desktop with Sidebar) */
+@media (max-width: 1199px) {
+  .cockpitColumns {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* Bento grid: 2 columns on tablet and wide phones, 1 col on mobile */
+@media (max-width: 1100px) {
+  .bentoGrid {
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-  .stallAvatarBadge {
-    width: 42px;
-    height: 42px;
-    font-size: 22px;
-  }
-  .livePill {
-    font-size: 0.7rem;
-    padding: 4px 10px;
-    gap: 4px;
-  }
-  .publicStallBtn {
-    display: none;
-  }
-  .marketScheduleTag {
-    font-size: 0.75rem;
-    padding: 5px 10px;
-    gap: 6px;
-  }
-  .weatherPill {
-    font-size: 0.75rem;
-    padding: 5px 10px;
-    gap: 4px;
-  }
-  .operationalBar {
-    gap: 8px;
-    padding-top: 12px;
-    font-size: 0.8rem;
-  }
 }
 
-/* -- Bento stat cards -- */
-@media (max-width: 480px) {
+@media (max-width: 580px) {
+  .bentoGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
   .statCard {
-    padding: 12px 10px;
-    border-radius: 12px;
-  }
-  .statMainValue {
-    font-size: clamp(1rem, 5vw, 1.35rem);
-  }
-  .statLabel {
-    font-size: 0.65rem;
-  }
-  .statIconBox {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-  }
-  .sparklineWrap {
-    height: 28px;
-  }
-}
-
-/* -- Section cards -- */
-@media (max-width: 480px) {
-  .sectionCard {
-    padding: 14px 12px;
+    padding: 14px;
     border-radius: 14px;
   }
-  .cardTitle {
-    font-size: 1.05rem;
+  .statMainValue {
+    font-size: 1.55rem;
   }
 }
 
-/* -- Cockpit columns -- */
-@media (max-width: 480px) {
-  .cockpitColumns {
+/* Header & Operational Bar */
+@media (max-width: 768px) {
+  .cockpitHeader {
+    padding: 18px 16px;
+    border-radius: 16px;
     gap: 14px;
   }
-  .leftColumn,
-  .rightColumn {
-    gap: 14px;
+  .headerTopRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .stallIdentity {
+    width: 100%;
+    gap: 12px;
+  }
+  .stallTitles {
+    min-width: 0;
+    flex: 1;
+  }
+  .greetingText {
+    font-size: clamp(1.15rem, 5vw, 1.45rem);
+    word-break: break-word;
+  }
+  .stallSubtext {
+    font-size: 0.82rem;
+    flex-wrap: wrap;
+  }
+  .headerActions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+  }
+  .livePill {
+    font-size: 0.72rem;
+    padding: 5px 12px;
+  }
+  .publicStallBtn {
+    display: inline-flex;
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+  .operationalBar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding-top: 12px;
+    overflow-x: visible;
+  }
+  .marketScheduleTag,
+  .weatherPill,
+  .healthMetric {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    justify-content: flex-start;
   }
 }
 
-/* -- Order items -- */
-@media (max-width: 480px) {
+/* Card header row & filter tabs */
+@media (max-width: 768px) {
+  .cardHeaderRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .cardTitleGroup {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Order item card */
+@media (max-width: 600px) {
   .orderItemRow {
     padding: 12px 10px;
-    gap: 8px;
+    gap: 10px;
     border-radius: 10px;
   }
-  .orderNumText {
-    font-size: 0.88rem;
+  .orderMetaTop {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .orderCustIdentity {
+    width: 100%;
+    justify-content: flex-start;
   }
   .custNameText {
-    font-size: 0.78rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .orderItemsSummary {
-    padding: 6px 8px;
-    font-size: 0.78rem;
-  }
-}
-
-@media (max-width: 400px) {
   .orderRowActions {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+  }
+  .slotTotalTag {
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.82rem;
+  }
+  .orderPriceTotal {
+    font-size: 0.95rem;
   }
   .actionBtnGroup {
-    justify-content: flex-end;
+    display: flex;
+    width: 100%;
+    gap: 8px;
+  }
+  .quickActionBtn {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  .btnOutlineSmall {
+    padding: 8px 12px;
   }
 }
 
-/* -- Product cards -- */
+/* Product Quick Cards in Right Column & Mobile */
+.productQuickCard {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 12px 14px;
+  gap: 10px;
+}
+
+@media (min-width: 600px) and (max-width: 1199px) {
+  .productQuickCard {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 1440px) {
+  .productQuickCard {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.productLeftInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.prodTitle {
+  word-break: break-word;
+}
+
+.productStockControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (min-width: 600px) and (max-width: 1199px) {
+  .productStockControls {
+    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .productStockControls {
+    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+}
+
 @media (max-width: 480px) {
   .productQuickCard {
     padding: 10px;
     border-radius: 10px;
-    gap: 8px;
   }
   .productIconBox {
-    width: 34px;
-    height: 34px;
-    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
     border-radius: 8px;
   }
   .prodTitle {
@@ -1147,10 +1377,19 @@
   .prodMetaPrice {
     font-size: 0.72rem;
   }
+  .stockCountBadge {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+  }
+  .stepperBtn {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+  }
 }
 
-/* -- Packing center card -- */
-@media (max-width: 480px) {
+/* Packing center card */
+@media (max-width: 580px) {
   .packingCenterCard {
     padding: 14px 12px;
     border-radius: 14px;
@@ -1163,21 +1402,105 @@
   .packingTitle {
     font-size: 1rem;
   }
+  .checklistLi {
+    font-size: 0.82rem;
+  }
+  .pickListActionBanner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .pickListActionBanner button {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
-/* -- Review cards -- */
+/* Review cards */
 @media (max-width: 480px) {
   .reviewItemCard {
     padding: 10px;
     border-radius: 10px;
   }
-}
-
-/* -- Quick actions bar -- */
-@media (max-width: 480px) {
-  .fabPrimaryBtn,
-  .fabSecondaryBtn {
-    font-size: 0.85rem;
-    padding: 10px 20px;
+  .reviewItemHeader {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .reviewCustomerName {
+    font-size: 0.82rem;
+  }
+  .reviewCommentText {
+    font-size: 0.8rem;
   }
 }
+
+/* Pending & Setup Banners */
+@media (max-width: 600px) {
+  .pendingCard {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    gap: 10px;
+  }
+  .pendingLink {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+  .pendingTitleRow {
+    font-size: 0.88rem;
+  }
+  .pendingDescription {
+    font-size: 0.8rem;
+  }
+}
+
+/* Best seller headline banner on mobile */
+@media (max-width: 480px) {
+  .bestSellerHeadlineBanner {
+    padding: 8px 10px;
+    gap: 8px;
+    border-radius: 10px;
+  }
+}
+
+/* Quick Actions FAB Bar */
+@media (max-width: 1023px) {
+  .quickActionsBar {
+    position: static;
+    flex-direction: column;
+    width: 100%;
+    margin-top: var(--space-4, 16px);
+    margin-bottom: var(--space-6, 24px);
+    gap: 10px;
+  }
+  .fabPrimaryBtn,
+  .fabSecondaryBtn {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 12px 20px;
+  }
+}
+
+/* Extra small devices (<= 380px) */
+@media (max-width: 380px) {
+  .cockpitHeader {
+    padding: 12px 10px;
+  }
+  .stallAvatarBadge {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  .statCard {
+    padding: 12px 10px;
+  }
+  .statMainValue {
+    font-size: 1.3rem;
+  }
+  .sectionCard {
+    padding: 12px 8px;
+  }
+}
+

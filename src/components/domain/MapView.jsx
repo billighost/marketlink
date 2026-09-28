@@ -41,6 +41,7 @@ export const MapView = forwardRef(function MapView({
   showControls = true,
   className = '',
   ariaLabel = 'Interactive map of market locations',
+  children,
 }, ref) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -481,6 +482,8 @@ export const MapView = forwardRef(function MapView({
           )}
         </div>
       )}
+
+      {children}
     </div>
   );
 

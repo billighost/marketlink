@@ -270,11 +270,11 @@ const StoreSettingsTab = () => {
                 
                 <div className={styles.row2}>
                   <div className={styles.formGroup}>
-                    <label>STANDARD LOCAL DELIVERY FEE (₦)</label>
+                    <label>STANDARD LOCAL DELIVERY FEE ($)</label>
                     <input type="number" value={form.deliveryFee} onChange={e => update('deliveryFee', e.target.value)} className={styles.input} />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>MIN. ORDER FOR FREE DELIVERY (₦)</label>
+                    <label>MIN. ORDER FOR FREE DELIVERY ($)</label>
                     <input type="number" value={form.freeDeliveryMin} onChange={e => update('freeDeliveryMin', e.target.value)} className={styles.input} />
                   </div>
                 </div>

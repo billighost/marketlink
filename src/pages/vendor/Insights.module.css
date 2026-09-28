@@ -577,7 +577,10 @@
     font-size: clamp(1.2rem, 5vw, 1.5rem);
   }
   .rangeSelectorWrap {
-    align-self: flex-start;
+    width: 100%;
+  }
+  .rangeSelectorWrap select {
+    width: 100%;
   }
 }
 
@@ -614,9 +617,13 @@
     width: 32px;
     height: 32px;
   }
+  .chartBox {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
-/* -- Best sellers -- */
+/* -- Best sellers & headline banner -- */
 @media (max-width: 480px) {
   .bestSellersSection {
     padding: 14px 12px;
@@ -632,4 +639,30 @@
   .itemName {
     font-size: 0.82rem;
   }
+  .bestSellerHeadlineBox {
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+  .headlineIconBox {
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+  }
+  .headlineText {
+    font-size: 0.95rem;
+  }
 }
+
+@media (max-width: 380px) {
+  .bestCard {
+    flex-wrap: wrap;
+  }
+  .revenueCol {
+    align-items: flex-start;
+    width: 100%;
+    border-top: 1px dashed var(--color-wood-line);
+    padding-top: 4px;
+  }
+}
+

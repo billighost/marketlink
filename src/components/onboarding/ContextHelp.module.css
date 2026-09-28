@@ -1,0 +1,138 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.triggerBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-wood-line);
+  background: var(--color-canvas-soft);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--duration-fast) var(--ease-standard);
+  flex-shrink: 0;
+}
+
+.triggerBtn.xs {
+  width: 18px;
+  height: 18px;
+}
+
+.triggerBtn.sm {
+  width: 22px;
+  height: 22px;
+}
+
+.triggerBtn.md {
+  width: 26px;
+  height: 26px;
+}
+
+.triggerBtn:hover {
+  background: var(--color-beet-tint);
+  border-color: var(--color-beet);
+  color: var(--color-beet);
+}
+
+.triggerActive {
+  background: var(--color-beet);
+  border-color: var(--color-beet);
+  color: var(--color-white);
+}
+
+.popoverCard {
+  position: absolute;
+  z-index: var(--z-dropdown, 200);
+  width: 260px;
+  max-width: calc(100vw - 32px);
+  background: var(--color-white);
+  border: 1px solid var(--color-wood-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-menu);
+  padding: var(--space-3) var(--space-4);
+  animation: popoverFadeIn var(--duration-fast) var(--ease-standard);
+  text-align: left;
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.placement_bottom {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.placement_top {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.placement_left {
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.placement_right {
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.popoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.popoverTitle {
+  font-family: var(--font-head);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.popoverCloseBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--duration-fast);
+}
+
+.popoverCloseBtn:hover {
+  color: var(--color-ink);
+}
+
+.popoverText {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: var(--lh-body);
+  color: var(--color-ink-soft);
+  margin: 0;
+}

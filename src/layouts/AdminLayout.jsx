@@ -17,7 +17,6 @@ import { getAdminOverview } from '@/api/admin';
 import { useVisibleInterval } from '@/hooks/useVisibleInterval';
 import { MarketLinkLeaf } from '@/components/ui/MarketLinkLogo';
 import Button from '@/components/ui/Button';
-import FloatingActions from '@/components/ui/FloatingActions';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './AdminLayout.module.css';
 
@@ -88,8 +87,15 @@ export default function AdminLayout() {
 
   const handleSignOut = async () => {
     setIsMenuOpen(false);
+    try {
+      sessionStorage.setItem('marketlink_signed_out_notice', 'You have been signed out successfully.');
+    } catch {
+      // ignore
+    }
     await logout();
-    navigate('/login');
+    navigate('/login', {
+      state: { signedOut: true, message: 'You have been signed out successfully.' },
+    });
   };
 
   const getBadgeValue = (key) => {
@@ -246,23 +252,118 @@ export default function AdminLayout() {
                 <span className={styles.mobileAdminSubtitle}>Admin</span>
               </div>
             </Link>
-            <button
-              ref={menuButtonRef}
-              type="button"
-              className={styles.menuButton}
-              onClick={() => setIsMenuOpen(true)}
-              aria-label="Open administration menu"
-              aria-expanded={isMenuOpen}
-            >
-              <Menu size={20} aria-hidden="true" />
-              <span>Menu</span>
-            </button>
+            
+            <div className={styles.mobileTopActions}>
+              {(pendingFarmers > 0 || openFlags > 0) && (
+                <Link
+                  to={pendingFarmers > 0 ? '/admin/people?status=pending' : '/admin/moderation'}
+                  className={styles.mobileAttentionPill}
+                  title="Items needing review"
+                >
+                  <span className={styles.attentionDot} />
+                  <span>{pendingFarmers + openFlags} alert{(pendingFarmers + openFlags) !== 1 ? 's' : ''}</span>
+                </Link>
+              )}
+              <button
+                ref={menuButtonRef}
+                type="button"
+                className={styles.menuButton}
+                onClick={() => setIsMenuOpen(true)}
+                aria-label="Open administration menu"
+                aria-expanded={isMenuOpen}
+              >
+                <div className={styles.menuBtnInner}>
+                  <Menu size={18} aria-hidden="true" />
+                  <span>Menu</span>
+                  {(pendingFarmers + openFlags + unhandledMessages) > 0 && (
+                    <span className={styles.mobileMenuBadge}>
+                      {pendingFarmers + openFlags + unhandledMessages}
+                    </span>
+                  )}
+                </div>
+              </button>
+            </div>
           </header>
 
           {/* Main Outlet */}
           <main className={styles.content}>
             <Outlet />
           </main>
+
+          {/* Mobile Bottom Navigation (< 1024px) */}
+          <nav className={styles.mobileBottomNav} aria-label="Mobile admin quick navigation">
+            <NavLink
+              to="/admin"
+              end
+              className={({ isActive }) =>
+                `${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`
+              }
+            >
+              <LayoutDashboard size={20} aria-hidden="true" />
+              <span className={styles.bottomNavLabel}>Overview</span>
+            </NavLink>
+
+            <NavLink
+              to="/admin/people"
+              className={({ isActive }) =>
+                `${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`
+              }
+            >
+              <div className={styles.bottomNavIconWrap}>
+                <Users size={20} aria-hidden="true" />
+                {pendingFarmers > 0 && (
+                  <span className={styles.bottomNavBadge}>
+                    {pendingFarmers > 9 ? '9+' : pendingFarmers}
+                  </span>
+                )}
+              </div>
+              <span className={styles.bottomNavLabel}>People</span>
+            </NavLink>
+
+            <NavLink
+              to="/admin/moderation"
+              className={({ isActive }) =>
+                `${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`
+              }
+            >
+              <div className={styles.bottomNavIconWrap}>
+                <ShieldCheck size={20} aria-hidden="true" />
+                {openFlags > 0 && (
+                  <span className={styles.bottomNavBadge}>
+                    {openFlags > 9 ? '9+' : openFlags}
+                  </span>
+                )}
+              </div>
+              <span className={styles.bottomNavLabel}>Moderate</span>
+            </NavLink>
+
+            <NavLink
+              to="/admin/markets"
+              className={({ isActive }) =>
+                `${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`
+              }
+            >
+              <MapPin size={20} aria-hidden="true" />
+              <span className={styles.bottomNavLabel}>Markets</span>
+            </NavLink>
+
+            <button
+              type="button"
+              className={`${styles.bottomNavItem} ${isMenuOpen ? styles.bottomNavItemActive : ''}`}
+              onClick={() => setIsMenuOpen(true)}
+              aria-label="Open full admin menu"
+            >
+              <div className={styles.bottomNavIconWrap}>
+                <Menu size={20} aria-hidden="true" />
+                {unhandledMessages > 0 && (
+                  <span className={styles.bottomNavBadge}>
+                    {unhandledMessages > 9 ? '9+' : unhandledMessages}
+                  </span>
+                )}
+              </div>
+              <span className={styles.bottomNavLabel}>More</span>
+            </button>
+          </nav>
         </div>
 
         {/* Mobile Drawer Navigation (< 1024px) */}

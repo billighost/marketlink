@@ -15,7 +15,7 @@ const SalesTab = () => {
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={styles.statHeader}>TOTAL REVENUE (30 DAYS)</div>
-          <h2 className={styles.statValue}>₦262,700</h2>
+          <h2 className={styles.statValue}>$2,627.00</h2>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statHeader}>HARVEST SPOILAGE</div>
@@ -43,25 +43,25 @@ const SalesTab = () => {
               <tr>
                 <td>Oct 14, 2026</td>
                 <td>42</td>
-                <td>₦84,500</td>
+                <td>$845.00</td>
                 <td><span className={`${styles.badge} ${styles.badgeCleared}`}>Cleared</span></td>
               </tr>
               <tr>
                 <td>Oct 07, 2026</td>
                 <td>38</td>
-                <td>₦76,200</td>
+                <td>$762.00</td>
                 <td><span className={`${styles.badge} ${styles.badgeSurplus}`}>Surplus</span></td>
               </tr>
               <tr>
                 <td>Sep 30, 2026</td>
                 <td>51</td>
-                <td>₦102,000</td>
+                <td>$1,020.00</td>
                 <td><span className={`${styles.badge} ${styles.badgeCleared}`}>Cleared</span></td>
               </tr>
               <tr>
                 <td>Sep 23, 2026</td>
                 <td>45</td>
-                <td>₦91,400</td>
+                <td>$914.00</td>
                 <td><span className={`${styles.badge} ${styles.badgeCleared}`}>Cleared</span></td>
               </tr>
             </tbody>

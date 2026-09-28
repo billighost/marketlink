@@ -16,12 +16,20 @@ export async function login({ email, password }) {
 
 export async function logout() {
   try {
+    sessionStorage.removeItem('marketlink_session_expired');
+    sessionStorage.removeItem('marketlink_return_url');
+    sessionStorage.setItem('marketlink_intentional_logout', 'true');
+  } catch {
+    // ignore
+  }
+  try {
     await apiFetch('/auth/logout', { method: 'POST' });
   } finally {
     clearAccessToken();
     try {
       localStorage.removeItem('marketlink_user');
       localStorage.setItem('marketlink_signed_out', Date.now().toString());
+      sessionStorage.removeItem('marketlink_session_expired');
     } catch {
       // ignore
     }

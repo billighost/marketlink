@@ -81,6 +81,13 @@
   gap: var(--space-4);
 }
 
+.stallsGrid > *,
+.stallCardWrap > * {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
 @media (min-width: 768px) {
   .stallsGrid {
     grid-template-columns: repeat(2, 1fr);

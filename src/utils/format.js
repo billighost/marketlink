@@ -31,11 +31,7 @@ export const formatCurrency = formatPrice;
  * @returns {string}
  */
 export function formatNaira(amount) {
-  if (typeof amount !== 'number' || isNaN(amount)) {
-    return '₦0';
-  }
-  const clean = Math.round(amount);
-  return `₦${new Intl.NumberFormat('en-NG').format(clean)}`;
+  return formatPrice(typeof amount === 'number' ? amount : 0);
 }
 
 /**

@@ -196,6 +196,8 @@ export function AppRoutes() {
         <Route path="profile/reviews"     element={<BuyerReviews />} />
 
         {/* ── Redirects: every old URL still resolves ──────────────────── */}
+        <Route path="vendors"             element={<Navigate to="/buyer/stalls" replace />} />
+        <Route path="vendors/:id"         element={<RedirectFarmerToStall />} />
         <Route path="farmers"             element={<Navigate to="/buyer/stalls" replace />} />
         <Route path="farmers/:id"         element={<RedirectFarmerToStall />} />
         <Route path="cart"                element={<Navigate to="/buyer/basket" replace />} />
@@ -213,6 +215,7 @@ export function AppRoutes() {
         <Route path={PATHS.HOME}            element={<GuestHome />} />
         <Route path={PATHS.MARKETS}         element={<Market />} />
         <Route path={PATHS.MARKET_DETAIL}    element={<MarketDetail />} />
+        <Route path="/vendors"             element={<Navigate to={PATHS.FARMERS} replace />} />
         <Route path={PATHS.FARMERS}          element={<Farmers />} />
         <Route path={PATHS.FARMER_DETAIL}   element={<FarmerDetail />} />
         <Route path={PATHS.PRODUCTS}        element={<Products />} />

@@ -45,6 +45,7 @@ export function TopBar() {
 
   // Five nav items: logo is the home link
   const navItems = [
+    { name: 'Home', path: PATHS.HOME || '/', icon: Store },
     { name: 'Markets', path: PATHS.MARKETS || '/markets', icon: Store },
     { name: 'Stalls', path: PATHS.FARMERS || '/farmers', icon: Users },
     { name: 'Produce', path: PATHS.PRODUCTS || '/products', icon: Sparkles },
@@ -54,6 +55,7 @@ export function TopBar() {
 
   const isActive = (path) => {
     const p = location.pathname;
+    if (path === '/home') return p === '/';
     if (path === '/markets') return p === '/markets' || p.startsWith('/markets/');
     if (path === '/farmers') return p === '/farmers' || p.startsWith('/farmers/');
     if (path === '/products') return p === '/products' || p.startsWith('/products/');
@@ -118,21 +120,30 @@ export function TopBar() {
       <header className={`${styles.header} ${scrolled ? styles.headerScrolled : ''}`}>
         <div className={styles.barInner}>
           {/* Logo = home link */}
-          <Link to={PATHS.HOME} className={styles.logoLink} aria-label="MarketLink home">
+          <Link to={PATHS.HOME} className={styles.logoLink} aria-label="MarketLink home" data-tour="guest-brand">
             <MarketLinkLogo size="md" />
           </Link>
 
           {/* Desktop nav (≥1024) */}
-          <nav className={styles.desktopNav} aria-label="Main navigation">
+          <nav className={styles.desktopNav} aria-label="Main navigation" data-tour="guest-nav">
             <ul className={styles.navList} role="list">
               {navItems.map((item) => {
                 const active = isActive(item.path);
+                const tourAttr =
+                  item.name === 'Markets'
+                    ? 'guest-markets'
+                    : item.name === 'Stalls'
+                    ? 'guest-stalls'
+                    : item.name === 'Produce'
+                    ? 'guest-produce'
+                    : undefined;
                 return (
                   <li key={item.name}>
                     <Link
                       to={item.path}
                       className={`${styles.navLink} ${active ? styles.navLinkActive : ''}`}
                       aria-current={active ? 'page' : undefined}
+                      data-tour={tourAttr}
                     >
                       {item.name}
                     </Link>
@@ -143,7 +154,7 @@ export function TopBar() {
           </nav>
 
           {/* Right actions */}
-          <div className={styles.actions}>
+          <div className={styles.actions} data-tour="guest-auth">
             {/* Search — desktop only */}
             {/* <button
               type="button"
@@ -154,15 +165,15 @@ export function TopBar() {
               <Search size={18} strokeWidth={1.8} aria-hidden="true" />
             </button> */}
 
-            {/* Sign in — text link (hidden if already on login page) */}
+            {/* Sign in — hidden only when already on the login page */}
             {location.pathname !== (PATHS.LOGIN || '/login') && (
               <Link to={PATHS.LOGIN || '/login'} className={styles.signInLink}>
                 Sign in
               </Link>
             )}
 
-            {/* Sign up — the one beet element on desktop (hidden on auth pages per spec) */}
-            {!isAuthPage && (
+            {/* Sign up — hidden only when already on the register page */}
+            {location.pathname !== (PATHS.REGISTER || '/register') && (
               <Link to={PATHS.REGISTER || '/register'} className={styles.signUpBtn}>
                 Sign up
               </Link>

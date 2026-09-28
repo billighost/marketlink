@@ -176,6 +176,40 @@
     width: 100%;
   }
   .inventoryGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contentArea {
+    padding: 12px;
+  }
+  .actionHeader {
+    align-items: stretch;
+  }
+  .searchLayout {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+  .searchInput {
+    width: 100%;
+    font-size: 16px; /* Prevent iOS auto-zoom */
+  }
+  .btnPrimary {
+    width: 100%;
+    justify-content: center;
+  }
+  .inventoryGrid {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .inventoryCard {
+    padding: 12px;
+  }
+  .inventoryQuantity {
+    font-size: 1.1rem;
   }
 }

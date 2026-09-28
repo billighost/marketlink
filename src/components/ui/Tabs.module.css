@@ -4,11 +4,17 @@
   border-bottom: var(--border);
   gap: var(--space-4);
   overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .tabs::-webkit-scrollbar {
   display: none;
+  width: 0;
+  height: 0;
 }
 
 .tab {
@@ -25,6 +31,7 @@
   color: var(--color-ink-soft);
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   transition: color var(--duration-fast) var(--ease-standard),
@@ -48,6 +55,7 @@
 .count {
   font-size: var(--text-xs);
   color: var(--color-ink-faint);
+  flex-shrink: 0;
 }
 
 .active .count {

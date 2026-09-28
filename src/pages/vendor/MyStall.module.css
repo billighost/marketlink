@@ -1262,6 +1262,15 @@
    COMPREHENSIVE RESPONSIVE IMPROVEMENTS - MyStall.module.css
    --------------------------------------------------------------- */
 
+/* -- Smooth touch-scroll for wizard step pills -- */
+.wizardStepsRow {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.wizardStepsRow::-webkit-scrollbar {
+  display: none;
+}
+
 /* -- Header -- */
 @media (max-width: 640px) {
   .header {
@@ -1270,8 +1279,15 @@
     gap: 10px;
   }
   .headerActions {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  .headerActions button,
+  .headerActions a {
+    flex: 1;
+    min-width: 130px;
+    justify-content: center;
   }
   .title {
     font-size: clamp(1.2rem, 5vw, 1.5rem);
@@ -1297,14 +1313,33 @@
 }
 
 /* -- Bento grid -- */
-@media (max-width: 480px) {
+@media (max-width: 720px) {
   .bentoGrid {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+}
+
+@media (max-width: 480px) {
   .bentoCard {
-    padding: 14px 14px;
+    padding: 14px 12px;
     border-radius: 14px;
+    gap: 10px;
+  }
+  .cardHeader {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .scheduleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .scheduleDay {
+    width: 100%;
+  }
+  .limitValueRow {
+    flex-wrap: wrap;
   }
 }
 
@@ -1314,3 +1349,59 @@
     width: 100%;
   }
 }
+
+/* -- Onboarding banner on mobile -- */
+@media (max-width: 640px) {
+  .onboardingBanner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px 14px;
+  }
+  .onboardingLeft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .onboardingActionBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* -- Wizard multi-step onboarding responsiveness -- */
+@media (max-width: 540px) {
+  .wizardMarketsGrid {
+    grid-template-columns: 1fr;
+  }
+  .wizardFooterNav {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .wizardFooterNav button {
+    width: 100%;
+    justify-content: center;
+  }
+  .stepPill {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  .wizardDaysRow {
+    gap: 6px;
+  }
+  .wizardDayBtn {
+    flex: 1;
+    min-width: 40px;
+    text-align: center;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  .livePreviewBanner {
+    height: 100px;
+  }
+  .livePreviewBannerTitle {
+    font-size: 1.15rem;
+  }
+}
+

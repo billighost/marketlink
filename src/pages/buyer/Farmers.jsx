@@ -171,7 +171,7 @@ export function Farmers() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search stalls, produce, or growers (e.g. berries, sourdough, honey)..."
+              placeholder="Search stalls, produce, or growers..."
               className={styles.searchInput}
               aria-label="Search stalls and produce"
             />

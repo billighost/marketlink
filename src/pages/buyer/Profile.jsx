@@ -19,6 +19,8 @@ import {
   Sprout,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
+import { useOnboarding } from '@/context/OnboardingContext';
 import { useNotificationCount } from '@/hooks/useNotificationCount';
 import { getSavedMarkets } from '@/api/me';
 import { getOrders } from '@/api/orders';
@@ -30,12 +32,15 @@ import styles from './Profile.module.css';
 
 export function Profile() {
   const { user, logout } = useAuth();
+  const { showToast } = useToast();
+  const { openRestartModal } = useOnboarding();
   const { unreadCount } = useNotificationCount();
   const navigate = useNavigate();
 
   useDocumentTitle('Your Profile · MarketLink');
 
   const [isSignOutOpen, setIsSignOutOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [savedMarketsCount, setSavedMarketsCount] = useState(null);
   const [ordersCount, setOrdersCount] = useState(null);
   const [motionReduced, setMotionReduced] = useState(() => {
@@ -98,9 +103,27 @@ export function Profile() {
     return 'C';
   };
 
-  const handleSignOut = () => {
-    logout();
-    navigate('/login');
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      setIsSignOutOpen(false);
+      try {
+        sessionStorage.setItem('marketlink_signed_out_notice', 'You have been signed out of MarketLink.');
+      } catch {
+        // ignore storage errors
+      }
+      await logout();
+      showToast({ message: 'Signed out of MarketLink.' });
+      navigate('/login', {
+        state: { signedOut: true, message: 'You have been signed out of MarketLink.' },
+      });
+    } catch {
+      navigate('/login', {
+        state: { signedOut: true, message: 'You have been signed out of MarketLink.' },
+      });
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   const homeMarketName =
@@ -417,6 +440,24 @@ export function Profile() {
               </div>
 
               <div className={styles.cardGroup}>
+                <button
+                  type="button"
+                  onClick={() => openRestartModal('buyer')}
+                  className={styles.settingRow}
+                  style={{ background: 'transparent', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}
+                >
+                  <div className={`${styles.rowIconBox} ${styles.tintBeet}`}>
+                    <Sparkles size={18} />
+                  </div>
+                  <div className={styles.rowContent}>
+                    <span className={styles.rowTitle}>Take a tour again</span>
+                    <span className={styles.rowSub}>
+                      Replay the interactive guided walkthrough of MarketLink
+                    </span>
+                  </div>
+                  <ChevronRight size={16} className={styles.rowChevron} />
+                </button>
+
                 <Link to="/buyer/help" className={styles.settingRow}>
                   <div className={`${styles.rowIconBox} ${styles.tintOlive}`}>
                     <HelpCircle size={18} />
@@ -463,7 +504,7 @@ export function Profile() {
         {/* Sign Out Confirmation Sheet */}
         <BottomSheet
           open={isSignOutOpen}
-          onClose={() => setIsSignOutOpen(false)}
+          onClose={() => !signingOut && setIsSignOutOpen(false)}
           title="Sign out"
           size="peek"
         >
@@ -480,13 +521,15 @@ export function Profile() {
                 type="button"
                 className={styles.signOutButton}
                 onClick={handleSignOut}
+                disabled={signingOut}
               >
-                Sign out
+                {signingOut ? 'Signing out…' : 'Sign out'}
               </button>
               <button
                 type="button"
                 className={styles.cancelButton}
                 onClick={() => setIsSignOutOpen(false)}
+                disabled={signingOut}
               >
                 Cancel
               </button>

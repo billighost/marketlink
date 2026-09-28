@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Sparkles,
   Info,
+  Clock,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import { useAuth, homePathFor } from '@/context/AuthContext';
@@ -281,6 +282,145 @@ export function Register() {
           : 'Receive pre-orders ahead of market day, plan your weekly harvest accurately, and reduce unsold produce.'
       }
       heroFeatures={role === 'customer' ? shopperFeatures : farmerFeatures}
+      heroMiddle={
+        <div className={authStyles.workflowCard}>
+          <div className={authStyles.workflowHeader}>
+            <div className={authStyles.workflowBadge}>
+              {role === 'customer' ? (
+                <>
+                  <Clock size={12} aria-hidden="true" />
+                  <span>Weekend Routine</span>
+                </>
+              ) : (
+                <>
+                  <Store size={12} aria-hidden="true" />
+                  <span>Grower Workflow</span>
+                </>
+              )}
+            </div>
+            <span className={authStyles.workflowSub}>
+              {role === 'customer' ? 'How Saturday pickup works' : 'How pre-orders work'}
+            </span>
+          </div>
+
+          <div className={authStyles.timelineList}>
+            {role === 'customer' ? (
+              <>
+                <div className={authStyles.timelineItem}>
+                  <div className={authStyles.timelineIndex}>1</div>
+                  <div className={authStyles.timelineBody}>
+                    <div className={authStyles.timelineTitleRow}>
+                      <span className={authStyles.timelineTitle}>Reserve Ahead Online</span>
+                      <span className={authStyles.timelineTag}>By Fri 8pm</span>
+                    </div>
+                    <p className={authStyles.timelineDesc}>
+                      Browse real-time stall harvest & lock in artisan favorites before stalls sell out.
+                    </p>
+                  </div>
+                </div>
+
+                <div className={authStyles.timelineItem}>
+                  <div className={authStyles.timelineIndex}>2</div>
+                  <div className={authStyles.timelineBody}>
+                    <div className={authStyles.timelineTitleRow}>
+                      <span className={authStyles.timelineTitle}>Picked Fresh at Dawn</span>
+                      <span className={authStyles.timelineTag}>Saturday dawn</span>
+                    </div>
+                    <p className={authStyles.timelineDesc}>
+                      Growers harvest strictly to demand and pack your labeled tote with zero waste.
+                    </p>
+                  </div>
+                </div>
+
+                <div className={authStyles.timelineItem}>
+                  <div className={authStyles.timelineIndex}>3</div>
+                  <div className={authStyles.timelineBody}>
+                    <div className={authStyles.timelineTitleRow}>
+                      <span className={authStyles.timelineTitle}>Collect & Pay at Stall</span>
+                      <span className={authStyles.timelineTag}>Sat 9am–2pm</span>
+                    </div>
+                    <p className={authStyles.timelineDesc}>
+                      Walk right up to the stall canopy, inspect quality in person, and tap to pay.
+                    </p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={authStyles.timelineItem}>
+                  <div className={authStyles.timelineIndex}>1</div>
+                  <div className={authStyles.timelineBody}>
+                    <div className={authStyles.timelineTitleRow}>
+                      <span className={authStyles.timelineTitle}>List Weekly Harvest</span>
+                      <span className={authStyles.timelineTag}>Wed – Thu</span>
+                    </div>
+                    <p className={authStyles.timelineDesc}>
+                      Set available produce, bushel counts, and specialty cuts in under 2 minutes.
+                    </p>
+                  </div>
+                </div>
+
+                <div className={authStyles.timelineItem}>
+                  <div className={authStyles.timelineIndex}>2</div>
+                  <div className={authStyles.timelineBody}>
+                    <div className={authStyles.timelineTitleRow}>
+                      <span className={authStyles.timelineTitle}>Lock In Orders</span>
+                      <span className={authStyles.timelineTag}>Friday 8pm cutoff</span>
+                    </div>
+                    <p className={authStyles.timelineDesc}>
+                      Harvest strictly to demand at dawn. Eliminate unsold crates and produce waste.
+                    </p>
+                  </div>
+                </div>
+
+                <div className={authStyles.timelineItem}>
+                  <div className={authStyles.timelineIndex}>3</div>
+                  <div className={authStyles.timelineBody}>
+                    <div className={authStyles.timelineTitleRow}>
+                      <span className={authStyles.timelineTitle}>Canopy Handover</span>
+                      <span className={authStyles.timelineTag}>Saturday Market</span>
+                    </div>
+                    <p className={authStyles.timelineDesc}>
+                      Hand pre-sorted crates to waiting customers. Collect direct payments without fees.
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className={authStyles.harvestPreview}>
+            <Sparkles size={13} className={authStyles.harvestIcon} aria-hidden="true" />
+            <span className={authStyles.harvestText}>
+              {role === 'customer' ? (
+                <>
+                  <strong>In Season This Saturday:</strong> Heirloom Tomatoes, Wild Honey, Artisan Sourdough
+                </>
+              ) : (
+                <>
+                  <strong>High Demand Categories:</strong> Pasture Eggs, Sourdough Boules, Organic Berries
+                </>
+              )}
+            </span>
+          </div>
+
+          <div className={authStyles.workflowFooterPills}>
+            {role === 'customer' ? (
+              <>
+                <span className={authStyles.pillItem}>🌿 100% Direct to Grower</span>
+                <span className={authStyles.pillItem}>⚡ Skip Stall Lines</span>
+                <span className={authStyles.pillItem}>🛡️ Zero Prepayment Risk</span>
+              </>
+            ) : (
+              <>
+                <span className={authStyles.pillItem}>🚜 0% Platform Commission</span>
+                <span className={authStyles.pillItem}>📦 Zero Produce Waste</span>
+                <span className={authStyles.pillItem}>💰 In-Person Payout</span>
+              </>
+            )}
+          </div>
+        </div>
+      }
       heroQuote={
         role === 'customer'
           ? 'I never miss out on heirloom tomatoes or wild honey anymore. The farmers have my bag ready when I arrive!'

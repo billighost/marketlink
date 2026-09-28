@@ -199,5 +199,28 @@
 @media (max-width: 480px) {
   .container {
     padding: 12px 10px 80px;
+    gap: 12px;
+  }
+  .dateRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .dateInput {
+    width: 100%;
+  }
+  .slotCard {
+    padding: 10px;
+    border-radius: 10px;
+  }
+  .productRow {
+    font-size: 0.88rem;
+    padding: 6px 0;
+  }
+  .orderItemHeader {
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 0.82rem;
   }
 }
+

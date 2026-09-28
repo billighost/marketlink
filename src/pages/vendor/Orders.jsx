@@ -34,6 +34,7 @@ import {
   Check,
   ShoppingBag,
 } from 'lucide-react';
+import HorizontalScrollRow from '@/components/ui/HorizontalScrollRow';
 import styles from './Orders.module.css';
 
 const STATUS_TABS = [
@@ -366,7 +367,11 @@ export function Orders() {
       </div>
 
       {/* Segmented Status Tabs with Dynamic Badges */}
-      <div className={styles.tabsContainer} role="tablist" aria-label="Order status categories">
+      <HorizontalScrollRow
+        contentClassName={styles.tabsContainer}
+        role="tablist"
+        ariaLabel="Order status categories"
+      >
         {STATUS_TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           const count = getTabCount(tab.id);
@@ -392,7 +397,7 @@ export function Orders() {
             </button>
           );
         })}
-      </div>
+      </HorizontalScrollRow>
 
       {/* Orders List */}
       {loading ? (

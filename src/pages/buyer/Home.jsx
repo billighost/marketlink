@@ -114,14 +114,16 @@ export function Home() {
               {metaLoading && !feedMeta ? (
                 <div className={styles.clockSkeleton} aria-hidden="true" />
               ) : (
-                <MarketClock
-                  marketName={feedMeta?.homeMarket?.name || 'Your market'}
-                  openNow={feedMeta?.clock?.openNow}
-                  windowLabel={feedMeta?.clock?.windowLabel}
-                  nextOpenLabel={feedMeta?.clock?.nextOpenLabel}
-                  closesAtLabel={feedMeta?.clock?.closesAtLabel}
-                  progress={feedMeta?.clock?.todayProgress ?? 0}
-                />
+                <div data-tour="buyer-clock">
+                  <MarketClock
+                    marketName={feedMeta?.homeMarket?.name || 'Your market'}
+                    openNow={feedMeta?.clock?.openNow}
+                    windowLabel={feedMeta?.clock?.windowLabel}
+                    nextOpenLabel={feedMeta?.clock?.nextOpenLabel}
+                    closesAtLabel={feedMeta?.clock?.closesAtLabel}
+                    progress={feedMeta?.clock?.todayProgress ?? 0}
+                  />
+                </div>
               )}
             </div>
 
@@ -149,7 +151,7 @@ export function Home() {
         <PickupBanner order={activePickup} />
 
         {/* Curated and Endless Feed */}
-        <div className={styles.feed}>
+        <div className={styles.feed} data-tour="buyer-feed">
           {/* First row: At the market today (StallStrip) */}
           <StallStrip marketId={selectedMarketId} />
 

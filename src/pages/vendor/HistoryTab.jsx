@@ -37,7 +37,7 @@ const HistoryTab = () => {
               <td>Oct 24, 2026</td>
               <td className={styles.tdPrimary}>Adeola Johnson</td>
               <td>Assorted Veggie Basket</td>
-              <td className={styles.tdPrimary}>₦12,500</td>
+              <td className={styles.tdPrimary}>$125.00</td>
               <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
               <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
             </tr>
@@ -46,7 +46,7 @@ const HistoryTab = () => {
               <td>Oct 24, 2026</td>
               <td className={styles.tdPrimary}>Chuks Emmanuel</td>
               <td>Unripe Plantains (1 Dozen)</td>
-              <td className={styles.tdPrimary}>₦3,800</td>
+              <td className={styles.tdPrimary}>$38.00</td>
               <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
               <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
             </tr>
@@ -55,7 +55,7 @@ const HistoryTab = () => {
               <td>Oct 23, 2026</td>
               <td className={styles.tdPrimary}>Fatima Bello</td>
               <td>Organic Carrots (5kg)</td>
-              <td className={styles.tdPrimary}>₦5,200</td>
+              <td className={styles.tdPrimary}>$52.00</td>
               <td><span className={`${styles.badge} ${styles.badgeCancelled}`}>Cancelled</span></td>
               <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
             </tr>
@@ -64,7 +64,7 @@ const HistoryTab = () => {
               <td>Oct 23, 2026</td>
               <td className={styles.tdPrimary}>Green Grocers Ltd</td>
               <td>Wholesale Yams (50 Tubers)</td>
-              <td className={styles.tdPrimary}>₦110,000</td>
+              <td className={styles.tdPrimary}>$1,100.00</td>
               <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
               <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
             </tr>
@@ -73,7 +73,7 @@ const HistoryTab = () => {
               <td>Oct 22, 2026</td>
               <td className={styles.tdPrimary}>Tobi Bakre</td>
               <td>Fresh Spinach (10 Bunches)</td>
-              <td className={styles.tdPrimary}>₦4,500</td>
+              <td className={styles.tdPrimary}>$45.00</td>
               <td><span className={`${styles.badge} ${styles.badgeDelivered}`}>Delivered</span></td>
               <td><button className={styles.iconButton}><MoreVertical size={18} /></button></td>
             </tr>

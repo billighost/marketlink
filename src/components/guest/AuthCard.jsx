@@ -17,6 +17,7 @@ export function AuthCard({
   heroTitle,
   heroLead,
   heroFeatures,
+  heroMiddle,
   heroQuote,
   heroAuthor,
   heroAuthorRole,
@@ -89,6 +90,12 @@ export function AuthCard({
                   </li>
                 ))}
               </ul>
+
+              {heroMiddle && (
+                <div className={styles.showcaseMiddle}>
+                  {heroMiddle}
+                </div>
+              )}
 
               <div className={styles.testimonialCard}>
                 <div className={styles.starRow} aria-label="5 out of 5 stars rating">

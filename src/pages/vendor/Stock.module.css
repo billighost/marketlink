@@ -389,8 +389,23 @@
   align-items: center;
   gap: var(--space-2);
   overflow-x: auto;
-  padding-bottom: 2px;
+  overflow-y: hidden;
+  padding: 4px 2px;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.chipRow::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+
 
 .filterChip {
   display: inline-flex;
@@ -406,6 +421,7 @@
   font-weight: var(--weight-medium);
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: all var(--duration-fast) var(--ease-standard);
 }
 
@@ -428,6 +444,7 @@
   padding: 1px 7px;
   border-radius: var(--radius-full);
   font-weight: var(--weight-bold);
+  flex-shrink: 0;
 }
 
 .filterChipActive .filterBadge {
@@ -440,14 +457,30 @@
   align-items: center;
   gap: var(--space-2);
   overflow-x: auto;
-  padding-bottom: 2px;
+  overflow-y: hidden;
+  padding: 4px 2px;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.categoryRow::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+
 
 .categoryRowLabel {
   font-size: var(--text-xs);
   color: var(--color-ink-muted);
   font-weight: var(--weight-medium);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .categoryPill {
@@ -459,6 +492,7 @@
   border-radius: var(--radius-full);
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: all var(--duration-fast) var(--ease-standard);
 }
 
@@ -993,6 +1027,17 @@
    COMPREHENSIVE RESPONSIVE IMPROVEMENTS - Stock.module.css
    --------------------------------------------------------------- */
 
+/* -- Smooth touch-scroll for filter chips & categories -- */
+.chipRow,
+.categoryRow {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.chipRow::-webkit-scrollbar,
+.categoryRow::-webkit-scrollbar {
+  display: none;
+}
+
 /* -- Header -- */
 @media (max-width: 640px) {
   .header {
@@ -1001,15 +1046,22 @@
     gap: 12px;
   }
   .headerActions {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  .headerActions button,
+  .headerActions a {
+    flex: 1;
+    min-width: 130px;
+    justify-content: center;
   }
   .title {
     font-size: clamp(1.2rem, 5vw, 1.5rem);
   }
 }
 
-/* -- Telemetry grid: 2x2 on small mobile -- */
+/* -- Telemetry grid: 2x2 on mobile -- */
 @media (max-width: 480px) {
   .telemetryGrid {
     grid-template-columns: 1fr 1fr;
@@ -1021,6 +1073,9 @@
   .cardValue {
     font-size: 1.35rem;
   }
+  .cardLabel {
+    font-size: 0.75rem;
+  }
 }
 
 @media (max-width: 360px) {
@@ -1029,14 +1084,28 @@
   }
 }
 
-/* -- Control bar -- */
+/* -- Control bar: responsive search and views -- */
 @media (max-width: 640px) {
   .controlBar {
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .searchWrap {
+    width: 100%;
   }
   .viewModeToggle {
     align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .controlBar {
+    gap: 8px;
+  }
+  .filterChip {
+    font-size: 0.8rem;
+    padding: 5px 10px;
   }
 }
 
@@ -1054,7 +1123,26 @@
     gap: 8px;
   }
   .gridName {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+  }
+  .stepperWrap {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .quickAddPill {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  .gridControls {
+    padding-top: 6px;
+    gap: 6px;
+  }
+  .cardActionRow {
+    gap: 4px;
+  }
+  .cardActionBtn {
+    font-size: 11px;
+    padding: 3px 6px;
   }
 }
 
@@ -1067,15 +1155,57 @@
   }
 }
 
-/* -- Product list rows -- */
-@media (max-width: 480px) {
+/* -- Product list rows on mobile -- */
+@media (max-width: 640px) {
   .productRow {
-    grid-template-columns: 44px 1fr;
-    gap: 8px;
-    padding: 10px 12px;
+    grid-template-columns: 48px 1fr;
+    gap: 10px;
+    padding: 12px;
   }
-  .thumbWrapper {
-    width: 44px;
-    height: 44px;
+  .controlsRow {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--color-wood-line);
   }
 }
+
+@media (max-width: 440px) {
+  .productRow {
+    grid-template-columns: 42px 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+  .thumbWrapper {
+    width: 42px;
+    height: 42px;
+  }
+  .productName {
+    font-size: 0.95rem;
+  }
+  .productPrice {
+    font-size: 0.85rem;
+  }
+  .controlsRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .stepperGroup {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .soldOutToggle {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .cardActionRow {
+    justify-content: flex-end;
+    width: 100%;
+  }
+}
+

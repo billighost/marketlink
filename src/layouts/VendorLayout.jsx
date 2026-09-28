@@ -19,13 +19,14 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useOnboarding } from '@/context/OnboardingContext';
 import { getFarmerOrders, getFarmerProfile, readyFarmerOrder, completeFarmerOrder } from '@/api/farmer';
 import { useVisibleInterval } from '@/hooks/useVisibleInterval';
 import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
 import VerifyEmailBanner from '@/components/layout/VerifyEmailBanner';
 import Toast from '@/components/ui/Toast';
-import FloatingActions from '@/components/ui/FloatingActions';
+import BackToTop from '@/components/ui/BackToTop';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
 import styles from './VendorLayout.module.css';
 
@@ -52,6 +53,7 @@ const NAV_ITEMS = [
 
 export default function VendorLayout() {
   const { user, logout, isAuthenticated } = useAuth();
+  const { openRestartModal } = useOnboarding();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -107,8 +109,15 @@ export default function VendorLayout() {
 
   const handleSignOut = async () => {
     setIsMoreOpen(false);
+    try {
+      sessionStorage.setItem('marketlink_signed_out_notice', 'You have been signed out successfully.');
+    } catch {
+      // ignore
+    }
     await logout();
-    navigate('/login');
+    navigate('/login', {
+      state: { signedOut: true, message: 'You have been signed out successfully.' },
+    });
   };
 
   const handleOpenCodeLookup = () => {
@@ -178,7 +187,7 @@ export default function VendorLayout() {
         )}
 
         {/* Desktop Sidebar (>= 1024px) */}
-        <aside className={styles.sidebar} aria-label="Farmer navigation">
+        <aside className={styles.sidebar} aria-label="Farmer navigation" data-tour="vendor-sidebar">
           <div className={styles.sidebarHeader}>
             <Link to="/vendor" className={styles.brandLink}>
               <MarketLinkLogo size="sm" />
@@ -224,11 +233,12 @@ export default function VendorLayout() {
                 size="sm"
                 className={styles.quickCodeBtn}
                 onClick={handleOpenCodeLookup}
+                data-tour="vendor-pickup-code"
               >
                 <QrCode size={15} aria-hidden="true" />
                 <span>Pickup Code</span>
               </Button>
-              <Link to="/vendor/stock?action=new" className={styles.quickAddLink}>
+              <Link to="/vendor/stock?action=new" className={styles.quickAddLink} data-tour="vendor-add-item">
                 <Plus size={15} aria-hidden="true" />
                 <span>Add Item</span>
               </Link>
@@ -236,35 +246,61 @@ export default function VendorLayout() {
           </div>
 
           <nav className={styles.sidebarNav}>
-            {NAV_ITEMS.map(({ to, label, icon: Icon, end, hasBadge }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                className={({ isActive }) =>
-                  `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
-                }
-                aria-current={({ isActive }) => (isActive ? 'page' : undefined)}
-                aria-label={hasBadge && badgeText ? badgeAria : label}
-              >
-                <Icon size={18} aria-hidden="true" className={styles.navIcon} />
-                <span className={styles.navLabel}>{label}</span>
-                {hasBadge && badgeText && (
-                  <span className={styles.badge} aria-hidden="true">
-                    {badgeText}
-                  </span>
-                )}
-              </NavLink>
-            ))}
+            {NAV_ITEMS.map(({ to, label, icon: Icon, end, hasBadge }) => {
+              const tourAttr =
+                to === '/vendor'
+                  ? 'vendor-overview'
+                  : to === '/vendor/stock'
+                  ? 'vendor-stock'
+                  : to === '/vendor/orders'
+                  ? 'vendor-orders'
+                  : to === '/vendor/insights'
+                  ? 'vendor-insights'
+                  : to === '/vendor/stall'
+                  ? 'vendor-stall'
+                  : undefined;
+              return (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  className={({ isActive }) =>
+                    `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
+                  }
+                  aria-current={({ isActive }) => (isActive ? 'page' : undefined)}
+                  aria-label={hasBadge && badgeText ? badgeAria : label}
+                  data-tour={tourAttr}
+                >
+                  <Icon size={18} aria-hidden="true" className={styles.navIcon} />
+                  <span className={styles.navLabel}>{label}</span>
+                  {hasBadge && badgeText && (
+                    <span className={styles.badge} aria-hidden="true">
+                      {badgeText}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
           </nav>
 
           <div className={styles.sidebarFooter}>
+            <button
+              type="button"
+              onClick={() => openRestartModal('vendor')}
+              className={styles.switchLink}
+              style={{ background: 'transparent', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}
+              title="Restart the Farmer walkthrough"
+            >
+              <Sparkles size={16} aria-hidden="true" style={{ color: 'var(--color-beet)' }} />
+              <span>Tour Walkthrough</span>
+            </button>
             <Link
               to={stallInfo?.id || stallInfo?._id ? `/farmers/${stallInfo.id || stallInfo._id}` : '/farmers'}
               target="_blank"
               rel="noreferrer"
               className={styles.switchLink}
               title="View your public stall storefront"
+              data-tour="vendor-storefront"
             >
               <Store size={16} aria-hidden="true" />
               <span>Public Storefront</span>
@@ -296,6 +332,7 @@ export default function VendorLayout() {
                 onClick={handleOpenCodeLookup}
                 aria-label="Lookup Pickup Code"
                 title="Verify Pickup Code"
+                data-tour="vendor-pickup-code-mobile"
               >
                 <QrCode size={18} aria-hidden="true" />
               </button>
@@ -305,6 +342,7 @@ export default function VendorLayout() {
                 rel="noreferrer"
                 className={styles.mobileSwitchBtn}
                 aria-label="View Public Stall"
+                data-tour="vendor-mobile-storefront"
               >
                 <Store size={16} aria-hidden="true" />
               </Link>
@@ -334,6 +372,7 @@ export default function VendorLayout() {
               className={({ isActive }) =>
                 `${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`
               }
+              data-tour="vendor-bottom-stock"
             >
               <Package size={20} aria-hidden="true" />
               <span>Stock</span>
@@ -345,6 +384,7 @@ export default function VendorLayout() {
                 `${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`
               }
               aria-label={badgeAria}
+              data-tour="vendor-bottom-orders"
             >
               <div className={styles.iconWithBadge}>
                 <ClipboardList size={20} aria-hidden="true" />
@@ -373,6 +413,7 @@ export default function VendorLayout() {
               onClick={() => setIsMoreOpen(true)}
               aria-label="More options"
               aria-expanded={isMoreOpen}
+              data-tour="vendor-bottom-more"
             >
               <MoreHorizontal size={20} aria-hidden="true" />
               <span>More</span>
@@ -387,6 +428,17 @@ export default function VendorLayout() {
             title="Farmer Options"
           >
             <div className={styles.moreSheetContent}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMoreOpen(false);
+                  openRestartModal('vendor');
+                }}
+                className={styles.moreSheetLinkBtn}
+              >
+                <Sparkles size={20} aria-hidden="true" style={{ color: 'var(--color-beet)' }} />
+                <span>Take Farmer Tour</span>
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -512,8 +564,8 @@ export default function VendorLayout() {
             </div>
           </BottomSheet>
 
-          {/* Floating AI & Back to Top Actions */}
-          <FloatingActions showTopAfter={350} />
+          {/* Back to Top floating button on scroll */}
+          <BackToTop showAfter={350} />
         </div>
       </div>
     </VendorContext.Provider>

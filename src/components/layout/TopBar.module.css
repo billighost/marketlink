@@ -166,21 +166,30 @@
 .searchBtn { display: none; }
 @media (min-width: 1024px) { .searchBtn { display: inline-flex; } }
 
-/* Sign in text link (desktop only) */
+/* Sign in button (desktop only) — solid beet red with white text like sign up */
 .signInLink {
   display: none;
   align-items: center;
-  min-height: var(--tap-min);
-  padding-inline: var(--space-3);
-  color: var(--color-ink);
+  height: var(--control-h-sm);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-beet);
+  color: var(--color-on-primary);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   text-decoration: none;
-  transition: color var(--duration-fast) var(--ease-standard);
+  white-space: nowrap;
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
-.signInLink:hover { color: var(--color-beet); }
-.signInLink:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.signInLink:hover {
+  background: var(--color-beet-dark);
+  color: var(--color-on-primary);
+}
+.signInLink:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
 
 @media (min-width: 1024px) { .signInLink { display: inline-flex; } }
 

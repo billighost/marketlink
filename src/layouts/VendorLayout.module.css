@@ -701,41 +701,110 @@
 /* -- Mobile top bar: more compact -- */
 @media (max-width: 380px) {
   .mobileTopBar {
-    padding: 0 10px;
+    padding: 0 8px;
+    gap: 6px;
   }
   .mobileStallTitle {
     font-size: 0.82rem;
-    max-width: 160px;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobileStatusBadge {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+}
+
+/* -- Bottom nav: fluid spacing across all phone widths -- */
+@media (max-width: 1023px) {
+  .bottomNav {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  .bottomNavItem {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 2px;
+  }
+  .navLabel {
+    font-size: 10.5px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 }
 
-/* -- Bottom nav: better spacing on small phones -- */
 @media (max-width: 380px) {
   .bottomNavItem {
-    font-size: 10px;
-    min-width: 44px;
-    padding: 0 4px;
+    font-size: 9.5px;
+    gap: 1px;
+  }
+  .bottomNavBadge {
+    min-width: 14px;
+    height: 14px;
+    font-size: 9px;
+    top: -3px;
+    right: -6px;
   }
 }
 
-/* -- Code search form: stack on very small screens -- */
-@media (max-width: 400px) {
+/* -- Code search modal responsiveness -- */
+@media (max-width: 480px) {
+  .codeModalBody {
+    padding: var(--space-1) 0 var(--space-4);
+    gap: 14px;
+  }
+  .codeInput {
+    font-size: 16px;
+    height: 44px;
+    padding: 0 10px 0 38px;
+    letter-spacing: 0.1em;
+  }
+  .codeSearchIcon {
+    left: 10px;
+    width: 18px;
+    height: 18px;
+  }
+  .codeSearchBtn {
+    height: 44px;
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 420px) {
   .codeSearchForm {
     flex-direction: column;
+    gap: 8px;
   }
   .codeSearchBtn {
     width: 100%;
   }
+  .foundOrderHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .foundOrderFooter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .foundOrderFooter button {
+    width: 100%;
+  }
 }
 
-/* -- More sheet: better spacing -- */
+/* -- More sheet: better touch targets on mobile -- */
 @media (max-width: 480px) {
   .moreSheetLink,
   .moreSheetLinkBtn {
     font-size: 0.9rem;
-    min-height: 48px;
+    min-height: 46px;
+    padding: 0 10px;
   }
 }
+

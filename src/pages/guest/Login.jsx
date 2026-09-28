@@ -39,9 +39,46 @@ export function Login() {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
-  const isSessionExpired =
-    searchParams.get('reason') === 'expired' ||
-    sessionStorage.getItem('marketlink_session_expired') === 'true';
+  const [signedOutMessage, setSignedOutMessage] = useState(() => {
+    if (location.state?.message) return location.state.message;
+    if (location.state?.signedOut) return 'You have been signed out successfully.';
+    if (searchParams.get('reason') === 'signed_out' || searchParams.get('signed_out') === 'true') {
+      return 'You have been signed out successfully.';
+    }
+    try {
+      const sessionNotice = sessionStorage.getItem('marketlink_signed_out_notice');
+      if (sessionNotice) {
+        sessionStorage.removeItem('marketlink_signed_out_notice');
+        return sessionNotice;
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
+  const [isSessionExpired, setIsSessionExpired] = useState(() => {
+    if (location.state?.signedOut || location.state?.message || searchParams.get('reason') === 'signed_out') {
+      try {
+        sessionStorage.removeItem('marketlink_session_expired');
+      } catch {
+        // ignore
+      }
+      return false;
+    }
+    try {
+      const isExpired =
+        searchParams.get('reason') === 'expired' ||
+        sessionStorage.getItem('marketlink_session_expired') === 'true';
+      if (isExpired) {
+        sessionStorage.removeItem('marketlink_session_expired');
+        return true;
+      }
+    } catch {
+      // ignore
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -96,6 +133,8 @@ export function Login() {
     setBannerError(null);
     setIsUnverified(false);
     setResendStatus(null);
+    setSignedOutMessage(null);
+    setIsSessionExpired(false);
 
     const emailErr = validateField('email', email);
     const passwordErr = validateField('password', password);
@@ -177,8 +216,16 @@ export function Login() {
         </div>
       }
     >
-      
-      {isSessionExpired && (
+      {signedOutMessage && (
+        <div role="status" className={authStyles.bannerSuccess}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle2 size={16} aria-hidden="true" />
+            <p style={{ margin: 0 }}>{signedOutMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {!signedOutMessage && isSessionExpired && (
         <div role="status" className={authStyles.bannerSuccess}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Clock size={16} aria-hidden="true" />

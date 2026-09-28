@@ -1015,7 +1015,6 @@
     padding: 10px;
   }
 }
-
 /* ---------------------------------------------------------------
    COMPREHENSIVE RESPONSIVE IMPROVEMENTS - StockForm.module.css
    --------------------------------------------------------------- */
@@ -1025,4 +1024,55 @@
     gap: 14px;
     padding-bottom: 24px;
   }
+  .previewCard {
+    padding: 10px 12px;
+  }
+  .previewMedia {
+    width: 60px;
+    height: 60px;
+  }
+  .previewName {
+    font-size: 1.05rem;
+  }
+  .previewPrice {
+    font-size: 1.1rem;
+  }
+  .visualSection {
+    padding: 12px;
+  }
+  .visualSectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tabSwitcher {
+    width: 100%;
+    display: flex;
+  }
+  .tabBtn {
+    flex: 1;
+    justify-content: center;
+  }
 }
+
+@media (max-width: 380px) {
+  .previewBody {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .previewMedia {
+    width: 100%;
+    height: 120px;
+  }
+  .previewImg {
+    object-position: center;
+  }
+  .illustrationGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .currencyPrefixBadge {
+    padding: 0 8px;
+    font-size: 12px;
+  }
+}
+

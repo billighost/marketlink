@@ -243,7 +243,11 @@ export async function apiFetch(path, options = {}) {
       // Only broadcast sign-out when the refresh token is definitively rejected by the server
       const hadToken = Boolean(getAccessToken());
       clearAccessToken();
-      if (hadToken) {
+      const isIntentionalLogout =
+        typeof sessionStorage !== 'undefined' &&
+        sessionStorage.getItem('marketlink_intentional_logout') === 'true';
+
+      if (hadToken && !isIntentionalLogout) {
         try {
           if (typeof window !== 'undefined' && window.location) {
             const currentPath = window.location.pathname + window.location.search;
@@ -257,6 +261,15 @@ export async function apiFetch(path, options = {}) {
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('marketlink:session_expired'));
           }
+        } catch {
+          // ignore storage errors
+        }
+      } else if (isIntentionalLogout) {
+        try {
+          sessionStorage.removeItem('marketlink_intentional_logout');
+          sessionStorage.removeItem('marketlink_session_expired');
+          localStorage.removeItem('marketlink_user');
+          localStorage.setItem('marketlink_signed_out', Date.now().toString());
         } catch {
           // ignore storage errors
         }

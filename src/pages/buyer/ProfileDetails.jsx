@@ -149,9 +149,17 @@ export function ProfileDetails() {
     setSigningOutAll(true);
     try {
       await signOutAllDevices();
-      logout();
+      setIsSignOutAllConfirm(false);
+      try {
+        sessionStorage.setItem('marketlink_signed_out_notice', 'You have been signed out of all devices.');
+      } catch {
+        // ignore
+      }
+      await logout();
       showToast({ message: 'Signed out of all devices.' });
-      navigate('/login');
+      navigate('/login', {
+        state: { signedOut: true, message: 'You have been signed out of all devices.' },
+      });
     } catch (err) {
       showToast({ message: err.message || 'Could not sign out of all devices.' });
       setSigningOutAll(false);

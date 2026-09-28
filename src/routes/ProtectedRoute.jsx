@@ -4,11 +4,11 @@ import { useAuth } from '@/context/AuthContext';
 import { PATHS } from './paths';
 
 /**
- * Route guard that checks if the user is authenticated and has the required role.
- * Waits for silent session refresh before redirecting.
+ * Route guard that checks if the user is authenticated.
+ * All authenticated users can freely access all routes without role blockage.
  */
-export function ProtectedRoute({ allowedRoles = ['customer', 'buyer'], children }) {
-  const { isAuthenticated, role, isCheckingSession } = useAuth();
+export function ProtectedRoute({ children }) {
+  const { isAuthenticated, isCheckingSession } = useAuth();
   const location = useLocation();
 
   if (isCheckingSession) {
@@ -17,17 +17,6 @@ export function ProtectedRoute({ allowedRoles = ['customer', 'buyer'], children 
 
   if (!isAuthenticated) {
     return <Navigate to={PATHS.LOGIN} state={{ from: location }} replace />;
-  }
-
-  // Normalize role check (accept either customer or buyer)
-  const userRole = role === 'buyer' ? 'customer' : role;
-  const isAllowed = allowedRoles.some((r) => {
-    const norm = r === 'buyer' ? 'customer' : r;
-    return norm === userRole;
-  });
-
-  if (!isAllowed) {
-    return <Navigate to={PATHS.UNAUTHORIZED} replace />;
   }
 
   return children;

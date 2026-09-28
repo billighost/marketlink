@@ -451,3 +451,26 @@
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
 }
+
+/* Mobile refinements */
+@media (max-width: 480px) {
+  .stallBannerWrap {
+    height: 160px;
+    border-radius: var(--radius-lg);
+    margin-top: var(--space-2);
+  }
+  .stallHeading {
+    font-size: clamp(1.4rem, 1.15rem + 1.2vw, 1.85rem);
+    line-height: 1.25;
+  }
+  .produceGrid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+    gap: var(--space-3, 10px);
+  }
+}
+
+@media (max-width: 360px) {
+  .produceGrid {
+    grid-template-columns: 1fr;
+  }
+}

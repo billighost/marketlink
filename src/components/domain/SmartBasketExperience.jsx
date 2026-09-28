@@ -34,7 +34,7 @@ import {
 } from '@/api/smartBasket';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
-import { formatPrice, formatNaira } from '@/utils/format';
+import { formatPrice } from '@/utils/format';
 import Illustration from '@/components/domain/Illustration';
 import styles from './SmartBasketExperience.module.css';
 
@@ -1093,7 +1093,7 @@ export function SmartBasketExperience({
                       {prod.name}
                     </div>
                     <div className={styles.searchResultPrice}>
-                      {formatNaira(prod.priceCents)} / {prod.unit}
+                      {formatPrice(prod.priceCents)} / {prod.unit}
                     </div>
                     <div className={styles.searchResultFarmer}>
                       {prod.farmerName} • Stock: {prod.quantityAvailable}
@@ -1120,15 +1120,15 @@ export function SmartBasketExperience({
         <div className={styles.footerSummary}>
           <span className={styles.footerTotalLabel}>Total Basket Cost</span>
           <div className={styles.footerAmountRow}>
-            <span className={styles.footerTotalAmount}>{formatNaira(currentTotal)}</span>
+            <span className={styles.footerTotalAmount}>{formatPrice(currentTotal)}</span>
             <span
               className={`${styles.footerRemainingTag} ${
                 isOverBudget ? styles.tagOver : styles.tagGood
               }`}
             >
               {isOverBudget
-                ? `Exceeds budget by ${formatNaira(currentTotal - currentBudget)}`
-                : `${formatNaira(currentRemaining)} remaining`}
+                ? `Exceeds budget by ${formatPrice(currentTotal - currentBudgetCents)}`
+                : `${formatPrice(currentRemaining)} remaining`}
             </span>
           </div>
         </div>
@@ -1196,7 +1196,7 @@ export function SmartBasketExperience({
                       <div className={styles.altMeta}>
                         <div className={styles.altName}>{alt.name}</div>
                         <div className={styles.altPrice}>
-                          {formatNaira(alt.priceCents)} / {alt.unit} • {alt.farmerName}
+                          {formatPrice(alt.priceCents)} / {alt.unit} • {alt.farmerName}
                         </div>
                         <div className={styles.altStock}>
                           Available: {alt.quantityAvailable} {alt.unit}
@@ -1261,7 +1261,7 @@ export function SmartBasketExperience({
 
                 <div className={styles.detailsMeta}>
                   <div className={styles.detailsPrice}>
-                    {formatNaira(detailsTarget.priceCents)}
+                    {formatPrice(detailsTarget.priceCents)}
                     <span className={styles.detailsUnit}> / {detailsTarget.unit}</span>
                   </div>
 

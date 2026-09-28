@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Sparkles } from 'lucide-react';
 import Page from '@/components/layout/Page';
 import PageTitle from '@/components/layout/PageTitle';
 import Illustration from '@/components/domain/Illustration';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useOnboarding } from '@/context/OnboardingContext';
 import styles from './Help.module.css';
 
 const HOW_IT_WORKS_STEPS = [
@@ -70,6 +71,7 @@ const FAQS = [
 
 export function Help() {
   useDocumentTitle('How MarketLink works · MarketLink');
+  const { openRestartModal } = useOnboarding();
 
   const [openIndex, setOpenIndex] = useState(null);
 
@@ -87,6 +89,71 @@ export function Help() {
       />
 
       <div className={styles.container}>
+        {/* Interactive Tour CTA Banner */}
+        <div
+          style={{
+            background: 'var(--color-canvas-soft)',
+            border: '1px solid var(--color-wood-line)',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-4) var(--space-5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 'var(--space-4)',
+            marginBottom: 'var(--space-6)',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: 'var(--radius-full)',
+                background: 'var(--color-beet-tint)',
+                color: 'var(--color-beet)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h3 style={{ fontFamily: 'var(--font-head)', fontSize: 'var(--text-h4)', color: 'var(--color-ink)', margin: 0 }}>
+                New to MarketLink?
+              </h3>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-ink-soft)', margin: '2px 0 0 0' }}>
+                Take our 2-minute interactive tour to see how to browse produce, reserve crates, and collect orders.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => openRestartModal('buyer')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '0 var(--space-4)',
+              height: 'var(--control-h-sm, 36px)',
+              background: 'var(--color-beet)',
+              color: 'var(--color-on-primary, #FFF7F2)',
+              border: '1px solid var(--color-beet-dark)',
+              borderRadius: 'var(--radius-md)',
+              fontFamily: 'var(--font-body)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 'var(--weight-semibold)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 1px 3px rgba(122, 46, 59, 0.2)',
+            }}
+          >
+            <span>Start Interactive Tour</span>
+          </button>
+        </div>
+
         {/* Block 1: How MarketLink works */}
         <section className={styles.section} aria-labelledby="how-it-works-heading">
           <h2 id="how-it-works-heading" className={styles.sectionTitle}>

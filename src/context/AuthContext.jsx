@@ -137,6 +137,13 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try {
+      sessionStorage.removeItem('marketlink_session_expired');
+      sessionStorage.removeItem('marketlink_return_url');
+      sessionStorage.setItem('marketlink_intentional_logout', 'true');
+    } catch {
+      // ignore
+    }
+    try {
       await apiLogout();
     } catch {
       // ignore logout errors
@@ -147,6 +154,7 @@ export function AuthProvider({ children }) {
       try {
         localStorage.removeItem('marketlink_user');
         localStorage.setItem('marketlink_signed_out', Date.now().toString());
+        sessionStorage.removeItem('marketlink_session_expired');
       } catch {
         // ignore storage errors
       }

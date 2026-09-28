@@ -3,10 +3,10 @@ import { Inbox } from 'lucide-react';
 import styles from './IncomingOrdersTab.module.css';
 
 const MOCK_ORDERS = [
-  { id: 'ML-8821', customer: 'Marta Lin', slot: '8:30 AM - 9:00 AM', items: 'Fresh Ugu Leaves (3 Bunches)', total: '₦1,500', status: 'Pending' },
-  { id: 'ML-8820', customer: 'David Chen', slot: '9:00 AM - 9:30 AM', items: 'Cherokee Purple Tomatoes (2kg)', total: '₦4,200', status: 'Accepted' },
-  { id: 'ML-8819', customer: 'Sarah Jenkins', slot: '10:15 AM - 10:45 AM', items: 'White Yams (5 Tubers)', total: '₦12,500', status: 'Pending' },
-  { id: 'ML-8818', customer: 'James Robertson', slot: '11:30 AM - 12:00 PM', items: 'Lacinato Kale (4 Bunches)', total: '₦3,000', status: 'Pending' },
+  { id: 'ML-8821', customer: 'Marta Lin', slot: '8:30 AM - 9:00 AM', items: 'Fresh Ugu Leaves (3 Bunches)', total: '$15.00', status: 'Pending' },
+  { id: 'ML-8820', customer: 'David Chen', slot: '9:00 AM - 9:30 AM', items: 'Cherokee Purple Tomatoes (2kg)', total: '$42.00', status: 'Accepted' },
+  { id: 'ML-8819', customer: 'Sarah Jenkins', slot: '10:15 AM - 10:45 AM', items: 'White Yams (5 Tubers)', total: '$125.00', status: 'Pending' },
+  { id: 'ML-8818', customer: 'James Robertson', slot: '11:30 AM - 12:00 PM', items: 'Lacinato Kale (4 Bunches)', total: '$30.00', status: 'Pending' },
 ];
 
 const IncomingOrdersTab = () => {

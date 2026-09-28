@@ -66,7 +66,7 @@ export function BuyerTopBar() {
 
           <span className={styles.navDivider} aria-hidden="true" />
 
-          <nav className={styles.desktopNav} aria-label="Customer navigation">
+          <nav className={styles.desktopNav} aria-label="Customer navigation" data-tour="buyer-nav">
             <Link
               to="/buyer"
               className={`${styles.navLink} ${currentPath === '/buyer' ? styles.navLinkActive : ''}`}
@@ -76,6 +76,7 @@ export function BuyerTopBar() {
             <Link
               to="/buyer/products"
               className={`${styles.navLink} ${currentPath.startsWith('/buyer/products') ? styles.navLinkActive : ''}`}
+              data-tour="buyer-products-nav"
             >
               Browse
             </Link>
@@ -101,6 +102,7 @@ export function BuyerTopBar() {
               to="/buyer/route"
               className={`${styles.navLink} ${currentPath.startsWith('/buyer/route') ? styles.navLinkActive : ''}`}
               title="Market Route Planner"
+              data-tour="buyer-route-nav"
             >
               Route
             </Link>
@@ -109,7 +111,7 @@ export function BuyerTopBar() {
 
         {/* Action group: on mobile MarketDropdown flexes on left; Search and Basket on right */}
         <div className={styles.actions}>
-          <div className={styles.marketWrapper}>
+          <div className={styles.marketWrapper} data-tour="buyer-market-dropdown">
             <MarketDropdown variant="buyer" />
           </div>
 
@@ -119,6 +121,7 @@ export function BuyerTopBar() {
             className={styles.searchButton}
             aria-label="Search the market"
             title="Search the market (Ctrl + K)"
+            data-tour="buyer-search"
           >
             <Search size={18} strokeWidth={2} aria-hidden="true" />
           </button>
@@ -128,6 +131,7 @@ export function BuyerTopBar() {
             className={`${styles.cartButton} ${currentPath.startsWith('/buyer/basket') ? styles.cartButtonActive : ''}`}
             aria-label={`Shopping basket with ${count} items`}
             data-cart-target-desktop
+            data-tour="buyer-basket"
           >
             <ShoppingBasket size={18} strokeWidth={2} aria-hidden="true" />
             <span className={styles.cartText}>Basket</span>
@@ -143,6 +147,7 @@ export function BuyerTopBar() {
             className={`${styles.avatarButton} ${currentPath.startsWith('/buyer/profile') ? styles.avatarButtonActive : ''}`}
             aria-label={`Your profile, ${user?.name || 'Customer'}`}
             title={`Your profile (${user?.name || 'Customer'})`}
+            data-tour="buyer-profile"
           >
             <span className={styles.avatarText}>{getInitials()}</span>
           </Link>

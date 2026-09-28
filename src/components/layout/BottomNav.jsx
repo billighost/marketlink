@@ -40,11 +40,20 @@ export function BottomNav() {
   };
 
   return (
-    <nav className={styles.nav} aria-label="Main navigation">
+    <nav className={styles.nav} aria-label="Main navigation" data-tour="buyer-bottom-nav">
       <ul className={styles.list} role="list">
         {NAV_ITEMS.map((item) => {
           const isActive = getIsActive(item);
           const Icon = item.icon;
+          const tourAttr =
+            item.id === 'browse'
+              ? 'buyer-bottom-browse'
+              : item.id === 'basket'
+              ? 'buyer-bottom-basket'
+              : item.id === 'you'
+              ? 'buyer-bottom-you'
+              : undefined;
+
           return (
             <li key={item.id} className={styles.item}>
               <button
@@ -53,6 +62,7 @@ export function BottomNav() {
                 onClick={() => handleClick(item)}
                 aria-current={isActive ? 'page' : undefined}
                 data-cart-target={item.id === 'basket' ? '' : undefined}
+                data-tour={tourAttr}
               >
                 {isActive && <span className={styles.bar} aria-hidden="true" />}
                 <span className={styles.iconWrap}>

@@ -9,6 +9,7 @@ import { MapView } from '@/components/domain/MapView';
 import SegmentedControl from '@/components/ui/SegmentedControl';
 import EmptyState from '@/components/ui/EmptyState';
 import Skeleton from '@/components/ui/Skeleton';
+import MapMarketCard from './MapMarketCard';
 import { useCatalogueRoutes } from './routes';
 import styles from './MarketsView.module.css';
 
@@ -35,6 +36,7 @@ export function MarketsView({ audience = 'guest' }) {
 
   const [selectedDay, setSelectedDay] = useState(dayParam);
   const [selectedMarketId, setSelectedMarketId] = useState(null);
+  const [isMapCardDismissed, setIsMapCardDismissed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const selectedCardRef = useRef(null);
   const mapViewRef = useRef(null); // exposed imperative handle from MapView
@@ -112,10 +114,14 @@ export function MarketsView({ audience = 'guest' }) {
   const handleMarkerSelect = (markerOrId) => {
     const id = typeof markerOrId === 'object' ? markerOrId.id : markerOrId;
     setSelectedMarketId(id);
+    setIsMapCardDismissed(false);
+    const m = markets.find((item) => (item.id || item._id) === id);
+    if (m?.location?.lat && m?.location?.lng && mapViewRef.current?.flyTo) {
+      mapViewRef.current.flyTo(Number(m.location.lat), Number(m.location.lng), 14);
+    }
     if (selectedCardRef.current) {
       selectedCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-    // Open the marker's tooltip
     if (mapViewRef.current?.openMarkerPopup) {
       mapViewRef.current.openMarkerPopup(id);
     }
@@ -124,6 +130,7 @@ export function MarketsView({ audience = 'guest' }) {
   const handleSidebarCardSelect = (market) => {
     const id = market.id || market._id;
     setSelectedMarketId(id);
+    setIsMapCardDismissed(false);
     // Fly map to this market's location
     if (market.location?.lat && market.location?.lng && mapViewRef.current?.flyTo) {
       mapViewRef.current.flyTo(
@@ -137,7 +144,7 @@ export function MarketsView({ audience = 'guest' }) {
       if (mapViewRef.current?.openMarkerPopup) {
         mapViewRef.current.openMarkerPopup(id);
       }
-    }, 600);
+    }, 400);
   };
 
   const selectedMarket = useMemo(() => {
@@ -281,7 +288,27 @@ export function MarketsView({ audience = 'guest' }) {
                 interactive={true}
                 showDirectionsLink={false}
                 ariaLabel="Map of nearby farmers markets"
-              />
+              >
+                {selectedMarket && !isMapCardDismissed && (
+                  <MapMarketCard
+                    market={selectedMarket}
+                    audience={audience}
+                    onClose={() => setIsMapCardDismissed(true)}
+                  />
+                )}
+                {selectedMarket && isMapCardDismissed && (
+                  <button
+                    type="button"
+                    className={styles.mapCardRestoreBtn}
+                    onClick={() => setIsMapCardDismissed(false)}
+                    aria-label={`Show ${selectedMarket.name} on map`}
+                    title={`Show ${selectedMarket.name}`}
+                  >
+                    <MapPin size={13} className={styles.mapCardRestoreIcon} aria-hidden="true" />
+                    <span>Show {selectedMarket.name}</span>
+                  </button>
+                )}
+              </MapView>
             </div>
           </div>
 
