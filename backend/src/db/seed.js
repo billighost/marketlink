@@ -1,10 +1,3 @@
-/**
- * Database seed script.
- * ⚠️ WARNING: THIS SCRIPT RESETS THE DATABASE.
- * THE DATABASE MUST NEVER BE SEEDED AGAIN ONCE POPULATED WITH DATA.
- * An automatic safety guard prevents execution if data already exists in the database.
- */
-
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,7 +36,6 @@ export async function runSeed(force = false, targetDb = null) {
   const targetDbName = process.env.DB_NAME || env.DB_NAME;
   const isExplicitDevSeed = env.isDevelopment || targetDbName === 'marketlink_test';
 
-  // Run safety guard check before touching any database
   assertSafeDatabase(targetDbName, env.MONGODB_URI, 'seed reset', {
     isExplicitDevSeed,
     nodeEnv: env.NODE_ENV,
@@ -52,7 +44,6 @@ export async function runSeed(force = false, targetDb = null) {
 
   const db = targetDb || (await connectDb(env.MONGODB_URI, targetDbName));
 
-  // ⚠️ CRITICAL SAFETY CHECK: NEVER RE-SEED IF DATA ALREADY EXISTS
   if (!hasForce && targetDbName !== 'marketlink_test') {
     const existingColls = await db.listCollections().toArray();
     const existingNames = new Set(existingColls.map((c) => c.name));
@@ -77,14 +68,12 @@ export async function runSeed(force = false, targetDb = null) {
   console.log(`🌱  Starting MarketLink Database Seed on "${targetDbName}" (${env.NODE_ENV})...`);
   console.log(`======================================================\n`);
 
-  // 1. Drop existing collections to ensure a fresh, clean slate
   const existingCollections = await db.listCollections().toArray();
   for (const coll of existingCollections) {
     if (!coll.name.startsWith('system.')) {
       try {
         await db.collection(coll.name).drop();
       } catch (err) {
-        // drop may fail on some environments
       }
       try {
         await db.collection(coll.name).deleteMany({});
@@ -93,18 +82,15 @@ export async function runSeed(force = false, targetDb = null) {
   }
   console.log('✓ Cleaned existing collections.');
 
-  // 2. Re-create collections with validators and indexes
   await createCollections(db);
   await ensureIndexes(db);
   console.log('✓ Applied JSON schema validators and indexes.');
 
-  // 3. Hashes
   console.log('⏳ Hashing demo credentials...');
   const userPasswordHash = await bcrypt.hash('market123', 10);
   const adminPasswordHash = await bcrypt.hash('Admin12345', 10);
   const now = new Date();
 
-  // ── 4. Categories ──────────────────────────────────────────────────────────
   const categoryDefs = [
     { name: 'Vegetables', slug: 'vegetables', sortOrder: 1, art: 'carrot' },
     { name: 'Fruit', slug: 'fruit', sortOrder: 2, art: 'strawberries' },
@@ -124,14 +110,13 @@ export async function runSeed(force = false, targetDb = null) {
   const categoryMap = new Map(categories.map((c) => [c.name, c]));
   console.log(`✓ Seeded ${categories.length} categories.`);
 
-  // ── 5. Markets ─────────────────────────────────────────────────────────────
   const marketDefs = [
     {
       name: 'Elm Street Market',
       slug: 'elm-street-market',
       address: '200 Elm Street, Maplewood, NJ',
       location: { type: 'Point', coordinates: [-74.172, 40.735] },
-      schedule: [{ day: 'sat', openMin: 480, closeMin: 780 }], // 8:00 AM - 1:00 PM
+      schedule: [{ day: 'sat', openMin: 480, closeMin: 780 }],
       timezone: 'America/New_York',
       note: 'Free parking behind the community centre.',
       facilities: ['parking', 'restrooms', 'wheelchair-accessible', 'atm'],
@@ -145,7 +130,7 @@ export async function runSeed(force = false, targetDb = null) {
       slug: 'riverside-sunday-market',
       address: '45 River Road, Millburn, NJ',
       location: { type: 'Point', coordinates: [-74.31, 40.725] },
-      schedule: [{ day: 'sun', openMin: 540, closeMin: 840 }], // 9:00 AM - 2:00 PM
+      schedule: [{ day: 'sun', openMin: 540, closeMin: 840 }],
       timezone: 'America/New_York',
       note: 'Dogs welcome. Card payments accepted at most stalls.',
       facilities: ['dog-friendly', 'river-trail', 'card-payments'],
@@ -160,7 +145,7 @@ export async function runSeed(force = false, targetDb = null) {
       address: '88 Summit Avenue, Summit, NJ',
       location: { type: 'Point', coordinates: [-74.362, 40.715] },
       schedule: [
-        { day: 'wed', openMin: 450, closeMin: 720 }, // 7:30 AM - 12:00 PM
+        { day: 'wed', openMin: 450, closeMin: 720 },
         { day: 'sat', openMin: 450, closeMin: 720 },
       ],
       timezone: 'America/New_York',
@@ -176,7 +161,7 @@ export async function runSeed(force = false, targetDb = null) {
       slug: 'grove-park-market',
       address: '12 Park Lane, South Orange, NJ',
       location: { type: 'Point', coordinates: [-74.264, 40.748] },
-      schedule: [{ day: 'wed', openMin: 510, closeMin: 810 }], // 8:30 AM - 1:30 PM (Wednesday)
+      schedule: [{ day: 'wed', openMin: 510, closeMin: 810 }],
       timezone: 'America/New_York',
       note: 'Live music most Wednesdays. Picnic area nearby.',
       facilities: ['live-music', 'picnic-area', 'playground'],
@@ -200,10 +185,8 @@ export async function runSeed(force = false, targetDb = null) {
   const groveMarket = markets[3];
   console.log(`✓ Seeded ${markets.length} markets.`);
 
-  // ── 6. Users (Admin + Customers + Farmers) ──────────────────────────────────
   const users = [];
 
-  // Admin
   const adminUser = {
     _id: new ObjectId(),
     role: 'admin',
@@ -224,7 +207,6 @@ export async function runSeed(force = false, targetDb = null) {
   };
   users.push(adminUser);
 
-  // Customers (8 total: 7 active, 1 inactive)
   const customerDefs = [
     {
       name: 'George Adams',
@@ -352,7 +334,6 @@ export async function runSeed(force = false, targetDb = null) {
     'Shadowbrook Orchard': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551620/marketlink/farmers/fm5wdfcclihlcoa3uzjv.jpg',
   };
 
-  // Farmers (14 total: 12 from placeholders + 1 pending + 1 suspended)
   const farmerRaw = [
     {
       code: 'f-riverbend',
@@ -546,7 +527,6 @@ export async function runSeed(force = false, targetDb = null) {
       isNew: false,
       status: 'active',
     },
-    // Required pending farmer
     {
       code: 'f-pending',
       stallName: 'Pine Valley Apiary',
@@ -563,7 +543,6 @@ export async function runSeed(force = false, targetDb = null) {
       isNew: true,
       status: 'pending',
     },
-    // Required suspended farmer
     {
       code: 'f-suspended',
       stallName: 'Shadowbrook Orchard',
@@ -632,10 +611,10 @@ export async function runSeed(force = false, targetDb = null) {
       operatingDays: f.operatingDays,
       pickupWindows: f.operatingDays.map((d) => ({
         day: d,
-        startMin: 480, // 8:00 AM
-        endMin: 720,   // 12:00 PM
+        startMin: 480,
+        endMin: 720,
       })),
-      cutoffMinutesBefore: 720, // 12 hours before pickup start
+      cutoffMinutesBefore: 720,
       address: userDoc.address,
       location: {
         type: 'Point',
@@ -670,9 +649,7 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.FARMERS).insertMany(farmers);
   console.log(`✓ Seeded ${users.length} users and ${farmers.length} farmer profiles.`);
 
-  // ── 7. Products (Ported from placeholders + expanded to >40) ──────────────────
   const productDefs = [
-    // Riverbend Farm — Vegetables
     { farmerCode: 'f-riverbend', name: 'Heirloom tomatoes', category: 'Vegetables', priceCents: 450, unit: 'lb', availability: 'in', qty: 24, lowStock: 5, art: 'tomato', tags: ['seasonal', 'bestseller'], desc: 'A mix of Cherokee Purple, Brandywine and Green Zebra, picked yesterday.' },
     { farmerCode: 'f-riverbend', name: 'Rainbow carrots', category: 'Vegetables', priceCents: 450, unit: 'bunch', availability: 'in', qty: 18, lowStock: 4, art: 'carrot', tags: ['organic'], desc: 'Purple, orange, yellow and white carrots, tops still attached.' },
     { farmerCode: 'f-riverbend', name: 'Red and gold beets', category: 'Vegetables', priceCents: 500, unit: 'bunch', availability: 'low', qty: 4, lowStock: 5, art: 'beet-bunch', tags: ['seasonal'], desc: 'Sweet and earthy, roasted or raw in salads.' },
@@ -681,68 +658,54 @@ export async function runSeed(force = false, targetDb = null) {
     { farmerCode: 'f-riverbend', name: 'Sweet corn', category: 'Vegetables', priceCents: 100, unit: 'each', availability: 'low', qty: 6, lowStock: 10, art: 'corn', tags: ['seasonal', 'new'], desc: 'Picked at dawn. Best eaten the same day.' },
     { farmerCode: 'f-riverbend', name: 'Butternut squash', category: 'Vegetables', priceCents: 300, unit: 'each', availability: 'in', qty: 20, lowStock: 5, art: 'squash', tags: ['seasonal'], desc: 'Dense, sweet flesh. Roast, mash, or turn into soup.' },
 
-    // Oak & Mill Bakery
     { farmerCode: 'f-oakmill', name: 'Sourdough boule', category: 'Bakery', priceCents: 700, unit: 'loaf', availability: 'in', qty: 12, lowStock: 3, art: 'sourdough-boule', tags: ['bestseller'], desc: 'Naturally leavened over 36 hours with a crackling crust.' },
     { farmerCode: 'f-oakmill', name: 'Butter croissant', category: 'Bakery', priceCents: 400, unit: 'each', availability: 'in', qty: 20, lowStock: 5, art: 'croissant', tags: ['bestseller'], desc: 'Flaky, laminated by hand with grass-fed butter.' },
     { farmerCode: 'f-oakmill', name: 'Seeded rye loaf', category: 'Bakery', priceCents: 800, unit: 'loaf', availability: 'in', qty: 8, lowStock: 2, art: 'sourdough-boule', tags: ['new'], desc: 'Dense, dark rye studded with caraway and sunflower seeds.' },
     { farmerCode: 'f-oakmill', name: 'Almond pastry', category: 'Bakery', priceCents: 450, unit: 'each', availability: 'in', qty: 15, lowStock: 3, art: 'croissant', tags: ['bestseller'], desc: 'Twice-baked butter croissant filled with velvety frangipane.' },
 
-    // Hollow Creek Apiary
     { farmerCode: 'f-hollowcreek', name: 'Wildflower honey', category: 'Honey and jam', priceCents: 950, unit: 'jar', availability: 'low', qty: 3, lowStock: 5, art: 'honey-jar', tags: ['bestseller'], desc: 'Raw, unfiltered summer wildflower honey from Morris County.' },
     { farmerCode: 'f-hollowcreek', name: 'Creamed clover honey', category: 'Honey and jam', priceCents: 1100, unit: 'jar', availability: 'in', qty: 10, lowStock: 3, art: 'honey-jar', tags: [], desc: 'Spreadable whipped honey with a smooth, buttery texture.' },
     { farmerCode: 'f-hollowcreek', name: 'Honeycomb section', category: 'Honey and jam', priceCents: 1400, unit: 'jar', availability: 'in', qty: 6, lowStock: 2, art: 'honey-jar', tags: ['seasonal'], desc: 'Pure fresh honeycomb cut straight from the cedar hive.' },
 
-    // Willow Bend Poultry
     { farmerCode: 'f-willowbend', name: 'Farm eggs', category: 'Dairy and eggs', priceCents: 600, unit: 'dozen', availability: 'in', qty: 14, lowStock: 4, art: 'egg-carton', tags: ['organic'], desc: 'Free-range, pasture-raised. Yolks as orange as sunset.' },
     { farmerCode: 'f-willowbend', name: 'Half-dozen eggs', category: 'Dairy and eggs', priceCents: 350, unit: 'each', availability: 'in', qty: 10, lowStock: 3, art: 'egg-carton', tags: [], desc: 'Same pasture-raised eggs in a smaller carton.' },
     { farmerCode: 'f-willowbend', name: 'Pastured whole chicken', category: 'Meat and fish', priceCents: 1800, unit: 'each', availability: 'in', qty: 8, lowStock: 2, art: 'egg-carton', tags: ['organic'], desc: 'Air-chilled, pasture-raised whole roasting chicken (approx 4 lb).' },
 
-    // Maplecrest Creamery
     { farmerCode: 'f-maplecrest', name: 'Aged farmhouse cheddar', category: 'Dairy and eggs', priceCents: 1200, unit: 'each', availability: 'in', qty: 8, lowStock: 2, art: 'cheese', tags: ['bestseller'], desc: 'Sharp, crumbly, aged 18 months in their cellar.' },
     { farmerCode: 'f-maplecrest', name: 'Fresh ricotta', category: 'Dairy and eggs', priceCents: 800, unit: 'jar', availability: 'in', qty: 6, lowStock: 2, art: 'cheese', tags: ['new'], desc: 'Made that morning from whole Jersey cow milk. Creamy and mild.' },
     { farmerCode: 'f-maplecrest', name: 'Cultured butter', category: 'Dairy and eggs', priceCents: 650, unit: 'each', availability: 'in', qty: 12, lowStock: 4, art: 'milk-bottle', tags: [], desc: 'Tangy, European-style cultured butter with sea salt flakes.' },
     { farmerCode: 'f-maplecrest', name: 'Whole milk', category: 'Dairy and eggs', priceCents: 550, unit: 'jar', availability: 'in', qty: 10, lowStock: 3, art: 'milk-bottle', tags: [], desc: 'Non-homogenised, cream-top Jersey cow milk in a glass bottle.' },
 
-    // Sunridge Berry Farm
     { farmerCode: 'f-sunridge', name: 'Strawberries', category: 'Fruit', priceCents: 600, unit: 'pint', availability: 'in', qty: 16, lowStock: 5, art: 'strawberries', tags: ['seasonal', 'bestseller'], desc: 'Sweet, fragrant Earliglow berries picked that morning.' },
     { farmerCode: 'f-sunridge', name: 'Blueberries', category: 'Fruit', priceCents: 550, unit: 'pint', availability: 'in', qty: 20, lowStock: 6, art: 'blueberries', tags: ['seasonal'], desc: 'Plump Duke and Bluecrop blueberries from the sunny hillside.' },
     { farmerCode: 'f-sunridge', name: 'Mixed berry box', category: 'Fruit', priceCents: 1000, unit: 'pint', availability: 'low', qty: 3, lowStock: 4, art: 'strawberries', tags: ['seasonal'], desc: 'A little of everything: strawberries, blueberries, raspberries.' },
     { farmerCode: 'f-sunridge', name: 'Red raspberries', category: 'Fruit', priceCents: 650, unit: 'pint', availability: 'in', qty: 12, lowStock: 3, art: 'strawberries', tags: ['seasonal'], desc: 'Hand-picked heritage raspberries, sweet and delicate.' },
 
-    // Green Hollow Mushrooms
     { farmerCode: 'f-greenhollow', name: 'Oyster mushrooms', category: 'Vegetables', priceCents: 800, unit: 'lb', availability: 'in', qty: 10, lowStock: 3, art: 'mushrooms', tags: ['new'], desc: 'Tender blue oysters grown on oak sawdust. Delicate and nutty.' },
     { farmerCode: 'f-greenhollow', name: 'Lion\'s mane', category: 'Vegetables', priceCents: 1400, unit: 'lb', availability: 'in', qty: 5, lowStock: 2, art: 'mushrooms', tags: ['new'], desc: 'Shaggy, lobster-textured mushroom. Slice thick and sear in butter.' },
     { farmerCode: 'f-greenhollow', name: 'Shiitake cluster', category: 'Vegetables', priceCents: 1000, unit: 'lb', availability: 'in', qty: 8, lowStock: 3, art: 'mushrooms', tags: ['organic'], desc: 'Dense, smoky shiitakes cultivated on natural hardwood logs.' },
 
-    // Thornberry Preserves
     { farmerCode: 'f-thornberry', name: 'Strawberry jam', category: 'Honey and jam', priceCents: 750, unit: 'jar', availability: 'in', qty: 14, lowStock: 4, art: 'jam', tags: ['bestseller'], desc: 'Just strawberries, sugar and lemon. Nothing else.' },
     { farmerCode: 'f-thornberry', name: 'Fig and walnut butter', category: 'Honey and jam', priceCents: 900, unit: 'jar', availability: 'in', qty: 8, lowStock: 3, art: 'jam', tags: ['seasonal'], desc: 'Thick, spoonable fig butter with toasted walnut pieces.' },
     { farmerCode: 'f-thornberry', name: 'Peach chutney', category: 'Honey and jam', priceCents: 800, unit: 'jar', availability: 'out', qty: 0, lowStock: 3, art: 'jam', tags: ['seasonal'], desc: 'Spiced peach chutney with ginger. Back when peaches return.' },
 
-    // Cedarbrook Flowers
     { farmerCode: 'f-cedarbrook', name: 'Seasonal bouquet', category: 'Herbs and flowers', priceCents: 1200, unit: 'bunch', availability: 'in', qty: 10, lowStock: 3, art: 'flowers', tags: ['seasonal', 'new'], desc: 'Mixed dahlias, zinnias and greenery, wrapped in brown paper.' },
     { farmerCode: 'f-cedarbrook', name: 'Fresh basil pot', category: 'Herbs and flowers', priceCents: 400, unit: 'each', availability: 'in', qty: 8, lowStock: 2, art: 'herbs', tags: [], desc: 'A living Genovese basil plant. Snip what you need, keep it growing.' },
     { farmerCode: 'f-cedarbrook', name: 'Dried lavender bunch', category: 'Herbs and flowers', priceCents: 600, unit: 'bunch', availability: 'in', qty: 15, lowStock: 4, art: 'flowers', tags: ['seasonal'], desc: 'English lavender dried slowly in the barn. Fills a room with scent.' },
 
-    // Old Stone Fishmonger
     { farmerCode: 'f-oldstone', name: 'Fresh striped bass', category: 'Meat and fish', priceCents: 1600, unit: 'lb', availability: 'in', qty: 6, lowStock: 2, art: 'fish', tags: [], desc: 'Day-boat catch from Barnegat Bay, filleted to order.' },
     { farmerCode: 'f-oldstone', name: 'Cold-smoked trout', category: 'Meat and fish', priceCents: 1200, unit: 'each', availability: 'in', qty: 8, lowStock: 2, art: 'fish', tags: ['bestseller'], desc: 'Beechwood-smoked rainbow trout. Silky and delicate.' },
     { farmerCode: 'f-oldstone', name: 'Smoked fish pate', category: 'Meat and fish', priceCents: 750, unit: 'jar', availability: 'in', qty: 12, lowStock: 3, art: 'fish', tags: ['new'], desc: 'Flaked smoked fish blended with dill, capers, and cream cheese.' },
 
-    // Wild Meadow Meats
     { farmerCode: 'f-wildmeadow', name: 'Maple breakfast sausage', category: 'Meat and fish', priceCents: 900, unit: 'bag', availability: 'in', qty: 12, lowStock: 4, art: 'sausages', tags: ['bestseller'], desc: 'Sweet, smoky pork sausage with real maple syrup. The Saturday queue-maker.' },
     { farmerCode: 'f-wildmeadow', name: 'Italian pork sausage', category: 'Meat and fish', priceCents: 850, unit: 'bag', availability: 'in', qty: 10, lowStock: 3, art: 'sausages', tags: [], desc: 'Fennel seed, garlic and crushed red pepper. Grill or braise.' },
     { farmerCode: 'f-wildmeadow', name: 'Grass-fed ground beef', category: 'Meat and fish', priceCents: 950, unit: 'lb', availability: 'in', qty: 15, lowStock: 4, art: 'sausages', tags: ['organic'], desc: '85/15 lean ground beef from pasture-raised Black Angus.' },
 
-    // Clearwater Orchards
     { farmerCode: 'f-clearwater', name: 'Honeycrisp apples', category: 'Fruit', priceCents: 400, unit: 'lb', availability: 'in', qty: 25, lowStock: 6, art: 'apples', tags: ['seasonal', 'bestseller'], desc: 'Crisp, sweet-tart and impossibly juicy. The apple that ruins all other apples.' },
     { farmerCode: 'f-clearwater', name: 'Bartlett pears', category: 'Fruit', priceCents: 350, unit: 'lb', availability: 'in', qty: 18, lowStock: 4, art: 'pears', tags: ['seasonal'], desc: 'Buttery when ripe. Let them sit on the counter for a day or two.' },
     { farmerCode: 'f-clearwater', name: 'Fresh-pressed cider', category: 'Fruit', priceCents: 800, unit: 'jar', availability: 'low', qty: 4, lowStock: 5, art: 'apples', tags: ['seasonal', 'new'], desc: 'Unfiltered, unpasteurised blend of heritage apples. Shake before pouring.' },
-    // D9 requirement: 70-character name
     { farmerCode: 'f-clearwater', name: 'Handmade Small-Batch Heritage Golden Delicious Unfiltered Apple Cider!', category: 'Fruit', priceCents: 850, unit: 'jar', availability: 'in', qty: 12, lowStock: 3, art: 'apples', tags: ['seasonal'], desc: 'Special edition 70-character heritage cider.' },
 
-    // D9 requirement: tomato products from exactly 3 farmers
-    // (Riverbend has 'Heirloom tomatoes', Sunridge has 'Sweet cherry tomatoes', Thornberry has 'Pickled green tomatoes')
     { farmerCode: 'f-sunridge', name: 'Sweet cherry tomatoes', category: 'Vegetables', priceCents: 500, unit: 'pint', availability: 'in', qty: 15, lowStock: 4, art: 'tomato', tags: ['seasonal', 'organic'], desc: 'Sun-warmed bite-sized cherry tomatoes, intensely sweet.' },
     { farmerCode: 'f-thornberry', name: 'Pickled green tomatoes', category: 'Honey and jam', priceCents: 850, unit: 'jar', availability: 'in', qty: 10, lowStock: 3, art: 'jam', tags: ['seasonal'], desc: 'Tangy pickled green tomatoes with mustard seed and dill.' },
   ];
@@ -804,8 +767,6 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.PRODUCTS).insertMany(products);
   console.log(`✓ Seeded ${products.length} products.`);
 
-  // ── 8. Orders (22 total covering placed, accepted, ready, completed, cancelled, declined) ──
-  // Dates relative to "now" using utils/time.js
   const nextSat = getNextWeekday('sat', 8, 0, now);
   const nextSatPickupEnd = addHours(nextSat, 2);
   const lastSat = getPastWeekday('sat', 1, 8, 0, now);
@@ -878,13 +839,12 @@ export async function runSeed(force = false, targetDb = null) {
     };
   }
 
-  // Order 1: George Adams - Ready for pickup (Upcoming Saturday)
   const fRiver = farmerMap.get('f-riverbend');
   const pTom = productCodeMap.get('Heirloom tomatoes');
   const pKale = productCodeMap.get('Tuscan kale');
   orderDocs.push(
     createOrder({
-      orderNumber: 'ML-' + ++orderSeq, // ML-1041
+      orderNumber: 'ML-' + ++orderSeq,
       customerId: georgeUser._id,
       customerName: georgeUser.name,
       farmer: fRiver,
@@ -901,13 +861,12 @@ export async function runSeed(force = false, targetDb = null) {
     })
   );
 
-  // Order 2: George Adams - Accepted (Upcoming Saturday)
   const fOak = farmerMap.get('f-oakmill');
   const pBoule = productCodeMap.get('Sourdough boule');
   const pCroissant = productCodeMap.get('Butter croissant');
   orderDocs.push(
     createOrder({
-      orderNumber: 'ML-' + ++orderSeq, // ML-1042
+      orderNumber: 'ML-' + ++orderSeq,
       customerId: georgeUser._id,
       customerName: georgeUser.name,
       farmer: fOak,
@@ -923,12 +882,11 @@ export async function runSeed(force = false, targetDb = null) {
     })
   );
 
-  // Order 3: George Adams - Placed (Upcoming Saturday)
   const fSun = farmerMap.get('f-sunridge');
   const pStraw = productCodeMap.get('Strawberries');
   orderDocs.push(
     createOrder({
-      orderNumber: 'ML-' + ++orderSeq, // ML-1043
+      orderNumber: 'ML-' + ++orderSeq,
       customerId: georgeUser._id,
       customerName: georgeUser.name,
       farmer: fSun,
@@ -941,12 +899,11 @@ export async function runSeed(force = false, targetDb = null) {
     })
   );
 
-  // Order 4: George Adams - Completed (Past Saturday) - Category: Dairy and eggs
   const pEgg = productCodeMap.get('Farm eggs');
   const fWillow = farmerMap.get('f-willowbend');
   orderDocs.push(
     createOrder({
-      orderNumber: 'ML-' + ++orderSeq, // ML-1044
+      orderNumber: 'ML-' + ++orderSeq,
       customerId: georgeUser._id,
       customerName: georgeUser.name,
       farmer: fWillow,
@@ -964,10 +921,9 @@ export async function runSeed(force = false, targetDb = null) {
     })
   );
 
-  // Order 5: George Adams - Completed - Category: Vegetables (Heirloom tomatoes)
   orderDocs.push(
     createOrder({
-      orderNumber: 'ML-' + ++orderSeq, // ML-1045
+      orderNumber: 'ML-' + ++orderSeq,
       customerId: georgeUser._id,
       customerName: georgeUser.name,
       farmer: fRiver,
@@ -985,11 +941,10 @@ export async function runSeed(force = false, targetDb = null) {
     })
   );
 
-  // Order 6: George Adams - Completed - Category: Bakery (Sourdough boule)
   const threeWeeksAgo = getPastWeekday('sat', 3, 8, 0, now);
   orderDocs.push(
     createOrder({
-      orderNumber: 'ML-' + ++orderSeq, // ML-1046
+      orderNumber: 'ML-' + ++orderSeq,
       customerId: georgeUser._id,
       customerName: georgeUser.name,
       farmer: fOak,
@@ -1007,11 +962,10 @@ export async function runSeed(force = false, targetDb = null) {
     })
   );
 
-  // Order 7: George Adams - Completed - Category: Fruit (Strawberries)
   const fourWeeksAgo = getPastWeekday('sat', 4, 8, 0, now);
   orderDocs.push(
     createOrder({
-      orderNumber: 'ML-' + ++orderSeq, // ML-1047
+      orderNumber: 'ML-' + ++orderSeq,
       customerId: georgeUser._id,
       customerName: georgeUser.name,
       farmer: fSun,
@@ -1029,10 +983,9 @@ export async function runSeed(force = false, targetDb = null) {
     })
   );
 
-  // Order 8: George Adams - Cancelled
   orderDocs.push(
     createOrder({
-      orderNumber: 'ML-' + ++orderSeq, // ML-1048
+      orderNumber: 'ML-' + ++orderSeq,
       customerId: georgeUser._id,
       customerName: georgeUser.name,
       farmer: fRiver,
@@ -1049,7 +1002,6 @@ export async function runSeed(force = false, targetDb = null) {
     })
   );
 
-  // Add 17 more orders for other customers across various farmers and statuses (Chloe is brand new with 0 orders)
   const otherCustomers = customerUsers.filter(
     (u) => u.email !== 'george@example.com' && u.email !== 'chloe@example.com' && u.status === 'active'
   );
@@ -1100,7 +1052,6 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.ORDERS).insertMany(orderDocs);
   console.log(`✓ Seeded ${orderDocs.length} orders across placed, accepted, ready, completed, cancelled, declined.`);
 
-  // ── 9. Reviews (30+ reviews with farmer replies) ───────────────────────────
   const reviewDefs = [
     { farmerCode: 'f-riverbend', prodName: 'Heirloom tomatoes', rating: 5, author: 'Mia Kowalski', comment: "The best tomatoes I've ever had. We ate half the bag on the drive home.", reply: "Thank you Mia! Cherokee Purples are peaking right now." },
     { farmerCode: 'f-riverbend', prodName: 'Rainbow carrots', rating: 5, author: 'James Thornton', comment: 'Beautiful rainbow carrots. My kids were fighting over the purple ones.' },
@@ -1116,7 +1067,6 @@ export async function runSeed(force = false, targetDb = null) {
     { farmerCode: 'f-oldstone', prodName: 'Cold-smoked trout', rating: 4, author: 'Paul Gray', comment: 'Beautifully smoked trout. Melts on a bagel with cream cheese.' },
   ];
 
-  // Expand with additional reviews to reach >30 reviews without duplicate index keys
   const reviewDocs = [];
   const completedOrders = orderDocs.filter((o) => o.status === 'completed');
   const seenReviews = new Set();
@@ -1161,7 +1111,6 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.REVIEWS).insertMany(reviewDocs);
   console.log(`✓ Seeded ${reviewDocs.length} reviews.`);
 
-  // ── 10. Favorites (for George Adams) ────────────────────────────────────────
   const favoriteDocs = [
     { _id: new ObjectId(), userId: georgeUser._id, targetType: 'product', targetId: pTom._id, createdAt: now },
     { _id: new ObjectId(), userId: georgeUser._id, targetType: 'product', targetId: pBoule._id, createdAt: now },
@@ -1172,7 +1121,6 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.FAVORITES).insertMany(favoriteDocs);
   console.log(`✓ Seeded ${favoriteDocs.length} favorites.`);
 
-  // ── 11. Notifications ──────────────────────────────────────────────────────
   const notificationDocs = [
     {
       _id: new ObjectId(),
@@ -1230,7 +1178,6 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.NOTIFICATIONS).insertMany(notificationDocs);
   console.log(`✓ Seeded ${notificationDocs.length} intelligent notifications.`);
 
-  // ── 12. Announcements (2) ──────────────────────────────────────────────────
   const announcementDocs = [
     {
       _id: new ObjectId(),
@@ -1254,7 +1201,6 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.ANNOUNCEMENTS).insertMany(announcementDocs);
   console.log(`✓ Seeded ${announcementDocs.length} announcements.`);
 
-  // ── 13. Moderation Flags (2 open) ──────────────────────────────────────────
   const modFlagDocs = [
     {
       _id: new ObjectId(),
@@ -1282,7 +1228,6 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.MODERATION_FLAGS).insertMany(modFlagDocs);
   console.log(`✓ Seeded ${modFlagDocs.length} moderation flags.`);
 
-  // ── 14. Search History (for George) ────────────────────────────────────────
   const searchTerms = ['tomatoes', 'sourdough', 'honey', 'eggs', 'strawberries'];
   const searchDocs = searchTerms.map((term, idx) => ({
     _id: new ObjectId(),
@@ -1293,8 +1238,6 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.SEARCH_HISTORY).insertMany(searchDocs);
   console.log(`✓ Seeded ${searchDocs.length} search history items.`);
 
-  // ── 15. Counters ───────────────────────────────────────────────────────────
-  // Ensure the sequence counter is strictly higher than any seeded order number
   const nextOrderNumberSeq = orderSeq + 10;
   await db.collection(COLLECTIONS.COUNTERS).insertOne({
     _id: 'orderNumber',
@@ -1302,10 +1245,8 @@ export async function runSeed(force = false, targetDb = null) {
   });
   console.log(`✓ Initialized counters (orderNumber sequence: ${nextOrderNumberSeq}).`);
 
-  // ── 16. Compute & Sync Denormalised Fields ──────────────────────────────────
   console.log('⏳ Computing denormalized aggregate stats...');
 
-  // Compute farmerCount on markets
   for (const m of markets) {
     const count = await db.collection(COLLECTIONS.FARMERS).countDocuments({
       marketIds: m._id,
@@ -1314,7 +1255,6 @@ export async function runSeed(force = false, targetDb = null) {
     await db.collection(COLLECTIONS.MARKETS).updateOne({ _id: m._id }, { $set: { farmerCount: count } });
   }
 
-  // Compute salesCount, ratingSum, featuredScore, listed on products from completed orders
   for (const p of products) {
     let sales = 0;
     for (const o of orderDocs) {
@@ -1344,7 +1284,6 @@ export async function runSeed(force = false, targetDb = null) {
     p.featuredScore = featuredScore;
   }
 
-  // Compute ratings, sales, and categorySlugs on farmers
   for (const f of farmers) {
     const farmerProducts = products.filter((p) => p.farmerId.equals(f._id));
     const categorySlugs = [...new Set(farmerProducts.map((p) => p.categorySlug))];
@@ -1365,7 +1304,6 @@ export async function runSeed(force = false, targetDb = null) {
   }
   console.log('✓ Denormalized aggregates synchronized.');
 
-  // ── 16b. Seed Settings, Contact Messages, Audit Log ────────────────────────
   const settingsDocs = [
     { _id: 'maxItemsPerOrder', value: 30, updatedAt: now, updatedBy: null },
     { _id: 'defaultCutoffMinutes', value: 720, updatedAt: now, updatedBy: null },
@@ -1438,7 +1376,6 @@ export async function runSeed(force = false, targetDb = null) {
   await db.collection(COLLECTIONS.AUDIT_LOG).insertMany(auditDocs);
   console.log('✓ Seeded settings, contact messages, and audit log.');
 
-  // ── 17. Write tests/seedFacts.json ──────────────────────────────────────────
   const listedProducts = await db.collection(COLLECTIONS.PRODUCTS).find({ listed: true }).toArray();
   const sortedByPrice = [...listedProducts].sort((a, b) => a.priceCents - b.priceCents);
   const perCategoryCounts = {};
@@ -1488,7 +1425,6 @@ export async function runSeed(force = false, targetDb = null) {
   console.log(`────────────────────────────────────────────────────────────────────────────\n`);
 }
 
-// Auto-run if executed directly as a script
 if (process.argv[1] && process.argv[1].endsWith('seed.js')) {
   runSeed()
     .then(() => closeDb())

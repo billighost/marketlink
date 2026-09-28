@@ -1,7 +1,7 @@
 import React from 'react';
 import Badge from '@/components/ui/Badge';
 import { formatCurrency, formatDateShort } from '@/utils/format';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Star } from 'lucide-react';
 import styles from './Moderation.module.css';
 
 function formatRelativeTime(date) {
@@ -28,7 +28,7 @@ export function ModerationCard({ flag, activeTab, isBusy, onRemove, onKeep }) {
     <article
       className={`${styles.flagCard} ${isResolved ? styles.flagCardResolved : ''}`}
     >
-      {/* Card Header: Meta + Timestamps */}
+      
       <div className={styles.cardHeader}>
         <div className={styles.metaGroup}>
           <Badge tone={isReview ? 'neutral' : 'warning'}>
@@ -51,7 +51,6 @@ export function ModerationCard({ flag, activeTab, isBusy, onRemove, onKeep }) {
         </span>
       </div>
 
-      {/* Evidence Section */}
       <div className={styles.evidenceSection}>
         {isReview ? (
           <>
@@ -60,8 +59,9 @@ export function ModerationCard({ flag, activeTab, isBusy, onRemove, onKeep }) {
             </blockquote>
             <div className={styles.evidenceMeta}>
               {flag.preview?.rating && (
-                <span className={styles.ratingStars} aria-label={`${flag.preview.rating} stars`}>
-                  ★ {flag.preview.rating}
+                <span className={styles.ratingStars} aria-label={`${flag.preview.rating} stars`} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                  <Star size={11} fill="currentColor" aria-hidden="true" />
+                  <span>{flag.preview.rating}</span>
                 </span>
               )}
               <span>by {flag.preview?.customerName || 'Customer'}</span>
@@ -99,7 +99,6 @@ export function ModerationCard({ flag, activeTab, isBusy, onRemove, onKeep }) {
         )}
       </div>
 
-      {/* Flagger Notes */}
       {flag.note && !isResolved && (
         <div className={styles.flaggerNotes}>
           <span className={styles.flaggerNotesTitle}>Reporter Note</span>
@@ -107,7 +106,6 @@ export function ModerationCard({ flag, activeTab, isBusy, onRemove, onKeep }) {
         </div>
       )}
 
-      {/* Resolved Audit Trail */}
       {isResolved && (
         <div className={styles.auditBlock}>
           <strong>Resolution Outcome: {flag.status === 'removed' ? 'Content Removed' : 'Flag Dismissed (Kept)'}</strong>
@@ -115,7 +113,6 @@ export function ModerationCard({ flag, activeTab, isBusy, onRemove, onKeep }) {
         </div>
       )}
 
-      {/* Card Actions (For Open tab) */}
       {!isResolved && (
         <div className={styles.cardActions}>
           <div className={styles.decisionGroup}>

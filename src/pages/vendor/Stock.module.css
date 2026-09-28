@@ -4,16 +4,21 @@
   gap: var(--space-5);
   max-width: 1040px;
   margin: 0 auto;
-  padding: var(--space-2) var(--space-4) calc(var(--tap-min) + var(--space-12));
+  padding: var(--space-2) var(--space-3) calc(var(--tap-min) + var(--space-12));
 }
 
-/* Header */
+@media (min-width: 640px) {
+  .container {
+    padding: var(--space-2) var(--space-4) calc(var(--tap-min) + var(--space-12));
+  }
+}
+
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding-bottom: var(--space-2);
 }
 
@@ -75,7 +80,7 @@
 
 .title {
   font-family: var(--font-head);
-  font-size: 1.85rem;
+  font-size: clamp(1.4rem, 3.5vw, 1.85rem);
   font-weight: 700;
   color: var(--color-ink);
   letter-spacing: -0.02em;
@@ -94,6 +99,7 @@
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .templateBtn,
@@ -132,7 +138,6 @@
   background-color: var(--color-beet-dark, #5E212B) !important;
 }
 
-/* Telemetry Grid */
 .telemetryGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -278,7 +283,6 @@
   transition: width 0.4s ease;
 }
 
-/* Control Bar */
 .controlBar {
   display: flex;
   align-items: center;
@@ -369,7 +373,11 @@
   color: var(--color-beet, #7A2E3B);
 }
 
-/* Filters */
+.viewBtn:not(.viewBtnActive):hover {
+  background-color: var(--color-canvas-soft);
+  color: var(--color-ink);
+}
+
 .filterSection {
   display: flex;
   flex-direction: column;
@@ -466,7 +474,6 @@
   font-weight: var(--weight-bold);
 }
 
-/* Loading & Empty */
 .loadingBox {
   display: flex;
   flex-direction: column;
@@ -480,9 +487,6 @@
   padding: var(--space-8);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   GRID VIEW
-   ───────────────────────────────────────────────────────────── */
 .productGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -715,9 +719,6 @@
   font-weight: var(--weight-medium);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   LIST VIEW
-   ───────────────────────────────────────────────────────────── */
 .productList {
   display: flex;
   flex-direction: column;
@@ -880,7 +881,6 @@
   border-radius: var(--radius-full);
 }
 
-/* Controls */
 .controlsRow {
   display: flex;
   align-items: center;
@@ -919,14 +919,12 @@
   white-space: nowrap;
 }
 
-/* Load More */
 .loadMoreWrapper {
   display: flex;
   justify-content: center;
   padding: var(--space-4) 0;
 }
 
-/* Mobile Sticky Action Button */
 .stickyFooter {
   position: sticky;
   bottom: calc(var(--tap-min) + 20px + env(safe-area-inset-bottom, 0px) + var(--space-2));
@@ -950,7 +948,6 @@
   width: 100%;
 }
 
-/* Produce Row & Card Actions (CRUD) */
 .cardActionRow {
   display: flex;
   align-items: center;
@@ -992,3 +989,93 @@
   color: var(--color-danger);
 }
 
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - Stock.module.css
+   --------------------------------------------------------------- */
+
+/* -- Header -- */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .headerActions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .title {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+}
+
+/* -- Telemetry grid: 2x2 on small mobile -- */
+@media (max-width: 480px) {
+  .telemetryGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .telemetryCard {
+    padding: 12px 10px;
+  }
+  .cardValue {
+    font-size: 1.35rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .telemetryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -- Control bar -- */
+@media (max-width: 640px) {
+  .controlBar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .viewModeToggle {
+    align-self: flex-end;
+  }
+}
+
+/* -- Product grid -- */
+@media (max-width: 480px) {
+  .productGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .gridImageWrap {
+    height: 120px;
+  }
+  .gridBody {
+    padding: 10px 10px 12px;
+    gap: 8px;
+  }
+  .gridName {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .productGrid {
+    grid-template-columns: 1fr;
+  }
+  .gridImageWrap {
+    height: 160px;
+  }
+}
+
+/* -- Product list rows -- */
+@media (max-width: 480px) {
+  .productRow {
+    grid-template-columns: 44px 1fr;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .thumbWrapper {
+    width: 44px;
+    height: 44px;
+  }
+}

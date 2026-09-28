@@ -100,10 +100,10 @@ const ART_CATEGORIES = {
 };
 
 const SUGGESTED_NOTES = [
-  { label: '🌱 Picked Daily', text: 'Harvested fresh daily at dawn.' },
-  { label: '🧺 Hand-selected', text: 'Carefully sorted and hand-selected for quality.' },
-  { label: '✨ Heritage Variety', text: 'Heirloom variety with authentic rustic flavor.' },
-  { label: '🌿 Pesticide-Free', text: 'Grown without synthetic pesticides or chemicals.' },
+  { label: 'Picked Daily', text: 'Harvested fresh daily at dawn.' },
+  { label: 'Hand-selected', text: 'Carefully sorted and hand-selected for quality.' },
+  { label: 'Heritage Variety', text: 'Heirloom variety with authentic rustic flavor.' },
+  { label: 'Pesticide-Free', text: 'Grown without synthetic pesticides or chemicals.' },
 ];
 
 export function StockForm({ productId, onClose, onSaved, onDeleted }) {
@@ -115,7 +115,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // Form Fields
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [priceInput, setPriceInput] = useState('');
@@ -129,22 +128,18 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
   const [imageUrl, setImageUrl] = useState('');
   const [imagePublicId, setImagePublicId] = useState(null);
 
-  // Visuals tab: 'illustration' | 'photo'
   const [visualTab, setVisualTab] = useState('illustration');
   const [illusFilter, setIllusFilter] = useState('All');
   const [isDraggingFile, setIsDraggingFile] = useState(false);
 
-  // Weekly template config
   const [templateEnabled, setTemplateEnabled] = useState(false);
   const [templateDefaultQty, setTemplateDefaultQty] = useState(10);
 
-  // View state: 'form' | 'confirm-delete' | 'confirm-discard'
   const [viewStep, setViewStep] = useState('form');
   const [fieldErrors, setFieldErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
-  // Load Categories & Initial Product if editing
   useEffect(() => {
     let isMounted = true;
     async function init() {
@@ -152,7 +147,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         const catList = await getCategories();
         if (isMounted) setCategories(catList || []);
       } catch {
-        // ignore category load error
       }
 
       if (productId) {
@@ -363,7 +357,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
     );
   }
 
-  // Confirm Discard Changes Step
   if (viewStep === 'confirm-discard') {
     return (
       <ConfirmStep
@@ -378,7 +371,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
     );
   }
 
-  // Confirm Delete Product Step
   if (viewStep === 'confirm-delete') {
     return (
       <ConfirmStep
@@ -407,7 +399,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         </div>
       )}
 
-      {/* ── Live Customer Preview Card ── */}
       <div className={styles.previewCard}>
         <div className={styles.previewHeader}>
           <span className={styles.previewBadge}>Live Marketplace Preview</span>
@@ -442,7 +433,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         </div>
       </div>
 
-      {/* ── Produce Name ── */}
       <div className={styles.fieldGroup}>
         <div className={styles.labelRow}>
           <label htmlFor="produce-name" className={styles.label}>
@@ -481,7 +471,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         )}
       </div>
 
-      {/* ── Category Field ── */}
       <div className={styles.fieldGroup}>
         <label htmlFor="produce-category" className={styles.label}>
           Category <span className={styles.requiredMark}>*</span>
@@ -518,9 +507,8 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         )}
       </div>
 
-      {/* ── Price and Unit Row ── */}
       <div className={styles.twoCol}>
-        {/* Price */}
+        
         <div className={styles.fieldGroup}>
           <label htmlFor="produce-price" className={styles.label}>
             Price <span className={styles.requiredMark}>*</span>
@@ -554,7 +542,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
           )}
         </div>
 
-        {/* Unit */}
         <div className={styles.fieldGroup}>
           <label htmlFor="produce-unit" className={styles.label}>
             Unit <span className={styles.requiredMark}>*</span>
@@ -582,9 +569,8 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         </div>
       </div>
 
-      {/* ── Available Stock & Low Stock Threshold (Matching Steppers) ── */}
       <div className={styles.twoCol}>
-        {/* Available Quantity */}
+        
         <div className={styles.stepperCard}>
           <div className={styles.stepperCardHeader}>
             <label htmlFor="produce-quantity" className={styles.label}>
@@ -658,7 +644,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
           )}
         </div>
 
-        {/* Low-stock Threshold */}
         <div className={styles.stepperCard}>
           <div className={styles.stepperCardHeader}>
             <label htmlFor="produce-low-stock" className={styles.label}>
@@ -719,7 +704,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         </div>
       </div>
 
-      {/* ── Description with Quick Notes ── */}
       <div className={styles.fieldGroup}>
         <div className={styles.labelRow}>
           <label htmlFor="product-description" className={styles.label}>
@@ -769,7 +753,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         </div>
       </div>
 
-      {/* ── Tags / Produce Highlights ── */}
       <div className={styles.fieldGroup}>
         <label className={styles.label}>Tags & Attributes</label>
         <div className={styles.badgesGrid}>
@@ -813,7 +796,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         </div>
       </div>
 
-      {/* ── Picture Section (Illustration & Photo Upload Switcher) ── */}
       <div className={styles.visualSection}>
         <div className={styles.visualSectionHeader}>
           <div>
@@ -952,7 +934,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         )}
       </div>
 
-      {/* ── Weekly Inventory Template Section ── */}
       <div className={styles.templateCard}>
         <div className={styles.templateHeaderRow}>
           <div className={styles.templateIconWrap}>
@@ -1025,7 +1006,6 @@ export function StockForm({ productId, onClose, onSaved, onDeleted }) {
         )}
       </div>
 
-      {/* ── Action Buttons Footer ── */}
       <div className={styles.stickyFooterBar}>
         <div className={styles.footerLeft}>
           {productId && (

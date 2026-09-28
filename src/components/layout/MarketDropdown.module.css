@@ -1,5 +1,3 @@
-/* MarketDropdown — Clean, elegant navbar market selector */
-
 .dropdownWrapper {
   position: relative;
   display: inline-flex;
@@ -10,15 +8,15 @@
 .triggerBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 10px 0 6px;
+  gap: 7px;
+  padding: 0 12px 0 6px;
   background-color: #f8f6f2;
-  border: 1px solid rgba(46, 43, 38, 0.09);
+  border: 1px solid rgba(46, 43, 38, 0.10);
   border-radius: 999px;
   cursor: pointer;
   text-align: left;
-  height: 38px;
-  min-height: 38px;
+  height: 40px;
+  min-height: 40px;
   color: var(--color-ink, #2e2b26);
   transition: all var(--duration-fast, 120ms) var(--ease-standard, ease);
   user-select: none;
@@ -27,34 +25,35 @@
 
 @media (max-width: 360px) {
   .triggerBtn {
-    height: 34px;
-    min-height: 34px;
+    height: 36px;
+    min-height: 36px;
     padding: 0 8px 0 4px;
     gap: 4px;
   }
 }
 
 .triggerBtn:hover {
-  background-color: #efe9df;
-  border-color: rgba(122, 46, 59, 0.2);
+  background-color: #f2ede4;
+  border-color: rgba(122, 46, 59, 0.25);
+  transform: translateY(-1px);
 }
 
 .triggerBtnOpen {
   background-color: #efe9df;
-  border-color: rgba(122, 46, 59, 0.35);
-  box-shadow: 0 0 0 2px rgba(122, 46, 59, 0.1);
+  border-color: rgba(122, 46, 59, 0.4);
+  box-shadow: 0 0 0 3px rgba(122, 46, 59, 0.12);
 }
 
 .iconBox {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background-color: #ffffff;
   color: var(--color-beet, #7a2e3b);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(46, 43, 38, 0.08);
   flex-shrink: 0;
 }
 
@@ -79,11 +78,13 @@
   .subLabel {
     display: block;
     font-family: var(--font-body, 'Inter', sans-serif);
-    font-size: 0.62rem;
+    font-size: 0.61rem;
     color: var(--color-ink-soft, #6b6259);
-    font-weight: 500;
-    line-height: 1;
+    font-weight: 600;
+    line-height: 1.1;
     white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
 }
 
@@ -120,14 +121,13 @@
   color: var(--color-beet, #7a2e3b);
 }
 
-/* Dropdown Menu Modal/Menu */
 .dropdownMenu {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
   z-index: 9999;
   width: max-content;
-  min-width: 280px;
+  min-width: min(280px, calc(100vw - 24px));
   max-width: min(92vw, 380px);
   background-color: #ffffff;
   border: 1px solid rgba(46, 43, 38, 0.12);
@@ -160,11 +160,11 @@
     box-shadow: 0 1px 3px rgba(46, 43, 38, 0.04);
   }
   .triggerBtn:hover {
-    background-color: #faf7f2;
+    background-color: #faf5f2;
     border-color: rgba(122, 46, 59, 0.22);
   }
   .triggerBtnOpen {
-    background-color: #faf7f2;
+    background-color: #faf5f2;
     border-color: rgba(122, 46, 59, 0.28);
   }
   .iconBox {
@@ -174,7 +174,7 @@
     background-color: rgba(122, 46, 59, 0.08);
   }
   .marketName {
-    max-width: 160px;
+    max-width: 150px;
     font-size: 0.8125rem;
     font-weight: 600;
   }
@@ -182,7 +182,7 @@
 
 @media (max-width: 480px) {
   .marketName {
-    max-width: 125px;
+    max-width: clamp(80px, 28vw, 120px);
     font-size: 0.78rem;
   }
   .triggerBtn {
@@ -194,21 +194,21 @@
     height: 26px;
   }
   .dropdownMenu {
-    min-width: 270px;
-    max-width: calc(100vw - 20px);
+    min-width: 260px;
+    max-width: calc(100vw - 16px);
   }
   .dropdownMenu:not(.dropdownMenuRight) {
-    left: -4px;
+    left: 0;
   }
   .dropdownMenuRight {
-    right: -4px;
+    right: 0;
   }
 }
 
 @media (max-width: 360px) {
   .marketName {
-    max-width: 95px;
-    font-size: 0.75rem;
+    max-width: 85px;
+    font-size: 0.74rem;
   }
 }
 
@@ -264,7 +264,6 @@
   color: #7d7266;
 }
 
-/* Throttled Search Bar */
 .searchBarContainer {
   padding: 8px 10px 6px 10px;
   border-bottom: 1px solid rgba(46, 43, 38, 0.06);
@@ -326,7 +325,6 @@
   color: #2e2b26;
 }
 
-/* Market Options List */
 .marketList {
   display: flex;
   flex-direction: column;
@@ -431,7 +429,6 @@
   color: #a49b96;
 }
 
-/* Empty Search Results */
 .emptyResults {
   display: flex;
   flex-direction: column;
@@ -482,7 +479,6 @@
   background-color: #f7eef0;
 }
 
-/* Menu Footer */
 .menuFooter {
   padding: 10px 14px;
   border-top: 1px solid rgba(46, 43, 38, 0.07);

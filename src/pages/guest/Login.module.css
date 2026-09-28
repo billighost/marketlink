@@ -1,44 +1,151 @@
-/* Login.module.css — 35 lines, exactly ONE beet element */
+.optionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -2px;
+}
 
-/* The ONE beet element on the page */
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxInput {
+  accent-color: var(--color-beet);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
 .submitBtn {
-  min-height: var(--tap-min);
-  padding: 0 var(--space-4);
-  background: var(--color-beet);
+  min-height: 48px;
+  padding: 0 var(--space-5);
+  background: linear-gradient(135deg, var(--color-beet) 0%, #5E212B 100%);
   color: var(--color-on-primary);
   font-family: var(--font-body);
-  font-size: var(--text-body);
+  font-size: var(--text-base);
   font-weight: var(--weight-medium);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease-standard);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  box-shadow: 0 4px 14px rgba(122, 46, 59, 0.28), 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all var(--duration-fast) var(--ease-standard);
+  margin-top: var(--space-2);
+  position: relative;
+  overflow: hidden;
 }
+
 .submitBtn:hover:not(:disabled) {
-  background: var(--color-beet-dark);
-  color: var(--color-on-primary);
+  background: linear-gradient(135deg, #8E3544 0%, #6E2633 100%);
+  box-shadow: 0 6px 18px rgba(122, 46, 59, 0.38), 0 2px 4px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
 }
+
+.submitBtn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(122, 46, 59, 0.25);
+}
+
 .submitBtn:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
+
 .submitBtn:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
 }
 
+.btnArrow {
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.submitBtn:hover:not(:disabled) .btnArrow {
+  transform: translateX(3px);
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .resendBtn {
   align-self: flex-start;
-  padding: var(--space-1) var(--space-2);
-  background: transparent;
+  padding: 6px 12px;
+  background: var(--color-white);
   border: 1px solid var(--color-danger);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
   color: var(--color-danger);
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+  margin-top: var(--space-1);
 }
+
 .resendBtn:hover:not(:disabled) {
-  background: var(--color-white);
+  background: var(--color-danger-bg);
+}
+
+.perksRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding-top: var(--space-2);
+}
+
+.perkChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  background: var(--color-canvas-soft);
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(46, 43, 38, 0.06);
+}
+
+.perkIcon {
+  color: var(--color-herb);
+}
+
+.cardFooterContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.securityRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-ink-faint);
+}
+
+.securityIcon {
+  color: var(--color-herb);
 }

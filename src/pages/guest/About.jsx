@@ -156,7 +156,7 @@ export function About() {
 
   return (
     <div className={styles.page}>
-      {/* ─── HERO HEADER SECTION ───────────────────────────────── */}
+      
       <section className={styles.heroSection}>
         <div className="container">
           <div className={styles.heroContent}>
@@ -195,7 +195,6 @@ export function About() {
         </div>
       </section>
 
-      {/* ─── STATS METRIC STRIP ─────────────────────────────────── */}
       <section className={styles.statsSection}>
         <div className="container">
           <div className={styles.statsGrid}>
@@ -210,11 +209,10 @@ export function About() {
         </div>
       </section>
 
-      {/* ─── CHAPTER 1: THE STORY (WHY WE STARTED) ─────────────── */}
       <section className={styles.storySection}>
         <div className="container">
           <div className={styles.storyLayout}>
-            {/* Story Text */}
+            
             <div className={styles.storyTextCol}>
               <span className={styles.sectionKicker}>The Origin</span>
               <h2 className={styles.sectionHeading}>
@@ -250,7 +248,6 @@ export function About() {
               </div>
             </div>
 
-            {/* Story Visual Imagery Frame */}
             <div className={styles.storyVisualCol}>
               <div className={styles.imageStack}>
                 <div className={styles.ambientGlow} aria-hidden="true" />
@@ -293,7 +290,6 @@ export function About() {
         </div>
       </section>
 
-      {/* ─── CHAPTER 2: OUR 4 PILLARS (VALUES) ──────────────────── */}
       <section className={styles.valuesSection}>
         <div className="container">
           <div className={styles.valuesHeader}>
@@ -326,7 +322,6 @@ export function About() {
         </div>
       </section>
 
-      {/* ─── CHAPTER 3: HOW IT WORKS (THE SATURDAY CYCLE) ───────── */}
       <section className={styles.timelineSection}>
         <div className="container">
           <div className={styles.timelineHeader}>
@@ -363,7 +358,6 @@ export function About() {
         </div>
       </section>
 
-      {/* ─── CHAPTER 4: COMMUNITY STEWARDS & TEAM ───────────────── */}
       <section className={styles.teamSection}>
         <div className="container">
           <div className={styles.teamHeader}>
@@ -426,7 +420,6 @@ export function About() {
         </div>
       </section>
 
-      {/* ─── CHAPTER 5: OUR HISTORIC MARKET LOCATIONS ───────────── */}
       <section className={styles.marketsPreviewSection}>
         <div className="container">
           <div className={styles.marketsCard}>
@@ -461,14 +454,16 @@ export function About() {
                 className={styles.marketsImg}
               />
               <div className={styles.marketsImgTag}>
-                <span>📍 Greenwich Village · Abingdon Square</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <MapPin size={13} aria-hidden="true" />
+                  <span>Greenwich Village · Abingdon Square</span>
+                </span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── CHAPTER 6: COMMUNITY INVITATION CTA ────────────────── */}
       <section className={styles.ctaSection}>
         <div className="container">
           <div className={styles.ctaCard}>

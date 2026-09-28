@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Clock } from 'lucide-react';
+import { Eye, EyeOff, Clock, Mail, Lock, ArrowRight, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import { useAuth, homePathFor } from '@/context/AuthContext';
 import { resendVerification } from '@/api/auth';
@@ -9,10 +9,6 @@ import AuthCard from '@/components/guest/AuthCard';
 import authStyles from '@/components/guest/AuthCard.module.css';
 import styles from './Login.module.css';
 
-/**
- * Validates redirect destination to prevent open-redirect vulnerabilities.
- * Only same-origin relative paths starting with a single '/' are accepted.
- */
 export const safeNext = (raw) => {
   if (!raw) return null;
   if (!raw.startsWith('/') || raw.startsWith('//')) return null;
@@ -28,16 +24,15 @@ export function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendStatus, setResendStatus] = useState(null);
 
-  // Field errors: validate on blur
   const [fieldErrors, setFieldErrors] = useState({});
   const [touched, setTouched] = useState({});
 
-  // Page-level alerts
   const [bannerError, setBannerError] = useState(null);
   const [isUnverified, setIsUnverified] = useState(false);
 
@@ -48,7 +43,6 @@ export function Login() {
     searchParams.get('reason') === 'expired' ||
     sessionStorage.getItem('marketlink_session_expired') === 'true';
 
-  // If already authenticated, redirect
   useEffect(() => {
     if (isAuthenticated) {
       const rawNext = searchParams.get('next') || searchParams.get('redirect') || location.state?.from?.pathname;
@@ -56,6 +50,13 @@ export function Login() {
       navigate(dest, { replace: true });
     }
   }, [isAuthenticated, user, userRole, searchParams, location, navigate]);
+
+  useEffect(() => {
+    const qEmail = searchParams.get('email');
+    if (qEmail) {
+      setEmail(qEmail);
+    }
+  }, [searchParams]);
 
   const validateField = (name, val) => {
     if (name === 'email') {
@@ -154,18 +155,29 @@ export function Login() {
 
   return (
     <AuthCard
-      title="Welcome back"
-      lead="Sign in to reserve at the market."
+      split={true}
+      activeTab="login"
+      badge="Welcome Back"
+      title="Sign in to MarketLink"
+      lead="Access your pre-orders, favourite market stalls, and weekly basket."
+      heroTitle="Fresh Saturday morning produce, reserved before stalls open."
+      heroLead="Pre-order directly from certified local growers and collect easily at the market without rush or missing out."
       footer={
-        <span>
-          New here?{' '}
-          <Link to={PATHS.REGISTER} className={authStyles.link}>
-            Create an account
-          </Link>
-        </span>
+        <div className={styles.cardFooterContent}>
+          <span>
+            Don't have an account yet?{' '}
+            <Link to={PATHS.REGISTER} className={authStyles.link}>
+              Create one for free
+            </Link>
+          </span>
+          <div className={styles.securityRow}>
+            <ShieldCheck size={14} className={styles.securityIcon} aria-hidden="true" />
+            <span>256-bit encrypted • Pay when collecting in person</span>
+          </div>
+        </div>
       }
     >
-      {/* Session Expired Notice */}
+      
       {isSessionExpired && (
         <div role="status" className={authStyles.bannerSuccess}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -175,7 +187,6 @@ export function Login() {
         </div>
       )}
 
-      {/* Alert banner for page-level errors */}
       {bannerError && (
         <div role="alert" className={authStyles.bannerError}>
           <p>{bannerError}</p>
@@ -192,7 +203,6 @@ export function Login() {
         </div>
       )}
 
-      {/* Resend success notice */}
       {resendStatus && (
         <div role="status" className={authStyles.bannerSuccess}>
           <p>{resendStatus}</p>
@@ -200,25 +210,29 @@ export function Login() {
       )}
 
       <form onSubmit={handleSubmit} noValidate className={authStyles.form}>
-        {/* Email field */}
+        
         <div className={authStyles.field}>
           <label htmlFor="login-email" className={authStyles.label}>
-            Email
+            Email address
           </label>
-          <input
-            ref={emailRef}
-            id="login-email"
-            type="email"
-            name="email"
-            value={email}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            autoComplete="email"
-            aria-invalid={Boolean(fieldErrors.email)}
-            aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
-            className={`${authStyles.input} ${fieldErrors.email ? authStyles.inputInvalid : ''}`}
-            required
-          />
+          <div className={authStyles.inputWrap}>
+            <Mail size={18} className={authStyles.inputIcon} aria-hidden="true" />
+            <input
+              ref={emailRef}
+              id="login-email"
+              type="email"
+              name="email"
+              value={email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              autoComplete="email"
+              placeholder="you@example.com"
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
+              className={`${authStyles.input} ${authStyles.inputWithIcon} ${fieldErrors.email ? authStyles.inputInvalid : ''}`}
+              required
+            />
+          </div>
           {fieldErrors.email && (
             <span id="login-email-error" role="alert" className={authStyles.errorText}>
               {fieldErrors.email}
@@ -226,7 +240,6 @@ export function Login() {
           )}
         </div>
 
-        {/* Password field */}
         <div className={authStyles.field}>
           <div className={authStyles.labelRow}>
             <label htmlFor="login-password" className={authStyles.label}>
@@ -237,6 +250,7 @@ export function Login() {
             </Link>
           </div>
           <div className={authStyles.inputWrap}>
+            <Lock size={18} className={authStyles.inputIcon} aria-hidden="true" />
             <input
               ref={passwordRef}
               id="login-password"
@@ -246,9 +260,10 @@ export function Login() {
               onChange={handleChange}
               onBlur={handleBlur}
               autoComplete="current-password"
+              placeholder="Enter your password"
               aria-invalid={Boolean(fieldErrors.password)}
               aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
-              className={`${authStyles.input} ${authStyles.inputWithToggle} ${fieldErrors.password ? authStyles.inputInvalid : ''}`}
+              className={`${authStyles.input} ${authStyles.inputWithIcon} ${authStyles.inputWithToggle} ${fieldErrors.password ? authStyles.inputInvalid : ''}`}
               required
             />
             <button
@@ -268,14 +283,50 @@ export function Login() {
           )}
         </div>
 
-        {/* Submit button — the ONE beet element */}
+        <div className={styles.optionsRow}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className={styles.checkboxInput}
+            />
+            <span>Remember me on this browser</span>
+          </label>
+        </div>
+
         <button
           type="submit"
           disabled={loading}
           className={styles.submitBtn}
         >
-          {loading ? 'Signing in…' : 'Sign in'}
+          {loading ? (
+            <>
+              <Loader2 size={18} className={styles.spinner} aria-hidden="true" />
+              <span>Signing in…</span>
+            </>
+          ) : (
+            <>
+              <span>Sign in to MarketLink</span>
+              <ArrowRight size={18} className={styles.btnArrow} aria-hidden="true" />
+            </>
+          )}
         </button>
+
+        <div className={styles.perksRow}>
+          <div className={styles.perkChip}>
+            <CheckCircle2 size={14} className={styles.perkIcon} aria-hidden="true" />
+            <span>Fast Stall Pickup</span>
+          </div>
+          <div className={styles.perkChip}>
+            <CheckCircle2 size={14} className={styles.perkIcon} aria-hidden="true" />
+            <span>Direct Farmer Chat</span>
+          </div>
+          <div className={styles.perkChip}>
+            <CheckCircle2 size={14} className={styles.perkIcon} aria-hidden="true" />
+            <span>No Hidden Fees</span>
+          </div>
+        </div>
       </form>
     </AuthCard>
   );

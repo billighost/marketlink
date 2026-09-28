@@ -51,20 +51,6 @@ function getProductCategorySlug(p) {
   return p.categorySlug || (typeof p.category === 'string' ? p.category : '') || p.categoryName || '';
 }
 
-/**
- * Page B: Stall page (/buyer/stalls/:id)
- *
- * Content order (matches DOM order, which is also the mobile reading order):
- *  1. Identity — avatar, stall name, farmer name, rating
- *  2. Info card — open state, day dots, save button, pickup windows, location
- *  3. About the stall
- *  4. On the table today — current weekly stock, with category chips
- *  5. Reviews
- *
- * At 1024px+, a CSS grid re-flows this into two columns (identity/about/products/reviews
- * on the left, a sticky info card on the right) without changing the underlying DOM order,
- * so the logical reading order and the mobile visual order stay identical.
- */
 export function FarmerDetail() {
   const { id } = useParams();
   const { isFarmerFavorite, toggleFarmer } = useFavorites();
@@ -73,7 +59,6 @@ export function FarmerDetail() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [savingFavorite, setSavingFavorite] = useState(false);
 
-  // 1. Fetch Farmer Detail
   const {
     data: farmer,
     loading: farmerLoading,
@@ -84,38 +69,32 @@ export function FarmerDetail() {
 
   useDocumentTitle(farmer?.stallName ? `${farmer.stallName} · MarketLink` : 'Stall · MarketLink');
 
-  // Market ID for schedule and clock
   const marketId = farmer?.markets?.[0]?.id || farmer?.marketId || farmer?.marketIds?.[0] || farmer?.market?.id;
 
-  // 2. Fetch Market Detail for clock and timezone
   const { data: market } = useQuery(
     ['market-detail', marketId],
     ({ signal }) => getMarketDetail(marketId, signal).catch(() => null),
     { enabled: Boolean(marketId) }
   );
 
-  // 3. Fetch Products (include sold out so customer sees normal catalog)
   const { data: productsData, loading: productsLoading } = useQuery(
     ['farmer-products', id],
     ({ signal }) => getFarmerProducts(id, { includeSoldOut: true, limit: 50 }, signal),
     { enabled: Boolean(id) }
   );
 
-  // 4. Fetch Pickup Slots
   const { data: slotsData } = useQuery(
     ['farmer-slots', id],
     ({ signal }) => getFarmerPickupSlots(id, signal),
     { enabled: Boolean(id) }
   );
 
-  // 5. Fetch Reviews
   const { data: reviewsData } = useQuery(
     ['farmer-reviews', id],
     ({ signal }) => getFarmerReviews(id, { limit: 10 }, signal),
     { enabled: Boolean(id) }
   );
 
-  // Check if saved
   const isSaved = farmer ? isFarmerFavorite(farmer.id) : false;
 
   const handleToggleFavorite = async () => {
@@ -131,7 +110,6 @@ export function FarmerDetail() {
     }
   };
 
-  // Derive market clock & today weekday in market timezone
   const marketClock = market?.clock;
   const marketTimezone = market?.timezone || 'America/New_York';
 
@@ -160,7 +138,6 @@ export function FarmerDetail() {
     return [];
   }, [farmer]);
 
-  // Compute open state line
   const openState = useMemo(() => {
     if (!farmer || operatingDays.length === 0) {
       return { text: 'Trading days not listed', type: 'none' };
@@ -190,7 +167,6 @@ export function FarmerDetail() {
       };
     }
 
-    // Not here today - find next trading day
     let nextDayName = 'market day';
     if (todayIndex != null && operatingDays.length > 0) {
       for (let offset = 1; offset <= 7; offset += 1) {
@@ -210,7 +186,6 @@ export function FarmerDetail() {
     };
   }, [farmer, operatingDays, marketClock, todayIndex]);
 
-  // Prepare products: sorted available first, sold-out last
   const allProducts = useMemo(() => {
     const list = Array.isArray(productsData) ? productsData : productsData?.data || [];
     return [...list].sort((a, b) => {
@@ -221,7 +196,6 @@ export function FarmerDetail() {
     });
   }, [productsData]);
 
-  // Categories list for chips
   const categories = useMemo(() => {
     const set = new Set();
     for (const p of allProducts) {
@@ -233,12 +207,10 @@ export function FarmerDetail() {
     return ['All', ...Array.from(set).sort()];
   }, [allProducts]);
 
-  // Reset category selection when switching stalls
   useEffect(() => {
     setSelectedCategory('All');
   }, [id]);
 
-  // Filtered products by category chip
   const filteredProducts = useMemo(() => {
     if (selectedCategory === 'All') return allProducts;
     const target = selectedCategory.toLowerCase();
@@ -249,12 +221,10 @@ export function FarmerDetail() {
     });
   }, [allProducts, selectedCategory]);
 
-  // In-stock products count
   const inStockCount = useMemo(() => {
     return allProducts.filter((p) => p.availability !== 'out' && p.inventory !== 0).length;
   }, [allProducts]);
 
-  // Next opening day text
   const nextDayName = useMemo(() => {
     if (todayIndex != null && operatingDays.length > 0) {
       for (let offset = 1; offset <= 7; offset += 1) {
@@ -267,7 +237,6 @@ export function FarmerDetail() {
     return operatingDays.length > 0 ? DAY_NAMES[operatingDays[0]] : 'next market day';
   }, [todayIndex, operatingDays]);
 
-  // MarketLink Availability Mode: 🟢 OPEN TODAY | 🟡 LIMITED AVAILABILITY | 🔴 CLOSED TODAY
   const effectiveAvailability = useMemo(() => {
     const rawMode = farmer?.availabilityMode || farmer?.availabilityStatus?.mode;
     let mode = rawMode;
@@ -289,18 +258,18 @@ export function FarmerDetail() {
       }
     }
 
-    let badge = '🟢 OPEN TODAY';
+    let badge = 'OPEN TODAY';
     let tag = 'Accepting Orders';
     let note = farmer?.availabilityNote || farmer?.availabilityStatus?.note || null;
 
     if (mode === 'limited') {
-      badge = '🟡 LIMITED AVAILABILITY';
+      badge = 'LIMITED AVAILABILITY';
       tag = 'Low Stock';
       if (!note) {
         note = `Only ${inStockCount || 6} products currently available.`;
       }
     } else if (mode === 'closed') {
-      badge = '🔴 CLOSED TODAY';
+      badge = 'CLOSED TODAY';
       tag = 'Not Taking Orders';
       if (!note) {
         note = 'Customers cannot shop from this farmer today.';
@@ -315,7 +284,6 @@ export function FarmerDetail() {
     };
   }, [farmer, openState, inStockCount]);
 
-  // Operating Hours display string
   const hoursString = useMemo(() => {
     if (marketClock?.todayWindow?.opensAt && marketClock?.todayWindow?.closesAt) {
       return `${marketClock.todayWindow.opensAt} – ${marketClock.todayWindow.closesAt}`;
@@ -326,7 +294,6 @@ export function FarmerDetail() {
     return '8:00 AM – 3:00 PM';
   }, [marketClock, farmer]);
 
-  // Reviews
   const reviews = useMemo(() => {
     const list = Array.isArray(reviewsData) ? reviewsData : reviewsData?.data || [];
     return list.slice(0, 3);
@@ -335,7 +302,6 @@ export function FarmerDetail() {
   const totalReviewsCount = farmer?.reviewCount ?? reviewsData?.meta?.total ?? reviews.length;
   const ratingAvg = farmer?.ratingAvg ?? farmer?.rating ?? null;
 
-  // Pickup windows
   const pickupWindows = useMemo(() => {
     const list = Array.isArray(slotsData) ? slotsData : slotsData?.data || farmer?.pickupWindows || [];
     return list.map((s, idx) => ({
@@ -352,7 +318,6 @@ export function FarmerDetail() {
     farmer?.cutoffLabel ||
     (market?.cutoffDay ? `Reserve by ${market.cutoffDay}` : 'Reserve before market morning');
 
-  // Markers for LocationBlock
   const mapMarkers = useMemo(() => {
     if (farmer?.location?.lat && farmer?.location?.lng) {
       return [
@@ -377,7 +342,6 @@ export function FarmerDetail() {
     return [];
   }, [farmer, market]);
 
-  // Market & Pitch metadata
   const marketName = market?.name || farmer?.marketName || farmer?.market?.name || 'Local Market';
   const marketAddress = market?.address || farmer?.address || '';
   const stallLocationText = farmer?.stallNumber
@@ -386,7 +350,6 @@ export function FarmerDetail() {
     ? `${marketName} · ${marketAddress}`
     : marketName;
 
-  // Handle Loading State
   if (farmerLoading || (!farmer && !farmerError)) {
     return (
       <Page width="detail">
@@ -408,7 +371,6 @@ export function FarmerDetail() {
     );
   }
 
-  // Handle Not Found (Bad ID)
   if (farmerError || !farmer) {
     return (
       <Page width="detail">
@@ -434,7 +396,7 @@ export function FarmerDetail() {
   return (
     <Page width="detail">
       <div className={styles.container}>
-        {/* Back Link */}
+        
         <div className={styles.backRow}>
           <Link to="/buyer/stalls" className={styles.backLink} aria-label="Back to stalls">
             <ArrowLeft size={16} aria-hidden="true" />
@@ -442,7 +404,6 @@ export function FarmerDetail() {
           </Link>
         </div>
 
-        {/* ─── MarketLink Availability Mode Card ─── */}
         <section
           className={`${styles.availabilityModeCard} ${
             effectiveAvailability.mode === 'open'
@@ -499,7 +460,7 @@ export function FarmerDetail() {
         </section>
 
         <div className={styles.layout}>
-          {/* 1. Identity */}
+          
           <header className={styles.identityHeader}>
             <div className={styles.avatar} aria-hidden="true">
               {farmer.imageUrl ? (
@@ -532,7 +493,6 @@ export function FarmerDetail() {
             </div>
           </header>
 
-          {/* 2. Info card: status, save, pickup, location — sticky rail at 1024px+ */}
           <aside className={styles.rail}>
             <div className={styles.infoCard}>
               <div className={styles.scheduleBlock}>
@@ -597,14 +557,12 @@ export function FarmerDetail() {
             </div>
           </aside>
 
-          {/* 3. About the stall */}
           {farmer.description && (
             <Section title="About the stall" className={styles.about}>
               <p className={styles.aboutText}>{farmer.description}</p>
             </Section>
           )}
 
-          {/* 4. On the table today */}
           <Section
             title="On the table today"
             subtitle={`${filteredProducts.length} ${filteredProducts.length === 1 ? 'item' : 'items'}`}
@@ -653,7 +611,6 @@ export function FarmerDetail() {
             )}
           </Section>
 
-          {/* 5. Reviews */}
           <Section
             title="Reviews"
             subtitle={ratingAvg ? `${Number(ratingAvg).toFixed(1)} · ${totalReviewsCount} reviews` : 'Customer feedback'}

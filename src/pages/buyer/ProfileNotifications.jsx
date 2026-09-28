@@ -24,15 +24,14 @@ const DEMO_INTELLIGENT_NOTIFICATIONS = [
     id: 'demo-restock',
     type: 'restock',
     title: 'Your favorite farmer just restocked',
-    body: '🍅 Tomatoes are back at Green Valley Farm.',
-    message: '🍅 Tomatoes are back at Green Valley Farm.',
+    body: 'Tomatoes are back at Green Valley Farm.',
+    message: 'Tomatoes are back at Green Valley Farm.',
     createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
     readAt: null,
     unread: true,
     data: {
       farmerName: 'Green Valley Farm',
       productName: 'Tomatoes',
-      emoji: '🍅',
     },
     actionLabel: 'Pre-order produce',
     link: '/buyer/products',
@@ -41,8 +40,8 @@ const DEMO_INTELLIGENT_NOTIFICATIONS = [
     id: 'demo-pickup',
     type: 'order_ready',
     title: 'Your pickup is ready',
-    body: '🧺 Order #2048 is ready at Stall B12.',
-    message: '🧺 Order #2048 is ready at Stall B12.',
+    body: 'Order #2048 is ready at Stall B12.',
+    message: 'Order #2048 is ready at Stall B12.',
     createdAt: new Date(Date.now() - 75 * 60 * 1000).toISOString(),
     readAt: null,
     unread: true,
@@ -57,8 +56,8 @@ const DEMO_INTELLIGENT_NOTIFICATIONS = [
     id: 'demo-reminder',
     type: 'market_reminder',
     title: 'Market reminder',
-    body: '📍 Bodija Market opens tomorrow at 8:00 AM.',
-    message: '📍 Bodija Market opens tomorrow at 8:00 AM.',
+    body: 'Bodija Market opens tomorrow at 8:00 AM.',
+    message: 'Bodija Market opens tomorrow at 8:00 AM.',
     createdAt: new Date(Date.now() - 180 * 60 * 1000).toISOString(),
     readAt: null,
     unread: true,
@@ -110,7 +109,7 @@ function getAlertVisuals(notif) {
 
   if (type === 'restock' || type === 'favorite_restock' || title.includes('restocked')) {
     return {
-      icon: notif.data?.emoji || '🍅',
+      icon: <Sparkles size={18} aria-hidden="true" />,
       iconClass: styles.iconRestock,
       badgeText: 'Favorite Restock',
       badgeClass: styles.badgeRestock,
@@ -121,7 +120,7 @@ function getAlertVisuals(notif) {
 
   if (type === 'order_ready' || title.toLowerCase().includes('pickup is ready') || title.toLowerCase().includes('ready for pickup')) {
     return {
-      icon: '🧺',
+      icon: <ShoppingBag size={18} aria-hidden="true" />,
       iconClass: styles.iconOrder,
       badgeText: 'Pickup Ready',
       badgeClass: styles.badgeOrder,
@@ -132,7 +131,7 @@ function getAlertVisuals(notif) {
 
   if (type === 'market_reminder' || title.toLowerCase().includes('market reminder')) {
     return {
-      icon: '📍',
+      icon: <MapPin size={18} aria-hidden="true" />,
       iconClass: styles.iconMarket,
       badgeText: 'Market Reminder',
       badgeClass: styles.badgeMarket,
@@ -142,7 +141,7 @@ function getAlertVisuals(notif) {
   }
 
   return {
-    icon: '🔔',
+    icon: <Bell size={18} aria-hidden="true" />,
     iconClass: styles.iconOrder,
     badgeText: 'Update',
     badgeClass: styles.badgeOrder,
@@ -171,7 +170,6 @@ export function ProfileNotifications() {
       if (items.length > 0) {
         setRawNotifications(items);
       } else {
-        // Fallback to initial intelligent alerts if no records exist yet
         setRawNotifications(DEMO_INTELLIGENT_NOTIFICATIONS);
       }
     } catch {
@@ -189,7 +187,6 @@ export function ProfileNotifications() {
     return rawNotifications.filter((n) => !n.readAt && n.unread !== false).length;
   }, [rawNotifications]);
 
-  // Apply category filter
   const filteredNotifications = useMemo(() => {
     if (filter === 'all') return rawNotifications;
     if (filter === 'restock') {
@@ -216,7 +213,6 @@ export function ProfileNotifications() {
       refetchCount();
       showToast({ message: 'All alerts marked as read.' });
     } catch {
-      // ignore
     }
   };
 
@@ -232,7 +228,6 @@ export function ProfileNotifications() {
         await markNotificationRead(id);
         refetchCount();
       } catch {
-        // ignore
       }
     }
 
@@ -240,7 +235,6 @@ export function ProfileNotifications() {
     navigate(target);
   };
 
-  // Group notifications into Today, Yesterday, Earlier
   const grouped = useMemo(() => {
     const groups = { Today: [], Yesterday: [], Earlier: [] };
     filteredNotifications.forEach((notif) => {
@@ -266,7 +260,7 @@ export function ProfileNotifications() {
       />
 
       <div className={styles.container}>
-        {/* Quick Filter Chips */}
+        
         <div className={styles.filterChips} role="tablist" aria-label="Filter alerts">
           <button
             type="button"
@@ -280,21 +274,24 @@ export function ProfileNotifications() {
             className={`${styles.filterChip} ${filter === 'restock' ? styles.activeFilterChip : ''}`}
             onClick={() => setFilter('restock')}
           >
-            🍅 Restocks
+            <Sparkles size={14} aria-hidden="true" />
+            <span>Restocks</span>
           </button>
           <button
             type="button"
             className={`${styles.filterChip} ${filter === 'orders' ? styles.activeFilterChip : ''}`}
             onClick={() => setFilter('orders')}
           >
-            🧺 Pickup Ready
+            <ShoppingBag size={14} aria-hidden="true" />
+            <span>Pickup Ready</span>
           </button>
           <button
             type="button"
             className={`${styles.filterChip} ${filter === 'markets' ? styles.activeFilterChip : ''}`}
             onClick={() => setFilter('markets')}
           >
-            📍 Market Reminders
+            <MapPin size={14} aria-hidden="true" />
+            <span>Market Reminders</span>
           </button>
         </div>
 
@@ -354,12 +351,11 @@ export function ProfileNotifications() {
                             if (e.key === 'Enter') handleItemClick(notif);
                           }}
                         >
-                          {/* Alert Icon */}
+                          
                           <div className={`${styles.itemIconWrap} ${iconClass}`}>
                             <span>{icon}</span>
                           </div>
 
-                          {/* Alert Content */}
                           <div className={styles.itemContent}>
                             <div className={styles.itemHeader}>
                               <div className={styles.titleRow}>
@@ -378,12 +374,10 @@ export function ProfileNotifications() {
                               </span>
                             </div>
 
-                            {/* Prominent intelligent body */}
                             {displayBody && (
                               <p className={styles.itemMessage}>{displayBody}</p>
                             )}
 
-                            {/* Action Row */}
                             <div className={styles.itemActionRow}>
                               <span className={styles.actionPill}>
                                 {actionText}

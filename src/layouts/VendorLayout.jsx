@@ -194,7 +194,14 @@ export default function VendorLayout() {
             >
               <div className={styles.stallMeta}>
                 <span className={styles.stallName} title={stallInfo?.stallName || 'Create Your Stall'}>
-                  {stallInfo?.stallName || '✨ Create Your Stall'}
+                  {stallInfo?.stallName ? (
+                    stallInfo.stallName
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Sparkles size={13} aria-hidden="true" />
+                      <span>Create Your Stall</span>
+                    </span>
+                  )}
                 </span>
                 <div className={styles.stallStatusRow}>
                   <span className={styles.livePulseDot} />

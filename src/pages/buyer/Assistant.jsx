@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUp, Sparkles, AlertCircle, Store, Leaf, Receipt, MapPin } from 'lucide-react';
+import { ArrowUp, Sparkles, AlertCircle, Store, Leaf, Receipt, MapPin, Clock, RotateCcw, MessageSquare } from 'lucide-react';
 import { streamAssistantMessage, sendAssistantMessage } from '@/api/assistant';
 import { getProductDetail, getFarmerDetail, getMarketDetail } from '@/api/catalog';
 import ProductCard from '@/components/domain/ProductCard';
@@ -12,10 +12,31 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useSmartBasket } from '@/context/SmartBasketContext';
 import styles from './Assistant.module.css';
 
-const SUGGESTED_PROMPTS = [
-  'What time does the market open?',
-  'Who has eggs this Saturday?',
-  'When can I collect order MK-2049?',
+const SUGGESTIONS = [
+  {
+    icon: Clock,
+    badge: 'Hours',
+    title: 'Opening times & schedule',
+    prompt: 'What time does the market open?',
+  },
+  {
+    icon: Leaf,
+    badge: 'Produce',
+    title: 'Seasonal farm availability',
+    prompt: 'Who has eggs this Saturday?',
+  },
+  {
+    icon: Store,
+    badge: 'Stalls',
+    title: 'Find vendors & growers',
+    prompt: 'Where can I find fresh organic produce?',
+  },
+  {
+    icon: Receipt,
+    badge: 'Orders',
+    title: 'Collection & pickup info',
+    prompt: 'When can I collect order MK-2049?',
+  },
 ];
 
 function getChipIcon(type) {
@@ -225,7 +246,6 @@ export function Assistant() {
       streaming: true,
     };
 
-    // Snapshot history before this exchange is appended to state.
     const historyPayload = messages
       .filter((m) => !m.error)
       .map((m) => ({
@@ -260,7 +280,6 @@ export function Assistant() {
         res?.reply || accumulatedText || 'I have checked the market schedule and stock for you.';
       const rawCards = res?.cards || [];
 
-      // Collect structured cards and text entity tags [type:id]
       const cardMap = new Map();
 
       rawCards.forEach((c) => {
@@ -352,34 +371,74 @@ export function Assistant() {
   const hasUserMessages = messages.some((m) => m.sender === 'user');
 
   return (
-    <Page width="read">
+    <Page width="read" className={styles.pageRoot}>
       <PageTitle
         title="Ask MarketLink"
-        context="Market times, what is in stock, where a stall is."
+        context="Stall locations, what's in season, opening hours, or your orders."
         backTo="/buyer"
         backLabel="Back to today"
+        actions={
+          hasUserMessages ? (
+            <button
+              type="button"
+              className={styles.newChatBtn}
+              onClick={() => setMessages([])}
+              title="Start a new conversation"
+              aria-label="Start new conversation"
+            >
+              <RotateCcw size={14} aria-hidden="true" />
+              <span>New conversation</span>
+            </button>
+          ) : null
+        }
       />
 
       <div className={styles.chatShell}>
+        
+        <div className={styles.chatHeader}>
+          <div className={styles.statusPill}>
+            <span className={styles.statusDot} aria-hidden="true" />
+            <span className={styles.statusTitle}>Market Assistant</span>
+          </div>
+          <span className={styles.statusSubtitle}>Live inventory & stall directory</span>
+        </div>
+
         {!hasUserMessages ? (
           <div className={styles.emptyState}>
-            <div className={styles.emptyIcon} aria-hidden="true">
-              <Sparkles size={20} strokeWidth={1.75} />
+            <div className={styles.emptyIconBadge} aria-hidden="true">
+              <Sparkles size={22} strokeWidth={2} />
             </div>
-            <p className={styles.emptyText}>
-              Ask about opening times, what is in stock, or where to find a stall.
-            </p>
-            <div className={styles.suggestionsList}>
-              {SUGGESTED_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  className={styles.promptChip}
-                  onClick={() => handleSend(prompt)}
-                >
-                  {prompt}
-                </button>
-              ))}
+
+            <div className={styles.emptyTextGroup}>
+              <h2 className={styles.emptyTitle}>How can I help you today?</h2>
+              <p className={styles.emptySubtitle}>
+                Ask about market hours, current stall produce, artisan goods, or pickup status.
+              </p>
+            </div>
+
+            <div className={styles.suggestionsGrid}>
+              {SUGGESTIONS.map((item) => {
+                const ItemIcon = item.icon;
+                return (
+                  <button
+                    key={item.prompt}
+                    type="button"
+                    className={styles.promptCard}
+                    onClick={() => handleSend(item.prompt)}
+                  >
+                    <div className={styles.promptCardTop}>
+                      <div className={styles.promptCardIcon}>
+                        <ItemIcon size={16} strokeWidth={2} />
+                      </div>
+                      <span className={styles.promptBadge}>{item.badge}</span>
+                    </div>
+                    <div className={styles.promptCardContent}>
+                      <span className={styles.promptText}>{item.prompt}</span>
+                      <span className={styles.promptDesc}>{item.title}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -421,7 +480,6 @@ export function Assistant() {
                     )}
                   </div>
 
-                  {/* Proper entity cards shelf */}
                   {!isUser && msg.cards && msg.cards.length > 0 && (
                     <div className={styles.cardsShelf} aria-label="Recommended items">
                       <div className={styles.cardsTrack}>
@@ -435,7 +493,6 @@ export function Assistant() {
                     </div>
                   )}
 
-                  {/* Contextual follow-up suggestions */}
                   {!isUser && msg.suggestions && msg.suggestions.length > 0 && (
                     <div className={styles.followupSuggestions} aria-label="Suggested follow-up questions">
                       {msg.suggestions.map((suggestion, sIdx) => (
@@ -467,7 +524,7 @@ export function Assistant() {
               className={styles.input}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Ask about the market…"
+              placeholder="Ask about stalls, opening hours, produce, or pickup…"
               disabled={isTyping}
               aria-label="Message"
             />
@@ -480,6 +537,9 @@ export function Assistant() {
               <ArrowUp size={18} strokeWidth={2.25} aria-hidden="true" />
             </button>
           </div>
+          <p className={styles.composerFootnote}>
+            Assistant uses real-time producer catalogues &amp; local market schedules.
+          </p>
         </form>
       </div>
     </Page>

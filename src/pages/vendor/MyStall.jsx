@@ -37,9 +37,8 @@ import {
   Layers,
   Edit3,
   ArrowRight,
-  ArrowLeft,
-  AlertCircle,
   RefreshCw,
+  Star,
 } from 'lucide-react';
 import styles from './MyStall.module.css';
 
@@ -64,10 +63,8 @@ export function MyStall() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
-  // Active sub-sheet: 'none' | 'details' | 'markets' | 'windows' | 'cutoff' | 'closed' | 'location' | 'photo'
   const [activeSheet, setActiveSheet] = useState('none');
 
-  // Form Edit State
   const [stallName, setStallName] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
@@ -86,21 +83,17 @@ export function MyStall() {
   const [availabilityNote, setAvailabilityNote] = useState('');
   const [editingNote, setEditingNote] = useState(false);
 
-  // Closed dates state
   const [slotOverrides, setSlotOverrides] = useState([]);
   const [newClosureDate, setNewClosureDate] = useState('');
   const [newClosureReason, setNewClosureReason] = useState('');
 
-  // Location state
   const [address, setAddress] = useState('');
   const [locationCoords, setLocationCoords] = useState({ lat: 51.4545, lng: -2.5879 });
   const [editManualCoords, setEditManualCoords] = useState(false);
 
-  // Photo
   const [imageUrl, setImageUrl] = useState('');
   const [imagePublicId, setImagePublicId] = useState(null);
 
-  // Errors & Toast
   const [sheetErrors, setSheetErrors] = useState({});
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
@@ -181,10 +174,10 @@ export function MyStall() {
       }
       setToastMessage(
         newMode === 'open'
-          ? 'Availability set to 🟢 OPEN TODAY!'
+          ? 'Availability set to OPEN TODAY!'
           : newMode === 'limited'
-          ? 'Availability set to 🟡 LIMITED AVAILABILITY!'
-          : 'Availability set to 🔴 CLOSED TODAY.'
+          ? 'Availability set to LIMITED AVAILABILITY!'
+          : 'Availability set to CLOSED TODAY.'
       );
       setToastType('success');
       refreshProfile();
@@ -372,7 +365,6 @@ export function MyStall() {
     setSheetErrors({});
 
     try {
-      // Build safe pickup windows matched to operating days
       const validWindows = (wizardData.pickupWindows || [])
         .filter((w) => wizardData.operatingDays.includes(w.day))
         .map((w) => ({
@@ -417,7 +409,6 @@ export function MyStall() {
             : undefined,
       };
 
-      // Only send real uploaded URLs to the backend attachment validator
       if (wizardData.imageUrl && !wizardData.imageUrl.startsWith('/images/')) {
         payload.imageUrl = wizardData.imageUrl;
         if (wizardData.imagePublicId) {
@@ -427,7 +418,7 @@ export function MyStall() {
 
       const res = await updateFarmerProfile(payload);
       setProfile(res?.data || null);
-      setToastMessage('🎉 Stall successfully created & published!');
+      setToastMessage('Stall successfully created & published!');
       setToastType('success');
       setActiveSheet('none');
       if (searchParams.get('action')) {
@@ -491,7 +482,6 @@ export function MyStall() {
     }
   };
 
-  // Details Save
   const handleSaveDetails = (e) => {
     e?.preventDefault();
     handleSaveSection({
@@ -505,14 +495,12 @@ export function MyStall() {
     });
   };
 
-  // Markets Save
   const handleSaveMarkets = () => {
     handleSaveSection({
       marketIds,
     });
   };
 
-  // Operating Windows Validation & Save
   const handleSaveWindows = () => {
     const dayGroups = {};
     for (const w of pickupWindows) {
@@ -541,7 +529,6 @@ export function MyStall() {
     });
   };
 
-  // Cut-off and Capacity Save
   const handleSaveCutoff = () => {
     handleSaveSection({
       cutoffMinutesBefore: Math.max(30, Number(cutoffHours) * 60),
@@ -549,7 +536,6 @@ export function MyStall() {
     });
   };
 
-  // Add Closure Date
   const handleAddClosure = async () => {
     if (!newClosureDate) return;
     setSaving(true);
@@ -567,7 +553,6 @@ export function MyStall() {
     }
   };
 
-  // Remove Closure Date
   const handleRemoveClosure = async (date) => {
     setSaving(true);
     try {
@@ -582,7 +567,6 @@ export function MyStall() {
     }
   };
 
-  // Geolocation Browser API
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
       setSheetErrors({ general: 'Geolocation is not supported by your browser.' });
@@ -603,7 +587,6 @@ export function MyStall() {
     );
   };
 
-  // Save Location
   const handleSaveLocation = () => {
     handleSaveSection({
       address: address.trim(),
@@ -611,7 +594,6 @@ export function MyStall() {
     });
   };
 
-  // Upload Stall Photo
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -659,12 +641,10 @@ export function MyStall() {
     }
   };
 
-  // Selected markets resolved
   const selectedMarkets = useMemo(() => {
     return allMarkets.filter((m) => marketIds.includes(m.id));
   }, [allMarkets, marketIds]);
 
-  // Profile readiness score
   const readiness = useMemo(() => {
     let score = 0;
     if (stallName) score += 20;
@@ -697,7 +677,6 @@ export function MyStall() {
         <Toast message={toastMessage} type={toastType} onDismiss={() => setToastMessage('')} />
       )}
 
-      {/* Header */}
       <header className={styles.header}>
         <div className={styles.headerTitleGroup}>
           <div className={styles.badgeRow}>
@@ -734,7 +713,6 @@ export function MyStall() {
 
       {error && <div className={styles.errorBox}>{error}</div>}
 
-      {/* Onboarding Banner when stall not created or incomplete */}
       {(!stallName || readiness < 100) && (
         <section className={styles.onboardingBanner} aria-label="Stall setup status">
           <div className={styles.onboardingLeft}>
@@ -761,7 +739,6 @@ export function MyStall() {
         </section>
       )}
 
-      {/* Hero Stall Visual Showcase Banner */}
       <section className={styles.heroBanner}>
         <div className={styles.heroImageWrap}>
           {imageUrl ? (
@@ -774,7 +751,6 @@ export function MyStall() {
 
           <div className={styles.heroOverlay} />
 
-          {/* Quick Photo Upload Trigger */}
           <button
             type="button"
             className={styles.photoTriggerBtn}
@@ -786,7 +762,6 @@ export function MyStall() {
           </button>
         </div>
 
-        {/* Hero Meta Bar */}
         <div className={styles.heroMetaBar}>
           <div className={styles.heroIdentity}>
             <h2 className={styles.heroTitle}>{stallName || 'Your Farm Stall'}</h2>
@@ -799,7 +774,6 @@ export function MyStall() {
             </div>
           </div>
 
-          {/* Readiness Meter */}
           <div className={styles.readinessBox}>
             <div className={styles.readinessHeader}>
               <span className={styles.readinessLabel}>Profile Readiness</span>
@@ -815,9 +789,8 @@ export function MyStall() {
         </div>
       </section>
 
-      {/* Bento Grid Configuration Hub */}
       <section className={styles.bentoGrid} aria-label="Stall configuration sections">
-        {/* Card 0: MarketLink Availability Mode */}
+        
         <article
           className={styles.bentoCard}
           style={{
@@ -875,14 +848,28 @@ export function MyStall() {
                     marginTop: '2px',
                   }}
                 >
-                  {availabilityMode === 'open' && '🟢 OPEN TODAY · Accepting all orders'}
-                  {availabilityMode === 'limited' && '🟡 LIMITED AVAILABILITY · Low inventory alert'}
-                  {availabilityMode === 'closed' && '🔴 CLOSED TODAY · Not taking orders'}
+                  {availabilityMode === 'open' && (
+                    <>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#059669', display: 'inline-block' }} />
+                      OPEN TODAY · Accepting all orders
+                    </>
+                  )}
+                  {availabilityMode === 'limited' && (
+                    <>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d97706', display: 'inline-block' }} />
+                      LIMITED AVAILABILITY · Low inventory alert
+                    </>
+                  )}
+                  {availabilityMode === 'closed' && (
+                    <>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#dc2626', display: 'inline-block' }} />
+                      CLOSED TODAY · Not taking orders
+                    </>
+                  )}
                 </span>
               </div>
             </div>
 
-            {/* Quick 3-Mode Segmented Buttons */}
             <div style={{ display: 'inline-flex', gap: '6px', flexWrap: 'wrap' }}>
               <button
                 type="button"
@@ -898,9 +885,13 @@ export function MyStall() {
                   background: availabilityMode === 'open' ? '#059669' : '#fff',
                   color: availabilityMode === 'open' ? '#fff' : '#374151',
                   transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
                 }}
               >
-                🟢 Open Today
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: availabilityMode === 'open' ? '#fff' : '#059669', display: 'inline-block' }} />
+                Open Today
               </button>
               <button
                 type="button"
@@ -919,9 +910,13 @@ export function MyStall() {
                   background: availabilityMode === 'limited' ? '#d97706' : '#fff',
                   color: availabilityMode === 'limited' ? '#fff' : '#374151',
                   transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
                 }}
               >
-                🟡 Limited Availability
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: availabilityMode === 'limited' ? '#fff' : '#d97706', display: 'inline-block' }} />
+                Limited Availability
               </button>
               <button
                 type="button"
@@ -937,9 +932,13 @@ export function MyStall() {
                   background: availabilityMode === 'closed' ? '#dc2626' : '#fff',
                   color: availabilityMode === 'closed' ? '#fff' : '#374151',
                   transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
                 }}
               >
-                🔴 Closed Today
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: availabilityMode === 'closed' ? '#fff' : '#dc2626', display: 'inline-block' }} />
+                Closed Today
               </button>
             </div>
           </div>
@@ -947,11 +946,11 @@ export function MyStall() {
           <div className={styles.cardContent} style={{ paddingTop: 'var(--space-2)' }}>
             <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--color-ink-soft)', lineHeight: 1.5 }}>
               {availabilityMode === 'open' &&
-                'Your stall is shown as 🟢 OPEN TODAY on customer stall pages with your market name and opening hours (8:00 AM – 3:00 PM).'}
+                'Your stall is shown as OPEN TODAY on customer stall pages with your market name and opening hours (8:00 AM – 3:00 PM).'}
               {availabilityMode === 'limited' &&
-                (availabilityNote || 'Your stall is shown as 🟡 LIMITED AVAILABILITY ("Only 6 products currently available").')}
+                (availabilityNote || 'Your stall is shown as LIMITED AVAILABILITY ("Only 6 products currently available").')}
               {availabilityMode === 'closed' &&
-                'Your stall is shown as 🔴 CLOSED TODAY. Customers immediately see that you are closed today and when your next market day is.'}
+                'Your stall is shown as CLOSED TODAY. Customers immediately see that you are closed today and when your next market day is.'}
             </p>
 
             {availabilityMode === 'limited' && (
@@ -991,7 +990,6 @@ export function MyStall() {
           </div>
         </article>
 
-        {/* Card 1: Identity & Heritage */}
         <article className={styles.bentoCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWrap}>
@@ -1031,7 +1029,6 @@ export function MyStall() {
           </div>
         </article>
 
-        {/* Card 2: Markets */}
         <article className={styles.bentoCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWrap}>
@@ -1069,7 +1066,6 @@ export function MyStall() {
           </div>
         </article>
 
-        {/* Card 3: Operating Days & Windows */}
         <article className={styles.bentoCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWrap}>
@@ -1128,7 +1124,6 @@ export function MyStall() {
           </div>
         </article>
 
-        {/* Card 4: Cut-Off & Capacity */}
         <article className={styles.bentoCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWrap}>
@@ -1170,7 +1165,6 @@ export function MyStall() {
           </div>
         </article>
 
-        {/* Card 5: Seasonal Closures */}
         <article className={styles.bentoCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWrap}>
@@ -1208,7 +1202,6 @@ export function MyStall() {
           </div>
         </article>
 
-        {/* Card 6: Map Location & Pin */}
         <article className={styles.bentoCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWrap}>
@@ -1242,9 +1235,6 @@ export function MyStall() {
         </article>
       </section>
 
-      {/* ── Sub-Sheet Modals (100% Intact & Fully Functional) ── */}
-
-      {/* 1. Stall Details Sheet */}
       {activeSheet === 'details' && (
         <BottomSheet
           isOpen={true}
@@ -1340,7 +1330,6 @@ export function MyStall() {
         </BottomSheet>
       )}
 
-      {/* 2. Markets Sheet */}
       {activeSheet === 'markets' && (
         <BottomSheet
           isOpen={true}
@@ -1397,7 +1386,6 @@ export function MyStall() {
         </BottomSheet>
       )}
 
-      {/* 3. Pickup Windows Sheet */}
       {activeSheet === 'windows' && (
         <BottomSheet
           isOpen={true}
@@ -1413,7 +1401,6 @@ export function MyStall() {
               <div className={styles.errorBox}>{sheetErrors.general}</div>
             )}
 
-            {/* Operating Day Chips */}
             <div className={styles.daysChipRow}>
               {DAYS_OF_WEEK.map((d) => {
                 const isSelected = operatingDays.includes(d.id);
@@ -1437,7 +1424,6 @@ export function MyStall() {
               })}
             </div>
 
-            {/* Windows per selected day */}
             <div className={styles.windowsList}>
               {operatingDays.map((dayId) => {
                 const dayLabel = DAYS_OF_WEEK.find((d) => d.id === dayId)?.label;
@@ -1520,7 +1506,6 @@ export function MyStall() {
         </BottomSheet>
       )}
 
-      {/* 4. Cut-off & Capacity Sheet */}
       {activeSheet === 'cutoff' && (
         <BottomSheet
           isOpen={true}
@@ -1574,7 +1559,6 @@ export function MyStall() {
         </BottomSheet>
       )}
 
-      {/* 5. Closed Dates Sheet */}
       {activeSheet === 'closed' && (
         <BottomSheet
           isOpen={true}
@@ -1647,7 +1631,6 @@ export function MyStall() {
         </BottomSheet>
       )}
 
-      {/* 6. Location & Map Pin Sheet */}
       {activeSheet === 'location' && (
         <BottomSheet
           isOpen={true}
@@ -1719,7 +1702,6 @@ export function MyStall() {
               </div>
             )}
 
-            {/* Draggable MapView */}
             <div className={styles.mapContainer}>
               <MapView
                 markers={[
@@ -1751,7 +1733,6 @@ export function MyStall() {
         </BottomSheet>
       )}
 
-      {/* 7. Stall Photo Sheet */}
       {activeSheet === 'photo' && (
         <BottomSheet
           isOpen={true}
@@ -1795,7 +1776,6 @@ export function MyStall() {
         </BottomSheet>
       )}
 
-      {/* ─── STALL SETUP / CREATION WIZARD ─── */}
       {activeSheet === 'wizard' && (
         <BottomSheet
           isOpen={true}
@@ -1809,7 +1789,7 @@ export function MyStall() {
           title={stallName ? 'Complete Stall Setup Wizard' : 'Create & Launch Your Farm Stall'}
         >
           <div className={styles.wizardWrap}>
-            {/* Steps Progress Row */}
+            
             <div className={styles.wizardHeader}>
               <div className={styles.wizardStepsRow} role="tablist">
                 {[
@@ -1842,7 +1822,7 @@ export function MyStall() {
                       }}
                     >
                       <span className={styles.stepBadgeNum}>
-                        {isDone ? '✓' : s.step}
+                        {isDone ? <Check size={12} strokeWidth={2.5} /> : s.step}
                       </span>
                       <span>{s.title}</span>
                     </button>
@@ -1857,7 +1837,6 @@ export function MyStall() {
               </div>
             )}
 
-            {/* Step 1: Farm & Stall Identity */}
             {wizardStep === 1 && (
               <div className={styles.stepContent}>
                 <div>
@@ -1977,7 +1956,6 @@ export function MyStall() {
               </div>
             )}
 
-            {/* Step 2: Markets & Location */}
             {wizardStep === 2 && (
               <div className={styles.stepContent}>
                 <div>
@@ -2070,7 +2048,6 @@ export function MyStall() {
               </div>
             )}
 
-            {/* Step 3: Pickup Schedule & Ordering */}
             {wizardStep === 3 && (
               <div className={styles.stepContent}>
                 <div>
@@ -2231,7 +2208,6 @@ export function MyStall() {
               </div>
             )}
 
-            {/* Step 4: Photo & Live Storefront Preview */}
             {wizardStep === 4 && (
               <div className={styles.stepContent}>
                 <div>
@@ -2241,7 +2217,6 @@ export function MyStall() {
                   </p>
                 </div>
 
-                {/* Live Public Card Preview */}
                 <div className={styles.livePreviewBox}>
                   <div className={styles.livePreviewBanner}>
                     {wizardData.imageUrl ? (
@@ -2265,8 +2240,9 @@ export function MyStall() {
                       <span style={{ fontSize: '12px', color: '#6B7280' }}>
                         Est. {wizardData.since}
                       </span>
-                      <span style={{ fontSize: '12px', color: '#059669', fontWeight: 600 }}>
-                        ★ 5.0 (New Stall)
+                      <span style={{ fontSize: '12px', color: '#059669', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <Star size={11} fill="currentColor" aria-hidden="true" />
+                        <span>5.0 (New Stall)</span>
                       </span>
                       <span style={{ fontSize: '12px', color: '#7A2E3B', fontWeight: 600 }}>
                         {wizardData.marketIds.length} {wizardData.marketIds.length === 1 ? 'Market' : 'Markets'}
@@ -2286,7 +2262,6 @@ export function MyStall() {
                   </div>
                 </div>
 
-                {/* Photo Upload or Preset Picker */}
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '4px' }}>
                   <input
                     type="file"
@@ -2324,7 +2299,6 @@ export function MyStall() {
               </div>
             )}
 
-            {/* Wizard Navigation Footer */}
             <div className={styles.wizardFooterNav}>
               {wizardStep > 1 ? (
                 <Button

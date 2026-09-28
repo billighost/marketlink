@@ -1015,3 +1015,14 @@
     padding: 10px;
   }
 }
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - StockForm.module.css
+   --------------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .form {
+    gap: 14px;
+    padding-bottom: 24px;
+  }
+}

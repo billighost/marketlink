@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Store, ShoppingBag } from 'lucide-react';
 import BottomSheet from '@/components/ui/BottomSheet';
 import FormField from '@/components/ui/FormField';
 import Toggle from '@/components/ui/Toggle';
@@ -143,7 +144,6 @@ export function PersonEditorSheet({ open, person, initialRole = 'farmer', onClos
             </div>
           )}
 
-          {/* Role Selection (Only changeable when creating) */}
           <div className={styles.formSection}>
             <label className={styles.formLabel}>Account Role</label>
             <div className={styles.roleToggleGroup}>
@@ -156,7 +156,8 @@ export function PersonEditorSheet({ open, person, initialRole = 'farmer', onClos
                   setIsDirty(true);
                 }}
               >
-                🌾 Farmer / Producer
+                <Store size={15} style={{ verticalAlign: '-2px', marginRight: '6px' }} />
+                <span>Farmer / Producer</span>
               </button>
               <button
                 type="button"
@@ -167,12 +168,12 @@ export function PersonEditorSheet({ open, person, initialRole = 'farmer', onClos
                   setIsDirty(true);
                 }}
               >
-                🛒 Customer / Buyer
+                <ShoppingBag size={15} style={{ verticalAlign: '-2px', marginRight: '6px' }} />
+                <span>Customer / Buyer</span>
               </button>
             </div>
           </div>
 
-          {/* Primary Account Info */}
           <div className={styles.formSection}>
             <div className={styles.formGrid}>
               <FormField
@@ -249,7 +250,6 @@ export function PersonEditorSheet({ open, person, initialRole = 'farmer', onClos
             </FormField>
           </div>
 
-          {/* Farmer Specific Details */}
           {role === 'farmer' && (
             <div className={styles.formSection}>
               <h4 className={styles.sectionHeaderTitle}>Stall & Farm Details</h4>
@@ -310,7 +310,6 @@ export function PersonEditorSheet({ open, person, initialRole = 'farmer', onClos
             </div>
           )}
 
-          {/* Modal Footer Actions */}
           <div className={styles.formFooter}>
             <Button
               type="button"
@@ -334,7 +333,6 @@ export function PersonEditorSheet({ open, person, initialRole = 'farmer', onClos
         </form>
       </BottomSheet>
 
-      {/* Discard changes confirmation dialog */}
       <ConfirmDialog
         open={discardConfirmOpen}
         title="Discard Unsaved Changes?"

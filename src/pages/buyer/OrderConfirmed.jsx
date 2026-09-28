@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Map } from 'lucide-react';
 import { getOrderDetail } from '@/api/orders';
 import { formatPrice } from '@/utils/format';
 import Page from '@/components/layout/Page';
@@ -9,10 +9,6 @@ import Button from '@/components/ui/Button';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './OrderConfirmed.module.css';
 
-/**
- * Order confirmation page (/buyer/orders/:id/confirmed).
- * Displays collection code, collection instructions, and order total.
- */
 export function OrderConfirmed() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -66,12 +62,11 @@ export function OrderConfirmed() {
   return (
     <Page width="detail" className={styles.page}>
       <div className={styles.container}>
-        {/* Success Confirmation Badge */}
+        
         <div className={styles.confirmedBadge} aria-hidden="true">
           <CheckCircle2 size={36} strokeWidth={2} className={styles.confirmedIcon} />
         </div>
 
-        {/* Heading & Subtitle */}
         <div className={styles.header}>
           <h1 className={styles.title}>Reserved</h1>
           <p className={styles.subtitle}>
@@ -79,19 +74,16 @@ export function OrderConfirmed() {
           </p>
         </div>
 
-        {/* Physical Handoff Artifact: Collection Code */}
         {order.pickupCode && (
           <div className={styles.codeWrap}>
             <PickupCode code={order.pickupCode} size="lg" />
           </div>
         )}
 
-        {/* Order Identifier & Total to pay at the stall */}
         <p className={styles.orderMeta}>
           Order {orderNumber} · {formatPrice(totalCents)} to pay at the stall
         </p>
 
-        {/* Actions: View order and Market Route Planner */}
         <div className={styles.actions}>
           <Button
             variant="primary"
@@ -106,9 +98,10 @@ export function OrderConfirmed() {
             variant="secondary"
             size="lg"
             to="/buyer/route"
-            style={{ width: '100%' }}
+            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            🗺️ View Market Route Planner
+            <Map size={16} aria-hidden="true" />
+            <span>View Market Route Planner</span>
           </Button>
 
           <Link to="/buyer" className={styles.backLink}>

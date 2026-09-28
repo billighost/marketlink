@@ -9,15 +9,6 @@ import EmptyState from '@/components/ui/EmptyState';
 import { byOpenThenScarcity } from '@/utils/sortStalls';
 import styles from './StallStrip.module.css';
 
-/**
- * "At the market today" horizontal stall strip.
- * Fetches market farmers for the selected market, sorted:
- *  1. Open today first
- *  2. lowStockCount descending
- *  3. Alphabetically by stallName
- *
- * Links to /buyer/stalls/:id
- */
 export function StallStrip({ marketId }) {
   const navigate = useNavigate();
   const { selectedMarketId } = useAuth();
@@ -57,30 +48,25 @@ export function StallStrip({ marketId }) {
     >
       {(loading || !farmersData) && sortedStalls.length === 0 ? (
         <>
-          <div className={styles.skeletonCard} aria-hidden="true">
-            <div className={styles.skeletonAvatar} />
-            <div className={styles.skeletonLines}>
-              <div className={styles.skeletonHeading} />
-              <div className={styles.skeletonSub} />
-              <div className={styles.skeletonStatus} />
+          {[1, 2, 3].map((n) => (
+            <div key={n} className={styles.skeletonCard} aria-hidden="true">
+              <div className={styles.skeletonBanner}>
+                <div className={styles.skeletonAvatar} />
+              </div>
+              <div className={styles.skeletonBody}>
+                <div className={styles.skeletonHeading} />
+                <div className={styles.skeletonSub} />
+                <div className={styles.skeletonTags}>
+                  <div className={styles.skeletonTag} />
+                  <div className={styles.skeletonTag} />
+                </div>
+                <div className={styles.skeletonFooter}>
+                  <div className={styles.skeletonRating} />
+                  <div className={styles.skeletonCta} />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className={styles.skeletonCard} aria-hidden="true">
-            <div className={styles.skeletonAvatar} />
-            <div className={styles.skeletonLines}>
-              <div className={styles.skeletonHeading} />
-              <div className={styles.skeletonSub} />
-              <div className={styles.skeletonStatus} />
-            </div>
-          </div>
-          <div className={styles.skeletonCard} aria-hidden="true">
-            <div className={styles.skeletonAvatar} />
-            <div className={styles.skeletonLines}>
-              <div className={styles.skeletonHeading} />
-              <div className={styles.skeletonSub} />
-              <div className={styles.skeletonStatus} />
-            </div>
-          </div>
+          ))}
         </>
       ) : (
         sortedStalls.map((farmer) => (

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, X, Sprout } from 'lucide-react';
+import { Search, X, Sprout, Store, MapPin } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@/hooks/useQuery';
 import { getFarmers, getCategories, getMarketDetail } from '@/api/catalog';
@@ -12,29 +12,6 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { byOpenThenScarcity } from '@/utils/sortStalls';
 import styles from './Farmers.module.css';
 
-function getCategoryIcon(slug = '', name = '') {
-  const text = `${slug} ${name}`.toLowerCase();
-  if (text.includes('veg') || text.includes('green') || text.includes('herb')) return '🥬';
-  if (text.includes('fruit') || text.includes('berr') || text.includes('apple')) return '🍓';
-  if (text.includes('bake') || text.includes('bread') || text.includes('pastr')) return '🥐';
-  if (text.includes('dair') || text.includes('cheese') || text.includes('egg')) return '🧀';
-  if (text.includes('honey') || text.includes('jam') || text.includes('preserve')) return '🍯';
-  if (text.includes('flower') || text.includes('plant')) return '🌸';
-  if (text.includes('mushroom')) return '🍄';
-  if (text.includes('meat') || text.includes('poultry')) return '🥩';
-  return '🌿';
-}
-
-/**
- * Page A: Stalls index (/buyer/stalls)
- *
- * Spiced up with:
- *  - Interactive hero bar with live stats
- *  - Instant search across stall names, specialties, stories, and produce
- *  - Categorized chips with emoji icons & live counts
- *  - Active filter feedback and suggestion chips
- *  - FarmerCard with themed illustration banners & produce badges
- */
 export function Farmers() {
   useDocumentTitle('Stalls · MarketLink');
 
@@ -42,7 +19,6 @@ export function Farmers() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch current market details for context name
   const { data: marketData } = useQuery(
     ['market-detail', selectedMarketId],
     ({ signal }) => getMarketDetail(selectedMarketId, signal).catch(() => null),
@@ -54,13 +30,11 @@ export function Farmers() {
     user?.homeMarket?.name ||
     'the market';
 
-  // Fetch categories
   const { data: categoriesData } = useQuery(
     ['categories'],
     ({ signal }) => getCategories(signal)
   );
 
-  // Fetch stalls for the current market (or all stalls if no market)
   const { data: farmersData, loading } = useQuery(
     ['buyer-stalls', selectedMarketId],
     ({ signal }) =>
@@ -85,13 +59,11 @@ export function Farmers() {
     [rawStalls]
   );
 
-  // Compute available categories with item count
   const categoryChips = useMemo(() => {
     const rawCategories = Array.isArray(categoriesData) ? categoriesData : [];
     const usedSlugs = new Set();
     const chips = [];
 
-    // Prioritize categories that actually exist on currently loaded stalls
     for (const stall of rawStalls) {
       const slug = stall.categorySlug || stall.category;
       const name = stall.categoryName || stall.category || stall.specialty;
@@ -102,7 +74,6 @@ export function Farmers() {
       if (chips.length >= 6) break;
     }
 
-    // Fall back to server categories if needed
     if (chips.length < 6) {
       for (const cat of rawCategories) {
         const slug = cat.slug || cat.id || cat.name?.toLowerCase();
@@ -115,7 +86,6 @@ export function Farmers() {
       }
     }
 
-    // Compute counts
     for (const chip of chips) {
       const filterLower = chip.id.toLowerCase();
       chip.count = rawStalls.filter((s) => {
@@ -127,7 +97,6 @@ export function Farmers() {
     return chips.slice(0, 6);
   }, [rawStalls, categoriesData]);
 
-  // Filter stalls according to chip selection and search query
   const filteredStalls = useMemo(() => {
     let list = rawStalls;
 
@@ -170,7 +139,7 @@ export function Farmers() {
   return (
     <Page width="wide">
       <header className={styles.header}>
-        {/* Hero Header Area */}
+        
         <div className={styles.heroBox}>
           <div className={styles.eyebrow}>
             <Sprout size={13} className={styles.eyebrowIcon} />
@@ -181,21 +150,21 @@ export function Farmers() {
             <PageTitle title="Market Stalls" context={contextLine} />
           </div>
 
-          {/* Quick Metrics Bar */}
           <div className={styles.statsStrip}>
             <span className={styles.statBadge}>
               <span className={styles.pulseDot} />
               <strong>{openCount}</strong> Open Today
             </span>
             <span className={styles.statBadge}>
-              🌾 <strong>{rawStalls.length}</strong> Local Producers
+              <Store size={14} className={styles.statBadgeIcon} aria-hidden="true" />
+              <strong>{rawStalls.length}</strong> Local Producers
             </span>
             <span className={styles.statBadge}>
-              📍 100% Harvested within 50 miles
+              <MapPin size={14} className={styles.statBadgeIcon} aria-hidden="true" />
+              100% Harvested within 50 miles
             </span>
           </div>
 
-          {/* Search bar */}
           <div className={styles.searchContainer}>
             <Search size={16} className={styles.searchIcon} aria-hidden="true" />
             <input
@@ -219,7 +188,6 @@ export function Farmers() {
           </div>
         </div>
 
-        {/* One non-wrapping chip row, max 8 chips with icons */}
         <div
           className={styles.chipScroll}
           role="tablist"
@@ -235,7 +203,6 @@ export function Farmers() {
             ].filter(Boolean).join(' ')}
             onClick={() => setSelectedFilter('all')}
           >
-            <span className={styles.chipIcon}>🧺</span>
             <span>All</span>
             <span className={styles.chipBadge}>{rawStalls.length}</span>
           </button>
@@ -250,7 +217,6 @@ export function Farmers() {
             ].filter(Boolean).join(' ')}
             onClick={() => setSelectedFilter('open')}
           >
-            <span className={styles.chipIcon}>🟢</span>
             <span>Open today</span>
             <span className={styles.chipBadge}>{openCount}</span>
           </button>
@@ -269,7 +235,6 @@ export function Farmers() {
                 ].filter(Boolean).join(' ')}
                 onClick={() => setSelectedFilter(cat.id)}
               >
-                <span className={styles.chipIcon}>{getCategoryIcon(cat.id, cat.label)}</span>
                 <span>{cat.label}</span>
                 {cat.count > 0 && <span className={styles.chipBadge}>{cat.count}</span>}
               </button>
@@ -277,7 +242,6 @@ export function Farmers() {
           })}
         </div>
 
-        {/* Active Filter Notice */}
         {(selectedFilter !== 'all' || searchQuery.trim()) && (
           <div className={styles.activeFilterNotice}>
             <span>
@@ -303,7 +267,6 @@ export function Farmers() {
         )}
       </header>
 
-      {/* Results region */}
       <div aria-live="polite">
         {showLoading && (
           <div className={styles.grid}>

@@ -51,10 +51,6 @@ function getProductCategorySlug(p) {
   return p.categorySlug || (typeof p.category === 'string' ? p.category : '') || p.categoryName || '';
 }
 
-/**
- * Shared Stall detail view.
- * @param {'guest'|'buyer'} audience chooses actions and link targets, never content
- */
 export function StallView({ audience = 'guest' }) {
   const { id } = useParams();
   const routes = useCatalogueRoutes(audience);
@@ -71,7 +67,6 @@ export function StallView({ audience = 'guest' }) {
 
   const loginNext = `/login?next=${encodeURIComponent(location.pathname + (location.search || ''))}`;
 
-  // 1. Fetch Farmer Detail
   const {
     data: farmer,
     loading: farmerLoading,
@@ -82,42 +77,36 @@ export function StallView({ audience = 'guest' }) {
 
   useDocumentTitle(farmer?.stallName ? `${farmer.stallName} · MarketLink` : 'Stall · MarketLink');
 
-  // Market ID for schedule and clock
   const marketId =
     farmer?.markets?.[0]?.id ||
     farmer?.marketId ||
     farmer?.marketIds?.[0] ||
     farmer?.market?.id;
 
-  // 2. Fetch Market Detail for clock and timezone
   const { data: market } = useQuery(
     [`${audience}-market-detail`, marketId],
     ({ signal }) => getMarketDetail(marketId, signal).catch(() => null),
     { enabled: Boolean(marketId) }
   );
 
-  // 3. Fetch Products (include sold out so visitor sees normal catalog)
   const { data: productsData, loading: productsLoading } = useQuery(
     [`${audience}-farmer-products`, id],
     ({ signal }) => getFarmerProducts(id, { includeSoldOut: true, limit: 50 }, signal),
     { enabled: Boolean(id) }
   );
 
-  // 4. Fetch Pickup Slots
   const { data: slotsData } = useQuery(
     [`${audience}-farmer-slots`, id],
     ({ signal }) => getFarmerPickupSlots(id, signal),
     { enabled: Boolean(id) }
   );
 
-  // 5. Fetch Reviews
   const { data: reviewsData } = useQuery(
     [`${audience}-farmer-reviews`, id],
     ({ signal }) => getFarmerReviews(id, { limit: 10 }, signal),
     { enabled: Boolean(id) }
   );
 
-  // Check if saved (buyer only)
   const isSaved = isBuyer && farmer ? isFarmerFavorite(farmer.id || farmer._id) : false;
 
   const handleToggleFavorite = async () => {
@@ -133,7 +122,6 @@ export function StallView({ audience = 'guest' }) {
     }
   };
 
-  // Derive market clock & today weekday in market timezone
   const marketClock = market?.clock;
   const marketTimezone = market?.timezone || 'America/New_York';
 
@@ -162,7 +150,6 @@ export function StallView({ audience = 'guest' }) {
     return [];
   }, [farmer]);
 
-  // Compute open state line
   const openState = useMemo(() => {
     if (!farmer || operatingDays.length === 0) {
       return { text: 'Trading days not listed', type: 'none' };
@@ -192,7 +179,6 @@ export function StallView({ audience = 'guest' }) {
       };
     }
 
-    // Not here today - find next trading day
     let nextDayName = 'market day';
     if (todayIndex != null && operatingDays.length > 0) {
       for (let offset = 1; offset <= 7; offset += 1) {
@@ -212,7 +198,6 @@ export function StallView({ audience = 'guest' }) {
     };
   }, [farmer, operatingDays, marketClock, todayIndex]);
 
-  // Prepare products: sorted available first, sold-out last
   const allProducts = useMemo(() => {
     const list = Array.isArray(productsData) ? productsData : productsData?.data || [];
     return [...list].sort((a, b) => {
@@ -223,7 +208,6 @@ export function StallView({ audience = 'guest' }) {
     });
   }, [productsData]);
 
-  // Categories list for chips
   const categories = useMemo(() => {
     const set = new Set();
     for (const p of allProducts) {
@@ -239,7 +223,6 @@ export function StallView({ audience = 'guest' }) {
     setSelectedCategory('All');
   }, [id]);
 
-  // Filtered products by category chip
   const filteredProducts = useMemo(() => {
     if (selectedCategory === 'All') return allProducts;
     const target = selectedCategory.toLowerCase();
@@ -250,7 +233,6 @@ export function StallView({ audience = 'guest' }) {
     });
   }, [allProducts, selectedCategory]);
 
-  // Reviews
   const reviews = useMemo(() => {
     const list = Array.isArray(reviewsData) ? reviewsData : reviewsData?.data || [];
     return showAllReviews ? list : list.slice(0, 3);
@@ -260,7 +242,6 @@ export function StallView({ audience = 'guest' }) {
   const totalReviewsCount = farmer?.reviewCount ?? reviewsData?.meta?.total ?? rawReviewsList.length;
   const ratingAvg = farmer?.ratingAvg ?? farmer?.rating ?? null;
 
-  // Pickup windows: read-only for guests, selectable for buyers
   const pickupWindows = useMemo(() => {
     const list = Array.isArray(slotsData) ? slotsData : slotsData?.data || farmer?.pickupWindows || [];
     return list.map((s, idx) => ({
@@ -277,7 +258,6 @@ export function StallView({ audience = 'guest' }) {
     farmer?.cutoffLabel ||
     (market?.cutoffDay ? `Reserve by ${market.cutoffDay}` : 'Reserve before market morning');
 
-  // Markers for LocationBlock
   const mapMarkers = useMemo(() => {
     if (farmer?.location?.lat && farmer?.location?.lng) {
       return [
@@ -302,7 +282,6 @@ export function StallView({ audience = 'guest' }) {
     return [];
   }, [farmer, market]);
 
-  // Market & Pitch metadata
   const marketName = market?.name || farmer?.marketName || farmer?.market?.name || 'Local Market';
   const marketAddress = market?.address || farmer?.address || '';
   const stallLocationText = farmer?.stallNumber
@@ -311,7 +290,6 @@ export function StallView({ audience = 'guest' }) {
     ? `${marketName} · ${marketAddress}`
     : marketName;
 
-  // Loading State
   if (farmerLoading || (!farmer && !farmerError)) {
     return (
       <div className={styles.container}>
@@ -331,7 +309,6 @@ export function StallView({ audience = 'guest' }) {
     );
   }
 
-  // Not Found (Bad ID)
   if (farmerError || !farmer) {
     return (
       <EmptyState
@@ -349,7 +326,7 @@ export function StallView({ audience = 'guest' }) {
 
   return (
     <div className={styles.container}>
-      {/* Back Link */}
+      
       <div className={styles.backRow}>
         <Link to={routes.stalls} className={styles.backLink} aria-label="Back to stalls">
           <ArrowLeft size={16} aria-hidden="true" />
@@ -357,7 +334,6 @@ export function StallView({ audience = 'guest' }) {
         </Link>
       </div>
 
-      {/* Stall Hero Banner */}
       {(farmer.bannerUrl || farmer.imageUrl) && (
         <div className={styles.stallBannerWrap}>
           <img
@@ -370,7 +346,7 @@ export function StallView({ audience = 'guest' }) {
       )}
 
       <div className={styles.layout}>
-        {/* 1. Identity */}
+        
         <header className={styles.identityHeader}>
           <div className={styles.avatar} aria-hidden="true">
             {farmer.imageUrl ? (
@@ -401,7 +377,6 @@ export function StallView({ audience = 'guest' }) {
               )}
             </div>
 
-            {/* Guest CTA under header */}
             {!isBuyer && (
               <div className={styles.guestCtaRow}>
                 <Link to={loginNext} className={styles.guestReserveLink}>
@@ -412,7 +387,6 @@ export function StallView({ audience = 'guest' }) {
           </div>
         </header>
 
-        {/* 2. Info card: status, save, pickup, location */}
         <aside className={styles.rail}>
           <div className={styles.infoCard}>
             <div className={styles.scheduleBlock}>
@@ -432,7 +406,6 @@ export function StallView({ audience = 'guest' }) {
               <p className={styles.marketLocation}>{stallLocationText}</p>
             </div>
 
-            {/* Save stall button or Sign in to save CTA */}
             {isBuyer ? (
               <button
                 type="button"
@@ -467,7 +440,7 @@ export function StallView({ audience = 'guest' }) {
 
             <div className={styles.railBlock}>
               <h2 className={styles.railHeading}>Collect from this stall</h2>
-              {/* For guests: no onSelect means read-only <span> chips rendered */}
+              
               <PickupWindows
                 windows={pickupWindows}
                 cutoffLabel={cutoffLabel}
@@ -491,14 +464,12 @@ export function StallView({ audience = 'guest' }) {
           </div>
         </aside>
 
-        {/* 3. About the stall */}
         {farmer.description && (
           <Section title="About the stall" className={styles.about}>
             <p className={styles.aboutText}>{farmer.description}</p>
           </Section>
         )}
 
-        {/* 4. On the table today */}
         <Section
           title="On the table today"
           subtitle={`${filteredProducts.length} ${filteredProducts.length === 1 ? 'item' : 'items'}`}
@@ -552,7 +523,6 @@ export function StallView({ audience = 'guest' }) {
           )}
         </Section>
 
-        {/* 5. Reviews — visible to both guest and buyer */}
         <Section
           title="Reviews"
           subtitle={ratingAvg ? `${Number(ratingAvg).toFixed(1)} · ${totalReviewsCount} reviews` : 'Customer feedback'}

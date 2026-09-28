@@ -1,0 +1,202 @@
+[
+  {
+    "file": "src/components/admin/DataTable.module.css",
+    "class": "sortButton"
+  },
+  {
+    "file": "src/components/admin/DataTable.module.css",
+    "class": "trClickable"
+  },
+  {
+    "file": "src/components/admin/DataTable.module.css",
+    "class": "checkboxInput"
+  },
+  {
+    "file": "src/components/admin/FilterBar.module.css",
+    "class": "filterSelect"
+  },
+  {
+    "file": "src/components/catalogue/MarketView.module.css",
+    "class": "clearSearchBtn"
+  },
+  {
+    "file": "src/components/catalogue/ProduceView.module.css",
+    "class": "mobileAddBtn"
+  },
+  {
+    "file": "src/components/domain/SmartBasketExperience.module.css",
+    "class": "controlInput"
+  },
+  {
+    "file": "src/components/domain/SmartBasketExperience.module.css",
+    "class": "actionIconBtn"
+  },
+  {
+    "file": "src/components/domain/TourModal/InteractiveTourModal.module.css",
+    "class": "navBtn"
+  },
+  {
+    "file": "src/components/layout/BottomNav.module.css",
+    "class": "button"
+  },
+  {
+    "file": "src/components/layout/CommandPalette.module.css",
+    "class": "option"
+  },
+  {
+    "file": "src/components/layout/GuestBottomNav.module.css",
+    "class": "tabBtn"
+  },
+  {
+    "file": "src/components/ui/Button.module.css",
+    "class": "button"
+  },
+  {
+    "file": "src/components/ui/SegmentedControl.module.css",
+    "class": "option"
+  },
+  {
+    "file": "src/components/ui/Stars.module.css",
+    "class": "starLabel"
+  },
+  {
+    "file": "src/components/ui/TimeSelect.module.css",
+    "class": "select"
+  },
+  {
+    "file": "src/components/ui/Toast.module.css",
+    "class": "action"
+  },
+  {
+    "file": "src/components/ui/Toggle.module.css",
+    "class": "toggle"
+  },
+  {
+    "file": "src/layouts/AdminLayout.module.css",
+    "class": "menuButton"
+  },
+  {
+    "file": "src/layouts/AdminLayout.module.css",
+    "class": "drawerCloseBtn"
+  },
+  {
+    "file": "src/layouts/VendorLayout.module.css",
+    "class": "bottomNavItem"
+  },
+  {
+    "file": "src/layouts/VendorLayout.module.css",
+    "class": "mobileCodeBtn"
+  },
+  {
+    "file": "src/pages/buyer/MarketRoute.module.css",
+    "class": "collectToggle"
+  },
+  {
+    "file": "src/pages/buyer/MarketRoute.module.css",
+    "class": "collectCheckbox"
+  },
+  {
+    "file": "src/pages/buyer/Reviews.module.css",
+    "class": "starBtn"
+  },
+  {
+    "file": "src/pages/buyer/Reviews.module.css",
+    "class": "saveEditBtn"
+  },
+  {
+    "file": "src/pages/guest/Contact.module.css",
+    "class": "faqQuestion"
+  },
+  {
+    "file": "src/pages/guest/Login.module.css",
+    "class": "checkboxLabel"
+  },
+  {
+    "file": "src/pages/guest/Login.module.css",
+    "class": "checkboxInput"
+  },
+  {
+    "file": "src/pages/vendor/DashboardTab.module.css",
+    "class": "btnOutline"
+  },
+  {
+    "file": "src/pages/vendor/DashboardTab.module.css",
+    "class": "btnPrimary"
+  },
+  {
+    "file": "src/pages/vendor/FarmInventoryTab.module.css",
+    "class": "btnPrimary"
+  },
+  {
+    "file": "src/pages/vendor/FarmInventoryTab.module.css",
+    "class": "editIcon"
+  },
+  {
+    "file": "src/pages/vendor/HistoryTab.module.css",
+    "class": "btnFilter"
+  },
+  {
+    "file": "src/pages/vendor/IncomingOrdersTab.module.css",
+    "class": "btnPrimary"
+  },
+  {
+    "file": "src/pages/vendor/MyStall.module.css",
+    "class": "addWindowBtn"
+  },
+  {
+    "file": "src/pages/vendor/MyStall.module.css",
+    "class": "toggleCoordsBtn"
+  },
+  {
+    "file": "src/pages/vendor/MyStall.module.css",
+    "class": "stepPill"
+  },
+  {
+    "file": "src/pages/vendor/MyStall.module.css",
+    "class": "wizardDayBtn"
+  },
+  {
+    "file": "src/pages/vendor/MyStall.module.css",
+    "class": "windowRemoveBtn"
+  },
+  {
+    "file": "src/pages/vendor/Overview.module.css",
+    "class": "quickActionBtn"
+  },
+  {
+    "file": "src/pages/vendor/Overview.module.css",
+    "class": "checklistLi"
+  },
+  {
+    "file": "src/pages/vendor/Stock.module.css",
+    "class": "viewBtn"
+  },
+  {
+    "file": "src/pages/vendor/Stock.module.css",
+    "class": "gridImageWrap"
+  },
+  {
+    "file": "src/pages/vendor/Stock.module.css",
+    "class": "gridTitleBlock"
+  },
+  {
+    "file": "src/pages/vendor/Stock.module.css",
+    "class": "thumbWrapper"
+  },
+  {
+    "file": "src/pages/vendor/Stock.module.css",
+    "class": "infoBlock"
+  },
+  {
+    "file": "src/pages/vendor/StockForm.module.css",
+    "class": "selectControl"
+  },
+  {
+    "file": "src/pages/vendor/StockForm.module.css",
+    "class": "tabBtn"
+  },
+  {
+    "file": "src/pages/vendor/StoreSettingsTab.module.css",
+    "class": "toggleTrack"
+  }
+]

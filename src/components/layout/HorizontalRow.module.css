@@ -160,4 +160,5 @@
 .track > * {
   scroll-snap-align: start;
   flex-shrink: 0;
+  max-width: calc(100vw - 2 * var(--page-pad, 1rem));
 }

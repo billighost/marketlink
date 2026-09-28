@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useFeed } from '@/hooks/useFeed';
 import { useQuery } from '@/hooks/useQuery';
@@ -14,6 +14,7 @@ import ProductCard from '@/components/domain/ProductCard';
 import FarmerCard from '@/components/domain/FarmerCard';
 import StallStrip from '@/components/domain/StallStrip';
 import PickupBanner from '@/components/domain/PickupBanner';
+import TodaySearch from '@/components/domain/TodaySearch';
 import HomeSkeleton from '@/components/layout/HomeSkeleton';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
@@ -36,7 +37,6 @@ export function Home() {
   const { sections, loadMore, loading, hasMore } = useFeed();
   const navigate = useNavigate();
 
-  const [searchQuery, setSearchQuery] = useState('');
   const sentinelRef = useRef(null);
 
   const fetchFeedMeta = useCallback(
@@ -92,15 +92,6 @@ export function Home() {
     return () => observer.disconnect();
   }, [loadMore, loading, hasMore]);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    const query = searchQuery.trim();
-    if (query) {
-      navigate(`/buyer/products?search=${encodeURIComponent(query)}`);
-    } else {
-      navigate('/buyer/products');
-    }
-  };
 
   // Initial full-page loading state
   if (loading && sections.length === 0) {
@@ -151,17 +142,7 @@ export function Home() {
           </div>
 
           {/* Full-width Search Field */}
-          <form className={styles.searchForm} onSubmit={handleSearchSubmit} role="search">
-            <Search size={18} className={styles.searchIcon} aria-hidden="true" />
-            <input
-              type="search"
-              className={styles.searchInput}
-              placeholder="Search produce, stalls, markets"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search produce, stalls and markets"
-            />
-          </form>
+          <TodaySearch />
         </header>
 
         {/* Conditional Active Pickup Banner */}

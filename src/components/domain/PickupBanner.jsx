@@ -4,14 +4,6 @@ import { ArrowRight } from 'lucide-react';
 import StatusDot from '@/components/ui/StatusDot';
 import styles from './PickupBanner.module.css';
 
-/**
- * Active pickup banner strip for the Today page.
- * Renders only when an active order is ready or upcoming for pickup.
- * Returns null when no active order exists.
- *
- * @param {object} props
- * @param {object|null} props.order  The active order from homeSummary
- */
 export function PickupBanner({ order }) {
   if (!order) return null;
 
@@ -33,7 +25,7 @@ export function PickupBanner({ order }) {
         <p className={styles.description}>{description}</p>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+      <div className={styles.actions}>
         <Link
           to="/buyer/route"
           className={styles.viewLink}

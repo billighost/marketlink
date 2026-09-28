@@ -15,6 +15,7 @@ import {
   X,
   Flag,
   RotateCcw,
+  Check,
 } from 'lucide-react';
 import { getRoutePlan, toggleRouteCollect, resetRouteProgress } from '@/api/orders';
 import Page from '@/components/layout/Page';
@@ -25,20 +26,6 @@ import Button from '@/components/ui/Button';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './MarketRoute.module.css';
 
-/**
- * Market Route Planner (/buyer/route).
- *
- * Connects orders + farmers + map into an integrated walking route:
- * START (Market Entrance)
- *  ↓
- * 📍 Green Valley — Stall A12
- *  ↓
- * 📍 Mama Grace — Stall B05
- *  ↓
- * 📍 Fresh Harvest — Stall C08
- *  ↓
- * FINISH (Collection Complete)
- */
 export function MarketRoute() {
   useDocumentTitle('Market Route Planner · MarketLink');
 
@@ -49,7 +36,6 @@ export function MarketRoute() {
   const [activeCodeStop, setActiveCodeStop] = useState(null);
   const [collectedStopIds, setCollectedStopIds] = useState(() => new Set());
 
-  // Fetch plan from backend and synchronize database collection states
   const fetchPlan = useCallback(async (signal) => {
     try {
       setLoading(true);
@@ -69,7 +55,6 @@ export function MarketRoute() {
         setUseDemo(false);
       }
     } catch {
-      // Fallback to local demo data if network fails
       setUseDemo(true);
     } finally {
       setLoading(false);
@@ -82,7 +67,6 @@ export function MarketRoute() {
     return () => controller.abort();
   }, [fetchPlan]);
 
-  // Determine current active stops
   const currentStops = useMemo(() => {
     if (!routeData) return [];
     if (useDemo || !routeData.hasRealOrders) {
@@ -91,24 +75,20 @@ export function MarketRoute() {
     return routeData.stops || [];
   }, [routeData, useDemo]);
 
-  // Set initial selected stop
   useEffect(() => {
     if (currentStops.length > 0 && !selectedStopId) {
       setSelectedStopId(currentStops[0].id);
     }
   }, [currentStops, selectedStopId]);
 
-  // Find currently selected stop object
   const activeStop = useMemo(() => {
     return currentStops.find((s) => s.id === selectedStopId) || currentStops[0] || null;
   }, [currentStops, selectedStopId]);
 
-  // Toggle collection checkbox for a stop with optimistic DB sync
   const toggleCollected = async (stopId) => {
     const isCurrentlyCollected = collectedStopIds.has(stopId);
     const nextState = !isCurrentlyCollected;
 
-    // Optimistic UI update
     setCollectedStopIds((prev) => {
       const next = new Set(prev);
       if (nextState) {
@@ -123,7 +103,6 @@ export function MarketRoute() {
       await toggleRouteCollect(stopId, nextState);
     } catch (err) {
       console.error('Failed to sync route stop collection status:', err);
-      // Revert optimistic state on failure
       setCollectedStopIds((prev) => {
         const reverted = new Set(prev);
         if (isCurrentlyCollected) {
@@ -136,7 +115,6 @@ export function MarketRoute() {
     }
   };
 
-  // Reset checklist progress in database and local UI
   const resetAllCollected = async () => {
     const previous = new Set(collectedStopIds);
     setCollectedStopIds(new Set());
@@ -153,7 +131,6 @@ export function MarketRoute() {
   const progressPercent = totalStopsCount > 0 ? Math.round((completedStopsCount / totalStopsCount) * 100) : 0;
   const allStopsCollected = totalStopsCount > 0 && completedStopsCount === totalStopsCount;
 
-  // Build map markers (Start entrance + each stall + Finish exit)
   const mapData = useMemo(() => {
     const market = routeData?.market || {};
     const centerLat = market.centerLat || 51.4545;
@@ -266,7 +243,6 @@ export function MarketRoute() {
         </div>
       </header>
 
-      {/* Live vs Preview Info Banner */}
       {(!routeData?.hasRealOrders || useDemo) && (
         <div className={styles.previewBanner}>
           <div className={styles.bannerContent}>
@@ -291,7 +267,6 @@ export function MarketRoute() {
         </div>
       )}
 
-      {/* Progress Strip */}
       <section className={styles.progressCard} aria-label="Route collection progress">
         <div className={styles.progressHeader}>
           <span className={styles.progressLabel}>Pickup Progress</span>
@@ -317,11 +292,10 @@ export function MarketRoute() {
         )}
       </section>
 
-      {/* Main Two-Column Layout */}
       <div className={styles.layout}>
-        {/* Left: Walking Route Flow (START -> Stops -> FINISH) */}
+        
         <div className={styles.routeFlow}>
-          {/* 1. START Waypoint */}
+          
           <div className={`${styles.waypoint} ${styles.waypointStart}`}>
             <div className={styles.waypointIcon}>
               <Navigation size={18} aria-hidden="true" />
@@ -337,20 +311,18 @@ export function MarketRoute() {
             </div>
           </div>
 
-          {/* Sequential Stops */}
           {currentStops.map((stop, index) => {
             const isSelected = stop.id === selectedStopId;
             const isCollected = collectedStopIds.has(stop.id);
 
             return (
               <React.Fragment key={stop.id}>
-                {/* Connecting arrow */}
+                
                 <div className={styles.connector} aria-hidden="true">
                   <div className={styles.connectorLine} />
                   <ArrowDown size={14} className={styles.connectorArrow} />
                 </div>
 
-                {/* Stop Card */}
                 <article
                   className={[
                     styles.stopCard,
@@ -371,11 +343,12 @@ export function MarketRoute() {
                           .filter(Boolean)
                           .join(' ')}
                       >
-                        {isCollected ? '✓' : index + 1}
+                        {isCollected ? <Check size={14} aria-hidden="true" /> : index + 1}
                       </span>
                       <div>
                         <h2 className={styles.stopStallName}>
-                          📍 {stop.stallName}
+                          <MapPin size={15} aria-hidden="true" style={{ display: 'inline-block', verticalAlign: '-2px', marginRight: '4px', color: 'var(--color-beet, #7A2E3B)' }} />
+                          {stop.stallName}
                           <span className={styles.stopStallNumber}>{stop.stallNumber}</span>
                         </h2>
                         <div className={styles.stopCategory}>{stop.category}</div>
@@ -395,7 +368,6 @@ export function MarketRoute() {
                     )}
                   </div>
 
-                  {/* Status & Code pill row */}
                   <div className={styles.stopMetaRow}>
                     <span
                       className={[
@@ -421,7 +393,6 @@ export function MarketRoute() {
                     </button>
                   </div>
 
-                  {/* Items reserved list */}
                   <div className={styles.itemsList}>
                     <div className={styles.itemsHeading}>Reserved Produce</div>
                     {stop.items && stop.items.map((item, iIdx) => (
@@ -437,7 +408,6 @@ export function MarketRoute() {
                     ))}
                   </div>
 
-                  {/* Card actions */}
                   <div className={styles.stopActions}>
                     <label
                       className={styles.collectToggle}
@@ -472,13 +442,11 @@ export function MarketRoute() {
             );
           })}
 
-          {/* Final connecting arrow */}
           <div className={styles.connector} aria-hidden="true">
             <div className={styles.connectorLine} />
             <ArrowDown size={14} className={styles.connectorArrow} />
           </div>
 
-          {/* 3. FINISH Waypoint */}
           <div className={`${styles.waypoint} ${styles.waypointFinish}`}>
             <div className={styles.waypointIcon}>
               <Flag size={18} aria-hidden="true" />
@@ -495,9 +463,8 @@ export function MarketRoute() {
           </div>
         </div>
 
-        {/* Right Sticky Map & Selected Stop Handoff */}
         <aside className={styles.mapColumn}>
-          {/* Map View */}
+          
           <div className={styles.mapCard}>
             <div className={styles.mapCardHeader}>
               <span className={styles.mapTitle}>
@@ -531,7 +498,6 @@ export function MarketRoute() {
             />
           </div>
 
-          {/* Quick Handoff Card for active stop */}
           {activeStop && (
             <div className={styles.quickHandoffCard}>
               <div className={styles.quickHandoffTitle}>Current Stop Handoff</div>
@@ -555,7 +521,13 @@ export function MarketRoute() {
                   onClick={() => toggleCollected(activeStop.id)}
                   style={{ flex: 1 }}
                 >
-                  {collectedStopIds.has(activeStop.id) ? '✓ Collected' : 'Mark Collected'}
+                  {collectedStopIds.has(activeStop.id) ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <Check size={14} /> Collected
+                    </span>
+                  ) : (
+                    'Mark Collected'
+                  )}
                 </Button>
                 <Button
                   variant="secondary"
@@ -571,7 +543,6 @@ export function MarketRoute() {
         </aside>
       </div>
 
-      {/* Modal for Fullscreen Pickup Code */}
       {activeCodeStop && (
         <div
           className={styles.modalBackdrop}
@@ -604,7 +575,13 @@ export function MarketRoute() {
                 size="md"
                 onClick={() => toggleCollected(activeCodeStop.id)}
               >
-                {collectedStopIds.has(activeCodeStop.id) ? '✓ Marked as Collected' : 'Mark as Collected'}
+                {collectedStopIds.has(activeCodeStop.id) ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                    <Check size={14} /> Marked as Collected
+                  </span>
+                ) : (
+                  'Mark as Collected'
+                )}
               </Button>
               <Button
                 variant="secondary"

@@ -19,6 +19,8 @@ import {
   ArrowUpRight,
   Flame,
   PieChart,
+  Trophy,
+  Medal,
 } from 'lucide-react';
 import styles from './Insights.module.css';
 
@@ -51,7 +53,6 @@ export function Insights() {
     loadInsights();
   }, [loadInsights]);
 
-  // Format daily orders for the BarChart component & calculate peak day
   const { chartData, peakDay, totalItemsSold } = useMemo(() => {
     let peak = null;
     let itemsSold = 0;
@@ -82,7 +83,6 @@ export function Insights() {
     return { chartData: list, peakDay: peak, totalItemsSold: itemsSold };
   }, [data]);
 
-  // Derived metrics
   const completionRate = useMemo(() => {
     const total = data?.totalOrders || 0;
     const completed = data?.completedOrders || total;
@@ -92,7 +92,7 @@ export function Insights() {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
+      
       <header className={styles.header}>
         <div className={styles.headerTitleGroup}>
           <div className={styles.badgeRow}>
@@ -141,9 +141,9 @@ export function Insights() {
         </div>
       ) : (
         <>
-          {/* Key Numbers Bento Grid */}
+          
           <section className={styles.kpiGrid} aria-label="Key performance metrics">
-            {/* Revenue */}
+            
             <div className={styles.kpiCard}>
               <div className={styles.cardHeader}>
                 <span className={styles.cardLabel}>Gross Revenue</span>
@@ -161,7 +161,6 @@ export function Insights() {
               </div>
             </div>
 
-            {/* Total Orders */}
             <div className={styles.kpiCard}>
               <div className={styles.cardHeader}>
                 <span className={styles.cardLabel}>Order Volume</span>
@@ -179,7 +178,6 @@ export function Insights() {
               </div>
             </div>
 
-            {/* Average Order Value */}
             <div className={styles.kpiCard}>
               <div className={styles.cardHeader}>
                 <span className={styles.cardLabel}>Avg. Basket Size</span>
@@ -198,7 +196,6 @@ export function Insights() {
               </div>
             </div>
 
-            {/* Repeat Customers */}
             <div className={styles.kpiCard}>
               <div className={styles.cardHeader}>
                 <span className={styles.cardLabel}>Loyal Patrons</span>
@@ -216,7 +213,6 @@ export function Insights() {
             </div>
           </section>
 
-          {/* Daily Trend Chart Section */}
           <section className={styles.chartSection}>
             <div className={styles.sectionHeaderRow}>
               <div className={styles.sectionTitleBlock}>
@@ -251,7 +247,6 @@ export function Insights() {
             </div>
           </section>
 
-          {/* 4. 🏆 Best-Selling Products Section */}
           <section className={styles.bestSellersSection} aria-label="Best-selling products">
             <div className={styles.sectionHeaderRow}>
               <div className={styles.sectionTitleBlock}>
@@ -259,7 +254,10 @@ export function Insights() {
                   <Award size={18} />
                 </div>
                 <div>
-                  <h2 className={styles.sectionTitle}>🏆 Best-Selling Products</h2>
+                  <h2 className={styles.sectionTitle}>
+                    <Trophy size={18} aria-hidden="true" style={{ display: 'inline-block', verticalAlign: '-3px', marginRight: '8px', color: '#7A2E3B' }} />
+                    Best-Selling Products
+                  </h2>
                   <p className={styles.sectionSubtitle}>
                     Real performance metrics computed directly from verified customer orders
                   </p>
@@ -284,7 +282,7 @@ export function Insights() {
                 <>
                   <div className={styles.bestList}>
                     {data.bestSellers.slice(0, 5).map((item, index) => {
-                      const medalEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                      const medalElement = index === 0 ? <Medal size={16} aria-hidden="true" /> : index === 1 ? <Medal size={16} aria-hidden="true" /> : index === 2 ? <Medal size={16} aria-hidden="true" /> : `#${index + 1}`;
                       const orderPct = item.orderPercentage ?? (
                         data.totalOrders > 0
                           ? Math.round(((item.ordersCount || item.quantity || 1) / data.totalOrders) * 100)
@@ -300,7 +298,7 @@ export function Insights() {
                               }`}
                               title={`Rank ${index + 1}`}
                             >
-                              <span className={styles.medalEmoji}>{medalEmoji}</span>
+                              <span className={styles.medalEmoji}>{medalElement}</span>
                             </span>
                           </div>
 
@@ -317,11 +315,10 @@ export function Insights() {
                               </div>
                             </div>
 
-                            {/* Order Percentage Progress Track */}
                             <div className={styles.shareTrack}>
                               <div
                                 className={`${styles.shareFill} ${
-                                  index === 0
+                                   index === 0
                                     ? styles.fillGold
                                     : index === 1
                                     ? styles.fillSilver
@@ -343,11 +340,10 @@ export function Insights() {
                     })}
                   </div>
 
-                  {/* Dynamic Headline Callout calculated from real data */}
                   {(data?.topProductSummary || (data?.bestSellers?.[0] && data?.totalOrders > 0)) && (
                     <div className={styles.bestSellerHeadlineBox}>
                       <div className={styles.headlineIconBox} aria-hidden="true">
-                        🏆
+                        <Trophy size={20} color="#7A2E3B" />
                       </div>
                       <div className={styles.headlineTextBox}>
                         <p className={styles.headlineText}>

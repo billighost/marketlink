@@ -10,11 +10,6 @@ import EmptyState from '@/components/ui/EmptyState';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import styles from './Orders.module.css';
 
-/**
- * Customer Orders index page (/buyer/orders).
- * Shows Active and Past tabs, persisted in the URL query string (?tab=past).
- * Zero beet elements — navigation and inspection only.
- */
 export function Orders() {
   useDocumentTitle('Orders · MarketLink');
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,7 +21,6 @@ export function Orders() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [counts, setCounts] = useState({ active: 0, past: 0 });
 
-  // Load counts for both tabs
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -46,7 +40,6 @@ export function Orders() {
     };
   }, []);
 
-  // Fetch page of orders for current tab
   const fetchTabOrders = useCallback(async (tab, cursor = null, append = false) => {
     if (!append) {
       setLoading(true);
@@ -92,7 +85,7 @@ export function Orders() {
 
   return (
     <Page width="detail" className={styles.page}>
-      {/* Counts already live on the tabs below — no need to repeat them in a subtitle */}
+      
       <PageTitle title="Orders" />
 
       <div className={styles.controls}>
@@ -107,7 +100,6 @@ export function Orders() {
         />
       </div>
 
-      {/* Market Route Planner Banner */}
       <div style={{
         margin: '0 0 var(--space-4)',
         padding: 'var(--space-3) var(--space-4)',
@@ -136,7 +128,7 @@ export function Orders() {
           </div>
           <div>
             <div style={{ fontWeight: 'var(--weight-bold)', color: 'var(--color-ink)', fontSize: 'var(--text-sm)' }}>
-              🗺️ Market Route Planner
+              Market Route Planner
             </div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-soft)' }}>
               {counts.active > 1

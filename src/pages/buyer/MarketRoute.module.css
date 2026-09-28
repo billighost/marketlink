@@ -1,5 +1,3 @@
-/* Market Route Planner Styles */
-
 .page {
   padding-bottom: var(--space-12);
 }
@@ -71,7 +69,6 @@
   color: var(--color-ink);
 }
 
-/* Progress bar strip */
 .progressCard {
   background-color: var(--color-canvas);
   border: var(--border);
@@ -128,7 +125,6 @@
   gap: var(--space-2);
 }
 
-/* Main Two-Column Layout */
 .layout {
   display: grid;
   grid-template-columns: 1fr;
@@ -142,13 +138,11 @@
   }
 }
 
-/* Left Column: Vertical Route Flow */
 .routeFlow {
   display: flex;
   flex-direction: column;
 }
 
-/* START & FINISH Waypoints */
 .waypoint {
   display: flex;
   align-items: center;
@@ -213,7 +207,6 @@
   color: var(--color-ink-soft);
 }
 
-/* Connecting Downward Connector with Arrow */
 .connector {
   display: flex;
   flex-direction: column;
@@ -243,7 +236,6 @@
   margin-top: -2px;
 }
 
-/* Stall Stop Card */
 .stopCard {
   background-color: var(--color-canvas);
   border: var(--border);
@@ -328,7 +320,6 @@
   margin-top: 2px;
 }
 
-/* Status & Code Row */
 .stopMetaRow {
   display: flex;
   flex-wrap: wrap;
@@ -382,7 +373,6 @@
   color: #1b4332;
 }
 
-/* Items list within stop card */
 .itemsList {
   border-top: var(--border);
   padding-top: var(--space-3);
@@ -418,7 +408,6 @@
   color: var(--color-ink-soft);
 }
 
-/* Card Actions */
 .stopActions {
   display: flex;
   align-items: center;
@@ -460,7 +449,6 @@
   text-decoration: underline;
 }
 
-/* Right Sticky Map & Quick Card Column */
 .mapColumn {
   position: sticky;
   top: calc(var(--top-bar-height, 68px) + var(--space-4));
@@ -562,7 +550,6 @@
   line-height: 1.4;
 }
 
-/* Modal for full physical handoff code */
 .modalBackdrop {
   position: fixed;
   inset: 0;
@@ -606,7 +593,6 @@
   to { opacity: 1; }
 }
 
-/* Live vs Preview Info Banner */
 .previewBanner {
   display: flex;
   align-items: center;
@@ -693,4 +679,3 @@
   justify-content: center;
   align-items: center;
 }
-

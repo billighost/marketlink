@@ -21,6 +21,9 @@ import {
   Tag,
   SlidersHorizontal,
   Star,
+  Coins,
+  DollarSign,
+  Sprout,
 } from 'lucide-react';
 import {
   generateSmartBasket,
@@ -37,6 +40,14 @@ import styles from './SmartBasketExperience.module.css';
 
 const DEFAULT_PRESET_PROMPT = 'I have $50. I need vegetables, fruits and eggs for Saturday.';
 
+const PLACEHOLDER_PROMPTS = [
+  'I have $50. I need vegetables, fruits and eggs for Saturday.',
+  'Fresh salad greens, sweet tomatoes and raw honey under $30',
+  'Weekend family basket with bakery, eggs and cheese for $65',
+  'Seasonal berry mix and fresh artisan milk for Sunday pickup',
+  'Weekly vegan pantry essentials within $40',
+];
+
 export function SmartBasketExperience({
   initialParams,
   onClose,
@@ -48,7 +59,6 @@ export function SmartBasketExperience({
   const controlsRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // ── Options Metadata ──────────────────────────────────────────────────────
   const [options, setOptions] = useState({
     markets: [],
     categories: [],
@@ -57,7 +67,6 @@ export function SmartBasketExperience({
   });
   const [loadingOptions, setLoadingOptions] = useState(true);
 
-  // ── Form State ────────────────────────────────────────────────────────────
   const [prompt, setPrompt] = useState(initialParams?.prompt || DEFAULT_PRESET_PROMPT);
   const [budget, setBudget] = useState(initialParams?.budget || 50);
   const [selectedMarketId, setSelectedMarketId] = useState(initialParams?.marketId || '');
@@ -65,24 +74,58 @@ export function SmartBasketExperience({
   const [selectedPickupDate, setSelectedPickupDate] = useState(initialParams?.pickupDate || '');
   const [selectedPickupTime, setSelectedPickupTime] = useState(initialParams?.pickupTime || '');
 
-  // ── Basket State ──────────────────────────────────────────────────────────
   const [basket, setBasket] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isModifying, setIsModifying] = useState(false);
 
-  // ── In-Basket Product Search ──────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const searchTimeoutRef = useRef(null);
 
-  // ── Modals / Overlays ─────────────────────────────────────────────────────
   const [replaceTarget, setReplaceTarget] = useState(null);
   const [detailsTarget, setDetailsTarget] = useState(null);
   const [reserving, setReserving] = useState(false);
 
-  // Sync props when initialParams changes
+  const [placeholderText, setPlaceholderText] = useState('');
+  useEffect(() => {
+    let promptIdx = 0;
+    let charIdx = 0;
+    let isDeleting = false;
+    let timer = null;
+
+    const tick = () => {
+      const fullText = PLACEHOLDER_PROMPTS[promptIdx];
+
+      if (!isDeleting) {
+        charIdx++;
+        setPlaceholderText(fullText.slice(0, charIdx));
+
+        if (charIdx >= fullText.length) {
+          isDeleting = true;
+          timer = setTimeout(tick, 2600);
+          return;
+        }
+        timer = setTimeout(tick, 40);
+      } else {
+        charIdx--;
+        setPlaceholderText(fullText.slice(0, charIdx));
+
+        if (charIdx <= 0) {
+          isDeleting = false;
+          promptIdx = (promptIdx + 1) % PLACEHOLDER_PROMPTS.length;
+          timer = setTimeout(tick, 400);
+          return;
+        }
+        timer = setTimeout(tick, 20);
+      }
+    };
+
+    timer = setTimeout(tick, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     if (initialParams) {
       if (initialParams.prompt !== undefined) setPrompt(initialParams.prompt);
@@ -94,7 +137,6 @@ export function SmartBasketExperience({
     }
   }, [initialParams]);
 
-  // 1. Load configuration options (markets, upcoming operating days, preset prompts)
   useEffect(() => {
     let mounted = true;
     async function loadOptions() {
@@ -103,7 +145,6 @@ export function SmartBasketExperience({
         const data = await getSmartBasketOptions();
         if (mounted && data) {
           setOptions(data);
-          // Auto-select Saturday or first operating day if not set
           if (!selectedDay && data.operatingDays?.length > 0) {
             const satDay = data.operatingDays.find((d) => d.dayCode === 'sat');
             setSelectedDay(satDay ? 'sat' : data.operatingDays[0].dayCode);
@@ -122,7 +163,6 @@ export function SmartBasketExperience({
     };
   }, []);
 
-  // 2. Generation function
   const handleGenerate = useCallback(
     async (overridePayload = null) => {
       setLoading(true);
@@ -155,7 +195,6 @@ export function SmartBasketExperience({
     [prompt, budget, selectedMarketId, selectedDay, selectedPickupDate, selectedPickupTime]
   );
 
-  // Initial generation on mount
   useEffect(() => {
     handleGenerate({
       prompt: initialParams?.prompt || DEFAULT_PRESET_PROMPT,
@@ -166,7 +205,6 @@ export function SmartBasketExperience({
     });
   }, []);
 
-  // ── Dynamic Basket Calculations ───────────────────────────────────────────
   const items = basket?.items || [];
   const currentTotal = useMemo(() => {
     return items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
@@ -178,7 +216,6 @@ export function SmartBasketExperience({
   const spentPercent = currentBudgetCents > 0 ? Math.min(100, Math.round((currentTotal / currentBudgetCents) * 100)) : 0;
   const isOverBudget = currentTotal > currentBudgetCents;
 
-  // ── Quantity Adjustments ──────────────────────────────────────────────────
   const handleIncreaseQty = (productId) => {
     setBasket((prev) => {
       if (!prev) return prev;
@@ -250,7 +287,6 @@ export function SmartBasketExperience({
     });
   };
 
-  // ── Replace Product with Alternative ──────────────────────────────────────
   const handleReplaceItem = (oldProductId, newProd) => {
     setBasket((prev) => {
       if (!prev) return prev;
@@ -293,7 +329,6 @@ export function SmartBasketExperience({
     showToast(`Replaced with ${newProd.name}`);
   };
 
-  // ── Live Product Search for Extra Additions ───────────────────────────────
   const handleSearchChange = (val) => {
     setSearchQuery(val);
     clearTimeout(searchTimeoutRef.current);
@@ -364,7 +399,6 @@ export function SmartBasketExperience({
     showToast(`Added ${prod.name} to basket`);
   };
 
-  // Toggle modify mode with scroll
   const handleToggleModify = () => {
     const nextState = !isModifying;
     setIsModifying(nextState);
@@ -373,7 +407,6 @@ export function SmartBasketExperience({
     }
   };
 
-  // Server-authoritative totals and stock recalculation
   useEffect(() => {
     if (!basket?.items || basket.items.length === 0) return;
 
@@ -397,14 +430,12 @@ export function SmartBasketExperience({
           });
         }
       } catch (e) {
-        // Silently preserve state on network error
       }
     }, 300);
 
     return () => clearTimeout(timer);
   }, [basket?.items, currentBudget, selectedMarketId]);
 
-  // ── Reserve Basket Action ─────────────────────────────────────────────────
   const handleReserveBasket = async () => {
     if (items.length === 0) {
       showToast('Your basket is empty. Please add items to reserve.');
@@ -413,7 +444,6 @@ export function SmartBasketExperience({
 
     setReserving(true);
     try {
-      // 1. Re-check stock authoritatively with the backend before reserving
       const validationPayload = items.map((it) => ({
         productId: it.productId,
         quantity: it.quantity,
@@ -429,7 +459,6 @@ export function SmartBasketExperience({
         return;
       }
 
-      // 2. Add each item to CartContext with quantity, farmerId, isSmartBasket
       for (const it of items) {
         add(
           it.productId,
@@ -446,7 +475,6 @@ export function SmartBasketExperience({
       showToast(`Reserved ${items.length} farm items for pickup!`);
 
       if (onClose) onClose();
-      // Navigate to basket reservation page
       navigate('/buyer/basket');
     } catch (err) {
       console.error('Reserve error:', err);
@@ -458,7 +486,7 @@ export function SmartBasketExperience({
 
   return (
     <div className={`${styles.container} ${embedded ? styles.embedded : ''}`}>
-      {/* ─── Hero Header & Prompt Input ─────────────────────────────────── */}
+      
       <section className={styles.hero} aria-labelledby="smart-basket-heading">
         <div className={styles.heroGlow} aria-hidden="true" />
         <div className={styles.heroContent}>
@@ -503,7 +531,7 @@ export function SmartBasketExperience({
                   className={styles.promptInput}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder='e.g. "I have $50. I need vegetables, fruits and eggs for Saturday."'
+                  placeholder={placeholderText || 'e.g. "I have $50. I need vegetables, fruits and eggs for Saturday."'}
                   aria-label="Describe what you want to buy and your budget"
                 />
               </div>
@@ -518,7 +546,6 @@ export function SmartBasketExperience({
               </button>
             </div>
 
-            {/* Quick Prompt Presets */}
             <div className={styles.promptChips} aria-label="Suggested Smart Basket prompts">
               <span className={styles.chipsLabel}>Try:</span>
               {(options.presetPrompts?.length > 0
@@ -547,38 +574,112 @@ export function SmartBasketExperience({
         </div>
       </section>
 
-      {/* ─── Customization Controls (Budget, Market, Day, Time) ─────────── */}
       <section
         ref={controlsRef}
         className={`${styles.controlsPanel} ${isModifying ? styles.controlsHighlighted : ''}`}
         aria-label="Basket configuration controls"
       >
-        {/* Budget Control */}
-        <div className={styles.controlGroup}>
-          <label className={styles.controlLabel} htmlFor="smart-basket-budget">
-            <span>Budget</span>
-          </label>
-          <div className={styles.budgetInputWrapper}>
-            <span className={styles.budgetCurrencyPrefix}>$</span>
-            <input
-              id="smart-basket-budget"
-              type="number"
-              className={styles.controlInput}
-              value={budget}
-              min="5"
-              max="1000"
-              step="5"
-              onChange={(e) => setBudget(Number(e.target.value))}
-              onBlur={() => handleGenerate()}
-              aria-label="Target budget in dollars"
-            />
+        
+        <div className={styles.controlsPanelHeader} aria-hidden="true">
+          <SlidersHorizontal size={13} />
+          <span>Customise Your Basket</span>
+        </div>
+
+        <div className={`${styles.controlGroup} ${styles.controlGroupFull}`}>
+          <div className={styles.controlLabelRow}>
+            <label className={styles.controlLabel} htmlFor="smart-basket-budget">
+              <Coins size={14} className={styles.budgetLabelIcon} />
+              <span>Budget</span>
+            </label>
+            <span className={styles.budgetTierPill} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              {budget < 35 ? (
+                <>
+                  <Sprout size={11} aria-hidden="true" />
+                  <span>Quick Pick</span>
+                </>
+              ) : budget < 65 ? (
+                <>
+                  <ShoppingBasket size={11} aria-hidden="true" />
+                  <span>Balanced</span>
+                </>
+              ) : budget < 100 ? (
+                <>
+                  <Store size={11} aria-hidden="true" />
+                  <span>Family</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={11} aria-hidden="true" />
+                  <span>Feast</span>
+                </>
+              )}
+            </span>
           </div>
-          <div className={styles.budgetQuickPills}>
-            {[25, 50, 75, 100].map((amt) => (
+
+          <div className={styles.budgetStepperWrapper}>
+            <button
+              type="button"
+              className={styles.stepperMiniBtn}
+              onClick={() => {
+                const next = Math.max(10, (Number(budget) || 50) - 5);
+                setBudget(next);
+                handleGenerate({ budget: next });
+              }}
+              aria-label="Decrease budget by $5"
+              title="Decrease budget by $5"
+              disabled={budget <= 10}
+            >
+              <Minus size={13} />
+            </button>
+
+            <div className={styles.budgetInputWrapper}>
+              <DollarSign size={16} className={styles.budgetCurrencyPrefix} />
+              <input
+                id="smart-basket-budget"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className={styles.controlInput}
+                value={budget}
+                min="10"
+                max="1000"
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, '');
+                  const num = raw === '' ? '' : Math.min(1000, parseInt(raw, 10));
+                  setBudget(num === '' ? '' : num);
+                }}
+                onFocus={(e) => e.target.select()}
+                onBlur={() => {
+                  const clamped = Math.max(10, Number(budget) || 10);
+                  setBudget(clamped);
+                  handleGenerate({ budget: clamped });
+                }}
+                aria-label="Target budget in dollars"
+              />
+            </div>
+
+            <button
+              type="button"
+              className={styles.stepperMiniBtn}
+              onClick={() => {
+                const next = Math.min(1000, (Number(budget) || 50) + 5);
+                setBudget(next);
+                handleGenerate({ budget: next });
+              }}
+              aria-label="Increase budget by $5"
+              title="Increase budget by $5"
+              disabled={budget >= 1000}
+            >
+              <Plus size={13} />
+            </button>
+          </div>
+
+          <div className={styles.budgetQuickPills} role="group" aria-label="Quick budget presets">
+            {[25, 40, 50, 75, 100].map((amt) => (
               <button
                 key={amt}
                 type="button"
-                className={`${styles.budgetQuickBtn} ${budget === amt ? styles.active : ''}`}
+                className={`${styles.budgetQuickBtn} ${budget === amt ? styles.budgetQuickActive : ''}`}
                 onClick={() => {
                   setBudget(amt);
                   handleGenerate({ budget: amt });
@@ -590,13 +691,13 @@ export function SmartBasketExperience({
           </div>
         </div>
 
-        {/* Market Filter */}
         <div className={styles.controlGroup}>
           <label className={styles.controlLabel} htmlFor="smart-basket-market">
             <Store size={14} />
             <span>Market</span>
           </label>
           <div className={styles.selectWrapper}>
+            <Store size={15} className={styles.selectIcon} aria-hidden="true" />
             <select
               id="smart-basket-market"
               className={styles.controlSelect}
@@ -618,13 +719,13 @@ export function SmartBasketExperience({
           </div>
         </div>
 
-        {/* Pickup Day */}
         <div className={styles.controlGroup}>
           <label className={styles.controlLabel} htmlFor="smart-basket-day">
             <Calendar size={14} />
             <span>Pickup Day</span>
           </label>
           <div className={styles.selectWrapper}>
+            <Calendar size={15} className={styles.selectIcon} aria-hidden="true" />
             <select
               id="smart-basket-day"
               className={styles.controlSelect}
@@ -648,13 +749,13 @@ export function SmartBasketExperience({
           </div>
         </div>
 
-        {/* Pickup Time Window */}
         <div className={styles.controlGroup}>
           <label className={styles.controlLabel} htmlFor="smart-basket-time">
             <Clock size={14} />
             <span>Pickup Time</span>
           </label>
           <div className={styles.selectWrapper}>
+            <Clock size={15} className={styles.selectIcon} aria-hidden="true" />
             <select
               id="smart-basket-time"
               className={styles.controlSelect}
@@ -680,7 +781,6 @@ export function SmartBasketExperience({
         </div>
       </section>
 
-      {/* ─── Dynamic Budget Status Card ─────────────────────────────────── */}
       <section className={styles.budgetCard} aria-label="Dynamic budget status">
         <div className={styles.budgetCardHeader}>
           <div className={styles.budgetValues}>
@@ -749,7 +849,6 @@ export function SmartBasketExperience({
           </div>
         </div>
 
-        {/* Visual Progress Bar */}
         <div className={styles.progressBarContainer}>
           <div
             className={styles.progressBarTrack}
@@ -777,7 +876,6 @@ export function SmartBasketExperience({
         </div>
       </section>
 
-      {/* ─── Suggested Basket Items List ─────────────────────────────────── */}
       <section className={styles.basketSection} aria-label="Suggested produce basket">
         <div className={styles.sectionHeader}>
           <div>
@@ -802,7 +900,6 @@ export function SmartBasketExperience({
           </div>
         </div>
 
-        {/* Error Alert */}
         {error && (
           <div className={styles.errorAlert} role="alert">
             <AlertTriangle size={18} />
@@ -813,7 +910,6 @@ export function SmartBasketExperience({
           </div>
         )}
 
-        {/* Loading State */}
         {loading && (
           <div className={styles.loadingState}>
             <RefreshCw size={28} className={styles.spin} />
@@ -821,7 +917,6 @@ export function SmartBasketExperience({
           </div>
         )}
 
-        {/* Empty State */}
         {items.length === 0 && !loading && !error && (
           <div className={styles.emptyState}>
             <ShoppingBasket size={48} className={styles.emptyIcon} />
@@ -841,12 +936,11 @@ export function SmartBasketExperience({
           </div>
         )}
 
-        {/* Product Cards List */}
         {!loading && items.length > 0 && (
           <div className={styles.itemsList}>
             {items.map((item) => (
               <article key={item.productId} className={styles.itemCard}>
-                {/* Product Thumbnail & Information */}
+                
                 <div className={styles.itemCardMain}>
                   <div
                     className={styles.itemArtThumb}
@@ -913,7 +1007,6 @@ export function SmartBasketExperience({
                   </div>
                 </div>
 
-                {/* Dynamic Quantity Controls & Actions */}
                 <div className={styles.itemControls}>
                   <div className={styles.stepper} aria-label={`Quantity stepper for ${item.name}`}>
                     <button
@@ -945,7 +1038,7 @@ export function SmartBasketExperience({
                   </div>
 
                   <div className={styles.itemActions}>
-                    {/* Replace Button */}
+                    
                     <button
                       type="button"
                       className={`${styles.actionIconBtn} ${styles.replaceBtn}`}
@@ -957,7 +1050,6 @@ export function SmartBasketExperience({
                       <span className={styles.btnLabelDesktop}>Replace</span>
                     </button>
 
-                    {/* Remove Button */}
                     <button
                       type="button"
                       className={`${styles.actionIconBtn} ${styles.removeBtn}`}
@@ -974,7 +1066,6 @@ export function SmartBasketExperience({
           </div>
         )}
 
-        {/* ─── Search for Another Product ─────────────────────────────────── */}
         <div className={styles.searchAddSection}>
           <div className={styles.searchAddHeader}>
             <Search size={15} />
@@ -1025,7 +1116,6 @@ export function SmartBasketExperience({
         </div>
       </section>
 
-      {/* ─── Action Footer Bar ────────────────────────────────────────────── */}
       <footer className={styles.footerBar} aria-label="Basket reservation actions">
         <div className={styles.footerSummary}>
           <span className={styles.footerTotalLabel}>Total Basket Cost</span>
@@ -1071,7 +1161,6 @@ export function SmartBasketExperience({
         </div>
       </footer>
 
-      {/* ─── Modal: Replace Item with Alternatives ────────────────────────── */}
       {replaceTarget && (
         <div className={styles.modalBackdrop} onClick={() => setReplaceTarget(null)}>
           <div
@@ -1137,7 +1226,6 @@ export function SmartBasketExperience({
         </div>
       )}
 
-      {/* ─── Modal: Product Details View ──────────────────────────────────── */}
       {detailsTarget && (
         <div className={styles.modalBackdrop} onClick={() => setDetailsTarget(null)}>
           <div

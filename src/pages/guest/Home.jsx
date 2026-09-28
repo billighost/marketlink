@@ -11,6 +11,7 @@ import {
   Sparkles,
   Sprout,
   Store,
+  Star,
 } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
@@ -173,7 +174,7 @@ export function Home() {
 
   return (
     <div className={styles.homeContainer}>
-      {/* ─── 1. HERO SECTION ────────────────────────────────────────── */}
+      
       <section className={styles.heroSection}>
         <div className={styles.heroOverlay} />
 
@@ -204,7 +205,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* ─── 2. WEEKEND GATHERINGS / MARKETS ────────────────────────── */}
       {(marketsLoading || markets.length > 0) && (
         <section className={styles.marketsSection}>
           <div className="container">
@@ -279,7 +279,6 @@ export function Home() {
         </section>
       )}
 
-      {/* ─── 3. SEASONAL HARVEST / PRICE BOARD ─────────────────────── */}
       {(productsLoading || homeLoading || boardItems.length > 0) && (
         <section className={styles.productsSection}>
           <div className="container">
@@ -338,7 +337,6 @@ export function Home() {
                           <Illustration name="basket" size="md" />
                         </div>
 
-                        {/* Favorite Heart Button */}
                         <button
                           type="button"
                           onClick={() => toggleProduct(product.id)}
@@ -353,7 +351,6 @@ export function Home() {
                           />
                         </button>
 
-                        {/* Stock pill overlay */}
                         <span
                           className={`${styles.productStockBadge} ${
                             product.availability === 'low' ? styles.stockLow : styles.stockIn
@@ -414,7 +411,6 @@ export function Home() {
         </section>
       )}
 
-      {/* ─── 4. THE GROWERS / MEET LOCAL FARMERS ─────────────────── */}
       {(homeLoading || farmers.length > 0) && (
         <section className={styles.farmersSection}>
           <div className="container">
@@ -487,8 +483,9 @@ export function Home() {
                             {operatingDays}
                           </span>
                           {farmer.ratingAvg > 0 && (
-                            <span className={styles.farmerRating}>
-                              ★ {Number(farmer.ratingAvg).toFixed(1)}
+                            <span className={styles.farmerRating} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <Star size={11} fill="currentColor" aria-hidden="true" />
+                              <span>{Number(farmer.ratingAvg).toFixed(1)}</span>
                               {farmer.ratingCount ? ` (${farmer.ratingCount})` : ''}
                             </span>
                           )}
@@ -510,7 +507,6 @@ export function Home() {
         </section>
       )}
 
-      {/* ─── 5. HOW MARKETLINK WORKS ──────────────────────────────── */}
       <section className={styles.howItWorksSection}>
         <div className="container">
           <div className={styles.howHeader}>
@@ -541,7 +537,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* ─── 6. CALL TO ACTION BANNER ───────────────────────────────── */}
       <section className={styles.ctaBannerSection}>
         <div className="container">
           <div className={styles.ctaCard}>

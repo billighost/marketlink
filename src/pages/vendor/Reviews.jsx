@@ -35,16 +35,14 @@ export function Reviews() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filterMode, setFilterMode] = useState('all'); // 'all' | 'unanswered' | '5' | '4' | 'critical'
+  const [filterMode, setFilterMode] = useState('all');
 
-  // Active review for reply or report
   const [activeReview, setActiveReview] = useState(null);
-  const [modalMode, setModalMode] = useState('none'); // 'none' | 'reply' | 'report' | 'delete-reply'
+  const [modalMode, setModalMode] = useState('none');
   const [replyText, setReplyText] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState('');
 
-  // Toast
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
 
@@ -135,7 +133,6 @@ export function Reviews() {
   const totalReviews = summary?.ratingCount || reviews.length || 0;
   const ratingAvg = summary?.ratingAvg ? Number(summary.ratingAvg).toFixed(1) : '5.0';
 
-  // Derived filters
   const filteredReviews = useMemo(() => {
     return reviews.filter((r) => {
       if (filterMode === '5') return r.rating === 5;
@@ -146,7 +143,6 @@ export function Reviews() {
     });
   }, [reviews, filterMode]);
 
-  // Reply statistics
   const answeredCount = reviews.filter((r) => Boolean(r.reply?.text || r.reply?.body)).length;
   const unansweredCount = reviews.length - answeredCount;
   const responseRate = reviews.length > 0 ? Math.round((answeredCount / reviews.length) * 100) : 100;
@@ -161,7 +157,6 @@ export function Reviews() {
         />
       )}
 
-      {/* Header */}
       <header className={styles.header}>
         <div className={styles.headerTitleGroup}>
           <div className={styles.badgeRow}>
@@ -181,9 +176,8 @@ export function Reviews() {
         </div>
       </header>
 
-      {/* Rating Summary Banner */}
       <section className={styles.summaryBanner} aria-label="Rating breakdown and reputation score">
-        {/* Score Column */}
+        
         <div className={styles.scoreCol}>
           <span className={styles.scoreNumber}>{ratingAvg}</span>
           <div className={styles.starsWrap}>
@@ -198,7 +192,6 @@ export function Reviews() {
           </div>
         </div>
 
-        {/* 5-Bar Breakdown Column */}
         <div className={styles.barsCol}>
           <div className={styles.barsHeader}>
             <span>Rating Distribution</span>
@@ -221,7 +214,10 @@ export function Reviews() {
                 tabIndex={0}
                 title={`Filter ${star} star reviews`}
               >
-                <span className={styles.starLabel}>{star} ★</span>
+                <span className={styles.starLabel} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                  <span>{star}</span>
+                  <Star size={11} fill="currentColor" aria-hidden="true" />
+                </span>
                 <div className={styles.barTrack}>
                   <div
                     className={styles.barFill}
@@ -236,7 +232,6 @@ export function Reviews() {
         </div>
       </section>
 
-      {/* Filter Chips */}
       <div className={styles.filterRow} role="tablist" aria-label="Review filters">
         <button
           type="button"
@@ -290,7 +285,6 @@ export function Reviews() {
         </button>
       </div>
 
-      {/* Reviews List */}
       {loading ? (
         <div className={styles.loadingBox}>
           <Skeleton height="110px" />
@@ -326,7 +320,7 @@ export function Reviews() {
 
             return (
               <article key={rev.id} className={styles.reviewCard}>
-                {/* Header */}
+                
                 <div className={styles.cardHeader}>
                   <div className={styles.customerCol}>
                     <div className={styles.avatarWrap}>{initials}</div>
@@ -364,10 +358,8 @@ export function Reviews() {
                   </div>
                 </div>
 
-                {/* Comment Body */}
                 {rev.comment && <p className={styles.comment}>{rev.comment}</p>}
 
-                {/* Farmer Reply Block */}
                 {hasReply ? (
                   <div className={styles.replyBox}>
                     <div className={styles.replyHeader}>
@@ -421,7 +413,6 @@ export function Reviews() {
         </div>
       )}
 
-      {/* Reply Sheet Modal */}
       {modalMode === 'reply' && (
         <BottomSheet
           isOpen={true}
@@ -481,7 +472,6 @@ export function Reviews() {
         </BottomSheet>
       )}
 
-      {/* Delete Reply Confirmation Peek Sheet */}
       {modalMode === 'delete-reply' && (
         <BottomSheet
           isOpen={true}
@@ -501,7 +491,6 @@ export function Reviews() {
         </BottomSheet>
       )}
 
-      {/* Report Review Sheet */}
       {modalMode === 'report' && (
         <BottomSheet
           isOpen={true}

@@ -1,9 +1,3 @@
-/**
- * Orders module service layer.
- * Implements customer order listing with cursor pagination, order detail retrieval,
- * order modification with deterministic delta stock arithmetic, cancelation, and reorder preview.
- */
-
 import { ObjectId } from 'mongodb';
 import { getDb } from '../../db/client.js';
 import { COLLECTIONS } from '../../db/collections.js';
@@ -16,17 +10,6 @@ import { transitionOrder } from './orderStateMachine.js';
 import { toOrderSummary, toOrderDetail } from './orderShapes.js';
 import { createNotification } from '../notifications/notify.js';
 
-/**
- * Lists orders for a customer with tab filtering ('active' vs 'past') and keyset cursor pagination.
- *
- * @param {string|ObjectId} customerId
- * @param {object} [options]
- * @param {string} [options.tab='active'] - 'active' | 'past'
- * @param {string} [options.cursor]
- * @param {number} [options.limit=10]
- * @param {Date} [options.now=new Date()]
- * @returns {Promise<{ orders: Array<object>, nextCursor: string|null, limit: number }>}
- */
 export async function listCustomerOrders(customerId, { tab = 'active', cursor, limit = 10, now = new Date() } = {}) {
   const db = getDb();
   const cid = toObjectId(customerId);
@@ -85,21 +68,11 @@ export async function listCustomerOrders(customerId, { tab = 'active', cursor, l
   };
 }
 
-/**
- * Loads order details for a customer with strict ownership enforcement.
- *
- * @param {string|ObjectId} orderId
- * @param {string|ObjectId} customerId
- * @param {object} [options]
- * @param {Date} [options.now=new Date()]
- * @returns {Promise<object>}
- */
 export async function getCustomerOrderDetail(orderId, customerId, { now = new Date() } = {}) {
   const db = getDb();
   const oid = toObjectId(orderId);
   const cid = toObjectId(customerId);
 
-  // Strict ownership in query filter: returns 404 for other customers to prevent ID probing
   const order = await db.collection(COLLECTIONS.ORDERS).findOne({ _id: oid, customerId: cid });
   if (!order) {
     throw AppError.notFound('Order not found.');
@@ -109,23 +82,11 @@ export async function getCustomerOrderDetail(orderId, customerId, { now = new Da
   return toOrderDetail(order, { marketDoc, now });
 }
 
-/**
- * Modifies an active order placed by the customer before cutoff.
- * Applies exact algorithm from D5.
- *
- * @param {string|ObjectId} orderId
- * @param {string|ObjectId} customerId
- * @param {object} updates - { items?: Array<{ productId, quantity }>, note?: string, slotStart?: string }
- * @param {object} [options]
- * @param {Date} [options.now=new Date()]
- * @returns {Promise<object>}
- */
 export async function modifyCustomerOrder(orderId, customerId, updates, { now = new Date() } = {}) {
   const db = getDb();
   const oid = toObjectId(orderId);
   const cid = toObjectId(customerId);
 
-  // 1. Load { _id, customerId } (404 otherwise). Require status === 'placed' and now < cutoffAt
   const order = await db.collection(COLLECTIONS.ORDERS).findOne({ _id: oid, customerId: cid });
   if (!order) {
     throw AppError.notFound('Order not found.');
@@ -150,13 +111,11 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
     oldItemsMap.set(item.productId.toString(), item);
   }
 
-  // 2. Compute delta per product: newQty - oldQty. Reject if all lines would be removed (USE_CANCEL)
   const increases = [];
   const decreases = [];
   let updatedItems = [...order.items];
 
   if (Array.isArray(updates.items)) {
-    // Only existing products can be adjusted; adding new products is NOT allowed
     for (const reqItem of updates.items) {
       if (!oldItemsMap.has(reqItem.productId.toString())) {
         throw AppError.unprocessable([
@@ -170,7 +129,6 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
       newQuantities.set(reqItem.productId.toString(), reqItem.quantity);
     }
 
-    // Build new item list and calculate delta
     const nextList = [];
     for (const oldItem of order.items) {
       const pIdStr = oldItem.productId.toString();
@@ -184,7 +142,6 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
       }
 
       if (newQty > 0) {
-        // Recalculate totals from SNAPSHOT prices
         nextList.push({
           ...oldItem,
           quantity: newQty,
@@ -200,12 +157,10 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
     updatedItems = nextList;
   }
 
-  // 3. Apply increases first through reserveStock (conditional), then decreases through restoreStock
   const appliedIncreases = [];
   for (const inc of increases) {
     const success = await reserveStock(inc.productId, inc.delta, db);
     if (!success) {
-      // Roll back already applied increases
       for (const applied of appliedIncreases) {
         await restoreStock(applied.productId, applied.delta, { db, notify: false });
       }
@@ -218,7 +173,6 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
     await restoreStock(dec.productId, dec.delta, { db, notify: true });
   }
 
-  // 4. New slot: must be an open slot of the same Farmer
   let newPickup = order.pickup;
   let newCutoffAt = order.cutoffAt;
   let newSlotKey = order.slotKey;
@@ -234,14 +188,12 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
     const slot = upcoming.find((s) => s.start === updates.slotStart);
 
     if (!slot || !slot.isOpen) {
-      // Roll back stock increases
       for (const applied of appliedIncreases) {
         await restoreStock(applied.productId, applied.delta, { db, notify: false });
       }
       throw AppError.conflict('That pickup time has closed.', 'SLOT_CLOSED');
     }
 
-    // Capacity check on new slot
     const slotKey = `${order.farmerId.toString()}|${slot.start}`;
     const maxOrdersPerSlot = 30;
     const count = await db.collection(COLLECTIONS.ORDERS).countDocuments({
@@ -271,7 +223,6 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
   const totalCents = subtotalCents;
   const newNote = updates.note !== undefined ? updates.note.trim() : order.note;
 
-  // 5. updateOne({ _id, status: 'placed' }) with conditional match
   const updateResult = await db.collection(COLLECTIONS.ORDERS).updateOne(
     { _id: oid, status: 'placed' },
     {
@@ -297,7 +248,6 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
   );
 
   if (updateResult.matchedCount === 0) {
-    // Farmer accepted meanwhile: roll the stock increases back and return 409 ORDER_CHANGED
     for (const applied of appliedIncreases) {
       await restoreStock(applied.productId, applied.delta, { db, notify: false });
     }
@@ -307,7 +257,6 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
     );
   }
 
-  // 6. Notify the Farmer
   try {
     await createNotification(
       {
@@ -320,22 +269,11 @@ export async function modifyCustomerOrder(orderId, customerId, updates, { now = 
       db
     );
   } catch {
-    // Non-blocking
   }
 
   return getCustomerOrderDetail(orderId, customerId, { now });
 }
 
-/**
- * Cancels an order on behalf of the customer before cutoff.
- *
- * @param {string|ObjectId} orderId
- * @param {string|ObjectId} customerId
- * @param {object} [params]
- * @param {string} [params.reason]
- * @param {Date} [params.now=new Date()]
- * @returns {Promise<object>}
- */
 export async function cancelCustomerOrder(orderId, customerId, { reason, now = new Date() } = {}) {
   const db = getDb();
   const oid = toObjectId(orderId);
@@ -369,13 +307,6 @@ export async function cancelCustomerOrder(orderId, customerId, { reason, now = n
   return toOrderDetail(updatedOrder, { marketDoc, now });
 }
 
-/**
- * Previews items for reordering a past order, indicating live availability and current prices.
- *
- * @param {string|ObjectId} orderId
- * @param {string|ObjectId} customerId
- * @returns {Promise<{ items: Array<object> }>}
- */
 export async function getReorderPreview(orderId, customerId) {
   const db = getDb();
   const oid = toObjectId(orderId);
@@ -417,21 +348,11 @@ export async function getReorderPreview(orderId, customerId) {
   return { items };
 }
 
-/**
- * Plans an optimal market pickup route for a customer across multiple stalls.
- * Connects orders, farmers, and map coordinates into a unified walking route.
- *
- * @param {string|ObjectId} customerId
- * @param {object} [options]
- * @param {Date} [options.now=new Date()]
- * @returns {Promise<object>}
- */
 export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}) {
   const db = getDb();
   const cid = toObjectId(customerId);
   const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
-  // Load customer's active orders (and recently completed/collected orders for the current pickup cycle)
   const activeOrders = await db
     .collection(COLLECTIONS.ORDERS)
     .find({
@@ -445,7 +366,6 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
     .sort({ createdAt: -1 })
     .toArray();
 
-  // If no active orders, query the real database market and real farmers to build an authentic preview route
   if (!activeOrders || activeOrders.length === 0) {
     const user = await db.collection(COLLECTIONS.USERS).findOne({ _id: cid });
     let previewMarket = null;
@@ -462,7 +382,6 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
     const marketName = previewMarket?.name || 'Local Farmers Market';
     const marketAddress = previewMarket?.address || 'Market Pavilion';
 
-    // Find real farmers from the database
     const dbFarmers = await db
       .collection(COLLECTIONS.FARMERS)
       .find(
@@ -479,7 +398,6 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
       .limit(3)
       .toArray();
 
-    // If fewer than 3 farmers for this market, fall back to any active farmers in the database
     let realFarmers = dbFarmers;
     if (realFarmers.length === 0) {
       realFarmers = await db.collection(COLLECTIONS.FARMERS).find({}).limit(3).toArray();
@@ -553,7 +471,6 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
     };
   }
 
-  // Otherwise, group real active orders into a cohesive walking route
   const farmerIds = [...new Set(activeOrders.map((o) => o.farmerId).filter(Boolean))];
   const marketIds = [...new Set(activeOrders.map((o) => o.marketId).filter(Boolean))];
 
@@ -582,7 +499,6 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
   const centerLng = typeof mCoords[0] === 'number' ? mCoords[0] : -74.172;
   const centerLat = typeof mCoords[1] === 'number' ? mCoords[1] : 40.735;
 
-  // Determine pickup day name (e.g. Saturday)
   let dayName = 'Saturday';
   const firstPickupDate = activeOrders[0]?.pickup?.start || activeOrders[0]?.createdAt;
   if (firstPickupDate) {
@@ -594,7 +510,6 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
     } catch {}
   }
 
-  // Sort orders by stallNumber to simulate a natural market aisle walking flow
   const sortedOrders = [...activeOrders].sort((a, b) => {
     const stallA = (a.pickup?.stallNumber || '').toLowerCase();
     const stallB = (b.pickup?.stallNumber || '').toLowerCase();
@@ -606,7 +521,6 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
     const stallNum = order.pickup?.stallNumber || f.stallNumber || `Stall ${String.fromCharCode(65 + (idx % 26))}${((idx + 1) * 3) % 20 + 1}`;
     const name = order.farmerName || f.stallName || 'Farm Stall';
 
-    // Disperse stalls naturally in an arc/corridor from entrance to exit
     const spreadFraction = sortedOrders.length > 1 ? (idx + 1) / (sortedOrders.length + 1) : 0.5;
     const latOffset = (spreadFraction - 0.5) * 0.0016;
     const lngOffset = Math.sin(spreadFraction * Math.PI) * 0.0012 * (idx % 2 === 0 ? 1 : -1);
@@ -691,14 +605,6 @@ export async function getCustomerRoutePlan(customerId, { now = new Date() } = {}
   };
 }
 
-/**
- * Toggles or sets a customer's order route collection state in MongoDB.
- *
- * @param {string|ObjectId} customerId
- * @param {string} orderId
- * @param {boolean} collected
- * @returns {Promise<object>}
- */
 export async function setRouteStopCollected(customerId, orderId, collected) {
   const db = getDb();
   const cid = toObjectId(customerId);
@@ -727,12 +633,6 @@ export async function setRouteStopCollected(customerId, orderId, collected) {
   };
 }
 
-/**
- * Resets all route collection progress for a customer in MongoDB.
- *
- * @param {string|ObjectId} customerId
- * @returns {Promise<object>}
- */
 export async function resetCustomerRouteProgress(customerId) {
   const db = getDb();
   const cid = toObjectId(customerId);

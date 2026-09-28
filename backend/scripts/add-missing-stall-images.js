@@ -1,21 +1,8 @@
-/**
- * add-missing-stall-images.js
- *
- * Slices through all stalls in MongoDB without a profile image (imageUrl),
- * uploads high-resolution, specialty-matched photography to Cloudinary,
- * and updates each farmer's profile in the database.
- *
- * Usage:
- *   node scripts/add-missing-stall-images.js
- *   node scripts/add-missing-stall-images.js --dry-run
- */
-
 import 'dotenv/config';
 import { connectDb, getDb, closeDb } from '../src/db/client.js';
 import { COLLECTIONS } from '../src/db/collections.js';
 import { saveImage } from '../src/modules/uploads/storage/cloudinary.js';
 
-// Curated high-resolution stall photography matched to each stall's specialty and story
 const STALL_PHOTO_MAP = {
   'Riverbend Farm': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551607/marketlink/farmers/dga545dhj29qy4y78szu.jpg',
   'Oak & Mill Bakery': 'https://res.cloudinary.com/dpnscafb/image/upload/v1790551628/marketlink/farmers/bkmyeb7qftnzlhvfu3ah.jpg',

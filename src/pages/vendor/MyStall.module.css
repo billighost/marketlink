@@ -4,10 +4,15 @@
   gap: var(--space-5);
   max-width: 1040px;
   margin: 0 auto;
-  padding: var(--space-2) var(--space-4) var(--space-12);
+  padding: var(--space-2) var(--space-3) var(--space-12);
 }
 
-/* Header */
+@media (min-width: 640px) {
+  .container {
+    padding: var(--space-2) var(--space-4) var(--space-12);
+  }
+}
+
 .header {
   display: flex;
   align-items: flex-start;
@@ -62,7 +67,7 @@
 
 .title {
   font-family: var(--font-head);
-  font-size: 1.85rem;
+  font-size: clamp(1.4rem, 3.5vw, 1.85rem);
   font-weight: 700;
   color: var(--color-ink);
   letter-spacing: -0.02em;
@@ -137,7 +142,6 @@
   font-size: var(--text-sm);
 }
 
-/* Hero Showcase Banner */
 .heroBanner {
   background: var(--color-white);
   border: 1px solid var(--color-wood-line);
@@ -307,7 +311,6 @@
   transition: width 0.4s ease;
 }
 
-/* Bento Grid */
 .bentoGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -444,7 +447,6 @@
   margin: auto 0;
 }
 
-/* Markets Pill List */
 .marketPillsList {
   display: flex;
   flex-direction: column;
@@ -481,7 +483,6 @@
   color: var(--color-ink-muted);
 }
 
-/* Schedule */
 .daysScheduleList {
   display: flex;
   flex-direction: column;
@@ -523,7 +524,6 @@
   font-style: italic;
 }
 
-/* Limits */
 .limitMetric {
   display: flex;
   flex-direction: column;
@@ -560,7 +560,6 @@
   margin: 0;
 }
 
-/* Closures */
 .allOpenState {
   display: flex;
   align-items: center;
@@ -592,7 +591,6 @@
   border-radius: var(--radius-md);
 }
 
-/* Location */
 .locationSummary {
   display: flex;
   align-items: flex-start;
@@ -619,9 +617,6 @@
   font-family: monospace;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   SHEET FORMS (Preserved & Enhanced)
-   ───────────────────────────────────────────────────────────── */
 .sheetForm {
   display: flex;
   flex-direction: column;
@@ -836,6 +831,11 @@
   font-weight: var(--weight-medium);
   cursor: pointer;
   text-decoration: underline;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.toggleCoordsBtn:hover {
+  opacity: 0.75;
 }
 
 .mapContainer {
@@ -863,7 +863,6 @@
   color: var(--color-ink-muted);
 }
 
-/* ─── ONBOARDING HERO BANNER ─── */
 .onboardingBanner {
   display: flex;
   align-items: center;
@@ -938,7 +937,6 @@
   transform: translateY(-1px);
 }
 
-/* ─── STALL SETUP / CREATION WIZARD ─── */
 .wizardWrap {
   display: flex;
   flex-direction: column;
@@ -982,6 +980,11 @@
   background: #F7EEF0;
   color: #7A2E3B;
   border-color: #7A2E3B;
+}
+
+.stepPill:not(.stepPillActive):not(.stepPillCompleted):hover {
+  background: #E5E7EB;
+  color: #374151;
 }
 
 .stepPillCompleted {
@@ -1106,6 +1109,12 @@
   border-color: #7A2E3B;
 }
 
+.wizardDayBtn:not(.wizardDayBtnActive):hover {
+  background: #F3F4F6;
+  border-color: #9CA3AF;
+  color: var(--color-ink);
+}
+
 .wizardPresetsRow {
   display: flex;
   flex-direction: column;
@@ -1157,6 +1166,12 @@
   color: #EF4444;
   cursor: pointer;
   padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.windowRemoveBtn:hover {
+  background-color: #FEF2F2;
 }
 
 .livePreviewBox {
@@ -1241,4 +1256,61 @@
   gap: var(--space-3, 12px);
   padding-top: var(--space-4, 16px);
   border-top: 1px solid var(--color-wood-line);
+}
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - MyStall.module.css
+   --------------------------------------------------------------- */
+
+/* -- Header -- */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .headerActions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .title {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+}
+
+/* -- Hero banner -- */
+@media (max-width: 480px) {
+  .heroImageWrap {
+    height: 140px;
+  }
+  .heroTitle {
+    font-size: 1.2rem;
+  }
+  .heroMetaBar {
+    padding: 14px 14px;
+    gap: 12px;
+  }
+  .readinessBox {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* -- Bento grid -- */
+@media (max-width: 480px) {
+  .bentoGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .bentoCard {
+    padding: 14px 14px;
+    border-radius: 14px;
+  }
+}
+
+/* -- Hero identity on small screens -- */
+@media (max-width: 480px) {
+  .heroIdentity {
+    width: 100%;
+  }
 }

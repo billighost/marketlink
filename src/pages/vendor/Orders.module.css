@@ -4,10 +4,15 @@
   gap: var(--space-4);
   max-width: 1040px;
   margin: 0 auto;
-  padding: var(--space-2) var(--space-4) var(--space-12);
+  padding: var(--space-2) var(--space-3) var(--space-12);
 }
 
-/* Header */
+@media (min-width: 640px) {
+  .container {
+    padding: var(--space-2) var(--space-4) var(--space-12);
+  }
+}
+
 .header {
   display: flex;
   align-items: flex-start;
@@ -75,7 +80,7 @@
 
 .title {
   font-family: var(--font-head);
-  font-size: 1.85rem;
+  font-size: clamp(1.4rem, 3.5vw, 1.85rem);
   font-weight: 700;
   color: var(--color-ink);
   letter-spacing: -0.02em;
@@ -118,7 +123,6 @@
   transform: translateY(-1px);
 }
 
-/* Telemetry Strip */
 .telemetryRow {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -207,7 +211,6 @@
   color: var(--color-beet, #7A2E3B);
 }
 
-/* Search Bar */
 .searchWrapper {
   position: relative;
   display: flex;
@@ -263,7 +266,6 @@
   background-color: var(--color-canvas-soft);
 }
 
-/* Tabs */
 .tabsContainer {
   display: flex;
   align-items: center;
@@ -321,7 +323,6 @@
   color: #DC2626 !important;
 }
 
-/* Loading & Empty */
 .loadingBox {
   display: flex;
   flex-direction: column;
@@ -335,7 +336,6 @@
   padding: var(--space-8);
 }
 
-/* Order List */
 .orderList {
   display: flex;
   flex-direction: column;
@@ -506,7 +506,6 @@
   white-space: nowrap;
 }
 
-/* Right Actions Column */
 .cardActionsCol {
   display: flex;
   align-items: center;
@@ -638,9 +637,91 @@
   border-color: var(--color-ink-muted);
 }
 
-/* Load More */
 .loadMoreWrapper {
   display: flex;
   justify-content: center;
   padding: var(--space-4) 0;
+}
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - Orders.module.css
+   --------------------------------------------------------------- */
+
+/* -- Header -- */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .title {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+  .pickListBtn {
+    align-self: flex-start;
+  }
+}
+
+/* -- Telemetry: 2x2 on mobile -- */
+@media (max-width: 480px) {
+  .telemetryRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .telemetryCard {
+    padding: 10px 12px;
+  }
+  .stageValue {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .telemetryRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -- Tabs -- */
+@media (max-width: 480px) {
+  .tabBtn {
+    font-size: 0.78rem;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+}
+
+/* -- Order cards -- */
+@media (max-width: 640px) {
+  .orderCard {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .totalAmount {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .orderCard {
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+  .customerName {
+    font-size: 0.82rem;
+  }
+  .orderNumber {
+    font-size: 0.8rem;
+  }
+  .avatarWrap {
+    width: 38px;
+    height: 38px;
+  }
+  .quickAcceptBtn,
+  .quickReadyBtn,
+  .quickCompleteBtn {
+    font-size: 0.72rem;
+    padding: 6px 10px;
+  }
 }

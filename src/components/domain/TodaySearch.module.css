@@ -1,0 +1,406 @@
+.searchContainer {
+  position: relative;
+  width: 100%;
+  z-index: 60;
+}
+
+.searchForm {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-4);
+  color: var(--color-ink-soft);
+  pointer-events: none;
+  flex-shrink: 0;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.searchInput {
+  width: 100%;
+  height: 48px;
+  border: 1.5px solid rgba(46, 43, 38, 0.18);
+  background-color: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-10) 0 calc(var(--space-4) + 18px + var(--space-3));
+  font-family: var(--font-body);
+  font-size: var(--text-input, 15px);
+  color: var(--color-ink);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              box-shadow var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(46, 43, 38, 0.06);
+}
+
+.searchInput:focus {
+  border-color: var(--color-beet);
+  box-shadow: 0 0 0 3px var(--color-beet-tint), 0 2px 6px rgba(46, 43, 38, 0.08);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--color-ink-faint, #8f8b82);
+}
+
+.searchFormActive .searchIcon {
+  color: var(--color-beet);
+}
+
+.rightControls {
+  position: absolute;
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.spinner {
+  color: var(--color-beet);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: rgba(46, 43, 38, 0.08);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+  padding: 0;
+}
+
+.clearBtn:hover {
+  background: rgba(46, 43, 38, 0.16);
+  color: var(--color-ink);
+}
+
+.searchDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--color-white);
+  border: 1.5px solid rgba(46, 43, 38, 0.12);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 16px 40px -8px rgba(46, 43, 38, 0.16),
+              0 2px 8px rgba(46, 43, 38, 0.06);
+  max-height: 440px;
+  overflow-y: auto;
+  z-index: 100;
+  animation: dropdownFadeIn 0.18s ease-out;
+  overscroll-behavior: contain;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownBody {
+  padding: var(--space-2) 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid rgba(46, 43, 38, 0.06);
+}
+
+.section:last-of-type {
+  border-bottom: none;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-4) var(--space-2);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-soft);
+}
+
+.headerIcon {
+  color: var(--color-ink-soft);
+  opacity: 0.8;
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.dropdownItem:hover,
+.itemSelected {
+  background-color: var(--color-canvas-soft, #f7f5f0);
+}
+
+.dropdownItem:hover .itemTitle,
+.itemSelected .itemTitle {
+  color: var(--color-beet);
+}
+
+.itemMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  flex: 1;
+}
+
+.itemIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md, 8px);
+  flex-shrink: 0;
+}
+
+.produceIconWrap {
+  background: rgba(46, 125, 50, 0.1);
+  color: #2e7d32;
+}
+
+.stallIconWrap {
+  background: rgba(200, 100, 30, 0.1);
+  color: #b7521e;
+}
+
+.marketIconWrap {
+  background: rgba(40, 90, 160, 0.1);
+  color: #1e5a9c;
+}
+
+.categoryIconWrap {
+  background: rgba(120, 50, 120, 0.1);
+  color: #7a2e7a;
+}
+
+.historyIconWrap {
+  background: rgba(46, 43, 38, 0.07);
+  color: var(--color-ink-soft);
+}
+
+.itemTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.priceBadge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-beet);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.unitText {
+  font-weight: 400;
+  color: var(--color-ink-soft);
+  font-size: 12px;
+}
+
+.secondaryBadge {
+  font-size: 12px;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  flex-shrink: 0;
+}
+
+.itemArrow {
+  color: var(--color-ink-soft);
+  opacity: 0.5;
+  transition: transform var(--duration-fast) var(--ease-standard);
+  flex-shrink: 0;
+}
+
+.dropdownItem:hover .itemArrow,
+.itemSelected .itemArrow {
+  transform: translateX(2px);
+  opacity: 1;
+  color: var(--color-beet);
+}
+
+.popularChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-2);
+}
+
+.popularChip {
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(46, 43, 38, 0.12);
+  background: var(--color-canvas, #faf9f6);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+  display: inline-flex;
+  align-items: center;
+}
+
+.popularChip:hover {
+  background: var(--color-beet-tint, #fbebed);
+  border-color: var(--color-beet);
+  color: var(--color-beet);
+  transform: translateY(-1px);
+}
+
+.loadingRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  color: var(--color-ink-soft);
+  font-size: 13.5px;
+}
+
+.noResultsBox {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.noResultsText {
+  margin: 0 0 var(--space-1);
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+.noResultsSub {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-ink-soft);
+}
+
+.dropdownFooter {
+  border-top: 1px solid rgba(46, 43, 38, 0.08);
+  background: var(--color-canvas, #faf9f6);
+  padding: var(--space-1) var(--space-2);
+}
+
+.seeAllBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-md, 8px);
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  font-size: 13.5px;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.seeAllBtn:hover,
+.seeAllBtn.itemSelected {
+  background: var(--color-beet-tint, #fbebed);
+  color: var(--color-beet);
+}
+
+.seeAllMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.seeAllIcon {
+  color: var(--color-beet);
+}
+
+.seeAllArrow {
+  color: var(--color-ink-soft);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.seeAllBtn:hover .seeAllArrow,
+.seeAllBtn.itemSelected .seeAllArrow {
+  transform: translateX(3px);
+  color: var(--color-beet);
+}
+
+@media (max-width: 480px) {
+  .searchInput {
+    height: 44px;
+    padding-left: calc(var(--space-3) + 18px + var(--space-2));
+    padding-right: var(--space-8);
+    font-size: 14px;
+  }
+
+  .searchIcon {
+    left: var(--space-3);
+  }
+
+  .rightControls {
+    right: var(--space-2);
+  }
+
+  .searchDropdown {
+    max-height: 380px;
+  }
+
+  .secondaryBadge {
+    max-width: 110px;
+  }
+}

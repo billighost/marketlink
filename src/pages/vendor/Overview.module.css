@@ -1,32 +1,37 @@
-/* ==========================================================================
-   Vendor Dashboard / Cockpit Experience (MarketLink)
-   Lively, rich, state-of-the-art agricultural management cockpit
-   Brand theme: #7A2E3B (Beet Root)
-   ========================================================================== */
-
 .container {
   display: flex;
   flex-direction: column;
   gap: var(--space-6, 24px);
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-4, 16px) var(--space-4, 16px) var(--space-16, 64px);
+  padding: var(--space-2, 8px) var(--space-2, 8px) var(--space-16, 64px);
   color: var(--color-ink, #212529);
   font-family: var(--font-body, system-ui, -apple-system, sans-serif);
 }
 
-/* ─── 1. COMMAND HEADER & BANNER ─────────────────────────────────────────── */
+@media (min-width: 640px) {
+  .container {
+    padding: var(--space-4, 16px) var(--space-4, 16px) var(--space-16, 64px);
+  }
+}
+
 .cockpitHeader {
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 16px);
   background: linear-gradient(135deg, #5E212B 0%, #7A2E3B 55%, #963E4D 100%);
   border-radius: var(--radius-xl, 20px);
-  padding: var(--space-6, 24px) var(--space-8, 32px);
+  padding: var(--space-4, 16px) var(--space-4, 16px);
   color: #ffffff;
   box-shadow: 0 10px 30px -5px rgba(122, 46, 59, 0.35);
   position: relative;
   overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .cockpitHeader {
+    padding: var(--space-6, 24px) var(--space-8, 32px);
+  }
 }
 
 .cockpitHeader::after {
@@ -43,7 +48,7 @@
 
 .headerTopRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3, 12px);
@@ -77,7 +82,7 @@
 
 .greetingText {
   font-family: var(--font-head, serif);
-  font-size: 1.75rem;
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
   font-weight: 700;
   line-height: 1.2;
   margin: 0;
@@ -100,6 +105,7 @@
   gap: var(--space-2, 8px);
   flex-wrap: wrap;
   z-index: 1;
+  flex-shrink: 0;
 }
 
 .livePill {
@@ -162,7 +168,6 @@
   transform: translateY(-1px);
 }
 
-/* Operational sub-banner inside header */
 .operationalBar {
   display: flex;
   align-items: center;
@@ -201,11 +206,24 @@
   gap: 6px;
 }
 
-/* ─── 2. TELEMETRY BENTO GRID ────────────────────────────────────────────── */
 .bentoGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: var(--space-4, 16px);
+}
+
+@media (max-width: 767px) {
+  .bentoGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2, 8px);
+  }
+}
+
+@media (max-width: 380px) {
+  .bentoGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-2, 8px);
+  }
 }
 
 .statCard {
@@ -274,7 +292,7 @@
 
 .statMainValue {
   font-family: var(--font-head, serif);
-  font-size: 1.85rem;
+  font-size: clamp(1.35rem, 3.5vw, 1.85rem);
   font-weight: 700;
   color: var(--color-ink, #1f2937);
   margin: var(--space-1, 4px) 0;
@@ -313,7 +331,6 @@
   overflow: visible;
 }
 
-/* ─── 3. MAIN DASHBOARD CONTENT COLUMNS ──────────────────────────────────── */
 .cockpitColumns {
   display: grid;
   grid-template-columns: 1fr;
@@ -338,7 +355,6 @@
   gap: var(--space-6, 24px);
 }
 
-/* ─── 4. LIVE ORDER OPERATIONS BOARD ─────────────────────────────────────── */
 .sectionCard {
   background: #ffffff;
   border: 1px solid var(--color-wood-line, #e7decb);
@@ -644,7 +660,6 @@
   white-space: nowrap;
 }
 
-/* ─── 5. TOP HARVEST PERFORMERS & INVENTORY WIDGET ───────────────────────── */
 .productListRow {
   display: flex;
   flex-direction: column;
@@ -750,7 +765,6 @@
   border-color: #7A2E3B;
 }
 
-/* ─── 6. MARKET PACKING & HARVEST CHECKLIST ──────────────────────────────── */
 .packingCenterCard {
   background: linear-gradient(135deg, #fdfbf7 0%, #f6f3eb 100%);
   border: 1px solid #e7decb;
@@ -825,7 +839,6 @@
   border-radius: 10px;
 }
 
-/* ─── 7. RECENT CUSTOMER LOVE & REVIEWS ──────────────────────────────────── */
 .reviewsPulseList {
   display: flex;
   flex-direction: column;
@@ -901,7 +914,6 @@
   text-decoration: underline;
 }
 
-/* ─── 8. FLOATING SPEED DIAL / QUICK ACTIONS ─────────────────────────────── */
 .quickActionsBar {
   position: sticky;
   bottom: var(--space-4, 16px);
@@ -977,7 +989,6 @@
   }
 }
 
-/* Reply modal */
 .replyModalBox {
   display: flex;
   flex-direction: column;
@@ -1000,4 +1011,173 @@
   outline: none;
   border-color: #7A2E3B;
   box-shadow: 0 0 0 3px rgba(122, 46, 59, 0.15);
+}
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - Overview.module.css
+   Targets: xs (< 400px), sm (< 480px), md (< 768px)
+   --------------------------------------------------------------- */
+
+/* -- Cockpit header -- */
+@media (max-width: 480px) {
+  .cockpitHeader {
+    border-radius: 16px;
+    padding: 14px 14px;
+    gap: 12px;
+  }
+  .stallAvatarBadge {
+    width: 42px;
+    height: 42px;
+    font-size: 22px;
+  }
+  .livePill {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    gap: 4px;
+  }
+  .publicStallBtn {
+    display: none;
+  }
+  .marketScheduleTag {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    gap: 6px;
+  }
+  .weatherPill {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    gap: 4px;
+  }
+  .operationalBar {
+    gap: 8px;
+    padding-top: 12px;
+    font-size: 0.8rem;
+  }
+}
+
+/* -- Bento stat cards -- */
+@media (max-width: 480px) {
+  .statCard {
+    padding: 12px 10px;
+    border-radius: 12px;
+  }
+  .statMainValue {
+    font-size: clamp(1rem, 5vw, 1.35rem);
+  }
+  .statLabel {
+    font-size: 0.65rem;
+  }
+  .statIconBox {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+  .sparklineWrap {
+    height: 28px;
+  }
+}
+
+/* -- Section cards -- */
+@media (max-width: 480px) {
+  .sectionCard {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+  .cardTitle {
+    font-size: 1.05rem;
+  }
+}
+
+/* -- Cockpit columns -- */
+@media (max-width: 480px) {
+  .cockpitColumns {
+    gap: 14px;
+  }
+  .leftColumn,
+  .rightColumn {
+    gap: 14px;
+  }
+}
+
+/* -- Order items -- */
+@media (max-width: 480px) {
+  .orderItemRow {
+    padding: 12px 10px;
+    gap: 8px;
+    border-radius: 10px;
+  }
+  .orderNumText {
+    font-size: 0.88rem;
+  }
+  .custNameText {
+    font-size: 0.78rem;
+  }
+  .orderItemsSummary {
+    padding: 6px 8px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .orderRowActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .actionBtnGroup {
+    justify-content: flex-end;
+  }
+}
+
+/* -- Product cards -- */
+@media (max-width: 480px) {
+  .productQuickCard {
+    padding: 10px;
+    border-radius: 10px;
+    gap: 8px;
+  }
+  .productIconBox {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+  .prodTitle {
+    font-size: 0.82rem;
+  }
+  .prodMetaPrice {
+    font-size: 0.72rem;
+  }
+}
+
+/* -- Packing center card -- */
+@media (max-width: 480px) {
+  .packingCenterCard {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+  .packingHeroRow {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .packingTitle {
+    font-size: 1rem;
+  }
+}
+
+/* -- Review cards -- */
+@media (max-width: 480px) {
+  .reviewItemCard {
+    padding: 10px;
+    border-radius: 10px;
+  }
+}
+
+/* -- Quick actions bar -- */
+@media (max-width: 480px) {
+  .fabPrimaryBtn,
+  .fabSecondaryBtn {
+    font-size: 0.85rem;
+    padding: 10px 20px;
+  }
 }

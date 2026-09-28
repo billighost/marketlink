@@ -58,51 +58,54 @@ export function BuyerTopBar() {
   return (
     <header className={`${styles.header} ${scrolled ? styles.headerScrolled : ''}`} role="banner">
       <div className={styles.container}>
-        {/* Brand logo (desktop only >=1024px) */}
-        <Link to="/buyer" className={styles.brand} aria-label="MarketLink home">
-          <MarketLinkLogo size="sm" />
-        </Link>
+        {/* Left group: Brand logo + Divider + Desktop Nav Links */}
+        <div className={styles.leftGroup}>
+          <Link to="/buyer" className={styles.brand} aria-label="MarketLink home">
+            <MarketLinkLogo size="sm" />
+          </Link>
 
-        {/* Desktop Nav Links (>=1024px only) */}
-        <nav className={styles.desktopNav} aria-label="Customer navigation">
-          <Link
-            to="/buyer"
-            className={`${styles.navLink} ${currentPath === '/buyer' ? styles.navLinkActive : ''}`}
-          >
-            Today
-          </Link>
-          <Link
-            to="/buyer/products"
-            className={`${styles.navLink} ${currentPath.startsWith('/buyer/products') ? styles.navLinkActive : ''}`}
-          >
-            Browse
-          </Link>
-          <Link
-            to="/buyer/stalls"
-            className={`${styles.navLink} ${currentPath.startsWith('/buyer/stalls') ? styles.navLinkActive : ''}`}
-          >
-            Stalls
-          </Link>
-          <Link
-            to="/buyer/markets"
-            className={`${styles.navLink} ${currentPath.startsWith('/buyer/markets') ? styles.navLinkActive : ''}`}
-          >
-            Markets
-          </Link>
-          <Link
-            to="/buyer/orders"
-            className={`${styles.navLink} ${currentPath.startsWith('/buyer/orders') ? styles.navLinkActive : ''}`}
-          >
-            Orders
-          </Link>
-          <Link
-            to="/buyer/route"
-            className={`${styles.navLink} ${currentPath.startsWith('/buyer/route') ? styles.navLinkActive : ''}`}
-            title="Market Route Planner"
-          >
-            Route
-          </Link>
-        </nav>
+          <span className={styles.navDivider} aria-hidden="true" />
+
+          <nav className={styles.desktopNav} aria-label="Customer navigation">
+            <Link
+              to="/buyer"
+              className={`${styles.navLink} ${currentPath === '/buyer' ? styles.navLinkActive : ''}`}
+            >
+              Today
+            </Link>
+            <Link
+              to="/buyer/products"
+              className={`${styles.navLink} ${currentPath.startsWith('/buyer/products') ? styles.navLinkActive : ''}`}
+            >
+              Browse
+            </Link>
+            <Link
+              to="/buyer/stalls"
+              className={`${styles.navLink} ${currentPath.startsWith('/buyer/stalls') ? styles.navLinkActive : ''}`}
+            >
+              Stalls
+            </Link>
+            <Link
+              to="/buyer/markets"
+              className={`${styles.navLink} ${currentPath.startsWith('/buyer/markets') ? styles.navLinkActive : ''}`}
+            >
+              Markets
+            </Link>
+            <Link
+              to="/buyer/orders"
+              className={`${styles.navLink} ${currentPath.startsWith('/buyer/orders') ? styles.navLinkActive : ''}`}
+            >
+              Orders
+            </Link>
+            <Link
+              to="/buyer/route"
+              className={`${styles.navLink} ${currentPath.startsWith('/buyer/route') ? styles.navLinkActive : ''}`}
+              title="Market Route Planner"
+            >
+              Route
+            </Link>
+          </nav>
+        </div>
 
         {/* Action group: on mobile MarketDropdown flexes on left; Search and Basket on right */}
         <div className={styles.actions}>
@@ -115,17 +118,18 @@ export function BuyerTopBar() {
             onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
             className={styles.searchButton}
             aria-label="Search the market"
+            title="Search the market (Ctrl + K)"
           >
-            <Search size={20} strokeWidth={1.75} aria-hidden="true" />
+            <Search size={18} strokeWidth={2} aria-hidden="true" />
           </button>
 
           <Link
             to="/buyer/basket"
-            className={styles.cartButton}
+            className={`${styles.cartButton} ${currentPath.startsWith('/buyer/basket') ? styles.cartButtonActive : ''}`}
             aria-label={`Shopping basket with ${count} items`}
             data-cart-target-desktop
           >
-            <ShoppingBasket size={20} strokeWidth={1.75} aria-hidden="true" />
+            <ShoppingBasket size={18} strokeWidth={2} aria-hidden="true" />
             <span className={styles.cartText}>Basket</span>
             {count > 0 && (
               <span className={styles.badge} data-cart-badge aria-hidden="true">
@@ -136,8 +140,9 @@ export function BuyerTopBar() {
 
           <Link
             to="/buyer/profile"
-            className={styles.avatarButton}
+            className={`${styles.avatarButton} ${currentPath.startsWith('/buyer/profile') ? styles.avatarButtonActive : ''}`}
             aria-label={`Your profile, ${user?.name || 'Customer'}`}
+            title={`Your profile (${user?.name || 'Customer'})`}
           >
             <span className={styles.avatarText}>{getInitials()}</span>
           </Link>

@@ -1,6 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, EyeOff, Check, X } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Check,
+  ShoppingBag,
+  Store,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Lock,
+  ArrowRight,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+  Info,
+} from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import { useAuth, homePathFor } from '@/context/AuthContext';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
@@ -14,11 +30,9 @@ export function Register() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { register, isAuthenticated, user } = useAuth();
 
-  // Role: preselected from query param ?role=farmer, default 'customer'
   const roleFromUrl = searchParams.get('role') === 'farmer' ? 'farmer' : 'customer';
   const [role, setRole] = useState(roleFromUrl);
 
-  // Sync role changes to URL
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     setSearchParams({ role: newRole }, { replace: true });
@@ -32,7 +46,6 @@ export function Register() {
     }
   }, [isAuthenticated, user, navigate]);
 
-  // Form states
   const [formData, setFormData] = useState({
     name: '',
     stallName: '',
@@ -51,11 +64,21 @@ export function Register() {
   const [touched, setTouched] = useState({});
   const [bannerError, setBannerError] = useState(null);
 
-  // Password rules
   const password = formData.password;
   const ruleMinLength = password.length >= 8;
   const ruleHasLetter = /[a-zA-Z]/.test(password);
   const ruleHasNumber = /[0-9]/.test(password);
+  const ruleHasSpecialOrLong = /[^a-zA-Z0-9]/.test(password) || password.length >= 10;
+
+  let strengthScore = 0;
+  if (password.length > 0) {
+    if (ruleMinLength) strengthScore += 1;
+    if (ruleHasLetter && ruleHasNumber) strengthScore += 1;
+    if (ruleHasSpecialOrLong) strengthScore += 1;
+    if (strengthScore === 0) strengthScore = 1;
+  }
+  const strengthLabels = ['', 'Needs more work', 'Fair password', 'Strong password'];
+  const strengthColors = ['', '#B3261E', '#E07A2C', '#5C7048'];
 
   const validateField = (name, val) => {
     const trimmed = (val || '').trim();
@@ -124,7 +147,6 @@ export function Register() {
     e.preventDefault();
     setBannerError(null);
 
-    // Validate all fields
     const requiredKeys = role === 'customer'
       ? ['name', 'email', 'phone', 'address', 'password', 'confirmPassword']
       : ['stallName', 'contactPerson', 'email', 'phone', 'address', 'password', 'confirmPassword'];
@@ -200,25 +222,94 @@ export function Register() {
     }
   };
 
+  const shopperFeatures = [
+    {
+      icon: <ShoppingBag size={18} aria-hidden="true" />,
+      text: 'Reserve Peak Harvest Early',
+      subtext: 'Secure limited heritage varieties before the stall sells out.',
+    },
+    {
+      icon: <Check size={18} aria-hidden="true" />,
+      text: 'Zero Prepayment Risk',
+      subtext: 'Inspect your produce in person and pay at collection on Saturday.',
+    },
+    {
+      icon: <ShieldCheck size={18} aria-hidden="true" />,
+      text: 'Support Local Growers',
+      subtext: 'Every order supports independent family farms and artisans.',
+    },
+  ];
+
+  const farmerFeatures = [
+    {
+      icon: <Store size={18} aria-hidden="true" />,
+      text: 'Live Stall Catalogue',
+      subtext: 'Manage seasonal produce, set quantities, and update harvest alerts.',
+    },
+    {
+      icon: <Check size={18} aria-hidden="true" />,
+      text: 'Guaranteed Market Pre-Orders',
+      subtext: 'Pack knowing your produce is already spoken for before sunrise.',
+    },
+    {
+      icon: <ShieldCheck size={18} aria-hidden="true" />,
+      text: 'Verified Market Vendor Badge',
+      subtext: 'Stand out to thousands of conscious market shoppers.',
+    },
+  ];
+
   return (
     <AuthCard
-      title="Create your account"
-      lead={role === 'customer' ? 'Sign up to reserve Saturday produce at the market.' : 'Sign up to list produce and receive market pre-orders.'}
+      split={true}
       wide={true}
+      activeTab="register"
+      badge={role === 'customer' ? 'Shopper Account' : 'Stallholder Account'}
+      title="Create your account"
+      lead={
+        role === 'customer'
+          ? 'Sign up to reserve fresh Saturday produce directly from market stalls.'
+          : 'Sign up to showcase your harvest and receive pre-orders for market day.'
+      }
+      heroTitle={
+        role === 'customer'
+          ? 'The fresher, simpler way to do your weekend food shop.'
+          : 'Connect your stall directly with passionate local food lovers.'
+      }
+      heroLead={
+        role === 'customer'
+          ? 'Reserve sourdough, pasture-raised eggs, and heritage vegetables straight from certified independent producers.'
+          : 'Receive pre-orders ahead of market day, plan your weekly harvest accurately, and reduce unsold produce.'
+      }
+      heroFeatures={role === 'customer' ? shopperFeatures : farmerFeatures}
+      heroQuote={
+        role === 'customer'
+          ? 'I never miss out on heirloom tomatoes or wild honey anymore. The farmers have my bag ready when I arrive!'
+          : 'Pre-orders through MarketLink allow our family farm to pick exactly what is needed on Friday morning. Zero waste!'
+      }
+      heroAuthor={role === 'customer' ? 'Elena K.' : 'Marcus Vance'}
+      heroAuthorRole={role === 'customer' ? 'Greenwich Market customer' : 'Vance Organic Orchards'}
       footer={
-        <span>
-          Already have an account?{' '}
-          <Link to={PATHS.LOGIN} className={authStyles.link}>
-            Sign in
-          </Link>
-        </span>
+        <div className={styles.cardFooterContent}>
+          <span>
+            Already have an account?{' '}
+            <Link to={PATHS.LOGIN} className={authStyles.link}>
+              Sign in
+            </Link>
+          </span>
+          <div className={styles.securityRow}>
+            <ShieldCheck size={14} className={styles.securityIcon} aria-hidden="true" />
+            <span>Free forever • No credit card required to register</span>
+          </div>
+        </div>
       }
     >
-      {/* Role selector first: real radio group */}
+      
       <fieldset className={styles.roleFieldset}>
-        <legend className="srOnly">Choose account type</legend>
+        <legend className={styles.roleLegend}>
+          <span className={styles.roleStepNum}>1</span> Select your account role
+        </legend>
         <div role="radiogroup" aria-label="Account type" className={styles.roleGrid}>
-          {/* Customer Option */}
+          
           <label className={`${styles.roleCard} ${role === 'customer' ? styles.roleCardActive : ''}`}>
             <input
               type="radio"
@@ -228,13 +319,24 @@ export function Register() {
               onChange={() => handleRoleChange('customer')}
               className={styles.roleRadio}
             />
+            <div className={styles.roleIconWrap}>
+              <ShoppingBag size={22} className={styles.customerIcon} aria-hidden="true" />
+            </div>
             <div className={styles.roleContent}>
-              <span className={styles.roleTitle}>I am shopping</span>
-              <span className={styles.roleDesc}>Reserve produce and collect it at the stall.</span>
+              <div className={styles.roleHeaderRow}>
+                <span className={styles.roleTitle}>I am shopping</span>
+                {role === 'customer' && <span className={styles.activePill}>Selected</span>}
+              </div>
+              <span className={styles.roleDesc}>
+                Reserve produce, bread, and goods to collect at the Saturday market stall.
+              </span>
+              <div className={styles.perkTags}>
+                <span className={styles.perkTag}><Check size={12} className={styles.perkCheck} /> Free pickup</span>
+                <span className={styles.perkTag}><Check size={12} className={styles.perkCheck} /> No prepayment</span>
+              </div>
             </div>
           </label>
 
-          {/* Farmer Option */}
           <label className={`${styles.roleCard} ${role === 'farmer' ? styles.roleCardActive : ''}`}>
             <input
               type="radio"
@@ -244,15 +346,26 @@ export function Register() {
               onChange={() => handleRoleChange('farmer')}
               className={styles.roleRadio}
             />
+            <div className={`${styles.roleIconWrap} ${styles.farmerIconWrap}`}>
+              <Store size={22} className={styles.farmerIcon} aria-hidden="true" />
+            </div>
             <div className={styles.roleContent}>
-              <span className={styles.roleTitle}>I sell at a market</span>
-              <span className={styles.roleDesc}>List stock and take pre-orders.</span>
+              <div className={styles.roleHeaderRow}>
+                <span className={styles.roleTitle}>I sell at a market</span>
+                {role === 'farmer' && <span className={styles.activePill}>Selected</span>}
+              </div>
+              <span className={styles.roleDesc}>
+                List your harvest, manage inventory, and take pre-orders before market morning.
+              </span>
+              <div className={styles.perkTags}>
+                <span className={styles.perkTag}><Check size={12} className={styles.perkCheck} /> Stall dashboard</span>
+                <span className={styles.perkTag}><Check size={12} className={styles.perkCheck} /> Direct orders</span>
+              </div>
             </div>
           </label>
         </div>
       </fieldset>
 
-      {/* Banner error */}
       {bannerError && (
         <div role="alert" className={authStyles.bannerError}>
           <p>{bannerError}</p>
@@ -260,10 +373,13 @@ export function Register() {
       )}
 
       <form onSubmit={handleSubmit} noValidate className={authStyles.form}>
-        {/* Section Heading: Identity */}
-        <h2 className={styles.sectionHeading}>
-          {role === 'customer' ? 'About you' : 'Your stall'}
-        </h2>
+        
+        <div className={styles.sectionHeader}>
+          <span className={styles.roleStepNum}>2</span>
+          <h2 className={styles.sectionHeading}>
+            {role === 'customer' ? 'About you' : 'Your stall & contact information'}
+          </h2>
+        </div>
 
         <div className={styles.twoCol}>
           {role === 'customer' ? (
@@ -271,19 +387,23 @@ export function Register() {
               <label htmlFor="register-name" className={authStyles.label}>
                 Full name
               </label>
-              <input
-                id="register-name"
-                name="name"
-                type="text"
-                value={formData.name}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                autoComplete="name"
-                aria-invalid={Boolean(fieldErrors.name)}
-                aria-describedby={fieldErrors.name ? 'register-name-err' : undefined}
-                className={`${authStyles.input} ${fieldErrors.name ? authStyles.inputInvalid : ''}`}
-                required
-              />
+              <div className={authStyles.inputWrap}>
+                <User size={18} className={authStyles.inputIcon} aria-hidden="true" />
+                <input
+                  id="register-name"
+                  name="name"
+                  type="text"
+                  placeholder="e.g. Jane Smith"
+                  value={formData.name}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  autoComplete="name"
+                  aria-invalid={Boolean(fieldErrors.name)}
+                  aria-describedby={fieldErrors.name ? 'register-name-err' : undefined}
+                  className={`${authStyles.input} ${authStyles.inputWithIcon} ${fieldErrors.name ? authStyles.inputInvalid : ''}`}
+                  required
+                />
+              </div>
               {fieldErrors.name && (
                 <span id="register-name-err" role="alert" className={authStyles.errorText}>
                   {fieldErrors.name}
@@ -294,21 +414,25 @@ export function Register() {
             <>
               <div className={authStyles.field}>
                 <label htmlFor="register-stallName" className={authStyles.label}>
-                  Stall / business name
+                  Stall or business name
                 </label>
-                <input
-                  id="register-stallName"
-                  name="stallName"
-                  type="text"
-                  value={formData.stallName}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  autoComplete="organization"
-                  aria-invalid={Boolean(fieldErrors.stallName)}
-                  aria-describedby={fieldErrors.stallName ? 'register-stallName-err' : undefined}
-                  className={`${authStyles.input} ${fieldErrors.stallName ? authStyles.inputInvalid : ''}`}
-                  required
-                />
+                <div className={authStyles.inputWrap}>
+                  <Store size={18} className={authStyles.inputIcon} aria-hidden="true" />
+                  <input
+                    id="register-stallName"
+                    name="stallName"
+                    type="text"
+                    placeholder="e.g. Sunburst Orchard"
+                    value={formData.stallName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    autoComplete="organization"
+                    aria-invalid={Boolean(fieldErrors.stallName)}
+                    aria-describedby={fieldErrors.stallName ? 'register-stallName-err' : undefined}
+                    className={`${authStyles.input} ${authStyles.inputWithIcon} ${fieldErrors.stallName ? authStyles.inputInvalid : ''}`}
+                    required
+                  />
+                </div>
                 {fieldErrors.stallName && (
                   <span id="register-stallName-err" role="alert" className={authStyles.errorText}>
                     {fieldErrors.stallName}
@@ -320,19 +444,23 @@ export function Register() {
                 <label htmlFor="register-contactPerson" className={authStyles.label}>
                   Contact person
                 </label>
-                <input
-                  id="register-contactPerson"
-                  name="contactPerson"
-                  type="text"
-                  value={formData.contactPerson}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  autoComplete="name"
-                  aria-invalid={Boolean(fieldErrors.contactPerson)}
-                  aria-describedby={fieldErrors.contactPerson ? 'register-contactPerson-err' : undefined}
-                  className={`${authStyles.input} ${fieldErrors.contactPerson ? authStyles.inputInvalid : ''}`}
-                  required
-                />
+                <div className={authStyles.inputWrap}>
+                  <User size={18} className={authStyles.inputIcon} aria-hidden="true" />
+                  <input
+                    id="register-contactPerson"
+                    name="contactPerson"
+                    type="text"
+                    placeholder="Your primary name"
+                    value={formData.contactPerson}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    autoComplete="name"
+                    aria-invalid={Boolean(fieldErrors.contactPerson)}
+                    aria-describedby={fieldErrors.contactPerson ? 'register-contactPerson-err' : undefined}
+                    className={`${authStyles.input} ${authStyles.inputWithIcon} ${fieldErrors.contactPerson ? authStyles.inputInvalid : ''}`}
+                    required
+                  />
+                </div>
                 {fieldErrors.contactPerson && (
                   <span id="register-contactPerson-err" role="alert" className={authStyles.errorText}>
                     {fieldErrors.contactPerson}
@@ -342,24 +470,27 @@ export function Register() {
             </>
           )}
 
-          {/* Email field */}
           <div className={authStyles.field}>
             <label htmlFor="register-email" className={authStyles.label}>
-              Email
+              Email address
             </label>
-            <input
-              id="register-email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              autoComplete="email"
-              aria-invalid={Boolean(fieldErrors.email)}
-              aria-describedby={fieldErrors.email ? 'register-email-err' : undefined}
-              className={`${authStyles.input} ${fieldErrors.email ? authStyles.inputInvalid : ''}`}
-              required
-            />
+            <div className={authStyles.inputWrap}>
+              <Mail size={18} className={authStyles.inputIcon} aria-hidden="true" />
+              <input
+                id="register-email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="email"
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? 'register-email-err' : undefined}
+                className={`${authStyles.input} ${authStyles.inputWithIcon} ${fieldErrors.email ? authStyles.inputInvalid : ''}`}
+                required
+              />
+            </div>
             {fieldErrors.email && (
               <span id="register-email-err" role="alert" className={authStyles.errorText}>
                 {fieldErrors.email}{' '}
@@ -372,25 +503,28 @@ export function Register() {
             )}
           </div>
 
-          {/* Contact number */}
           <div className={authStyles.field}>
             <label htmlFor="register-phone" className={authStyles.label}>
               Contact number
             </label>
-            <input
-              id="register-phone"
-              name="phone"
-              type="tel"
-              inputMode="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              autoComplete="tel"
-              aria-invalid={Boolean(fieldErrors.phone)}
-              aria-describedby={fieldErrors.phone ? 'register-phone-err' : undefined}
-              className={`${authStyles.input} ${fieldErrors.phone ? authStyles.inputInvalid : ''}`}
-              required
-            />
+            <div className={authStyles.inputWrap}>
+              <Phone size={18} className={authStyles.inputIcon} aria-hidden="true" />
+              <input
+                id="register-phone"
+                name="phone"
+                type="tel"
+                inputMode="tel"
+                placeholder="e.g. 07123 456789"
+                value={formData.phone}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="tel"
+                aria-invalid={Boolean(fieldErrors.phone)}
+                aria-describedby={fieldErrors.phone ? 'register-phone-err' : undefined}
+                className={`${authStyles.input} ${authStyles.inputWithIcon} ${fieldErrors.phone ? authStyles.inputInvalid : ''}`}
+                required
+              />
+            </div>
             {fieldErrors.phone && (
               <span id="register-phone-err" role="alert" className={authStyles.errorText}>
                 {fieldErrors.phone}
@@ -399,24 +533,27 @@ export function Register() {
           </div>
         </div>
 
-        {/* Address field (full width in 2-col layout) */}
         <div className={authStyles.field}>
           <label htmlFor="register-address" className={authStyles.label}>
-            Address
+            {role === 'customer' ? 'Address or neighbourhood' : 'Farm / Stall location address'}
           </label>
-          <input
-            id="register-address"
-            name="address"
-            type="text"
-            value={formData.address}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            autoComplete="street-address"
-            aria-invalid={Boolean(fieldErrors.address)}
-            aria-describedby={fieldErrors.address ? 'register-address-err' : undefined}
-            className={`${authStyles.input} ${fieldErrors.address ? authStyles.inputInvalid : ''}`}
-            required
-          />
+          <div className={authStyles.inputWrap}>
+            <MapPin size={18} className={authStyles.inputIcon} aria-hidden="true" />
+            <input
+              id="register-address"
+              name="address"
+              type="text"
+              placeholder={role === 'customer' ? 'e.g. 14 Richmond Hill, London' : 'e.g. Unit 3, Elm Valley Farm, Kent'}
+              value={formData.address}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              autoComplete="street-address"
+              aria-invalid={Boolean(fieldErrors.address)}
+              aria-describedby={fieldErrors.address ? 'register-address-err' : undefined}
+              className={`${authStyles.input} ${authStyles.inputWithIcon} ${fieldErrors.address ? authStyles.inputInvalid : ''}`}
+              required
+            />
+          </div>
           {fieldErrors.address && (
             <span id="register-address-err" role="alert" className={authStyles.errorText}>
               {fieldErrors.address}
@@ -424,27 +561,31 @@ export function Register() {
           )}
         </div>
 
-        {/* Section Heading: Security */}
-        <h2 className={styles.sectionHeading}>Security</h2>
+        <div className={styles.sectionHeader}>
+          <span className={styles.roleStepNum}>3</span>
+          <h2 className={styles.sectionHeading}>Create secure password</h2>
+        </div>
 
         <div className={styles.twoCol}>
-          {/* Password */}
+          
           <div className={authStyles.field}>
             <label htmlFor="register-password" className={authStyles.label}>
               Password
             </label>
             <div className={authStyles.inputWrap}>
+              <Lock size={18} className={authStyles.inputIcon} aria-hidden="true" />
               <input
                 id="register-password"
                 name="password"
                 type={showPassword ? 'text' : 'password'}
+                placeholder="At least 8 characters"
                 value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 autoComplete="new-password"
                 aria-invalid={Boolean(fieldErrors.password)}
                 aria-describedby={fieldErrors.password ? 'register-password-err' : 'register-password-rules'}
-                className={`${authStyles.input} ${authStyles.inputWithToggle} ${fieldErrors.password ? authStyles.inputInvalid : ''}`}
+                className={`${authStyles.input} ${authStyles.inputWithIcon} ${authStyles.inputWithToggle} ${fieldErrors.password ? authStyles.inputInvalid : ''}`}
                 required
               />
               <button
@@ -463,7 +604,34 @@ export function Register() {
               </span>
             )}
 
-            {/* Live password rule checklist */}
+            {password.length > 0 && (
+              <div className={styles.strengthWrap} aria-live="polite">
+                <div className={styles.strengthMeter}>
+                  <div
+                    className={`${styles.strengthBar} ${
+                      strengthScore >= 1 ? styles.strengthBarActive : ''
+                    }`}
+                    style={{ backgroundColor: strengthScore >= 1 ? strengthColors[strengthScore] : undefined }}
+                  />
+                  <div
+                    className={`${styles.strengthBar} ${
+                      strengthScore >= 2 ? styles.strengthBarActive : ''
+                    }`}
+                    style={{ backgroundColor: strengthScore >= 2 ? strengthColors[strengthScore] : undefined }}
+                  />
+                  <div
+                    className={`${styles.strengthBar} ${
+                      strengthScore >= 3 ? styles.strengthBarActive : ''
+                    }`}
+                    style={{ backgroundColor: strengthScore >= 3 ? strengthColors[strengthScore] : undefined }}
+                  />
+                </div>
+                <span className={styles.strengthLabel} style={{ color: strengthColors[strengthScore] }}>
+                  {strengthLabels[strengthScore]}
+                </span>
+              </div>
+            )}
+
             <ul id="register-password-rules" className={authStyles.checklist} aria-label="Password requirements">
               <li className={`${authStyles.checkItem} ${ruleMinLength ? authStyles.checkItemMet : ''}`}>
                 {ruleMinLength ? <Check size={14} className={authStyles.checkIcon} /> : <span className={styles.bulletDot} />}
@@ -480,23 +648,24 @@ export function Register() {
             </ul>
           </div>
 
-          {/* Confirm Password */}
           <div className={authStyles.field}>
             <label htmlFor="register-confirmPassword" className={authStyles.label}>
               Confirm password
             </label>
             <div className={authStyles.inputWrap}>
+              <Lock size={18} className={authStyles.inputIcon} aria-hidden="true" />
               <input
                 id="register-confirmPassword"
                 name="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Re-type your password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 autoComplete="new-password"
                 aria-invalid={Boolean(fieldErrors.confirmPassword)}
                 aria-describedby={fieldErrors.confirmPassword ? 'register-confirmPassword-err' : undefined}
-                className={`${authStyles.input} ${authStyles.inputWithToggle} ${fieldErrors.confirmPassword ? authStyles.inputInvalid : ''}`}
+                className={`${authStyles.input} ${authStyles.inputWithIcon} ${authStyles.inputWithToggle} ${fieldErrors.confirmPassword ? authStyles.inputInvalid : ''}`}
                 required
               />
               <button
@@ -514,25 +683,44 @@ export function Register() {
                 {fieldErrors.confirmPassword}
               </span>
             )}
+            {touched.confirmPassword && !fieldErrors.confirmPassword && formData.confirmPassword && (
+              <span className={styles.matchConfirmed}>
+                <Check size={13} aria-hidden="true" /> Passwords match
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Farmer approval notice directly above submit */}
         {role === 'farmer' && (
           <div className={authStyles.noticePanel}>
-            <strong>Stalls are reviewed before they go live.</strong> You can set up your stall straight away. An
-            administrator approves it before your produce appears to customers.
+            <ShieldCheck size={20} className={styles.noticeIcon} aria-hidden="true" />
+            <div>
+              <strong>Stalls are verified before going live.</strong> You can set up your stall catalogue and pricing straight away. An administrator reviews it before your produce appears to customers.
+            </div>
           </div>
         )}
 
-        {/* Submit button — the ONE beet element */}
         <button
           type="submit"
           disabled={loading}
           className={styles.submitBtn}
         >
-          {loading ? 'Creating account…' : 'Create account'}
+          {loading ? (
+            <>
+              <Loader2 size={18} className={styles.spinner} aria-hidden="true" />
+              <span>Creating your account…</span>
+            </>
+          ) : (
+            <>
+              <span>Create {role === 'farmer' ? 'Stallholder' : 'Shopper'} Account</span>
+              <ArrowRight size={18} className={styles.btnArrow} aria-hidden="true" />
+            </>
+          )}
         </button>
+
+        <p className={styles.termsNote}>
+          By registering, you agree to MarketLink's Community Guidelines and Privacy Policy.
+        </p>
       </form>
     </AuthCard>
   );

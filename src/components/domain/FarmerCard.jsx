@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, Sparkles, Star, AlertTriangle } from 'lucide-react';
 import Illustration from '@/components/domain/Illustration';
 import { useCatalogueRoutes } from '@/components/catalogue/routes';
 import styles from './FarmerCard.module.css';
@@ -135,15 +135,6 @@ function getStallTheme(art, specialty = '', stallName = '') {
   };
 }
 
-/**
- * Farmer card component.
- * Minimal design system specifications:
- *  - Tile aspect ratio 4/3 with centered illustration (row/list/grid)
- *  - Variant 'stall': 40px avatar with initials, 2-line reserved stall name,
- *    contact/specialty line, open/closed status, and optional low-stock warning.
- *  - Reserved heights prevent ragged cards in rows
- *  - Stretched link covers card cleanly with zero overlapping buttons
- */
 export function FarmerCard({
   farmer,
   variant = 'row',
@@ -177,12 +168,11 @@ export function FarmerCard({
           aria-label={`View stall ${farmer.stallName}`}
         />
 
-        {/* Themed Illustration Banner */}
         <div
           className={styles.stallBanner}
           style={{ background: theme.gradient, borderColor: theme.border }}
         >
-          {/* Floating Top Badges */}
+          
           <div className={styles.bannerBadges}>
             <div className={styles.badgeLeft}>
               {farmer.isTopSeller ? (
@@ -192,7 +182,8 @@ export function FarmerCard({
                 </span>
               ) : farmer.isNew ? (
                 <span className={styles.newTag}>
-                  <span>✨ New</span>
+                  <Sparkles size={11} className={styles.sparkleIcon} />
+                  <span>New</span>
                 </span>
               ) : farmer.stallNumber ? (
                 <span className={styles.stallNumberTag}>{farmer.stallNumber}</span>
@@ -216,7 +207,6 @@ export function FarmerCard({
             </div>
           </div>
 
-          {/* Central Artwork or Profile Cover Image */}
           {farmer.imageUrl ? (
             <div className={styles.bannerCover}>
               <img
@@ -231,7 +221,6 @@ export function FarmerCard({
             </div>
           )}
 
-          {/* Avatar overlapping banner border */}
           <div className={styles.stallAvatar} aria-hidden="true">
             {farmer.imageUrl ? (
               <img
@@ -245,7 +234,6 @@ export function FarmerCard({
           </div>
         </div>
 
-        {/* Card Content Body */}
         <div className={styles.stallContent}>
           <div className={styles.stallTitleGroup}>
             <h3 className={styles.stallHeading} title={farmer.stallName}>
@@ -260,7 +248,6 @@ export function FarmerCard({
             <p className={styles.stallSub}>{farmer.specialty}</p>
           )}
 
-          {/* Produce Tags */}
           {tags.length > 0 && (
             <div className={styles.tagRow}>
               {tags.map((tag, i) => (
@@ -275,12 +262,12 @@ export function FarmerCard({
             </div>
           )}
 
-          {/* Card Footer: Stock warning or Rating & View Link */}
           <div className={styles.stallFooter}>
             <div className={styles.footerLeft}>
               {hasLowStock ? (
                 <span className={styles.lowStockText}>
-                  ⚠️ {farmer.lowStockCount} {farmer.lowStockCount === 1 ? 'item low' : 'items low'}
+                  <AlertTriangle size={12} className={styles.lowStockIcon} aria-hidden="true" />
+                  <span>{farmer.lowStockCount} {farmer.lowStockCount === 1 ? 'item low' : 'items low'}</span>
                 </span>
               ) : farmer.rating ? (
                 <span className={styles.ratingInfo}>
@@ -317,7 +304,6 @@ export function FarmerCard({
         aria-label={`View stall ${farmer.stallName}`}
       />
 
-      {/* Top / Left: Illustration or Photo container */}
       <div className={styles.imageTile} data-aspect="4/3">
         {farmer.imageUrl ? (
           <img
@@ -335,7 +321,6 @@ export function FarmerCard({
         )}
       </div>
 
-      {/* Details Content */}
       <div className={styles.content}>
         <div className={styles.header}>
           <div className={styles.titleRow}>
@@ -349,7 +334,7 @@ export function FarmerCard({
 
         <div className={styles.meta}>
           <div className={styles.ratingBadge}>
-            <span className={styles.starIcon}>★</span>
+            <Star size={11} className={styles.starIcon} fill="currentColor" aria-hidden="true" />
             <span className={styles.ratingValue}>{farmer.rating}</span>
             <span className={styles.reviewCount}>({farmer.reviewCount})</span>
           </div>

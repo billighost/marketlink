@@ -8,12 +8,6 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { formatMarketSchedule } from '@/utils/format';
 import styles from './MarketDropdown.module.css';
 
-/**
- * Navbar Market Selector Dropdown
- * Allows Customers and Guests to easily switch active market with zero redirect to login.
- * Includes a throttled search bar for fast filtering without redundant network requests,
- * and reactively updates active state without reloading the browser page.
- */
 export function MarketDropdown({ variant = 'buyer', align = 'auto', className = '' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,7 +19,6 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
 
   const isRight = align === 'right' || (align === 'auto' && variant === 'guest');
 
-  // Throttled / debounced search value (250ms) to avoid jumpiness or spamming
   const debouncedSearch = useDebouncedValue(searchQuery, 250);
 
   const { data: marketsData, loading: marketsLoading } = useQuery(['markets'], ({ signal }) =>
@@ -38,7 +31,6 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
     user?.homeMarket ||
     markets[0] || { name: 'Farmers Market', address: '' };
 
-  // Filter markets using debounced search query (client-side for zero extra network requests)
   const filteredMarkets = useMemo(() => {
     if (!debouncedSearch.trim()) return markets;
     const q = debouncedSearch.trim().toLowerCase();
@@ -52,7 +44,6 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
     });
   }, [markets, debouncedSearch]);
 
-  // Focus search input when dropdown opens
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
@@ -63,7 +54,6 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
     }
   }, [isOpen]);
 
-  // Close dropdown on click outside or Escape
   useEffect(() => {
     if (!isOpen) return;
 
@@ -138,7 +128,6 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
           role="listbox"
           aria-label="Select a farmers market"
         >
-          {/* Menu Header */}
           <div className={styles.menuHeader}>
             <div className={styles.headerTitleRow}>
               <span className={styles.menuHeaderTitle}>Choose Your Market</span>
@@ -149,7 +138,6 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
             <span className={styles.menuHeaderSub}>Pre-order pickup location</span>
           </div>
 
-          {/* Throttled Search Bar */}
           <div className={styles.searchBarContainer}>
             <div className={styles.searchInner}>
               <Search size={14} className={styles.searchIcon} aria-hidden="true" />
@@ -175,7 +163,6 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
             </div>
           </div>
 
-          {/* Markets List */}
           <div className={styles.marketList}>
             {marketsLoading && (
               <div className={styles.listLoadingState}>
@@ -245,7 +232,6 @@ export function MarketDropdown({ variant = 'buyer', align = 'auto', className = 
             )}
           </div>
 
-          {/* Menu Footer */}
           <div className={styles.menuFooter}>
             <Link
               to={allMarketsLink}

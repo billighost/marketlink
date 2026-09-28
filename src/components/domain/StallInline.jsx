@@ -1,19 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Star } from 'lucide-react';
 import Illustration from '@/components/domain/Illustration';
 import DayDots from '@/components/domain/DayDots';
 import { useCatalogueRoutes } from '@/components/catalogue/routes';
 import styles from './StallInline.module.css';
 
-/**
- * Compact stall strip for the produce page.
- * Bridges from produce to the farmer who grew it.
- *
- * @param {object} farmer Farmer details object
- * @param {object} market Market details object or string
- * @param {string} className
- * @param {'guest'|'buyer'} audience
- */
 export function StallInline({ farmer, market, className = '', audience = 'buyer' }) {
   const routes = useCatalogueRoutes(audience);
   if (!farmer) return null;
@@ -29,7 +21,6 @@ export function StallInline({ farmer, market, className = '', audience = 'buyer'
     farmer.market?.name ||
     'Local Market';
 
-  // Compute 2-letter initials
   const initials = stallName
     .split(/\s+/)
     .map((word) => word[0])
@@ -57,8 +48,9 @@ export function StallInline({ farmer, market, className = '', audience = 'buyer'
             {farmerName && <span>{farmerName}</span>}
             {farmerName && (rating || reviewCount) && <span aria-hidden="true">·</span>}
             {rating && (
-              <span>
-                ★ {rating}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                <Star size={11} fill="currentColor" aria-hidden="true" />
+                <span>{rating}</span>
                 {reviewCount != null && ` (${reviewCount})`}
               </span>
             )}

@@ -1,20 +1,27 @@
 .contentArea {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 16px;
 }
 
-/* Page Header */
+@media (min-width: 640px) {
+  .contentArea {
+    padding: 24px;
+  }
+}
+
 .pageHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 24px;
 }
 
 .mainTitle {
   font-family: 'Idiqlat', serif;
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
   font-weight: 400;
   color: #111;
   margin: 0 0 6px 0;
@@ -110,7 +117,6 @@
   background-color: #f3f4f6;
 }
 
-/* Navigation Tabs */
 .tabsContainer {
   display: flex;
   gap: 8px;
@@ -149,13 +155,11 @@
   color: #fff;
 }
 
-/* Main Container */
 .settingsLayout {
   max-width: 800px;
   margin: 0 auto;
 }
 
-/* Form Section */
 .formSection {
   display: flex;
   flex-direction: column;
@@ -205,7 +209,6 @@
   margin: 0;
 }
 
-/* Form Elements */
 .formGrid {
   display: flex;
   flex-direction: column;
@@ -277,7 +280,6 @@
   margin-top: 8px;
 }
 
-/* Badge Buttons */
 .badgesWrapper {
   display: flex;
   flex-wrap: wrap;
@@ -316,7 +318,6 @@
   opacity: 0.9;
 }
 
-/* Days Grid */
 .daysGrid {
   display: flex;
   gap: 12px;
@@ -357,7 +358,6 @@
   color: #fff;
 }
 
-/* Banner Preview */
 .bannerPreview {
   background-color: rgba(92, 112, 72, 0.1);
   border: 1px solid rgba(92, 112, 72, 0.2);
@@ -381,7 +381,6 @@
   color: #374151;
 }
 
-/* Toggle Switch */
 .toggleGroup {
   display: flex;
   justify-content: space-between;
@@ -444,7 +443,6 @@
   right: auto;
 }
 
-/* Vacation Box */
 .vacationBox {
   background-color: rgba(224, 122, 44, 0.06);
   border: 1px solid rgba(224, 122, 44, 0.2);
@@ -453,7 +451,6 @@
   margin: -4px 0;
 }
 
-/* Bottom Save Bar */
 .bottomSaveBar {
   display: flex;
   justify-content: space-between;
@@ -469,9 +466,6 @@
   font-size: 0.9rem;
 }
 
-
-
-/* Best Practices */
 .bestPracticesCard {
   background-color: #fff;
   border-radius: 12px;
@@ -512,8 +506,6 @@
   flex-shrink: 0;
   margin-top: 2px;
 }
-
-
 
 @media (max-width: 768px) {
   .contentArea {

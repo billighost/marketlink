@@ -1,8 +1,3 @@
-/**
- * Orders routing layer.
- * Exposes customer pre-order checkout, list, details, modifications, cancellation, and reorder preview.
- */
-
 import { Router } from 'express';
 import { isValidObjectId } from '../../utils/ids.js';
 import {
@@ -29,7 +24,6 @@ import { defineRoutes } from '../../utils/defineRoutes.js';
 export const ordersRouter = Router();
 
 const routes = [
-  // POST /orders/checkout (Customer only, Idempotency-Key required)
   {
     method: 'post',
     path: '/checkout',
@@ -38,7 +32,6 @@ const routes = [
     summary: 'Submit pre-order checkout with idempotency',
     body: 'checkout',
     handler: async (req, res) => {
-      // Validate Idempotency-Key header (8..64 chars [A-Za-z0-9-])
       const rawKey = req.headers['idempotency-key'];
       if (!rawKey || typeof rawKey !== 'string') {
         throw AppError.unprocessable([
@@ -175,7 +168,6 @@ const routes = [
     },
   },
 
-  // GET /orders (Customer order list)
   {
     method: 'get',
     path: '/',
@@ -202,7 +194,6 @@ const routes = [
     },
   },
 
-  // GET /orders/route-plan (Customer Market Route Planner)
   {
     method: 'get',
     path: '/route-plan',
@@ -216,7 +207,6 @@ const routes = [
     },
   },
 
-  // POST /orders/route-plan/collect (Toggle or update collection state for a stop/order)
   {
     method: 'post',
     path: '/route-plan/collect',
@@ -231,7 +221,6 @@ const routes = [
         ]);
       }
       if (!isValidObjectId(targetId)) {
-        // Safe support for preview mode mock stops
         return res.status(200).json({
           data: {
             orderId: targetId,
@@ -250,7 +239,6 @@ const routes = [
     },
   },
 
-  // POST /orders/route-plan/reset (Reset collected status across customer's orders)
   {
     method: 'post',
     path: '/route-plan/reset',
@@ -262,7 +250,6 @@ const routes = [
     },
   },
 
-  // GET /orders/:id (Customer order detail)
   {
     method: 'get',
     path: '/:id',
@@ -281,7 +268,6 @@ const routes = [
     },
   },
 
-  // PATCH /orders/:id (Modify order before cutoff)
   {
     method: 'patch',
     path: '/:id',
@@ -372,7 +358,6 @@ const routes = [
     },
   },
 
-  // POST /orders/:id/cancel (Customer cancel order)
   {
     method: 'post',
     path: '/:id/cancel',
@@ -401,7 +386,6 @@ const routes = [
     },
   },
 
-  // GET /orders/:id/reorder-preview (Buy again preview)
   {
     method: 'get',
     path: '/:id/reorder-preview',
@@ -420,7 +404,6 @@ const routes = [
     },
   },
 
-  // POST /orders/:id/reviews (Customer review submission for completed order)
   {
     method: 'post',
     path: '/:id/reviews',

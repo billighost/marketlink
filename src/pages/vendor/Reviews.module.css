@@ -4,10 +4,15 @@
   gap: var(--space-5);
   max-width: 1040px;
   margin: 0 auto;
-  padding: var(--space-2) var(--space-4) var(--space-12);
+  padding: var(--space-2) var(--space-3) var(--space-12);
 }
 
-/* Header */
+@media (min-width: 640px) {
+  .container {
+    padding: var(--space-2) var(--space-4) var(--space-12);
+  }
+}
+
 .header {
   display: flex;
   align-items: flex-start;
@@ -75,7 +80,7 @@
 
 .title {
   font-family: var(--font-head);
-  font-size: 1.85rem;
+  font-size: clamp(1.4rem, 3.5vw, 1.85rem);
   font-weight: 700;
   color: var(--color-ink);
   letter-spacing: -0.02em;
@@ -89,7 +94,6 @@
   margin: 0;
 }
 
-/* Summary Banner */
 .summaryBanner {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -161,7 +165,6 @@
   margin-top: 4px;
 }
 
-/* Bars Column */
 .barsCol {
   display: flex;
   flex-direction: column;
@@ -230,7 +233,6 @@
   text-align: right;
 }
 
-/* Filter Row */
 .filterRow {
   display: flex;
   align-items: center;
@@ -287,7 +289,6 @@
   color: #DC2626 !important;
 }
 
-/* Loading & Empty */
 .loadingBox {
   display: flex;
   flex-direction: column;
@@ -301,7 +302,6 @@
   padding: var(--space-8);
 }
 
-/* Review List */
 .reviewList {
   display: flex;
   flex-direction: column;
@@ -428,7 +428,6 @@
   margin: 0;
 }
 
-/* Reply Box */
 .replyBox {
   background-color: #FDF9FA;
   border: 1px solid rgba(122, 46, 59, 0.2);
@@ -512,7 +511,6 @@
   border-color: var(--color-beet, #7A2E3B);
 }
 
-/* Modals */
 .replyForm {
   display: flex;
   flex-direction: column;
@@ -596,7 +594,6 @@
   padding-top: var(--space-2);
 }
 
-/* Report Modal */
 .reportModalBox {
   display: flex;
   flex-direction: column;
@@ -639,4 +636,55 @@
 .reportFooter {
   display: flex;
   justify-content: flex-end;
+}
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - Reviews.module.css
+   --------------------------------------------------------------- */
+
+/* -- Header -- */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .title {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+}
+
+/* -- Summary banner -- */
+@media (max-width: 540px) {
+  .summaryBanner {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+  .scoreCol {
+    border-right: none;
+    border-bottom: 1px solid var(--color-wood-line);
+    padding-right: 0;
+    padding-bottom: 16px;
+  }
+  .scoreNumber {
+    font-size: 2.8rem;
+  }
+}
+
+/* -- Filter row -- */
+@media (max-width: 480px) {
+  .filterRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+}
+
+/* -- Review cards -- */
+@media (max-width: 480px) {
+  .reviewCard {
+    padding: 14px;
+    border-radius: 12px;
+  }
 }

@@ -1,12 +1,3 @@
-/* ==========================================================================
-   SMART BASKET EXPERIENCE — MarketLink Design System
-   Farmers-market aesthetic on brand tokens only (semantic aliases, not raw
-   palette values). Cards carry a hairline border; shadow is reserved for the
-   hero moment and true floating layers (footer dock, modal dialogs) per the
-   system's own rule. Spacing follows the 4px token scale throughout.
-   Responsive from desktop down to 300px.
-   ========================================================================== */
-
 .container {
   display: flex;
   flex-direction: column;
@@ -25,7 +16,6 @@
   gap: var(--space-4);
 }
 
-/* ─── Hero / Header ──────────────────────────────────────────────────────── */
 .hero {
   position: relative;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
@@ -117,7 +107,6 @@
   max-width: 56ch;
 }
 
-/* ─── Prompt Input & Quick Chips ─────────────────────────────────────────── */
 .promptForm {
   display: flex;
   flex-direction: column;
@@ -128,16 +117,18 @@
   display: flex;
   align-items: center;
   background: var(--color-bg);
-  border-radius: var(--radius-lg);
-  padding: var(--space-2);
-  border: 2px solid transparent;
+  border-radius: var(--radius-xl, 16px);
+  padding: 6px;
+  border: 1.5px solid rgba(46, 43, 38, 0.12);
   gap: var(--space-2);
-  transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+  box-shadow: 0 4px 20px -2px rgba(46, 43, 38, 0.08);
+  transition: all var(--duration-fast) var(--ease-standard);
 }
 
 .promptBar:focus-within {
+  background: #ffffff;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(122, 46, 59, 0.2);
+  box-shadow: 0 0 0 3px rgba(122, 46, 59, 0.18), 0 8px 24px -4px rgba(122, 46, 59, 0.12);
 }
 
 .promptInputGroup {
@@ -231,14 +222,13 @@
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-/* ─── Controls & Customization Bar ───────────────────────────────────────── */
 .controlsPanel {
   background: var(--color-bg);
   border: var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-4);
   transition: border-color var(--duration-fast) var(--ease-standard);
 }
@@ -251,7 +241,7 @@
 .controlGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -262,12 +252,36 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .selectWrapper {
   position: relative;
   display: flex;
   align-items: center;
+  background: var(--color-canvas-soft);
+  border: 1.5px solid rgba(46, 43, 38, 0.12);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+  overflow: hidden;
+}
+
+.selectWrapper:focus-within {
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+  box-shadow: 0 0 0 3px rgba(122, 46, 59, 0.15);
+}
+
+.selectIcon {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--color-primary);
+  pointer-events: none;
+  flex-shrink: 0;
+  z-index: 1;
 }
 
 .selectChevron {
@@ -280,85 +294,169 @@
 .controlSelect,
 .controlInput {
   width: 100%;
-  background-color: var(--color-canvas-soft);
-  border: var(--border-input);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
+  background-color: transparent;
+  border: none;
+  outline: none;
+  padding: var(--space-3) var(--space-8) var(--space-3) var(--space-8);
   min-height: var(--control-h);
   font-size: var(--text-body);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   color: var(--color-text);
-  outline: none;
-  transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
   font-family: inherit;
   box-sizing: border-box;
+  cursor: pointer;
 }
 
 .controlSelect {
   appearance: none;
-  padding-right: var(--space-8);
-  cursor: pointer;
 }
 
-.controlSelect:focus,
-.controlInput:focus {
+.controlInput {
+  padding-left: var(--space-8);
+}
+
+.controlGroupFull {
+  grid-column: 1 / -1;
+}
+
+.controlsPanelHeader {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-1);
+}
+
+.controlLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.budgetLabelIcon {
+  color: var(--color-primary);
+}
+
+.budgetTierPill {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-primary);
+  background: rgba(122, 46, 59, 0.08);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+
+.budgetStepperWrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.stepperMiniBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 42px;
+  border: 1px solid rgba(46, 43, 38, 0.15);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.stepperMiniBtn:hover:not(:disabled) {
+  background: var(--color-canvas-soft);
   border-color: var(--color-primary);
-  background-color: var(--color-bg);
-  box-shadow: 0 0 0 3px rgba(122, 46, 59, 0.15);
+  color: var(--color-primary);
+}
+
+.stepperMiniBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .budgetInputWrapper {
   display: flex;
   align-items: center;
   position: relative;
+  flex: 1;
+  min-width: 0;
 }
 
 .budgetCurrencyPrefix {
-  position: absolute;
-  left: var(--space-3);
-  font-weight: var(--weight-semibold);
+  flex-shrink: 0;
   color: var(--color-primary);
-  font-size: var(--text-body);
   pointer-events: none;
 }
 
 .budgetInputWrapper input {
-  padding-left: var(--space-6);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  
+  -moz-appearance: textfield;
+}
+
+.budgetInputWrapper input::-webkit-outer-spin-button,
+.budgetInputWrapper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .budgetQuickPills {
   display: flex;
-  gap: var(--space-1);
+  gap: 5px;
   margin-top: var(--space-1);
   flex-wrap: wrap;
 }
 
 .budgetQuickBtn {
+  flex: 1;
+  min-width: 32px;
   background: var(--color-bg-muted);
-  border: var(--border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
+  border: 1px solid rgba(46, 43, 38, 0.12);
+  border-radius: var(--radius-full);
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--color-text);
   cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+  text-align: center;
+  transition: all var(--duration-fast) var(--ease-standard);
 }
 
 .budgetQuickBtn:hover {
   background: var(--color-canvas-soft);
   border-color: var(--color-primary);
   color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
+.budgetQuickBtn.budgetQuickActive,
 .budgetQuickBtn.active {
   background: var(--color-primary);
   color: var(--color-on-primary);
   border-color: var(--color-primary);
+  box-shadow: 0 2px 6px rgba(122, 46, 59, 0.25);
 }
 
-/* ─── DYNAMIC BUDGET TRACKER CARD ────────────────────────────────────────── */
 .budgetCard {
   background: var(--color-canvas-soft);
   border: var(--border);
@@ -487,7 +585,6 @@
   font-weight: var(--weight-semibold);
 }
 
-/* Progress bar */
 .progressBarContainer {
   display: flex;
   flex-direction: column;
@@ -527,7 +624,6 @@
   color: var(--color-text-muted);
 }
 
-/* ─── SUGGESTED BASKET ITEMS SECTION ─────────────────────────────────────── */
 .basketSection {
   background: var(--color-bg);
   border: var(--border);
@@ -593,7 +689,6 @@
   border-color: var(--color-primary);
 }
 
-/* Error & Loading States */
 .errorAlert {
   display: flex;
   align-items: flex-start;
@@ -676,7 +771,6 @@
   background: var(--color-primary-hover);
 }
 
-/* ─── Items List ─────────────────────────────────────────────────────────── */
 .itemsList {
   display: flex;
   flex-direction: column;
@@ -840,7 +934,6 @@
   font-weight: var(--weight-medium);
 }
 
-/* Stepper & Line Total */
 .itemControls {
   display: flex;
   align-items: center;
@@ -936,7 +1029,6 @@
   border-color: rgba(179, 38, 30, 0.3);
 }
 
-/* ─── SEARCH & ADD PRODUCTS SECTION ──────────────────────────────────────── */
 .searchAddSection {
   margin-top: var(--space-5);
   padding-top: var(--space-4);
@@ -1059,10 +1151,6 @@
   border-color: var(--color-primary-hover);
 }
 
-/* ─── ACTION FOOTER ──────────────────────────────────────────────────────── */
-/* Sticky (not fixed) so it docks to the bottom of whichever box is actually
-   scrolling — the page when standalone, the modal's own scroll area when
-   embedded — instead of escaping the modal and overlapping the backdrop. */
 .footerBar {
   display: flex;
   justify-content: space-between;
@@ -1179,7 +1267,6 @@
   cursor: not-allowed;
 }
 
-/* ─── MODAL DIALOGS (REPLACE & DETAILS) ───────────────────────────────────── */
 .modalBackdrop {
   position: fixed;
   inset: 0;
@@ -1336,7 +1423,6 @@
   text-align: center;
 }
 
-/* Details Modal Elements */
 .detailsTopRow {
   display: flex;
   gap: var(--space-4);
@@ -1436,7 +1522,6 @@
   text-align: right;
 }
 
-/* ─── ANIMATIONS ──────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1476,7 +1561,6 @@
   }
 }
 
-/* ─── Tablet (900px down) ─── */
 @media (max-width: 900px) {
   .controlsPanel {
     grid-template-columns: repeat(2, 1fr);
@@ -1489,9 +1573,12 @@
   .basketSection {
     padding: var(--space-4);
   }
+
+  .budgetStepperWrapper {
+    gap: 4px;
+  }
 }
 
-/* ─── Mobile (680px down) ─── */
 @media (max-width: 680px) {
   .container {
     padding: var(--space-2) var(--space-1);
@@ -1511,7 +1598,6 @@
     margin-bottom: var(--space-4);
   }
 
-  /* Prompt bar stacks cleanly */
   .promptBar {
     flex-direction: column;
     align-items: stretch;
@@ -1526,7 +1612,6 @@
     width: 100%;
   }
 
-  /* Horizontal swipeable chip rail */
   .promptChips {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -1560,7 +1645,6 @@
     display: none;
   }
 
-  /* Item card becomes a stacked mobile-commerce layout */
   .itemCard {
     flex-direction: column;
     align-items: stretch;
@@ -1583,7 +1667,6 @@
     display: none;
   }
 
-  /* Footer stacks; still sticky, never escapes its scroll container */
   .footerBar {
     flex-direction: column;
     align-items: stretch;
@@ -1610,7 +1693,6 @@
     justify-content: center;
   }
 
-  /* Overlays become bottom sheets on mobile */
   .modalBackdrop {
     align-items: flex-end;
     padding: 0;
@@ -1622,12 +1704,16 @@
   }
 }
 
-/* ─── Small phone (480px down) ─── */
 @media (max-width: 480px) {
   .controlsPanel {
     grid-template-columns: 1fr;
     padding: var(--space-3);
     gap: var(--space-3);
+  }
+
+  .controlSelect,
+  .controlInput {
+    font-size: var(--text-sm);
   }
 
   .budgetValues {
@@ -1651,7 +1737,6 @@
   }
 }
 
-/* ─── Very small phone (380px down) ─── */
 @media (max-width: 380px) {
   .container {
     padding: var(--space-1) 0;
@@ -1703,7 +1788,6 @@
   }
 }
 
-/* ─── Ultra-narrow phones down to ~300px ─── */
 @media (max-width: 320px) {
   .heroBadge {
     padding: 0.2rem var(--space-2);

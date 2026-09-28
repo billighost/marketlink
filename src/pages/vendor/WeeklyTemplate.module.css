@@ -757,3 +757,27 @@
     justify-content: center;
   }
 }
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - WeeklyTemplate.module.css
+   --------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .container {
+    padding: 12px 12px 80px;
+  }
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .title {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px 10px 80px;
+  }
+}

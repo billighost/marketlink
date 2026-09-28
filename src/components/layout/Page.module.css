@@ -9,9 +9,9 @@
   background-color: var(--color-white);
 }
 
-.wide   { max-width: var(--container-buyer); }
-.detail { max-width: var(--container-buyer-detail); }
-.read   { max-width: var(--container-buyer-read); }
+.wide   { max-width: var(--container-buyer, var(--container-max, 1400px)); }
+.detail { max-width: var(--container-buyer-detail, var(--container-max, 1400px)); }
+.read   { max-width: var(--container-buyer-read, var(--container-max, 1400px)); }
 
 @media (min-width: 768px) {
   .page {

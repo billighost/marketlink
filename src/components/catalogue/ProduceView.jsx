@@ -22,6 +22,9 @@ import {
   CheckCircle2,
   ExternalLink,
   ThumbsUp,
+  Star,
+  Snowflake,
+  ChefHat,
 } from 'lucide-react';
 import {
   getProductDetail,
@@ -94,13 +97,6 @@ function formatSlotDisplay(slot) {
   return { day: 'Scheduled Day', time: 'Collection Hours', market, stall };
 }
 
-/**
- * Redesigned Produce Detail View with luxury artisan aesthetics,
- * zoom gallery, provenance connection, rich slot selector,
- * interactive accordion tabs, and sticky mobile order bar.
- *
- * @param {'guest'|'buyer'} audience chooses actions and link targets
- */
 export function ProduceView({ audience = 'guest' }) {
   const { id } = useParams();
   const routes = useCatalogueRoutes(audience);
@@ -121,7 +117,6 @@ export function ProduceView({ audience = 'guest' }) {
 
   const loginNext = `/login?next=${encodeURIComponent(location.pathname + (location.search || ''))}`;
 
-  // 1. Product Detail query
   const {
     data: product,
     loading: productLoading,
@@ -139,28 +134,24 @@ export function ProduceView({ audience = 'guest' }) {
 
   const farmerId = product?.farmer?.id || product?.farmer?._id;
 
-  // 2. Reviews query
   const { data: reviewsData } = useQuery(
     [`${audience}-product-reviews`, id],
     ({ signal }) => getProductReviews(id, { limit: 10 }, signal),
     { enabled: Boolean(id && product) }
   );
 
-  // 3. Related products query
   const { data: relatedData } = useQuery(
     [`${audience}-product-related`, id],
     ({ signal }) => getRelatedProducts(id, signal),
     { enabled: Boolean(id && product) }
   );
 
-  // 4. Farmer products query ("Also on this stall")
   const { data: farmerProductsData } = useQuery(
     [`${audience}-farmer-products`, farmerId],
     ({ signal }) => getFarmerProducts(farmerId, { limit: 8 }, signal),
     { enabled: Boolean(farmerId) }
   );
 
-  // 5. Pickup slots query
   const { data: pickupSlotsData } = useQuery(
     [`${audience}-farmer-slots`, farmerId],
     ({ signal }) => getFarmerPickupSlots(farmerId, signal),
@@ -171,7 +162,6 @@ export function ProduceView({ audience = 'guest' }) {
     ? pickupSlotsData
     : pickupSlotsData?.data || product?.nextPickupSlots || [];
 
-  // Default first open slot
   useEffect(() => {
     if (!selectedSlot && pickupSlots.length > 0) {
       const firstOpen = pickupSlots.find((s) => s.isOpen !== false) || pickupSlots[0];
@@ -188,7 +178,6 @@ export function ProduceView({ audience = 'guest' }) {
     }
   };
 
-  // Loading skeleton state
   if (productLoading || (!product && !productError)) {
     return (
       <div className={styles.pageWrap}>
@@ -209,7 +198,6 @@ export function ProduceView({ audience = 'guest' }) {
     );
   }
 
-  // Error / Not Found state
   if (productError || !product) {
     const isNotFound =
       !product ||
@@ -251,7 +239,6 @@ export function ProduceView({ audience = 'guest' }) {
   const displayPrice = product.priceCents != null ? product.priceCents : product.price;
   const totalPriceCents = (displayPrice || 0) * qty;
 
-  // Stalls and recommendations
   const allFarmerProducts = Array.isArray(farmerProductsData?.data)
     ? farmerProductsData.data
     : Array.isArray(farmerProductsData)
@@ -265,7 +252,6 @@ export function ProduceView({ audience = 'guest' }) {
     ? relatedData
     : [];
 
-  // Reviews
   const reviews = reviewsData?.data || (Array.isArray(reviewsData) ? reviewsData : []);
   const visibleReviews = showAllReviews ? reviews : reviews.slice(0, 3);
   const ratingAvg = product.ratingAvg ? Number(product.ratingAvg).toFixed(1) : (reviews.length > 0 ? '5.0' : null);
@@ -303,7 +289,7 @@ export function ProduceView({ audience = 'guest' }) {
 
   return (
     <div className={styles.pageWrap}>
-      {/* ── Breadcrumb & Top Bar ──────────────────────────────────────── */}
+      
       <nav className={styles.navRow} aria-label="Breadcrumb">
         <div className={styles.breadcrumbCluster}>
           <Link to={routes.browse} className={styles.backLink}>
@@ -328,9 +314,8 @@ export function ProduceView({ audience = 'guest' }) {
         </button>
       </nav>
 
-      {/* ── Main Dual-Column Product Showcase ─────────────────────────── */}
       <div className={styles.topGrid}>
-        {/* Left Column: Visual Showcase & Gallery */}
+        
         <div className={styles.leftCol}>
           <div className={styles.visualCard}>
             <div className={styles.imageViewport}>
@@ -348,7 +333,6 @@ export function ProduceView({ audience = 'guest' }) {
                 </div>
               )}
 
-              {/* Category & Origin Floating Badges */}
               <div className={styles.floatingTagWrap}>
                 <span className={styles.categoryBadge}>
                   <Sprout size={13} aria-hidden="true" />
@@ -369,7 +353,6 @@ export function ProduceView({ audience = 'guest' }) {
                 )}
               </div>
 
-              {/* Favorite Button */}
               {isBuyer ? (
                 <button
                   type="button"
@@ -397,7 +380,6 @@ export function ProduceView({ audience = 'guest' }) {
               )}
             </div>
 
-            {/* Quality & Freshness Guarantee Strip */}
             <div className={styles.guaranteeStrip}>
               <div className={styles.guaranteeItem}>
                 <ShieldCheck size={16} className={styles.guaranteeIcon} aria-hidden="true" />
@@ -415,16 +397,18 @@ export function ProduceView({ audience = 'guest' }) {
           </div>
         </div>
 
-        {/* Right Column: Pricing, Stall Connection, Pickup Window & Order */}
         <div className={styles.rightCol}>
-          {/* Header & Title */}
+          
           <div className={styles.headerBlock}>
             <div className={styles.ratingStripe}>
               {ratingAvg ? (
                 <div className={styles.starRow}>
                   <Stars rating={Number(ratingAvg)} />
                   <span className={styles.ratingText}>
-                    <strong>★ {ratingAvg}</strong> ({totalReviewsCount} {totalReviewsCount === 1 ? 'review' : 'reviews'})
+                    <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <Star size={12} fill="currentColor" aria-hidden="true" />
+                      {ratingAvg}
+                    </strong> ({totalReviewsCount} {totalReviewsCount === 1 ? 'review' : 'reviews'})
                   </span>
                 </div>
               ) : (
@@ -452,7 +436,6 @@ export function ProduceView({ audience = 'guest' }) {
             </div>
           </div>
 
-          {/* Connected Producer / Stall Strip */}
           {farmer && (
             <div className={styles.stallCard}>
               <div className={styles.stallAvatar}>
@@ -489,7 +472,6 @@ export function ProduceView({ audience = 'guest' }) {
             </div>
           )}
 
-          {/* Collection & Pickup Window Selector */}
           <div className={styles.pickupSection}>
             <div className={styles.sectionTitleRow}>
               <div className={styles.sectionTitleWithIcon}>
@@ -551,7 +533,6 @@ export function ProduceView({ audience = 'guest' }) {
             )}
           </div>
 
-          {/* Order Actions Suite (Desktop / Tablet) */}
           <div className={styles.orderActionsSuite}>
             {isSoldOut ? (
               <div className={styles.soldOutBox} role="status">
@@ -641,7 +622,6 @@ export function ProduceView({ audience = 'guest' }) {
         </div>
       </div>
 
-      {/* ── Interactive Detail Tabs (Notes, How Collection Works, Producer) ── */}
       <section className={styles.tabsSection} aria-label="Detailed information">
         <div className={styles.tabsHeader} role="tablist">
           <button
@@ -684,21 +664,21 @@ export function ProduceView({ audience = 'guest' }) {
 
               <div className={styles.tipsGrid}>
                 <div className={styles.tipCard}>
-                  <span className={styles.tipEmoji}>🌱</span>
+                  <span className={styles.tipEmoji}><Sprout size={18} /></span>
                   <div>
                     <h4 className={styles.tipTitle}>Peak Season</h4>
                     <p className={styles.tipDesc}>Grown naturally in season for maximum flavor and nutrition.</p>
                   </div>
                 </div>
                 <div className={styles.tipCard}>
-                  <span className={styles.tipEmoji}>❄️</span>
+                  <span className={styles.tipEmoji}><Snowflake size={18} /></span>
                   <div>
                     <h4 className={styles.tipTitle}>Storage Advice</h4>
                     <p className={styles.tipDesc}>Keep in a cool, ventilated area or crisper drawer for optimal freshness.</p>
                   </div>
                 </div>
                 <div className={styles.tipCard}>
-                  <span className={styles.tipEmoji}>🧑‍🍳</span>
+                  <span className={styles.tipEmoji}><ChefHat size={18} /></span>
                   <div>
                     <h4 className={styles.tipTitle}>Culinary Tips</h4>
                     <p className={styles.tipDesc}>Pairs wonderfully with local sourdough, artisan cheeses, and fresh olive oils.</p>
@@ -759,7 +739,6 @@ export function ProduceView({ audience = 'guest' }) {
         </div>
       </section>
 
-      {/* ── Also On This Stall ────────────────────────────────────────── */}
       {moreFromFarmer.length > 0 && (
         <section className={styles.recommendSection}>
           <div className={styles.recommendHeader}>
@@ -793,7 +772,6 @@ export function ProduceView({ audience = 'guest' }) {
         </section>
       )}
 
-      {/* ── Similar At Other Stalls ───────────────────────────────────── */}
       {youMightLike.length > 0 && (
         <section className={styles.recommendSection}>
           <div className={styles.recommendHeader}>
@@ -820,7 +798,6 @@ export function ProduceView({ audience = 'guest' }) {
         </section>
       )}
 
-      {/* ── Reviews & Testimonials Section ────────────────────────────── */}
       <section className={styles.reviewsSection} aria-labelledby="reviews-title">
         <div className={styles.reviewsHeader}>
           <div>
@@ -868,7 +845,6 @@ export function ProduceView({ audience = 'guest' }) {
         )}
       </section>
 
-      {/* ── Mobile Sticky Bottom Action Bar (< 768px) ─────────────────── */}
       <div className={styles.mobileStickyBar} role="region" aria-label="Purchase actions">
         <div className={styles.mobilePriceBlock}>
           <span className={styles.mobilePrice}>{formatPrice(totalPriceCents)}</span>
@@ -910,7 +886,10 @@ export function ProduceView({ audience = 'guest' }) {
               {isSoldOut ? (
                 'Sold out'
               ) : addedAnimation ? (
-                'Added! ✓'
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                  <Check size={16} />
+                  <span>Added!</span>
+                </span>
               ) : (
                 'Add to Basket'
               )}

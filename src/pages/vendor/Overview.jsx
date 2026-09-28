@@ -25,6 +25,9 @@ import {
   CheckSquare,
   MessageSquare,
   Send,
+  Trophy,
+  Medal,
+  Sprout,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useVendor } from '@/layouts/VendorLayout';
@@ -51,9 +54,6 @@ import { PickList } from './PickList';
 import { formatPrice } from '@/utils/format';
 import styles from './Overview.module.css';
 
-/**
- * Micro SVG Sparkline with gradient area and glowing polyline
- */
 function Sparkline({ data = [], strokeColor = '#7A2E3B', fillId = 'grad-beet' }) {
   if (!data || data.length < 2) {
     return null;
@@ -109,25 +109,21 @@ export function Overview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Overview backend data
   const [overviewData, setOverviewData] = useState(null);
   const [weekInsights, setWeekInsights] = useState(null);
   const [orders, setOrders] = useState([]);
   const [activePipelineFilter, setActivePipelineFilter] = useState('all');
 
-  // Modals
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [isPickListOpen, setIsPickListOpen] = useState(false);
   const [activeReviewForReply, setActiveReviewForReply] = useState(null);
   const [replyInput, setReplyInput] = useState('');
   const [replySubmitting, setReplySubmitting] = useState(false);
 
-  // Quick Action Feedback
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
   const [actionInProgress, setActionInProgress] = useState(null);
 
-  // Local checklist items for packing
   const [packingChecklist, setPackingChecklist] = useState([
     { id: 'ice', label: 'Pack fresh cooling packs for greens & herbs', checked: true },
     { id: 'labels', label: 'Affix pickup slot name tags to pre-order boxes', checked: true },
@@ -165,7 +161,6 @@ export function Overview() {
     loadData();
   }, [loadData]);
 
-  // Greeting based on time of day
   const getGreeting = () => {
     const hour = new Date().getHours();
     const name = stallInfo?.contactPerson || user?.name?.split(' ')[0] || 'Grower';
@@ -174,13 +169,11 @@ export function Overview() {
     return `Good evening, ${name}`;
   };
 
-  // Quick Order Action: Accept
   const handleQuickAccept = async (orderId, e) => {
     e.stopPropagation();
     setActionInProgress(orderId);
     try {
       await acceptFarmerOrder(orderId);
-      // Optimistic update in list
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: 'accepted' } : o))
       );
@@ -195,7 +188,6 @@ export function Overview() {
     }
   };
 
-  // Quick Order Action: Ready for pickup
   const handleQuickReady = async (orderId, e) => {
     e.stopPropagation();
     setActionInProgress(orderId);
@@ -215,7 +207,6 @@ export function Overview() {
     }
   };
 
-  // Quick Order Action: Complete pickup
   const handleQuickComplete = async (orderId, e) => {
     e.stopPropagation();
     setActionInProgress(orderId);
@@ -235,13 +226,11 @@ export function Overview() {
     }
   };
 
-  // Quick Produce Restock (+5 or +10)
   const handleQuickRestock = async (productId, delta) => {
     try {
       const currentProd = (overviewData?.topProducts || []).find((p) => p.id === productId);
       const newQty = Math.max(0, (currentProd?.quantity || 0) + delta);
 
-      // Optimistic
       setOverviewData((prev) => {
         if (!prev) return prev;
         return {
@@ -261,7 +250,6 @@ export function Overview() {
     }
   };
 
-  // Toggle Sold Out
   const handleToggleSoldOut = async (productId, isCurrentlySoldOut) => {
     try {
       if (isCurrentlySoldOut) {
@@ -279,7 +267,6 @@ export function Overview() {
     }
   };
 
-  // Submit Review Reply
   const handleSubmitReply = async (e) => {
     e.preventDefault();
     if (!replyInput.trim() || !activeReviewForReply) return;
@@ -299,13 +286,11 @@ export function Overview() {
     }
   };
 
-  // Filtered orders list for the operations board
   const filteredOrders = useMemo(() => {
     if (activePipelineFilter === 'all') return orders;
     return orders.filter((o) => o.status === activePipelineFilter);
   }, [orders, activePipelineFilter]);
 
-  // Sparkline data extracted from 7d history or fallback
   const sparklineRevenue = useMemo(() => {
     if (overviewData?.sparkline7d && overviewData.sparkline7d.length > 0) {
       return overviewData.sparkline7d.map((d) => (d.revenueCents || 0) / 100);
@@ -320,7 +305,6 @@ export function Overview() {
     return [0, 0, 0, 0, 0, 0, 0];
   }, [overviewData]);
 
-  // Derived stats
   const pipeline = overviewData?.pipeline || {
     placed: orders.filter((o) => o.status === 'placed').length,
     accepted: orders.filter((o) => o.status === 'accepted').length,
@@ -344,12 +328,12 @@ export function Overview() {
 
   return (
     <div className={styles.container}>
-      {/* ─── 1. LIVELY COCKPIT HEADER & OPERATIONS BANNER ──────────────── */}
+      
       <header className={styles.cockpitHeader}>
         <div className={styles.headerTopRow}>
           <div className={styles.stallIdentity}>
             <div className={styles.stallAvatarBadge} aria-hidden="true">
-              🌱
+              <Sprout size={18} />
             </div>
             <div className={styles.stallTitles}>
               <h1 className={styles.greetingText}>{getGreeting()}</h1>
@@ -386,7 +370,6 @@ export function Overview() {
           </div>
         </div>
 
-        {/* Operational Market Day Sub-Banner */}
         <div className={styles.operationalBar}>
           <div className={styles.marketScheduleTag}>
             <Calendar size={14} />
@@ -416,14 +399,20 @@ export function Overview() {
                 <span style={{ opacity: 0.65 }}>No fulfillment data yet</span>
               )}
               {overviewData?.ratingCount > 0 && (
-                <>{' • '}<strong>{overviewData.ratingAvg} ★</strong> ({overviewData.ratingCount} review{overviewData.ratingCount !== 1 ? 's' : ''})</>
+                <>
+                  {' • '}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                    <strong>{overviewData.ratingAvg}</strong>
+                    <Star size={12} fill="currentColor" aria-hidden="true" />
+                  </span>{' '}
+                  ({overviewData.ratingCount} review{overviewData.ratingCount !== 1 ? 's' : ''})
+                </>
               )}
             </span>
           </div>
         </div>
       </header>
 
-      {/* Setup Stall Prompt if stall has no name yet */}
       {!stallInfo?.stallName && (
         <section className={styles.pendingCard} aria-label="Setup stall prompt">
           <div className={styles.pendingContent}>
@@ -441,7 +430,6 @@ export function Overview() {
         </section>
       )}
 
-      {/* Pending Approval Calm Notice */}
       {isPending && (
         <section className={styles.pendingCard} aria-label="Approval status">
           <div className={styles.pendingContent}>
@@ -469,9 +457,9 @@ export function Overview() {
         <ErrorState title="Couldn't load cockpit" text={error} onRetry={loadData} />
       ) : (
         <>
-          {/* ─── 2. TELEMETRY BENTO GRID (4 LIVELY METRIC CARDS) ──────── */}
+          
           <section className={styles.bentoGrid} aria-label="Key Performance Indicators">
-            {/* Card 1: Revenue */}
+            
             <div className={styles.statCard}>
               <div className={styles.statCardTop}>
                 <span className={styles.statLabel}>Market Revenue</span>
@@ -487,7 +475,6 @@ export function Overview() {
               <Sparkline data={sparklineRevenue} strokeColor="#7A2E3B" fillId="grad-rev" />
             </div>
 
-            {/* Card 2: Active Orders Pipeline */}
             <div className={styles.statCard}>
               <div className={styles.statCardTop}>
                 <span className={styles.statLabel}>Active Orders</span>
@@ -512,7 +499,6 @@ export function Overview() {
               <Sparkline data={sparklineOrders} strokeColor="#0284c7" fillId="grad-orders" />
             </div>
 
-            {/* Card 3: Today's Pickups / Readiness */}
             <div className={styles.statCard}>
               <div className={styles.statCardTop}>
                 <span className={styles.statLabel}>Pickups Readiness</span>
@@ -557,7 +543,6 @@ export function Overview() {
               </div>
             </div>
 
-            {/* Card 4: Catalog & Stock Health */}
             <div className={styles.statCard}>
               <div className={styles.statCardTop}>
                 <span className={styles.statLabel}>Harvest Produce</span>
@@ -601,9 +586,8 @@ export function Overview() {
             </div>
           </section>
 
-          {/* ─── 3. MAIN DASHBOARD COLUMNS ────────────────────────────── */}
           <div className={styles.cockpitColumns}>
-            {/* LEFT COLUMN: LIVE ORDER OPERATIONS BOARD */}
+            
             <div className={styles.leftColumn}>
               <section className={styles.sectionCard}>
                 <div className={styles.cardHeaderRow}>
@@ -613,7 +597,6 @@ export function Overview() {
                     <span className={styles.cardCountBadge}>{filteredOrders.length}</span>
                   </div>
 
-                  {/* Pipeline Filter Chips */}
                   <div className={styles.pipelineFilters}>
                     <button
                       type="button"
@@ -713,13 +696,20 @@ export function Overview() {
                               }`}
                             >
                               {order.status === 'placed' && '● New Pre-order'}
-                              {order.status === 'accepted' && '⚙ Packing'}
-                              {order.status === 'ready' && '✓ Ready for Pickup'}
+                              {order.status === 'accepted' && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <Clock size={12} /> Packing
+                                </span>
+                              )}
+                              {order.status === 'ready' && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <Check size={12} strokeWidth={2.5} /> Ready for Pickup
+                                </span>
+                              )}
                               {order.status === 'completed' && 'Completed'}
                             </span>
                           </div>
 
-                          {/* Items summary */}
                           <div className={styles.orderItemsSummary}>
                             {Array.isArray(order.items) && order.items.length > 0 ? (
                               order.items.map((it, idx) => (
@@ -734,7 +724,6 @@ export function Overview() {
                             )}
                           </div>
 
-                          {/* Action row */}
                           <div className={styles.orderRowActions}>
                             <div className={styles.slotTotalTag}>
                               <span>
@@ -806,12 +795,10 @@ export function Overview() {
                 )}
               </section>
 
-              {/* SECTION: TOP HARVEST PERFORMERS & QUICK RESTOCK STEPPER */}
-              {/* SECTION: 4. 🏆 Best-Selling Products */}
               <section className={styles.sectionCard} aria-label="Best-selling products">
                 <div className={styles.cardHeaderRow}>
                   <div className={styles.cardTitleGroup}>
-                    <span style={{ fontSize: '1.25rem' }} aria-hidden="true">🏆</span>
+                    <Trophy size={20} color="#b45309" aria-hidden="true" />
                     <div>
                       <h2 className={styles.cardTitle}>Your Top Products</h2>
                       <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
@@ -825,10 +812,9 @@ export function Overview() {
                   </Link>
                 </div>
 
-                {/* Dynamic Headline Callout calculated from real order data */}
                 {(overviewData?.bestSellingHeadline || (overviewData?.bestSellingProducts?.[0]?.name)) && (
                   <div className={styles.bestSellerHeadlineBanner}>
-                    <span style={{ fontSize: '1.25rem' }} aria-hidden="true">🥇</span>
+                    <Trophy size={18} color="#059669" aria-hidden="true" />
                     <div>
                       <strong style={{ fontSize: '0.9rem', color: '#065f46', display: 'block' }}>
                         {overviewData.bestSellingHeadline ||
@@ -843,14 +829,18 @@ export function Overview() {
 
                 <div className={styles.productListRow}>
                   {(overviewData?.bestSellingProducts || overviewData?.topProducts || []).slice(0, 5).map((prod, index) => {
-                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                    const medalColor = index === 0 ? '#eab308' : index === 1 ? '#94a3b8' : index === 2 ? '#b45309' : '#6b7280';
                     const orderPct = prod.orderPercentage || 0;
 
                     return (
                       <div key={prod.id || prod.productId || index} className={styles.productQuickCard}>
                         <div className={styles.productLeftInfo}>
                           <div className={styles.productIconBox} aria-label={`Rank ${index + 1}`}>
-                            <span style={{ fontSize: '1.2rem' }}>{medal}</span>
+                            {index < 3 ? (
+                              <Medal size={18} color={medalColor} />
+                            ) : (
+                              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#6b7280' }}>#{index + 1}</span>
+                            )}
                           </div>
                           <div className={styles.productNameCol}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
@@ -913,9 +903,8 @@ export function Overview() {
               </section>
             </div>
 
-            {/* RIGHT COLUMN: OPERATIONS CENTER, CHECKLIST & CUSTOMER LOVE */}
             <div className={styles.rightColumn}>
-              {/* MARKET DAY HARVEST & PACKING CENTER */}
+              
               <div className={styles.packingCenterCard}>
                 <div className={styles.packingHeroRow}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -948,7 +937,6 @@ export function Overview() {
                   ))}
                 </ul>
 
-                {/* Pick list quick banner */}
                 <div className={styles.pickListActionBanner}>
                   <div>
                     <strong style={{ fontSize: '0.9rem', color: '#1f2937', display: 'block' }}>
@@ -969,7 +957,6 @@ export function Overview() {
                 </div>
               </div>
 
-              {/* RECENT CUSTOMER LOVE & REVIEWS */}
               <section className={styles.sectionCard}>
                 <div className={styles.cardHeaderRow}>
                   <div className={styles.cardTitleGroup}>
@@ -992,8 +979,10 @@ export function Overview() {
                       <div key={rev.id} className={styles.reviewItemCard}>
                         <div className={styles.reviewItemHeader}>
                           <span className={styles.reviewCustomerName}>{rev.customerName}</span>
-                          <span className={styles.reviewDate}>
-                            {'★'.repeat(rev.rating || 5)}
+                          <span className={styles.reviewDate} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#eab308' }} aria-label={`${rev.rating || 5} out of 5 stars`}>
+                            {Array.from({ length: rev.rating || 5 }).map((_, i) => (
+                              <Star key={i} size={12} fill="currentColor" aria-hidden="true" />
+                            ))}
                           </span>
                         </div>
                         <p className={styles.reviewCommentText}>"{rev.comment}"</p>
@@ -1024,7 +1013,6 @@ export function Overview() {
             </div>
           </div>
 
-          {/* ─── 4. FLOATING QUICK ACTIONS SPEED BAR ──────────────────── */}
           <div className={styles.quickActionsBar}>
             <Link to="/vendor/stock?action=new" className={styles.fabPrimaryBtn}>
               <Plus size={18} />
@@ -1048,8 +1036,6 @@ export function Overview() {
         </>
       )}
 
-      {/* ─── 5. MODAL BOTTOM SHEETS ───────────────────────────────────── */}
-      {/* Detailed Order Sheet */}
       {selectedOrderId && (
         <BottomSheet
           isOpen={Boolean(selectedOrderId)}
@@ -1068,7 +1054,6 @@ export function Overview() {
         </BottomSheet>
       )}
 
-      {/* Pick List Sheet */}
       {isPickListOpen && (
         <BottomSheet
           isOpen={isPickListOpen}
@@ -1082,7 +1067,6 @@ export function Overview() {
         </BottomSheet>
       )}
 
-      {/* Customer Review Reply Dialog */}
       {activeReviewForReply && (
         <BottomSheet
           isOpen={Boolean(activeReviewForReply)}
@@ -1125,7 +1109,6 @@ export function Overview() {
         </BottomSheet>
       )}
 
-      {/* Toast Notification Feedback */}
       {toastMessage && (
         <Toast
           message={toastMessage}

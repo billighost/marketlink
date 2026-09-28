@@ -4,10 +4,15 @@
   gap: var(--space-5);
   max-width: 1040px;
   margin: 0 auto;
-  padding: var(--space-2) var(--space-4) var(--space-12);
+  padding: var(--space-2) var(--space-3) var(--space-12);
 }
 
-/* Header */
+@media (min-width: 640px) {
+  .container {
+    padding: var(--space-2) var(--space-4) var(--space-12);
+  }
+}
+
 .header {
   display: flex;
   align-items: flex-start;
@@ -62,7 +67,7 @@
 
 .title {
   font-family: var(--font-head);
-  font-size: 1.85rem;
+  font-size: clamp(1.4rem, 3.5vw, 1.85rem);
   font-weight: 700;
   color: var(--color-ink);
   letter-spacing: -0.02em;
@@ -81,7 +86,6 @@
   align-items: center;
 }
 
-/* Skeletons */
 .skeletonBox {
   display: flex;
   flex-direction: column;
@@ -106,7 +110,6 @@
   }
 }
 
-/* Empty */
 .emptyWrap {
   background: var(--color-white);
   border: 1px dashed var(--color-wood-line);
@@ -114,7 +117,6 @@
   padding: var(--space-8);
 }
 
-/* KPI Grid */
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -228,7 +230,6 @@
   border-radius: var(--radius-full);
 }
 
-/* Chart Section */
 .chartSection {
   background: var(--color-white);
   border: 1px solid var(--color-wood-line);
@@ -299,7 +300,6 @@
   padding-top: var(--space-2);
 }
 
-/* Best Sellers */
 .bestSellersSection {
   background: var(--color-white);
   border: 1px solid var(--color-wood-line);
@@ -449,7 +449,6 @@
   text-transform: uppercase;
 }
 
-/* ─── 4. Top Products Card & Dynamic Headline Callout ─── */
 .topProductsCard {
   display: flex;
   flex-direction: column;
@@ -561,4 +560,76 @@
   color: #047857;
   font-weight: 500;
   opacity: 0.85;
+}
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - Insights.module.css
+   --------------------------------------------------------------- */
+
+/* -- Header -- */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .title {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+  .rangeSelectorWrap {
+    align-self: flex-start;
+  }
+}
+
+/* -- KPI grid: 2x2 on mobile -- */
+@media (max-width: 480px) {
+  .kpiGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .kpiCard {
+    padding: 12px 10px;
+  }
+  .cardValue {
+    font-size: 1.35rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -- Chart section -- */
+@media (max-width: 480px) {
+  .chartSection {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+  .sectionTitle {
+    font-size: 1rem;
+  }
+  .sectionIconWrap {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* -- Best sellers -- */
+@media (max-width: 480px) {
+  .bestSellersSection {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+  .bestCard {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .itemRev {
+    font-size: 0.85rem;
+  }
+  .itemName {
+    font-size: 0.82rem;
+  }
 }

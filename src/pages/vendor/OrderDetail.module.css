@@ -276,3 +276,23 @@
 .dangerTextBtn:hover {
   text-decoration: underline;
 }
+
+/* ---------------------------------------------------------------
+   COMPREHENSIVE RESPONSIVE IMPROVEMENTS - OrderDetail.module.css
+   --------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .standaloneContainer {
+    margin: 12px auto 80px;
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .standaloneContainer {
+    padding: 14px 12px;
+    margin: 8px auto 80px;
+    border-radius: 12px;
+  }
+}

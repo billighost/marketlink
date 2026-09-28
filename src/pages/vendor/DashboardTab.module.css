@@ -118,7 +118,14 @@
   font-size: 0.8rem; 
   font-weight: 500; 
   cursor: pointer; 
-  color: #374151; 
+  color: #374151;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.btnOutline:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #111827;
 }
 
 .btnPrimary { 
@@ -129,7 +136,12 @@
   border-radius: 6px; 
   font-size: 0.8rem; 
   font-weight: 500; 
-  cursor: pointer; 
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+
+.btnPrimary:hover {
+  filter: brightness(1.1);
 }
 
 .table { 

@@ -1,9 +1,3 @@
-/* ==========================================================================
-   MarketLink layout utilities (plain global classes)
-   Strictly capped at ~20 high-value classes.
-   ========================================================================== */
-
-/* Responsive page padding - fluid and adaptable across viewports */
 :root {
   --page-pad: clamp(0.75rem, 3.5vw, 1.25rem);
 }
@@ -26,7 +20,6 @@
   }
 }
 
-/* Containers */
 .container {
   max-width: var(--container-max);
   margin-inline: auto;
@@ -48,7 +41,6 @@
   width: 100%;
 }
 
-/* Sections */
 .section {
   padding-block: var(--section-gap);
 }
@@ -59,7 +51,6 @@
   }
 }
 
-/* Flex stacks */
 .stack {
   display: flex;
   flex-direction: column;
@@ -78,7 +69,6 @@
   gap: var(--gap-loose);
 }
 
-/* Horizontal flex cluster */
 .cluster {
   display: flex;
   flex-wrap: wrap;
@@ -86,7 +76,6 @@
   align-items: center;
 }
 
-/* Space-between row that wraps cleanly */
 .rowBetween {
   display: flex;
   justify-content: space-between;
@@ -95,7 +84,6 @@
   gap: var(--gap-default);
 }
 
-/* Grids: mobile 1 col, tablet 2 cols, desktop 3 cols */
 .grid2 {
   display: grid;
   grid-template-columns: 1fr;
@@ -132,7 +120,6 @@
   gap: var(--gap-loose);
 }
 
-/* Typography helpers */
 .textMuted {
   color: var(--color-text-muted);
 }
@@ -146,7 +133,6 @@
   text-align: center;
 }
 
-/* Accessibility: visually hidden for screen readers */
 .visuallyHidden {
   position: absolute;
   width: 1px;
@@ -159,7 +145,6 @@
   border: 0;
 }
 
-/* Accessibility: skip to content link */
 .skipLink {
   position: absolute;
   top: var(--space-2);
@@ -184,7 +169,6 @@
   transform: translateY(0);
 }
 
-/* Hairline horizontal divider */
 .divider {
   height: 1px;
   background-color: var(--color-border);
@@ -192,12 +176,10 @@
   width: 100%;
 }
 
-/* Scroll lock when modal/drawer is open */
 .noScroll {
   overflow: hidden;
 }
 
-/* Responsive Table Wrapper */
 .tableResponsive,
 .tableWrap {
   width: 100%;
@@ -206,4 +188,3 @@
   position: relative;
   scrollbar-width: thin;
 }
-

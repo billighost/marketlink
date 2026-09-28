@@ -1,10 +1,10 @@
-/* BuyerLayout — Customer application frame */
-
 .appShell {
-  /* Buyer-scoped token overrides. Descendants of this element resolve these names
-     to the neutral values; vendor, admin and guest keep the warm originals. */
-  --color-border:    var(--color-hairline);
-  --color-bg-muted:  var(--color-white);
+  --color-border: var(--color-hairline);
+  --color-bg-muted: var(--color-white);
+
+  --container-buyer: var(--container-max, 1400px);
+  --container-buyer-detail: var(--container-max, 1400px);
+  --container-buyer-read: var(--container-narrow, 840px);
 
   --stack-nav: var(--bottom-nav-height);
   --stack-cart: 0px;
@@ -31,7 +31,6 @@
   }
 }
 
-/* Skip link */
 .skipLink {
   position: absolute;
   top: -999px;
@@ -56,7 +55,6 @@
   outline-offset: var(--focus-offset);
 }
 
-/* Main content wrapper with dynamic bottom stack offset */
 .main {
   flex: 1 0 auto;
   display: flex;

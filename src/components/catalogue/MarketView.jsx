@@ -62,14 +62,14 @@ const MARKET_HERO_IMAGES = {
 };
 
 const STALL_CATEGORIES = [
-  { id: 'all', label: 'All Stalls', icon: '🧺' },
-  { id: 'veg', label: 'Vegetables & Greens', icon: '🥬' },
-  { id: 'fruit', label: 'Fruit & Berries', icon: '🍓' },
-  { id: 'bakery', label: 'Bakery & Bread', icon: '🥐' },
-  { id: 'dairy', label: 'Dairy & Eggs', icon: '🧀' },
-  { id: 'flowers', label: 'Flowers & Plants', icon: '🌸' },
-  { id: 'preserves', label: 'Honey & Preserves', icon: '🍯' },
-  { id: 'meat', label: 'Meat & Poultry', icon: '🥩' },
+  { id: 'all', label: 'All Stalls' },
+  { id: 'veg', label: 'Vegetables & Greens' },
+  { id: 'fruit', label: 'Fruit & Berries' },
+  { id: 'bakery', label: 'Bakery & Bread' },
+  { id: 'dairy', label: 'Dairy & Eggs' },
+  { id: 'flowers', label: 'Flowers & Plants' },
+  { id: 'preserves', label: 'Honey & Preserves' },
+  { id: 'meat', label: 'Meat & Poultry' },
 ];
 
 function formatReadableSchedule(market) {
@@ -92,13 +92,6 @@ function formatReadableSchedule(market) {
   return formatMarketSchedule(market);
 }
 
-/**
- * Redesigned shared Market detail view with rich artisan aesthetics,
- * interactive schedule, category-filtered stall directory, harvest showcase,
- * and visitor guide.
- *
- * @param {'guest'|'buyer'} audience chooses actions and link targets, never content
- */
 export function MarketView({ audience = 'guest' }) {
   const { id } = useParams();
   const routes = useCatalogueRoutes(audience);
@@ -110,7 +103,6 @@ export function MarketView({ audience = 'guest' }) {
 
   const isBuyer = audience === 'buyer';
 
-  // 1. Fetch Market Detail
   const {
     data: market,
     loading: marketLoading,
@@ -121,26 +113,22 @@ export function MarketView({ audience = 'guest' }) {
 
   useDocumentTitle(market?.name ? `${market.name} · MarketLink` : 'Market · MarketLink');
 
-  // Scroll to top on navigation to market page
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [id]);
 
-  // 2. Fetch Stalls at this market
   const { data: farmersData, loading: farmersLoading } = useQuery(
     [`${audience}-market-farmers`, id],
     ({ signal }) => getMarketFarmers(id, {}, signal).catch(() => ({ data: [] })),
     { enabled: Boolean(id) && !marketError }
   );
 
-  // 3. Fetch Products fresh at this market
   const { data: productsData, loading: productsLoading } = useQuery(
     [`${audience}-market-products`, id],
     ({ signal }) => getMarketProducts(id, { limit: 12 }, signal).catch(() => ({ data: [] })),
     { enabled: Boolean(id) && !marketError }
   );
 
-  // 4. Fetch Saved Markets (buyer only)
   const { data: savedMarketsData, refetch: refetchSaved } = useQuery(
     ['saved-markets'],
     ({ signal }) => getSavedMarkets(signal).catch(() => ({ data: [] })),
@@ -187,13 +175,11 @@ export function MarketView({ audience = 'guest' }) {
     }
   };
 
-  // Sort stalls
   const allStalls = useMemo(() => {
     const list = Array.isArray(farmersData) ? farmersData : farmersData?.data || [];
     return [...list].sort(byOpenThenScarcity);
   }, [farmersData]);
 
-  // Filter stalls by search & category
   const filteredStalls = useMemo(() => {
     return allStalls.filter((stall) => {
       const matchesSearch =
@@ -248,7 +234,6 @@ export function MarketView({ audience = 'guest' }) {
     market?.operatingDayNumbers ||
     (Array.isArray(market?.schedule) ? market.schedule.map((s) => s.day) : []);
 
-  // Loading Skeleton State
   if (marketLoading || (!market && !marketError)) {
     return (
       <div className={styles.container}>
@@ -266,7 +251,6 @@ export function MarketView({ audience = 'guest' }) {
     );
   }
 
-  // Not Found / Error State
   if (marketError || !market) {
     return (
       <div className={styles.container}>
@@ -304,7 +288,7 @@ export function MarketView({ audience = 'guest' }) {
 
   return (
     <div className={styles.container}>
-      {/* ── Top Navigation Bar ────────────────────────────────────────── */}
+      
       <nav className={styles.navRow} aria-label="Page navigation">
         <Link to={routes.markets} className={styles.backLink}>
           <ArrowLeft size={16} aria-hidden="true" />
@@ -345,9 +329,8 @@ export function MarketView({ audience = 'guest' }) {
         </div>
       </nav>
 
-      {/* ── Clean & Modern Editorial Header ─────────────────────────── */}
       <section className={styles.headerSection} aria-labelledby="market-title">
-        {/* Compact Accent Banner */}
+        
         <div className={styles.compactBannerWrap}>
           <img
             src={heroImage}
@@ -356,7 +339,6 @@ export function MarketView({ audience = 'guest' }) {
           />
           <div className={styles.compactBannerOverlay} />
 
-          {/* Floating Live Status Badge */}
           <div className={styles.statusPillWrap}>
             {clock?.openNow ? (
               <span className={styles.statusOpen}>
@@ -372,7 +354,6 @@ export function MarketView({ audience = 'guest' }) {
           </div>
         </div>
 
-        {/* Identity & Quick Metadata Row */}
         <div className={styles.identityRow}>
           <div className={styles.titleAndMeta}>
             <h1 id="market-title" className={styles.marketTitle}>
@@ -424,7 +405,6 @@ export function MarketView({ audience = 'guest' }) {
         </div>
       </section>
 
-      {/* ── Closed / Upcoming Day Informational Banner ────────────────── */}
       {!clock?.openNow && (
         <section className={styles.closedAlert} role="status">
           <div className={styles.closedIconBox} aria-hidden="true">
@@ -450,9 +430,8 @@ export function MarketView({ audience = 'guest' }) {
         </section>
       )}
 
-      {/* ── Schedule & Location Dual Hub ──────────────────────────────── */}
       <section className={styles.splitGrid} aria-label="Visit and schedule details">
-        {/* Card 1: Operating Schedule */}
+        
         <div className={styles.infoCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardIconCircle}>
@@ -494,7 +473,6 @@ export function MarketView({ audience = 'guest' }) {
               )}
             </div>
 
-            {/* Market Clock Bar */}
             <div className={styles.clockEmbedded}>
               <MarketClock
                 marketName={market.name}
@@ -515,7 +493,6 @@ export function MarketView({ audience = 'guest' }) {
           </div>
         </div>
 
-        {/* Card 2: Location & Amenities */}
         <div className={styles.infoCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardIconCircle}>
@@ -548,7 +525,6 @@ export function MarketView({ audience = 'guest' }) {
               }
             />
 
-            {/* Market Amenities / Facilities */}
             <div className={styles.facilitiesBlock}>
               <span className={styles.facilitiesTitle}>Market Amenities</span>
               <div className={styles.facilitiesGrid}>
@@ -581,7 +557,6 @@ export function MarketView({ audience = 'guest' }) {
         </div>
       </section>
 
-      {/* ── Stalls & Producers Directory ──────────────────────────────── */}
       <section className={styles.stallsSection} id="stalls-directory" aria-labelledby="stalls-heading">
         <div className={styles.sectionHeaderRow}>
           <div className={styles.sectionHeaderTitles}>
@@ -600,7 +575,6 @@ export function MarketView({ audience = 'guest' }) {
             </p>
           </div>
 
-          {/* Search Inside Market */}
           <div className={styles.searchWrap}>
             <Search size={16} className={styles.searchIcon} aria-hidden="true" />
             <input
@@ -624,7 +598,6 @@ export function MarketView({ audience = 'guest' }) {
           </div>
         </div>
 
-        {/* Category Pills Bar */}
         <div className={styles.categoryBar} role="tablist" aria-label="Filter stalls by category">
           {STALL_CATEGORIES.map((cat) => {
             const active = selectedCategory === cat.id;
@@ -637,14 +610,12 @@ export function MarketView({ audience = 'guest' }) {
                 className={`${styles.catPill} ${active ? styles.catPillActive : ''}`}
                 onClick={() => setSelectedCategory(cat.id)}
               >
-                <span className={styles.catEmoji} aria-hidden="true">{cat.icon}</span>
                 <span>{cat.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Stalls Grid */}
         {farmersLoading ? (
           <div className={styles.stallsGrid}>
             <Skeleton height="11rem" borderRadius="var(--radius-lg)" />
@@ -682,7 +653,6 @@ export function MarketView({ audience = 'guest' }) {
         )}
       </section>
 
-      {/* ── Fresh Harvest Showcase ("Fresh at this market") ──────────── */}
       {freshProducts.length > 0 && (
         <section className={styles.produceSection} aria-labelledby="fresh-heading">
           <div className={styles.produceHeaderRow}>
@@ -718,7 +688,6 @@ export function MarketView({ audience = 'guest' }) {
         </section>
       )}
 
-      {/* ── Community Market Values Banner ────────────────────────────── */}
       <section className={styles.valuesSection} aria-label="MarketLink farmer promise">
         <div className={styles.valueCard}>
           <div className={styles.valueIconCircle}>
