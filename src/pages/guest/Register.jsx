@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Eye,
   EyeOff,
@@ -21,6 +21,7 @@ import { PATHS } from '@/routes/paths';
 import { useAuth, homePathFor } from '@/context/AuthContext';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import AuthCard from '@/components/guest/AuthCard';
+import AuthSwitchLink from '@/components/guest/AuthSwitchLink';
 import authStyles from '@/components/guest/AuthCard.module.css';
 import styles from './Register.module.css';
 
@@ -292,9 +293,9 @@ export function Register() {
         <div className={styles.cardFooterContent}>
           <span>
             Already have an account?{' '}
-            <Link to={PATHS.LOGIN} className={authStyles.link}>
+            <AuthSwitchLink to={PATHS.LOGIN} className={authStyles.link}>
               Sign in
-            </Link>
+            </AuthSwitchLink>
           </span>
           <div className={styles.securityRow}>
             <ShieldCheck size={14} className={styles.securityIcon} aria-hidden="true" />
@@ -495,9 +496,9 @@ export function Register() {
               <span id="register-email-err" role="alert" className={authStyles.errorText}>
                 {fieldErrors.email}{' '}
                 {fieldErrors.email.includes('already exists') && (
-                  <Link to={`${PATHS.LOGIN}?email=${encodeURIComponent(formData.email)}`} className={authStyles.link}>
+                  <AuthSwitchLink to={`${PATHS.LOGIN}?email=${encodeURIComponent(formData.email)}`} className={authStyles.link}>
                     Sign in instead
-                  </Link>
+                  </AuthSwitchLink>
                 )}
               </span>
             )}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Sparkles, ShieldCheck, ShoppingBag, Store, Star, Check } from 'lucide-react';
 import { PATHS } from '@/routes/paths';
 import MarketLinkLogo from '@/components/ui/MarketLinkLogo';
+import AuthSwitchLink from './AuthSwitchLink';
 import styles from './AuthCard.module.css';
 
 export function AuthCard({
@@ -13,6 +14,7 @@ export function AuthCard({
   footer,
   wide = false,
   split = false,
+  flip, // true = sidebar on the right. Defaults to right on the Create Account tab.
   activeTab = null,
   heroTitle,
   heroLead,
@@ -40,6 +42,8 @@ export function AuthCard({
     },
   ];
 
+  const flipped = flip ?? activeTab === 'register';
+
   const quote = heroQuote || 'MarketLink makes Saturday mornings effortless. I grab artisan sourdough and heritage greens without waiting in queues.';
   const author = heroAuthor || 'Sophie M.';
   const authorRole = heroAuthorRole || 'Market regular, Broadway Market';
@@ -47,7 +51,7 @@ export function AuthCard({
   return (
     <div className={styles.wrap}>
       <div
-        className={`${styles.card} ${split ? styles.splitCard : ''} ${
+        className={`${styles.card} ${split ? styles.splitCard : ''} ${split && flipped ? styles.splitFlip : ''} ${
           wide ? styles.cardWide : ''
         } ${className}`}
       >
@@ -130,23 +134,35 @@ export function AuthCard({
           )}
 
           {activeTab && (
-            <div className={styles.tabSwitcher} role="tablist" aria-label="Authentication selection">
-              <Link
-                to={PATHS.LOGIN}
-                role="tab"
-                aria-selected={activeTab === 'login'}
-                className={`${styles.tabBtn} ${activeTab === 'login' ? styles.tabBtnActive : ''}`}
+            <div
+              className={styles.tabSwitcher}
+              data-auth-tabs="true"
+              data-active={activeTab}
+            >
+              {/* The sliding highlight. It sits under the labels and moves between tabs. */}
+              <span className={styles.tabPill} aria-hidden="true" />
+              <div
+                className={styles.tabLabels}
+                role="tablist"
+                aria-label="Authentication selection"
               >
-                Sign In
-              </Link>
-              <Link
-                to={PATHS.REGISTER}
-                role="tab"
-                aria-selected={activeTab === 'register'}
-                className={`${styles.tabBtn} ${activeTab === 'register' ? styles.tabBtnActive : ''}`}
-              >
-                Create Account
-              </Link>
+                <AuthSwitchLink
+                  to={PATHS.LOGIN}
+                  role="tab"
+                  aria-selected={activeTab === 'login'}
+                  className={`${styles.tabBtn} ${activeTab === 'login' ? styles.tabBtnActive : ''}`}
+                >
+                  Sign In
+                </AuthSwitchLink>
+                <AuthSwitchLink
+                  to={PATHS.REGISTER}
+                  role="tab"
+                  aria-selected={activeTab === 'register'}
+                  className={`${styles.tabBtn} ${activeTab === 'register' ? styles.tabBtnActive : ''}`}
+                >
+                  Create Account
+                </AuthSwitchLink>
+              </div>
             </div>
           )}
 

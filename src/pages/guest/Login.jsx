@@ -6,6 +6,7 @@ import { useAuth, homePathFor } from '@/context/AuthContext';
 import { resendVerification } from '@/api/auth';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import AuthCard from '@/components/guest/AuthCard';
+import AuthSwitchLink from '@/components/guest/AuthSwitchLink';
 import authStyles from '@/components/guest/AuthCard.module.css';
 import styles from './Login.module.css';
 
@@ -166,9 +167,9 @@ export function Login() {
         <div className={styles.cardFooterContent}>
           <span>
             Don't have an account yet?{' '}
-            <Link to={PATHS.REGISTER} className={authStyles.link}>
+            <AuthSwitchLink to={PATHS.REGISTER} className={authStyles.link}>
               Create one for free
-            </Link>
+            </AuthSwitchLink>
           </span>
           <div className={styles.securityRow}>
             <ShieldCheck size={14} className={styles.securityIcon} aria-hidden="true" />

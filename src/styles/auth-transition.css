@@ -1,0 +1,113 @@
+/* Swap transition between Sign In and Create Account.
+   Must be a GLOBAL stylesheet (not a CSS module) because it targets
+   ::view-transition pseudo-elements. Import it from index.css.
+
+   How it works: each piece of the card has a view-transition-name
+   (set in AuthCard.module.css). Because Sign In and Create Account put the
+   panels on opposite sides, the browser slides every named piece from its
+   old position to its new one. The text inside the panels is faded out
+   quickly and faded back in at the end, so it never overlaps mid-swap. */
+
+:root {
+  --auth-duration: 600ms;
+  --auth-ease: cubic-bezier(0.65, 0, 0.35, 1);   /* gentle in and out */
+  --auth-slide: 40px;   /* mobile only: how far the form travels */
+  --auth-dir: 1;        /* 1 = to Create Account, -1 = back to Sign In */
+}
+
+:root[data-auth-nav='back'] {
+  --auth-dir: -1;
+}
+
+/* ---- Everything moves together, same timing ---- */
+::view-transition-group(root),
+::view-transition-group(auth-card),
+::view-transition-group(auth-showcase),
+::view-transition-group(auth-showcase-content),
+::view-transition-group(auth-form),
+::view-transition-group(auth-tabs-track),
+::view-transition-group(auth-tab-pill),
+::view-transition-group(auth-tab-labels) {
+  animation-duration: var(--auth-duration);
+  animation-timing-function: var(--auth-ease);
+}
+
+/* ---- White card + dark panel backgrounds: stretch to the new size ---- */
+::view-transition-old(auth-card),
+::view-transition-new(auth-card),
+::view-transition-old(auth-showcase),
+::view-transition-new(auth-showcase) {
+  height: 100%;
+  object-fit: fill;
+}
+
+/* ---- Text layers: never scaled, clipped to their own box ---- */
+::view-transition-group(auth-form),
+::view-transition-group(auth-showcase-content) {
+  overflow: clip;
+}
+
+::view-transition-old(auth-form),
+::view-transition-new(auth-form),
+::view-transition-old(auth-showcase-content),
+::view-transition-new(auth-showcase-content) {
+  height: 100%;
+  object-fit: none;
+  object-position: top left;
+  mix-blend-mode: normal;
+}
+
+/* Old text is gone before the panels cross; new text appears once they land */
+/* Timings are a share of --auth-duration, so changing that one value
+   speeds up or slows down everything together. */
+::view-transition-old(auth-form),
+::view-transition-old(auth-showcase-content) {
+  animation: auth-fade-out calc(var(--auth-duration) * 0.37) ease-out both;
+}
+
+::view-transition-new(auth-form),
+::view-transition-new(auth-showcase-content) {
+  animation: auth-fade-in calc(var(--auth-duration) * 0.5) ease-out calc(var(--auth-duration) * 0.5) both;
+}
+
+@keyframes auth-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes auth-fade-in {
+  from { opacity: 0; }
+}
+
+/* ---- Mobile / tablet: the sidebar is hidden and nothing changes sides,
+        so give the form a small slide instead ---- */
+@media (max-width: 959px) {
+  ::view-transition-old(auth-form) {
+    animation: auth-form-out calc(var(--auth-duration) * 0.4) ease-out both;
+  }
+
+  ::view-transition-new(auth-form) {
+    animation: auth-form-in calc(var(--auth-duration) * 0.6) var(--auth-ease) calc(var(--auth-duration) * 0.33) both;
+  }
+
+  @keyframes auth-form-out {
+    to {
+      opacity: 0;
+      transform: translateX(calc(var(--auth-dir) * var(--auth-slide) * -1));
+    }
+  }
+
+  @keyframes auth-form-in {
+    from {
+      opacity: 0;
+      transform: translateX(calc(var(--auth-dir) * var(--auth-slide)));
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
