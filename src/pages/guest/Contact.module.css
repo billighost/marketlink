@@ -14,7 +14,6 @@
   }
 }
 
-/* ─── Hero Header ─── */
 .hero {
   position: relative;
   background: linear-gradient(135deg, var(--color-beet, #7A2E3B) 0%, var(--color-beet-dark, #5E212B) 100%);
@@ -23,6 +22,13 @@
   color: #ffffff;
   box-shadow: 0 8px 24px rgba(94, 33, 43, 0.18);
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 1.35rem 1rem;
+    border-radius: var(--radius-lg, 12px);
+  }
 }
 
 .heroGlow {
@@ -34,6 +40,15 @@
   background: radial-gradient(circle, rgba(176, 134, 85, 0.28) 0%, transparent 72%);
   border-radius: 50%;
   pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .heroGlow {
+    width: 180px;
+    height: 180px;
+    top: -40px;
+    right: -40px;
+  }
 }
 
 .heroBadge {
@@ -154,6 +169,13 @@
   border-radius: var(--radius-xl, 14px);
   padding: var(--space-6, 1.5rem);
   box-shadow: 0 2px 8px rgba(46, 43, 38, 0.04);
+}
+
+@media (max-width: 640px) {
+  .formColumn {
+    padding: 1.25rem 1rem;
+    border-radius: var(--radius-lg, 12px);
+  }
 }
 
 .formHeader {
@@ -282,6 +304,13 @@
   box-shadow: 0 2px 8px rgba(46, 43, 38, 0.04);
 }
 
+@media (max-width: 640px) {
+  .detailsBlock {
+    padding: 1.25rem 1rem;
+    border-radius: var(--radius-lg, 12px);
+  }
+}
+
 .detailsHeading {
   font-family: var(--font-head);
   font-size: var(--text-h3);
@@ -368,6 +397,13 @@
   padding-bottom: 0.25rem;
   border-bottom: 1px dashed rgba(227, 211, 184, 0.8);
   margin-bottom: 0.25rem;
+}
+
+@media (max-width: 360px) {
+  .hoursRow {
+    flex-direction: column;
+    gap: 2px;
+  }
 }
 
 .hoursRow:last-child {

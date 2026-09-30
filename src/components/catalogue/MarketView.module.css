@@ -424,6 +424,13 @@
   box-shadow: 0 4px 20px rgba(46, 43, 38, 0.04);
 }
 
+@media (max-width: 640px) {
+  .infoCard {
+    padding: 1.25rem 1rem;
+    border-radius: var(--radius-lg, 14px);
+  }
+}
+
 .cardHeader {
   display: flex;
   align-items: flex-start;
@@ -489,6 +496,14 @@
   border: 1px solid #EFE6D7;
   font-family: var(--font-body);
   font-size: 14px;
+}
+
+@media (max-width: 400px) {
+  .scheduleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 }
 
 .scheduleDay {
@@ -704,6 +719,12 @@
   max-width: 320px;
 }
 
+@media (max-width: 767px) {
+  .searchWrap {
+    max-width: 100%;
+  }
+}
+
 .searchIcon {
   position: absolute;
   left: 14px;
@@ -755,6 +776,20 @@
   flex-wrap: wrap;
   gap: 8px;
   padding-bottom: 4px;
+}
+
+@media (max-width: 640px) {
+  .categoryBar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .categoryBar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .catPill {
@@ -932,6 +967,13 @@
   background: var(--color-canvas-soft, #FAF7F0);
   border: 1px solid var(--color-wood-line, #E3D3B8);
   border-radius: 18px;
+}
+
+@media (max-width: 640px) {
+  .valuesSection {
+    padding: 1.25rem 1rem;
+    border-radius: var(--radius-lg, 14px);
+  }
 }
 
 @media (min-width: 768px) {

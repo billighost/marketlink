@@ -301,6 +301,13 @@
   align-items: stretch;
 }
 
+@media (max-width: 480px) {
+  .marketsGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4, 1rem);
+  }
+}
+
 .marketCard {
   background-color: #ffffff;
   border-radius: 12px;
@@ -405,6 +412,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .vendorCount {
@@ -476,8 +485,28 @@
 
 @media (max-width: 480px) {
   .productsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
     gap: var(--space-3, 0.75rem);
+  }
+
+  .productBody {
+    padding: 10px !important;
+  }
+
+  .productTitle {
+    font-size: 0.84rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  .reserveBtn {
+    padding: 6px 8px !important;
+    font-size: 0.74rem !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .productsGrid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -807,6 +836,13 @@
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .farmerBody {
+    padding: 14px 14px;
+  }
 }
 
 .farmerName {
@@ -1095,6 +1131,26 @@
   gap: 14px;
   justify-content: center;
   align-items: center;
+}
+
+@media (max-width: 480px) {
+  .ctaCard {
+    padding: 2rem 1.25rem;
+    border-radius: var(--radius-lg, 16px);
+  }
+
+  .ctaButtons {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .ctaPrimaryBtn,
+  .ctaSecondaryBtn {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+  }
 }
 
 .ctaPrimaryBtn {

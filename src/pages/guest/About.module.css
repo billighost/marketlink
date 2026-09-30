@@ -29,6 +29,13 @@
   overflow: hidden;
 }
 
+@media (max-width: 640px) {
+  .hero {
+    padding: 1.35rem 1rem;
+    border-radius: var(--radius-lg, 12px);
+  }
+}
+
 .heroGlow {
   position: absolute;
   top: -80px;
@@ -38,6 +45,26 @@
   background: radial-gradient(circle, rgba(176, 134, 85, 0.28) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .heroGlow {
+    width: 180px;
+    height: 180px;
+    top: -40px;
+    right: -40px;
+  }
+  .heroActions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .heroPrimaryBtn,
+  .heroSecondaryBtn {
+    width: 100%;
+    justify-content: center;
+    min-height: var(--tap-min, 44px);
+  }
 }
 
 .heroBadge {
@@ -168,6 +195,21 @@
 }
 
 @media (max-width: 480px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .statCard {
+    padding: 12px 10px;
+  }
+
+  .statValue {
+    font-size: 1.55rem;
+  }
+}
+
+@media (max-width: 320px) {
   .statsGrid {
     grid-template-columns: 1fr;
   }
@@ -328,6 +370,12 @@
   height: 380px;
   object-fit: cover;
   display: block;
+}
+
+@media (max-width: 640px) {
+  .storyImg {
+    height: 240px;
+  }
 }
 
 .storyImgBadge {
@@ -559,6 +607,13 @@
   gap: var(--space-5, 1.25rem);
 }
 
+@media (max-width: 480px) {
+  .teamGrid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+    gap: var(--space-3, 0.75rem);
+  }
+}
+
 @media (min-width: 1024px) {
   .teamGrid {
     grid-template-columns: repeat(5, 1fr);
@@ -752,6 +807,7 @@
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2, 0.5rem);
   background-color: var(--color-beet, #7A2E3B);
   color: #ffffff !important;
@@ -762,6 +818,13 @@
   border-radius: var(--radius-full, 999px);
   text-decoration: none;
   transition: background-color var(--duration-fast, 150ms) ease;
+  min-height: var(--tap-min, 44px);
+}
+
+@media (max-width: 640px) {
+  .viewMarketsBtn {
+    width: 100%;
+  }
 }
 
 .viewMarketsBtn:hover {

@@ -515,6 +515,12 @@
   }
 }
 
+@media (max-width: 360px) {
+  .splitCard .formSide {
+    padding: var(--space-5) var(--space-3);
+  }
+}
+
 .tabSwitcher {
   position: relative;
   padding: 4px;

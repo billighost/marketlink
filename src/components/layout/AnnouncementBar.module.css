@@ -57,3 +57,21 @@
   outline: var(--focus-ring);
   outline-offset: -2px;
 }
+
+@media (max-width: 480px) {
+  .announcementBar {
+    padding-inline: var(--space-2);
+  }
+
+  .content {
+    padding: 0 var(--space-6) 0 var(--space-2);
+    font-size: 11.5px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .closeButton {
+    right: 2px;
+  }
+}

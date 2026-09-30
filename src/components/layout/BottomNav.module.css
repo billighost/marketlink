@@ -39,7 +39,8 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: color var(--duration-fast) var(--ease-standard);
+  transition: color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) cubic-bezier(0.2, 0, 0, 1);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -47,6 +48,10 @@
   color: var(--color-ink);
   background-color: var(--color-canvas-soft);
   border-radius: var(--radius-md);
+}
+
+.button:active {
+  transform: scale(0.92) !important;
 }
 
 .button:focus-visible {

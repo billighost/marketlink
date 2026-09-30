@@ -15,6 +15,14 @@
   overflow: hidden;
 }
 
+@media (max-width: 640px) {
+  .hero {
+    padding: 1.35rem 1rem;
+    border-radius: var(--radius-lg, 12px);
+    margin-bottom: var(--space-5, 1.25rem);
+  }
+}
+
 .heroGlow {
   position: absolute;
   top: -60px;
@@ -24,6 +32,15 @@
   background: radial-gradient(circle, rgba(176, 134, 85, 0.28) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .heroGlow {
+    width: 180px;
+    height: 180px;
+    top: -40px;
+    right: -40px;
+  }
 }
 
 .heroBadge {
@@ -119,9 +136,17 @@
   gap: var(--space-5, 1.25rem);
 }
 
-@media (max-width: 860px) {
+@media (min-width: 580px) and (max-width: 860px) {
+  .featuresGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4, 1rem);
+  }
+}
+
+@media (max-width: 579px) {
   .featuresGrid {
     grid-template-columns: 1fr;
+    gap: var(--space-3, 0.75rem);
   }
 }
 
@@ -172,6 +197,14 @@
   background: var(--color-canvas-soft, #FAF7F0);
   border: 1px solid var(--color-border, #E3D3B8);
   border-radius: var(--radius-xl, 14px);
+}
+
+@media (max-width: 640px) {
+  .faqSection {
+    margin-top: var(--space-8, 2rem);
+    padding: 1.25rem 1rem;
+    border-radius: var(--radius-lg, 12px);
+  }
 }
 
 .faqHeader {
@@ -232,7 +265,6 @@
   line-height: var(--lh-relaxed, 1.55);
 }
 
-/* Callout footer banner */
 .calloutBanner {
   margin-top: var(--space-10, 2.5rem);
   background: var(--color-white, #ffffff);
@@ -244,6 +276,16 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-4, 1rem);
+}
+
+@media (max-width: 640px) {
+  .calloutBanner {
+    margin-top: var(--space-8, 2rem);
+    padding: 1.25rem 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3, 0.75rem);
+  }
 }
 
 .calloutText h3 {
@@ -262,6 +304,7 @@
 .calloutAction {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2, 0.5rem);
   background: var(--color-beet, #7A2E3B);
   color: #ffffff;
@@ -271,6 +314,13 @@
   font-weight: var(--weight-semibold, 600);
   text-decoration: none;
   transition: background-color var(--duration-fast, 0.15s) ease;
+  min-height: var(--tap-min, 44px);
+}
+
+@media (max-width: 640px) {
+  .calloutAction {
+    width: 100%;
+  }
 }
 
 .calloutAction:hover {
