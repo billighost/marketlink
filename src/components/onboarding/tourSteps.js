@@ -16,7 +16,7 @@ export const BUYER_STEPS = [
       'Move effortlessly between Today’s live market updates, fresh produce browsing, attending stalls, open market hubs, and your collection route.',
     illustration: 'stall',
     placement: 'bottom',
-    preferredMobilePlacement: 'bottom',
+    preferredMobilePlacement: 'top',
   },
   {
     id: 'buyer-search',
@@ -26,6 +26,7 @@ export const BUYER_STEPS = [
       'Search for heirloom varieties, artisan sourdough, organic honey, or local family farms. You can also press Ctrl + K anywhere on the site.',
     illustration: 'basket-tomatoes',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'buyer-market-dropdown',
@@ -35,6 +36,7 @@ export const BUYER_STEPS = [
       'Your active market dictates stall availability, morning collection hours, and live harvest feeds. Tap anytime to explore other regional markets.',
     illustration: 'basket-door',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'buyer-clock',
@@ -44,6 +46,7 @@ export const BUYER_STEPS = [
       'Track real-time trading status and order cutoff deadlines. Farmers close reservations before sunrise so they have time to harvest and pack.',
     illustration: 'crate-carrots',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'buyer-feed',
@@ -53,6 +56,7 @@ export const BUYER_STEPS = [
       'Discover stalls attending today’s market, newly added crates, and seasonal produce curated by local growers in your community.',
     illustration: 'leafy-greens',
     placement: 'top',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'buyer-products-nav',
@@ -63,6 +67,7 @@ export const BUYER_STEPS = [
       'Explore live inventory directly from farm stalls. View origin details, harvesting methods, morning pricing, and grower stories.',
     illustration: 'sourdough-boule',
     placement: 'bottom',
+    preferredMobilePlacement: 'top',
   },
   {
     id: 'buyer-basket',
@@ -73,15 +78,18 @@ export const BUYER_STEPS = [
       'Reserve produce from multiple farm stalls in one shared basket. Inspect everything in person at market morning, show your code, and pay cash at the stall.',
     illustration: 'basket',
     placement: 'bottom',
+    preferredMobilePlacement: 'top',
   },
   {
     id: 'buyer-route-nav',
     target: '[data-tour="buyer-route-nav"]',
+    fallbackTarget: '[data-tour="buyer-bottom-orders"]',
     title: 'Market Route Planner',
     content:
       'Collect all your orders with zero backtracking. MarketLink calculates the optimal walking circuit between your booked stalls on market day.',
     illustration: 'crate',
     placement: 'bottom',
+    preferredMobilePlacement: 'top',
   },
   {
     id: 'buyer-profile',
@@ -92,6 +100,7 @@ export const BUYER_STEPS = [
       'Access your 4-letter pickup codes, saved markets, restock alerts, notification channels, and replay this tour whenever you need a refresher.',
     illustration: 'honey-jar',
     placement: 'left',
+    preferredMobilePlacement: 'top',
   },
 ];
 
@@ -99,11 +108,13 @@ export const VENDOR_STEPS = [
   {
     id: 'vendor-overview',
     target: '[data-tour="vendor-overview"]',
+    fallbackTarget: '[data-tour="vendor-bottom-overview"]',
     title: 'Grower Cockpit Overview',
     content:
       'Welcome to your producer command center. Monitor incoming pre-orders, collection time windows, revenue metrics, and morning packing checklists.',
     illustration: 'stall',
     placement: 'bottom',
+    preferredMobilePlacement: 'top',
   },
   {
     id: 'vendor-pickup-code',
@@ -114,15 +125,18 @@ export const VENDOR_STEPS = [
       'When a customer arrives at your market stall, tap here and enter their 6-character pickup code to confirm items, total, and hand off instantly.',
     illustration: 'basket-door',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'vendor-add-item',
     target: '[data-tour="vendor-add-item"]',
+    fallbackTarget: '[data-tour="vendor-add-item-mobile"]',
     title: 'Add Fresh Harvest Items',
     content:
       'List newly harvested crops, baked loaves, or honey batches with photos, unit pricing, organic certifications, and available crate quantities.',
     illustration: 'crate-carrots',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'vendor-stock',
@@ -133,6 +147,7 @@ export const VENDOR_STEPS = [
       'Toggle items sold out or restocked with a single tap. Live inventory sync ensures walk-up customers and online reservees stay informed.',
     illustration: 'leafy-greens',
     placement: 'right',
+    preferredMobilePlacement: 'top',
   },
   {
     id: 'vendor-orders',
@@ -143,6 +158,7 @@ export const VENDOR_STEPS = [
       'Manage orders through Placed, Accepted, Packed, and Ready stages. Generate printable pick-lists organized by pickup time slots.',
     illustration: 'basket-tomatoes',
     placement: 'right',
+    preferredMobilePlacement: 'top',
   },
   {
     id: 'vendor-insights',
@@ -153,6 +169,7 @@ export const VENDOR_STEPS = [
       'Track peak pickup windows, top-selling seasonal harvests, average basket size, and customer review sentiments.',
     illustration: 'sourdough-boule',
     placement: 'right',
+    preferredMobilePlacement: 'top',
   },
   {
     id: 'vendor-storefront',
@@ -163,6 +180,7 @@ export const VENDOR_STEPS = [
       'Preview how your stall banner, farm bio, certifications, and catalogue appear to local customers browsing MarketLink.',
     illustration: 'stall',
     placement: 'top',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'vendor-stall',
@@ -173,6 +191,7 @@ export const VENDOR_STEPS = [
       'Configure your operating market days, pickup collection cutoff deadlines, stall biography, and contact preferences here.',
     illustration: 'honey-jar',
     placement: 'right',
+    preferredMobilePlacement: 'top',
   },
 ];
 
@@ -185,42 +204,51 @@ export const GUEST_STEPS = [
       'MarketLink connects you directly with certified local farmers, community markets, and fresh seasonal harvests in your neighborhood.',
     illustration: 'stall',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'guest-markets',
     target: '[data-tour="guest-markets"]',
+    fallbackTarget: '[data-tour="guest-markets-btn"]',
     title: 'Discover Local Markets',
     content:
       'Find farmers markets open on weekends and weekdays near you with interactive maps, trading hours, and attending growers.',
     illustration: 'basket-door',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'guest-stalls',
     target: '[data-tour="guest-stalls"]',
+    fallbackTarget: '[data-tour="guest-farmers-section"]',
     title: 'Meet Local Growers',
     content:
       'Explore verified family orchards, heritage grain bakers, vegetable growers, and local food artisans trading in your area.',
     illustration: 'crate-carrots',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'guest-produce',
     target: '[data-tour="guest-produce"]',
+    fallbackTarget: '[data-tour="guest-produce-btn"]',
     title: 'Fresh Seasonal Harvest',
     content:
       'See what is ripe and available on the stalls before you head out. Check grower notes, varieties, and morning availability.',
     illustration: 'leafy-greens',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
   {
     id: 'guest-auth',
     target: '[data-tour="guest-auth"]',
+    fallbackTarget: '[data-tour="guest-menu-btn"]',
     title: 'Join Our Community',
     content:
       'Sign up as a customer to reserve morning produce crates, or register your farm stall to take pre-orders from local neighbors.',
     illustration: 'honey-jar',
     placement: 'bottom',
+    preferredMobilePlacement: 'bottom',
   },
 ];
 

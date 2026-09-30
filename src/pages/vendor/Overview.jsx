@@ -1021,7 +1021,7 @@ export function Overview() {
           </div>
 
           <div className={styles.quickActionsBar}>
-            <Link to="/vendor/stock?action=new" className={styles.fabPrimaryBtn}>
+            <Link to="/vendor/stock?action=new" className={styles.fabPrimaryBtn} data-tour="vendor-add-item-mobile">
               <Plus size={18} />
               <span>Add Harvest Produce</span>
             </Link>

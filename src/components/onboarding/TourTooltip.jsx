@@ -6,7 +6,8 @@ import styles from './Onboarding.module.css';
 
 /**
  * Smartly positioned tooltip card that explains the currently highlighted feature.
- * Calculates optimal viewport coordinates on desktop and converts to a docked bottom card on mobile.
+ * Calculates optimal viewport coordinates on desktop and converts to a docked bottom or top
+ * card on mobile to prevent occluding the highlighted element.
  */
 export function TourTooltip({
   step,
@@ -19,6 +20,7 @@ export function TourTooltip({
   onFinish,
 }) {
   const tooltipRef = useRef(null);
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
   const [coords, setCoords] = useState({ top: 0, left: 0, placement: 'bottom' });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -34,9 +36,34 @@ export function TourTooltip({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Compute smart tooltip position relative to target
+  // Determine mobile docking position: 'top' or 'bottom'
+  // Ensures card never covers the spotlighted element on mobile
+  const resolveMobilePlacement = useCallback(() => {
+    if (!targetElement) {
+      return step?.preferredMobilePlacement || 'bottom';
+    }
+
+    const tRect = targetElement.getBoundingClientRect();
+    const vh = window.visualViewport?.height || window.innerHeight;
+
+    // If target is in the bottom portion of viewport or in the bottom nav bar,
+    // dock card at top so target and pulse ring remain 100% visible
+    if (tRect.bottom > vh - 220 || tRect.top > vh * 0.45) {
+      return 'top';
+    }
+
+    if (step?.preferredMobilePlacement) {
+      return step.preferredMobilePlacement;
+    }
+
+    return 'bottom';
+  }, [targetElement, step]);
+
+  const mobilePlacement = resolveMobilePlacement();
+
+  // Compute smart tooltip position relative to target for desktop
   const updatePosition = useCallback(() => {
-    if (isMobile) return; // Mobile uses fixed bottom card layout
+    if (isMobile) return;
 
     const card = tooltipRef.current;
     const cardRect = card ? card.getBoundingClientRect() : { width: 360, height: 260 };
@@ -62,7 +89,6 @@ export function TourTooltip({
     let top = 0;
     let left = 0;
 
-    // Check vertical & horizontal space
     const spaceBelow = window.innerHeight - tRect.bottom;
     const spaceAbove = tRect.top;
     const spaceRight = window.innerWidth - tRect.right;
@@ -144,6 +170,37 @@ export function TourTooltip({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFirst, isLast, onNext, onPrev, onSkip, onFinish]);
 
+  // Touch gesture swipe support for mobile
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      };
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (e.changedTouches.length === 1) {
+      const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+      const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+      const dt = Date.now() - touchStartRef.current.time;
+
+      // Horizontal swipe threshold: > 45px, mostly horizontal, under 450ms
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 450) {
+        if (dx < 0) {
+          // Swipe left -> Next
+          if (!isLast) onNext();
+          else onFinish();
+        } else {
+          // Swipe right -> Previous
+          if (!isFirst) onPrev();
+        }
+      }
+    }
+  };
+
   // Focus management
   useEffect(() => {
     tooltipRef.current?.focus();
@@ -157,6 +214,12 @@ export function TourTooltip({
         position: 'fixed',
       };
 
+  const mobileClass = isMobile
+    ? mobilePlacement === 'top'
+      ? styles.tooltipMobileTopCard
+      : styles.tooltipMobileBottomCard
+    : '';
+
   return (
     <div
       ref={tooltipRef}
@@ -164,9 +227,11 @@ export function TourTooltip({
       aria-modal="true"
       aria-label={step.title}
       tabIndex={-1}
-      className={`${styles.tooltipCard} ${isMobile ? styles.tooltipMobileCard : ''}`}
+      className={`${styles.tooltipCard} ${mobileClass}`}
       style={styleProps}
-      data-placement={coords.placement}
+      data-placement={isMobile ? mobilePlacement : coords.placement}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Header bar: Icon/Badge + Close/Skip */}
       <div className={styles.tooltipHeader}>

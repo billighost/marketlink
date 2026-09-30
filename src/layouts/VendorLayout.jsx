@@ -362,6 +362,7 @@ export default function VendorLayout() {
               className={({ isActive }) =>
                 `${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`
               }
+              data-tour="vendor-bottom-overview"
             >
               <LayoutDashboard size={20} aria-hidden="true" />
               <span>Overview</span>

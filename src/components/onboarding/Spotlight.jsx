@@ -2,10 +2,55 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import styles from './Onboarding.module.css';
 
 /**
+ * Checks whether an element is truly visible and rendered in the DOM.
+ */
+function isElementVisible(el) {
+  if (!el || !el.isConnected) return false;
+  const rect = el.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  const style = window.getComputedStyle(el);
+  if (
+    style.display === 'none' ||
+    style.visibility === 'hidden' ||
+    style.opacity === '0'
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Resolves the active visible target element, giving priority to targetSelector
+ * and cleanly falling back to fallbackSelector if the primary element is hidden
+ * (e.g. desktop navigation or sidebar hidden on mobile).
+ */
+export function getVisibleTargetElement(targetSelector, fallbackSelector) {
+  if (targetSelector) {
+    try {
+      const el = document.querySelector(targetSelector);
+      if (isElementVisible(el)) return el;
+    } catch {
+      // Invalid selector fallback
+    }
+  }
+
+  if (fallbackSelector) {
+    try {
+      const fallbackEl = document.querySelector(fallbackSelector);
+      if (isElementVisible(fallbackEl)) return fallbackEl;
+    } catch {
+      // Invalid selector fallback
+    }
+  }
+
+  return null;
+}
+
+/**
  * Spotlight creates an interactive visual overlay that darkens the background
  * and casts a soft illuminated cutout with a glow border over the target element.
  */
-export function Spotlight({ targetSelector, fallbackSelector, padding = 8, onTargetFound }) {
+export function Spotlight({ targetSelector, fallbackSelector, padding, onTargetFound }) {
   const [rect, setRect] = useState(null);
   const [viewportSize, setViewportSize] = useState({
     width: window.innerWidth,
@@ -13,11 +58,12 @@ export function Spotlight({ targetSelector, fallbackSelector, padding = 8, onTar
   });
   const rafRef = useRef(null);
 
+  // Use slightly tighter padding on mobile so highlights don't overflow
+  const isMobile = viewportSize.width < 768;
+  const effectivePadding = padding !== undefined ? padding : (isMobile ? 6 : 8);
+
   const updateTargetRect = useCallback(() => {
-    let el = targetSelector ? document.querySelector(targetSelector) : null;
-    if (!el && fallbackSelector) {
-      el = document.querySelector(fallbackSelector);
-    }
+    const el = getVisibleTargetElement(targetSelector, fallbackSelector);
 
     if (!el) {
       setRect(null);
@@ -25,21 +71,28 @@ export function Spotlight({ targetSelector, fallbackSelector, padding = 8, onTar
       return;
     }
 
-    // Target is present
     const rawRect = el.getBoundingClientRect();
 
-    // Check if target is hidden/0-sized
     if (rawRect.width === 0 && rawRect.height === 0) {
       setRect(null);
       if (onTargetFound) onTargetFound(null);
       return;
     }
 
+    const vw = window.visualViewport?.width || window.innerWidth;
+    const vh = window.visualViewport?.height || window.innerHeight;
+
+    // Viewport-clamped cutout coordinates
+    const left = Math.max(2, rawRect.left - effectivePadding);
+    const top = Math.max(2, rawRect.top - effectivePadding);
+    const right = Math.min(vw - 2, rawRect.right + effectivePadding);
+    const bottom = Math.min(vh - 2, rawRect.bottom + effectivePadding);
+
     const calculated = {
-      x: Math.max(0, rawRect.left - padding),
-      y: Math.max(0, rawRect.top - padding),
-      width: rawRect.width + padding * 2,
-      height: rawRect.height + padding * 2,
+      x: left,
+      y: top,
+      width: Math.max(16, right - left),
+      height: Math.max(16, bottom - top),
       rawTop: rawRect.top,
       rawBottom: rawRect.bottom,
       rawLeft: rawRect.left,
@@ -61,34 +114,33 @@ export function Spotlight({ targetSelector, fallbackSelector, padding = 8, onTar
     });
 
     if (onTargetFound) onTargetFound(el);
-  }, [targetSelector, fallbackSelector, padding, onTargetFound]);
+  }, [targetSelector, fallbackSelector, effectivePadding, onTargetFound]);
 
   // Scroll element into view smoothly when step changes
   useEffect(() => {
-    let el = targetSelector ? document.querySelector(targetSelector) : null;
-    if (!el && fallbackSelector) {
-      el = document.querySelector(fallbackSelector);
-    }
+    const el = getVisibleTargetElement(targetSelector, fallbackSelector);
 
     if (el) {
-      // Check if visible in viewport
       const bounding = el.getBoundingClientRect();
+      const isMobileScreen = window.innerWidth < 768;
+      const topSafeZone = isMobileScreen ? 64 : 80;
+      const bottomSafeZone = isMobileScreen ? 80 : 120;
+
       const isVisible =
-        bounding.top >= 80 &&
-        bounding.bottom <= window.innerHeight - 120 &&
+        bounding.top >= topSafeZone &&
+        bounding.bottom <= window.innerHeight - bottomSafeZone &&
         bounding.left >= 0 &&
         bounding.right <= window.innerWidth;
 
       if (!isVisible) {
         el.scrollIntoView({
           behavior: 'smooth',
-          block: window.innerWidth < 768 ? 'start' : 'center',
+          block: 'center',
           inline: 'nearest',
         });
       }
     }
 
-    // Re-check target position after scroll
     const checkTimer = setTimeout(updateTargetRect, 200);
     const checkTimer2 = setTimeout(updateTargetRect, 500);
 
@@ -98,13 +150,12 @@ export function Spotlight({ targetSelector, fallbackSelector, padding = 8, onTar
     };
   }, [targetSelector, fallbackSelector, updateTargetRect]);
 
-  // Listen for resize and continuous scroll tracking
+  // Listen for resize, orientation changes, and continuous scroll tracking
   useEffect(() => {
-    const handleResize = () => {
-      setViewportSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
+    const updateSize = () => {
+      const vw = window.visualViewport?.width || window.innerWidth;
+      const vh = window.visualViewport?.height || window.innerHeight;
+      setViewportSize({ width: vw, height: vh });
       updateTargetRect();
     };
 
@@ -113,18 +164,22 @@ export function Spotlight({ targetSelector, fallbackSelector, padding = 8, onTar
       rafRef.current = requestAnimationFrame(updateTargetRect);
     };
 
-    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('resize', updateSize, { passive: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.visualViewport?.addEventListener('resize', updateSize, { passive: true });
+    window.visualViewport?.addEventListener('scroll', handleScroll, { passive: true });
 
     // Initial check
     updateTargetRect();
 
-    // Poll periodically while active to catch dynamic layout adjustments
+    // Poll periodically while active to catch dynamic DOM transitions
     const interval = setInterval(updateTargetRect, 300);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', updateSize);
       window.removeEventListener('scroll', handleScroll);
+      window.visualViewport?.removeEventListener('resize', updateSize);
+      window.visualViewport?.removeEventListener('scroll', handleScroll);
       clearInterval(interval);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };

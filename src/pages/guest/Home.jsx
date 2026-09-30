@@ -194,11 +194,11 @@ export function Home() {
           </p>
 
           <div className={styles.heroActions}>
-            <Link to={PATHS.MARKETS} className={styles.browseMarketsBtn}>
+            <Link to={PATHS.MARKETS} className={styles.browseMarketsBtn} data-tour="guest-markets-btn">
               <span>Browse Markets</span>
             </Link>
 
-            <Link to={PATHS.PRODUCTS} className={styles.exploreProduceBtn}>
+            <Link to={PATHS.PRODUCTS} className={styles.exploreProduceBtn} data-tour="guest-produce-btn">
               <span>Explore Fresh Produce</span>
             </Link>
           </div>
@@ -412,7 +412,7 @@ export function Home() {
       )}
 
       {(homeLoading || farmers.length > 0) && (
-        <section className={styles.farmersSection}>
+        <section className={styles.farmersSection} data-tour="guest-farmers-section">
           <div className="container">
             <div className={styles.sectionHeader}>
               <div>

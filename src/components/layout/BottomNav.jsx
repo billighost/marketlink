@@ -52,6 +52,10 @@ export function BottomNav() {
               ? 'buyer-bottom-basket'
               : item.id === 'you'
               ? 'buyer-bottom-you'
+              : item.id === 'orders'
+              ? 'buyer-bottom-orders'
+              : item.id === 'today'
+              ? 'buyer-bottom-today'
               : undefined;
 
           return (

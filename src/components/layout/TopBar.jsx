@@ -188,6 +188,7 @@ export function TopBar() {
               aria-expanded={isOpen}
               aria-controls="guest-nav-drawer"
               aria-label="Open menu"
+              data-tour="guest-menu-btn"
             >
               <Menu size={20} strokeWidth={2} aria-hidden="true" />
             </button>
