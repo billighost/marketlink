@@ -1,7 +1,20 @@
-# MarketLink Frontend Foundation
+# MarketLink
 
-> **"Farm Fresh Just a Click Away"**  
-> A clean, calm, and minimal web platform connecting local farmers with neighborhood customers for in-person pickup pre-orders.
+**A marketplace that connects local farmers with neighbourhood customers for in-person pickup pre-orders.** *"Farm Fresh Just a Click Away."*
+
+Built for **TechWiz**, Aptech's hackathon, as a complete full-stack app with separate experiences for **buyers, vendors (farmers) and admins**.
+
+**[Live demo](https://marketlink-phi.vercel.app)**
+
+## Highlights
+
+- Role-based experiences for guests, buyers, vendors and admins, enforced by route guards
+- Cart, favourites and pre-order flow with a command palette (keyboard-first navigation)
+- Node.js and Express 5 API on MongoDB, with documented schema and endpoints
+- Hand-built design system with CSS Modules and design tokens, with no Tailwind or UI kit
+- Full specification and database/API docs included in the repo
+
+**Stack:** React, Vite, React Router, Express 5, MongoDB
 
 ---
 
